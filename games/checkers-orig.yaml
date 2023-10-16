@@ -1,0 +1,73 @@
+---
+name: checkers BT
+start:
+  __= BP= __= BP= __= BP= __= BP=
+  BP_ ___ BP_ ___ BP_ ___ BP_ ___
+  ___ BP_ ___ BP_ ___ BP_ ___ BP_
+  ___ ___ ___ ___ ___ ___ ___ ___
+  ___ ___ ___ ___ ___ ___ ___ ___
+  RP_ ___ RP_ ___ RP_ ___ RP_ ___
+  ___ RP_ ___ RP_ ___ RP_ ___ RP_
+  RP= __= RP= __= RP= __= RP= __=
+win:
+  - pattern: Bab
+    count: eq 0
+lose:
+  - pattern: Rab
+    count: eq 0
+rule:
+  type: mirror
+  children:
+  - type: sequence
+    children:
+    - type: sequence
+      id: redturn
+      children:
+      - type: player
+        number: 1
+        children:
+        - type: or
+          children:
+          - type: or
+            children:
+            - type: rule
+              lhs: .   __a;
+                   Rbc .  ;
+              rhs: .   Rba;
+                   __c .  ;
+            - type: rule
+              lhs: RKa .  ;
+                   .   __b;
+              rhs: __a .  ;
+                   .   RKb;
+          - type: loop
+            children:
+            - type: or
+              children:
+              - type: rule
+                lhs: .   .   __a;
+                     .   Bx_ .  ;
+                     Rbc .   .  ;
+                rhs: .   .   Rba;
+                     .   Bx_ .  ;
+                     __c .   .  ;
+              - type: rule
+                lhs: RKa .   .  ;
+                     .   Bx_ .  ;
+                     .   .   __b;
+                rhs: __a .   .  ;
+                     .   ___ .  ;
+                     .   .   RKb;
+      - type: rule
+        lhs: RP=
+        rhs: RK=
+    - type: nextplayer
+      children:
+      - type: fliponly
+        children:
+        - type: swap
+          what: R
+          with: B
+          children:
+          - type: link
+            to: redturn

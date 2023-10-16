@@ -1,0 +1,36 @@
+---
+name: rush hour BT
+start:
+  - XX XX XX XX XX XX XX XX;
+    XX __ __ __ __ T1 __ XX;
+    XX __ __ __ __ T1 __ XX;
+    XX CR CR __ __ T1 __ OO;
+    XX __ __ __ __ __ __ XX;
+    XX __ __ __ __ __ __ XX;
+    XX __ __ __ __ __ __ XX;
+    XX XX XX XX XX XX XX XX;
+  - XX XX XX XX XX XX XX XX;
+    XX __ __ __ __ T1 __ XX;
+    XX __ __ __ __ T1 __ XX;
+    XX CR CR __ __ T1 __ OO;
+    XX __ __ __ __ C1 C1 XX;
+    XX __ __ __ __ __ __ XX;
+    XX __ __ __ __ __ __ XX;
+    XX XX XX XX XX XX XX XX;
+rule:
+  type: sequence
+  children:
+  - type: player
+    number: 1
+    children:
+    - type: rotate
+      children:
+      - type: rule
+        lhs: Ca Ca __
+        rhs: __ Ca Ca
+      - type: rule
+        lhs: Ta Ta Ta __
+        rhs: __ Ta Ta Ta
+win:
+  - pattern: CR CR OO
+    count: ge 1
