@@ -184,7 +184,7 @@ def node_print_gv(node, next_gid, id_to_gid):
             nlabel = ''
             for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
                 nlabel += ' '.join(ll)
-                if ii == len(lhs) // 2:
+                if ii == 0:#len(lhs) // 2:
                     nlabel += ' → '
                 else:
                     nlabel += '   '
