@@ -14,10 +14,10 @@ out:
 out/%.pdf: out/%.gv | out
 	dot $< -Tpdf -o $@
 
-out/%-base.gv: games/%.yaml yaml2bt.py | out
+out/%-base.gv: games/%.yaml yaml2bt.py util.py | out
 	python3 yaml2bt.py $< > $@
 
-out/%-xform.gv: games/%.yaml yaml2bt.py | out
+out/%-xform.gv: games/%.yaml yaml2bt.py util.py | out
 	python3 yaml2bt.py --xform $< > $@
 
 clean:

@@ -8,7 +8,7 @@ start:
     _  _  _  _  E  _  _  _  _ ;
     P0 _  _  _  X  X  X  _  O ;
     X  X  X  X  X  X  X  X  X ;
-rule:
+tree:
   type: sequence
   children:
   - type: player

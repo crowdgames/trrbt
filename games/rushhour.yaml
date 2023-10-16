@@ -17,7 +17,7 @@ start:
     XX __ __ __ __ __ __ XX;
     XX __ __ __ __ __ __ XX;
     XX XX XX XX XX XX XX XX;
-rule:
+tree:
   type: sequence
   children:
   - type: player
@@ -31,6 +31,8 @@ rule:
       - type: rule
         lhs: Ta Ta Ta __
         rhs: __ Ta Ta Ta
-win:
-  - pattern: CR CR OO
-    count: ge 1
+  - type: win
+    number: 1
+    children:
+    - type: match
+      match: CR CR OO
