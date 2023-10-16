@@ -1,0 +1,90 @@
+---
+name: checkers BT
+start:
+  - __= BP= __= BP= __= BP= __= BP=;
+    BP_ ___ BP_ ___ BP_ ___ BP_ ___;
+    ___ BP_ ___ BP_ ___ BP_ ___ BP_;
+    ___ ___ ___ ___ ___ ___ ___ ___;
+    ___ ___ ___ ___ ___ ___ ___ ___;
+    RP_ ___ RP_ ___ RP_ ___ RP_ ___;
+    ___ RP_ ___ RP_ ___ RP_ ___ RP_;
+    RP= __= RP= __= RP= __= RP= __=;
+win:
+  - pattern: Bab
+    count: eq 0
+lose:
+  - pattern: Rab
+    count: eq 0
+rule:
+  type: mirror
+  children:
+  - type: sequence
+    children:
+    - type: sequence
+      id: redturn
+      children:
+      - type: player
+        number: 1
+        children:
+        - type: sequence
+          children:
+          - type: or
+            children:
+            - type: rule
+              lhs: .    ___a;
+                   RbSc  .  ;
+              rhs: .    RbSa;
+                   ___c .   ;
+            - type: rule
+              lhs: RKSa .   ;
+                   .    ___b;
+              rhs: ___a .   ;
+                   .    RKSb;
+            - type: rule
+              lhs: .    .    ___a;
+                   .    BxS_ .   ;
+                   RbSc .    .   ;
+              rhs: .    .    RbJa;
+                   .    ____ .   ;
+                   ___c .    .   ;
+            - type: rule
+              lhs: RKSa  .   .   ;
+                   .    BxS_ .   ;
+                   .    .    ___b;
+              rhs: ___a .    .   ;
+                   .    ____ .   ;
+                   .    .    RKJb;
+          - type: loop
+            children:
+            - type: or
+              children:
+              - type: rule
+                lhs: .    .    ___a;
+                     .    BxS_ .   ;
+                     RbJc .    .   ;
+                rhs: .    .    RbJa;
+                     .    ____ .   ;
+                     ___c .    .   ;
+              - type: rule
+                lhs: RKJa  .   .   ;
+                     .    BxS_ .   ;
+                     .    .    ___b;
+                rhs: ___a .    .   ;
+                     .    ____ .   ;
+                     .    .    RKJb;
+      - type: rule
+        lhs: RaJb
+        rhs: RaSb
+      - type: rule
+        lhs: RPS=
+        rhs: RKS=
+    - type: nextplayer
+      children:
+      - type: fliponly
+        children:
+        - type: swaponly
+          what: R
+          with: B
+          children:
+          - type: link
+            to: redturn

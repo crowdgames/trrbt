@@ -1,0 +1,34 @@
+---
+name: connect four BT
+start:
+  - _= _= _= _= _= _= _=;
+    __ __ __ __ __ __ __;
+    __ __ __ __ __ __ __;
+    __ __ __ __ __ __ __;
+    __ __ __ __ __ __ __;
+    __ __ __ __ __ __ __;
+rule:
+  type: sequence
+  children:
+  - type: sequence
+    id: playerturn
+    children:
+    - type: player
+      number: 1
+      children:
+      - type: rule
+        lhs: _=
+        rhs: R=
+    - type: loop
+      children:
+      - type: rule
+        lhs: Ra;_b
+        rhs: _a;Rb
+  - type: nextplayer
+    children:
+    - type: swap
+      what: R
+      with: Y
+      children:
+      - type: link
+        to: playerturn

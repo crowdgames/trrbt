@@ -1,0 +1,81 @@
+---
+name: platformer
+start:
+  - _  _  _  _  _  _  _  _  _ ;
+    _  _  _  _  _  _  _  _  _ ;
+    _  _  _  _  _  _  Q  _  _ ;
+    _  _  _  _  _  _  _  _  _ ;
+    _  _  _  _  E  _  _  _  _ ;
+    P0 _  _  _  X  X  X  _  O ;
+    X  X  X  X  X  X  X  X  X ;
+rule:
+  type: sequence
+  children:
+  - type: player
+    number: 1
+    children:
+    - type: or
+      children:
+      - type: rule
+        lhs: Pa
+        rhs: Pa
+      - type: mirror
+        children:
+        - type: rule
+          lhs: Pa _
+          rhs: _  Pa
+        - type: rule
+          lhs: Pa O
+          rhs: _  O
+      - type: rule
+        lhs: P0;X
+        rhs: P2;X
+  - type: all
+    children:
+    - type: rule
+      lhs: _  E
+      rhs: E  _
+    - type: rule
+      lhs: Pa E
+      rhs: E  _
+  - type: all
+    children:
+    - type: rule
+      lhs: E ; _
+      rhs: _ ; E
+    - type: rule
+      lhs: E ; Pa; X
+      rhs: _ ; E ; X
+    - type: rule
+      lhs: E ; P0; _ 
+      rhs: _ ; E ; P0
+    - type: rule
+      lhs: Pa; _
+      rhs: _ ; Pa
+    - type: rule
+      lhs: P0; E ; X
+      rhs: _ ; P0; X
+    - type: rule
+      lhs: P0; E ; _
+      rhs: _ ; P0; E
+    - type: rule
+      lhs: P0;X
+      rhs: P0;X
+    - type: rule
+      lhs: _ ;P1
+      rhs: P0;_ 
+    - type: rule
+      lhs: X ;P1
+      rhs: X ;P0 
+    - type: rule
+      lhs: Q ;P1
+      rhs: X ;P0 
+    - type: rule
+      lhs: _ ;P2
+      rhs: P1;_ 
+    - type: rule
+      lhs: X ;P1
+      rhs: X ;P0
+    - type: rule
+      lhs: Q ;P1
+      rhs: X ;P0

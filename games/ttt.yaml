@@ -1,0 +1,39 @@
+---
+name: tic-tac-toe BT
+start:
+  - _ _ _;
+    _ _ _;
+    _ _ _;
+rule:
+  type: sequence
+  children:
+  - type: player
+    number: 1
+    children:
+    - type: rule
+      lhs: _
+      rhs: X
+  - type: player
+    number: 2
+    children:
+    - type: rule
+      lhs: _
+      rhs: O
+win:
+  - pattern: X X X
+    count: ge 1
+  - pattern: X;X;X
+    count: ge 1
+  - pattern: . . X; . X .; X . .
+    count: ge 1
+  - pattern: X . .; . X .; . . X
+    count: ge 1
+lose:
+  - pattern: O O O
+    count: ge 1
+  - pattern: O;O;O
+    count: ge 1
+  - pattern: . . O; . O .; O . .
+    count: ge 1
+  - pattern: O . .; . O .; . . O
+    count: ge 1
