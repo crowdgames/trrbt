@@ -25,14 +25,14 @@ tree:
     children:
     - type: rotate
       children:
-      - type: rule
+      - type: rewrite
         lhs: Ca Ca __
         rhs: __ Ca Ca
-      - type: rule
+      - type: rewrite
         lhs: Ta Ta Ta __
         rhs: __ Ta Ta Ta
   - type: win
     number: 1
     children:
     - type: match
-      match: CR CR OO
+      pattern: CR CR OO

@@ -16,18 +16,18 @@ def pad_tiles(ts):
 
     return [[[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in t] for t in ts]
 
-def string_to_tuple(s):
+def string_to_pattern(s):
     return tuple([tuple([tile.strip() for tile in row.split()]) for row in s.split(';') if row.strip() != ''])
 
 def node_reshape_tiles(node):
     node = node.copy()
 
-    if node['type'] == 'rule':
-        node['lhs'] = string_to_tuple(node['lhs'])
-        node['rhs'] = string_to_tuple(node['rhs'])
+    if node['type'] == 'rewrite':
+        node['lhs'] = string_to_pattern(node['lhs'])
+        node['rhs'] = string_to_pattern(node['rhs'])
 
     if node['type'] == 'match':
-        node['match'] = string_to_tuple(node['match'])
+        node['pattern'] = string_to_pattern(node['pattern'])
 
     if 'children' in node.keys():
         node['children'] = [node_reshape_tiles(child) for child in node['children']]
@@ -47,7 +47,7 @@ def unique(nodes):
     return ret
 
 def rule_apply(node, app):
-    for key in ['lhs', 'rhs', 'match']:
+    for key in ['lhs', 'rhs', 'pattern']:
         if key in node.keys():
             node[key] = app(node[key])
     return node
@@ -174,11 +174,11 @@ def node_print_gv(node, next_gid, id_to_gid):
     if 'id' in node.keys():
         id_to_gid[node['id']] = id_str
 
-    if ntype in ['rule', 'match']:
+    if ntype in ['rewrite', 'match']:
         nshape = 'box'
         nfont = 'Courier New'
 
-        if ntype == 'rule':
+        if ntype == 'rewrite':
             lhs, rhs = pad_tiles([node['lhs'], node['rhs']])
 
             nlabel = ''
@@ -191,8 +191,8 @@ def node_print_gv(node, next_gid, id_to_gid):
                 nlabel += ' '.join(rr)
                 nlabel += '\\n'
         else:
-            match = pad_tiles([node['match']])[0]
-            nlabel = '\\n'.join([' '.join(row) for row in match])
+            pattern = pad_tiles([node['pattern']])[0]
+            nlabel = '\\n'.join([' '.join(row) for row in pattern])
 
     else:
         if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace']:
@@ -201,16 +201,14 @@ def node_print_gv(node, next_gid, id_to_gid):
             nshape = 'diamond'
         elif ntype in ['link']:
             nshape = 'invhouse'
-        elif ntype in ['win']:
+        elif ntype in ['win', 'lose', 'draw']:
             nshape = 'octagon'
         else:
             nshape = 'oval'
         nfont = 'Times New Roman'
         nlabel = ntype
 
-        if ntype == 'player':
-            nlabel += ':' + str(node['number'])
-        elif ntype == 'win':
+        if ntype in ['player', 'win', 'lose', 'draw']:
             nlabel += ':' + str(node['number'])
         elif ntype == 'swaponly':
             nlabel += '\\n'
@@ -239,7 +237,7 @@ def node_print_gv(node, next_gid, id_to_gid):
 def game_print_gv(game):
     print('digraph G {')
     for ii, start in enumerate(game.starts):
-        start = pad_tiles([string_to_tuple(start)])[0]
+        start = pad_tiles([string_to_pattern(start)])[0]
         label = '\\n'.join([' '.join(row) for row in start])
         print('  START%d [shape="box", fontname="Courier New", label="%s"];' % (ii, label))
     node_print_gv(game.tree, [0], {})

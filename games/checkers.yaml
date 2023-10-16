@@ -24,24 +24,24 @@ tree:
           children:
           - type: or
             children:
-            - type: rule
+            - type: rewrite
               lhs: .    ___a;
                    RbSc  .  ;
               rhs: .    RbSa;
                    ___c .   ;
-            - type: rule
+            - type: rewrite
               lhs: RKSa .   ;
                    .    ___b;
               rhs: ___a .   ;
                    .    RKSb;
-            - type: rule
+            - type: rewrite
               lhs: .    .    ___a;
                    .    BxS_ .   ;
                    RbSc .    .   ;
               rhs: .    .    RbJa;
                    .    ____ .   ;
                    ___c .    .   ;
-            - type: rule
+            - type: rewrite
               lhs: RKSa  .   .   ;
                    .    BxS_ .   ;
                    .    .    ___b;
@@ -52,24 +52,24 @@ tree:
             children:
             - type: or
               children:
-              - type: rule
+              - type: rewrite
                 lhs: .    .    ___a;
                      .    BxS_ .   ;
                      RbJc .    .   ;
                 rhs: .    .    RbJa;
                      .    ____ .   ;
                      ___c .    .   ;
-              - type: rule
+              - type: rewrite
                 lhs: RKJa  .   .   ;
                      .    BxS_ .   ;
                      .    .    ___b;
                 rhs: ___a .    .   ;
                      .    ____ .   ;
                      .    .    RKJb;
-      - type: rule
+      - type: rewrite
         lhs: RaJb
         rhs: RaSb
-      - type: rule
+      - type: rewrite
         lhs: RPS=
         rhs: RKS=
       - type: win
@@ -78,7 +78,7 @@ tree:
          - type: none
            children:
            - type: match
-             match: Babc
+             pattern: Babc
     - type: nextplayer
       children:
       - type: fliponly
