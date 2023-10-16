@@ -4,36 +4,32 @@ start:
   - _ _ _;
     _ _ _;
     _ _ _;
-rule:
+tree:
   type: sequence
   children:
-  - type: player
-    number: 1
+  - type: sequence
+    id: xturn
     children:
-    - type: rule
-      lhs: _
-      rhs: X
-  - type: player
-    number: 2
+    - type: player
+      number: 1
+      children:
+      - type: rule
+        lhs: _
+        rhs: X
+    - type: win
+      number: 1
+      children:
+      - type: turn
+        children:
+        - type: match
+          match: X X X
+        - type: match
+          match: X . .; . X .; . . X
+  - type: nextplayer
     children:
-    - type: rule
-      lhs: _
-      rhs: O
-win:
-  - pattern: X X X
-    count: ge 1
-  - pattern: X;X;X
-    count: ge 1
-  - pattern: . . X; . X .; X . .
-    count: ge 1
-  - pattern: X . .; . X .; . . X
-    count: ge 1
-lose:
-  - pattern: O O O
-    count: ge 1
-  - pattern: O;O;O
-    count: ge 1
-  - pattern: . . O; . O .; O . .
-    count: ge 1
-  - pattern: O . .; . O .; . . O
-    count: ge 1
+    - type: swaponly
+      what: X
+      with: O
+      children:
+      - type: link
+        to: xturn

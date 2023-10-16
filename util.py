@@ -2,18 +2,18 @@ import yaml
 
 
 class Game:
-    def __init__(self, starts, bt):
+    def __init__(self, starts, tree):
         self.starts = starts
-        self.bt = bt
+        self.tree = tree
 
-        
+
 def pad_tiles(ts):
     tile_len = 0
     for t in ts:
         for row in t:
             for tile in row:
                 tile_len = max(tile_len, len(tile))
-    
+
     return [[[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in t] for t in ts]
 
 def string_to_tuple(s):
@@ -26,34 +26,53 @@ def node_reshape_tiles(node):
         node['lhs'] = string_to_tuple(node['lhs'])
         node['rhs'] = string_to_tuple(node['rhs'])
 
+    if node['type'] == 'match':
+        node['match'] = string_to_tuple(node['match'])
+
     if 'children' in node.keys():
         node['children'] = [node_reshape_tiles(child) for child in node['children']]
 
     return node
 
-def unique(rules):
-    keys = {}
-    for rule in rules:
-        keys[rule] = None
-    return list(keys.keys())
+def unique(nodes):
+    ret = []
+    for node in nodes:
+        uniq = True
+        for rnode in ret:
+            if node == rnode: #TODO: compare all keys but 'children'?
+                uniq = False
+        if uniq:
+            ret.append(node)
 
-def rule_identity(lhs, rhs):
-    return unique([(lhs, rhs)])
+    return ret
 
-def rule_mirror(lhs, rhs):
-    return unique([(lhs, rhs), (tuple([row[::-1] for row in lhs]), tuple([row[::-1] for row in rhs]))])
+def rule_apply(node, app):
+    for key in ['lhs', 'rhs', 'match']:
+        if key in node.keys():
+            node[key] = app(node[key])
+    return node
 
-def rule_fliponly(lhs, rhs):
-    return unique([(tuple(lhs[::-1]), tuple(rhs[::-1]))])
+def xform_identity(node):
+    return [node]
 
-def rule_rotate(lhs, rhs):
-    ret = [(lhs, rhs)]
+def xform_rule_mirror(node):
+    return unique([node, rule_apply(node.copy(), lambda x: tuple([row[::-1] for row in x]))])
+
+def xform_rule_fliponly(node):
+    return unique([rule_apply(node.copy(), lambda x: tuple(x[::-1]))])
+
+def xform_rule_rotate(node):
+    ret = [node]
     while len(ret) < 4:
-        last_lhs, last_rhs = ret[-1]
-        ret.append((tuple(zip(*last_lhs[::-1])), tuple(zip(*last_rhs[::-1]))))
+        ret.append(rule_apply(ret[-1].copy(), lambda x: tuple(zip(*x[::-1]))))
     return unique(ret)
 
-def rule_swaponly_fn(wht, wth):
+def xform_rule_turn(node):
+    ret = [node]
+    ret.append(rule_apply(ret[-1].copy(), lambda x: tuple(zip(*x[::-1]))))
+    return unique(ret)
+
+def xform_rule_swaponly_fn(wht, wth):
     def rule_swaponly_side(hs):
         ret_hs = ()
         for row in hs:
@@ -69,14 +88,13 @@ def rule_swaponly_fn(wht, wth):
                 ret_row += (ret_tile,)
             ret_hs += (ret_row,)
         return ret_hs
-            
-    def rule_swaponly(lhs, rhs):
-        ret = [(rule_swaponly_side(lhs), rule_swaponly_side(rhs))]
-        return unique(ret)
+
+    def rule_swaponly(node):
+        return unique([rule_apply(node.copy(), lambda x: rule_swaponly_side(x))])
 
     return rule_swaponly
 
-def rule_replace_fn(wht, wth):
+def xform_rule_replace_fn(wht, wth):
     def rule_replace_side(hs, wthi):
         ret_hs = ()
         for row in hs:
@@ -86,68 +104,66 @@ def rule_replace_fn(wht, wth):
                 ret_row += (ret_tile,)
             ret_hs += (ret_row,)
         return ret_hs
-            
-    def rule_replace(lhs, rhs):
-        ret = [(lhs, rhs)] + [(rule_replace_side(lhs, wthi), rule_replace_side(rhs, wthi)) for wthi in wth]
-        return unique(ret)
+
+    def rule_replace(node):
+        return unique([node] + [rule_apply(node.copy(), lambda x: rule_replace_side(x, wthi)) for wthi in wth])
 
     return rule_replace
 
-def node_xform_tiles(node, xforms, id_to_node, player_number_offset):
-    nodes = []
+def xform_player_next(node):
+    if 'number' in node.keys():
+        node = node.copy()
+        node['number'] += 1
+    return [node]
 
-    if 'id' in node.keys():
+def node_xform_tiles(node, xforms, id_to_node):
+    if 'id' in node.keys(): # TODO: move after xform?
         id_to_node[node['id']] = node
 
-    if node['type'] == 'rule':
-        xformed = [(node['lhs'], node['rhs'])]
-        for xform in xforms:
-            new_xformed = []
-            for lhs, rhs in xformed:
-                new_xformed += xform(lhs, rhs)
-            xformed = new_xformed
-        for lhs, rhs in xformed:
-            new_node = node.copy()
-            new_node['lhs'], new_node['rhs'] = lhs, rhs
-            nodes.append(new_node)
+    ret_nodes = []
 
-    elif node['type'] == 'link':
-        nodes.append(node_xform_tiles(id_to_node[node['to']], xforms, id_to_node, player_number_offset)[0])
-
-    elif node['type'] == 'nextplayer':
-        nodes.append(node_xform_tiles(node['children'][0], xforms, id_to_node, player_number_offset + 1)[0])
-        
-    elif node['type'] in ['rotate', 'mirror', 'fliponly', 'swaponly', 'replace']:
+    if node['type'] in ['rotate', 'turn', 'mirror', 'fliponly', 'swaponly', 'replace']:
         fn = None
         if node['type'] == 'rotate':
-            fn = rule_rotate
+            fn = xform_rule_rotate
+        elif node['type'] == 'turn':
+            fn = xform_rule_turn
         elif node['type'] == 'mirror':
-            fn = rule_mirror
+            fn = xform_rule_mirror
         elif node['type'] == 'fliponly':
-            fn = rule_fliponly
+            fn = xform_rule_fliponly
         elif node['type'] == 'swaponly':
-            fn = rule_swaponly_fn(node['what'], node['with'])
+            fn = xform_rule_swaponly_fn(node['what'], node['with'])
         elif node['type'] == 'replace':
-            fn = rule_replace_fn(node['what'], node['with'])
+            fn = xform_rule_replace_fn(node['what'], node['with'])
 
         for child in node['children']:
-            nodes += node_xform_tiles(child, [fn] + xforms, id_to_node, player_number_offset)
+            ret_nodes += node_xform_tiles(child, [fn] + xforms, id_to_node)
+
+    elif node['type'] == 'link':
+        ret_nodes.append(node_xform_tiles(id_to_node[node['to']], xforms, id_to_node)[0])
+
+    elif node['type'] == 'nextplayer':
+        ret_nodes.append(node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)[0])
 
     else:
-        node = node.copy()
-        nodes.append(node)
+        xformed = [node.copy()]
+        for xform in xforms:
+            new_xformed = []
+            for xformed_node in xformed:
+                new_xformed += xform(xformed_node)
+            xformed = new_xformed
+        ret_nodes = xformed
 
-        if node['type'] == 'player':
-            node['number'] += player_number_offset
-        
-        if 'children' in node.keys():
-            children = node['children']
-            new_children = []
-            for child in children:
-                new_children += node_xform_tiles(child, xforms, id_to_node, player_number_offset)
-            node['children'] = new_children
+        for node in ret_nodes:
+            if 'children' in node.keys():
+                children = node['children']
+                new_children = []
+                for child in children:
+                    new_children += node_xform_tiles(child, xforms, id_to_node)
+                node['children'] = new_children
 
-    return nodes
+    return ret_nodes
 
 def node_print_gv(node, next_gid, id_to_gid):
     id_str = ('%04d' % next_gid[0])
@@ -158,54 +174,43 @@ def node_print_gv(node, next_gid, id_to_gid):
     if 'id' in node.keys():
         id_to_gid[node['id']] = id_str
 
-    if ntype == 'rule':
+    if ntype in ['rule', 'match']:
         nshape = 'box'
         nfont = 'Courier New'
 
-        lhs = node['lhs']
-        rhs = node['rhs']
-        
-        if False:
-            tile_len = 0
-            for ll, rr in zip(lhs, rhs):
-                for ee in ll + rr:
-                    tile_len = max(tile_len, len(ee))
+        if ntype == 'rule':
+            lhs, rhs = pad_tiles([node['lhs'], node['rhs']])
 
-            space_tile = '.'
-            while True:
-                if len(space_tile) >= tile_len:
-                    break
-                space_tile += ' '
-                if len(space_tile) >= tile_len:
-                    break
-                space_tile = ' ' + space_tile
-            lhs = [[(tile if tile != '.' else space_tile) for tile in row] for row in lhs]
-            rhs = [[(tile if tile != '.' else space_tile) for tile in row] for row in rhs]
+            nlabel = ''
+            for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
+                nlabel += ' '.join(ll)
+                if ii == len(lhs) // 2:
+                    nlabel += ' → '
+                else:
+                    nlabel += '   '
+                nlabel += ' '.join(rr)
+                nlabel += '\\n'
         else:
-            lhs, rhs = pad_tiles([lhs, rhs])
+            match = pad_tiles([node['match']])[0]
+            nlabel = '\\n'.join([' '.join(row) for row in match])
 
-        nlabel = ''
-        for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
-            nlabel += ' '.join(ll)
-            if ii == len(lhs) // 2:
-                nlabel += ' → '
-            else:
-                nlabel += '   '
-            nlabel += ' '.join(rr)
-            nlabel += '\\n'
     else:
-        if ntype in ['mirror', 'rotate', 'fliponly', 'swaponly', 'replace']:
+        if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace']:
             nshape = 'hexagon'
         elif ntype in ['player', 'nextplayer']:
             nshape = 'diamond'
         elif ntype in ['link']:
             nshape = 'invhouse'
+        elif ntype in ['win']:
+            nshape = 'octagon'
         else:
             nshape = 'oval'
         nfont = 'Times New Roman'
         nlabel = ntype
-        
+
         if ntype == 'player':
+            nlabel += ':' + str(node['number'])
+        elif ntype == 'win':
             nlabel += ':' + str(node['number'])
         elif ntype == 'swaponly':
             nlabel += '\\n'
@@ -237,17 +242,17 @@ def game_print_gv(game):
         start = pad_tiles([string_to_tuple(start)])[0]
         label = '\\n'.join([' '.join(row) for row in start])
         print('  START%d [shape="box", fontname="Courier New", label="%s"];' % (ii, label))
-    node_print_gv(game.bt, [0], {})
+    node_print_gv(game.tree, [0], {})
     print('}')
 
 def yaml2bt(filename, xform):
     with open(filename, 'rt') as f:
         data = yaml.safe_load(f)
 
-    root = data['rule']
+    root = data['tree']
     root = node_reshape_tiles(root)
     if xform:
-        root = node_xform_tiles(root, [rule_identity], {}, 0)[0]
+        root = node_xform_tiles(root, [xform_identity], {})[0]
 
     starts = data['start']
 

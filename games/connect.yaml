@@ -1,34 +1,44 @@
 ---
 name: connect four BT
 start:
-  - _= _= _= _= _= _= _=;
-    __ __ __ __ __ __ __;
-    __ __ __ __ __ __ __;
-    __ __ __ __ __ __ __;
-    __ __ __ __ __ __ __;
-    __ __ __ __ __ __ __;
-rule:
+  - = = = = = = =;
+    _ _ _ _ _ _ _;
+    _ _ _ _ _ _ _;
+    _ _ _ _ _ _ _;
+    _ _ _ _ _ _ _;
+    _ _ _ _ _ _ _;
+    _ _ _ _ _ _ _;
+tree:
   type: sequence
   children:
   - type: sequence
-    id: playerturn
+    id: redturn
     children:
     - type: player
       number: 1
       children:
       - type: rule
-        lhs: _=
-        rhs: R=
+        lhs: =;_
+        rhs: =;R
     - type: loop
       children:
       - type: rule
-        lhs: Ra;_b
-        rhs: _a;Rb
+        lhs: R;_
+        rhs: _;R
+    - type: win
+      number: 1
+      children:
+      - type: turn
+        children:
+        - type: match
+          match: R R R R
+        - type: match
+          match: R . . .; . R . .; . . R .; . . . R
   - type: nextplayer
     children:
-    - type: swap
+    - type: swaponly
       what: R
       with: Y
       children:
       - type: link
-        to: playerturn
+        to: redturn

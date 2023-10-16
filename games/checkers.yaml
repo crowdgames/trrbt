@@ -9,13 +9,7 @@ start:
     RPS_ ____ RPS_ ____ RPS_ ____ RPS_ ____;
     ____ RPS_ ____ RPS_ ____ RPS_ ____ RPS_;
     RPS= ___= RPS= ___= RPS= ___= RPS= ___=;
-win:
-  - pattern: Bab
-    count: eq 0
-lose:
-  - pattern: Rab
-    count: eq 0
-rule:
+tree:
   type: mirror
   children:
   - type: sequence
@@ -78,6 +72,13 @@ rule:
       - type: rule
         lhs: RPS=
         rhs: RKS=
+      - type: win
+        number: 1
+        children:
+         - type: none
+           children:
+           - type: match
+             match: Babc
     - type: nextplayer
       children:
       - type: fliponly
