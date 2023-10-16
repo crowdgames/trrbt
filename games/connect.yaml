@@ -17,12 +17,12 @@ tree:
     - type: player
       number: 1
       children:
-      - type: rule
+      - type: rewrite
         lhs: =;_
         rhs: =;R
     - type: loop
       children:
-      - type: rule
+      - type: rewrite
         lhs: R;_
         rhs: _;R
     - type: win
@@ -31,9 +31,9 @@ tree:
       - type: turn
         children:
         - type: match
-          match: R R R R
+          pattern: R R R R
         - type: match
-          match: R . . .; . R . .; . . R .; . . . R
+          pattern: R . . .; . R . .; . . R .; . . . R
   - type: nextplayer
     children:
     - type: swaponly

@@ -16,66 +16,81 @@ tree:
     children:
     - type: or
       children:
-      - type: rule
+      - type: rewrite
         lhs: Pa
         rhs: Pa
       - type: mirror
         children:
-        - type: rule
+        - type: rewrite
           lhs: Pa _
           rhs: _  Pa
-        - type: rule
+        - type: rewrite
           lhs: Pa O
-          rhs: _  O
-      - type: rule
+          rhs: _  W
+      - type: rewrite
         lhs: P0;X
         rhs: P2;X
   - type: all
     children:
-    - type: rule
+    - type: rewrite
       lhs: _  E
       rhs: E  _
-    - type: rule
+    - type: rewrite
       lhs: Pa E
       rhs: E  _
   - type: all
     children:
-    - type: rule
+    - type: rewrite
       lhs: E ; _
       rhs: _ ; E
-    - type: rule
+    - type: rewrite
       lhs: E ; Pa; X
       rhs: _ ; E ; X
-    - type: rule
+    - type: rewrite
       lhs: E ; P0; _ 
       rhs: _ ; E ; P0
-    - type: rule
-      lhs: Pa; _
-      rhs: _ ; Pa
-    - type: rule
+    - type: rewrite
+      lhs: P0; _
+      rhs: _ ; P0
+    - type: rewrite
+      lhs: P0; O
+      rhs: _ ; W
+    - type: rewrite
       lhs: P0; E ; X
       rhs: _ ; P0; X
-    - type: rule
+    - type: rewrite
       lhs: P0; E ; _
       rhs: _ ; P0; E
-    - type: rule
+    - type: rewrite
       lhs: P0;X
       rhs: P0;X
-    - type: rule
+    - type: rewrite
       lhs: _ ;P1
       rhs: P0;_ 
-    - type: rule
+    - type: rewrite
       lhs: X ;P1
       rhs: X ;P0 
-    - type: rule
+    - type: rewrite
       lhs: Q ;P1
       rhs: X ;P0 
-    - type: rule
+    - type: rewrite
       lhs: _ ;P2
       rhs: P1;_ 
-    - type: rule
+    - type: rewrite
       lhs: X ;P1
       rhs: X ;P0
-    - type: rule
+    - type: rewrite
       lhs: Q ;P1
       rhs: X ;P0
+  - type: win
+    number: 1
+    children:
+    - type: match
+      pattern: W
+  - type: lose
+    number: 1
+    children:
+    - type: none
+      children:
+      - type: match
+        pattern: Pa

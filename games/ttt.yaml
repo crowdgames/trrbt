@@ -13,7 +13,7 @@ tree:
     - type: player
       number: 1
       children:
-      - type: rule
+      - type: rewrite
         lhs: _
         rhs: X
     - type: win
@@ -22,9 +22,9 @@ tree:
       - type: turn
         children:
         - type: match
-          match: X X X
+          pattern: X X X
         - type: match
-          match: X . .; . X .; . . X
+          pattern: X . .; . X .; . . X
   - type: nextplayer
     children:
     - type: swaponly
