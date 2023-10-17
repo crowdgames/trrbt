@@ -23,14 +23,25 @@ tree:
   - type: player
     number: 1
     children:
-    - type: rotate
+    - type: mirror
       children:
       - type: rewrite
-        lhs: Ca Ca __
-        rhs: __ Ca Ca
-      - type: rewrite
-        lhs: Ta Ta Ta __
-        rhs: __ Ta Ta Ta
+        lhs: CR CR __
+        rhs: __ CR CR
+    - type: replaceonly
+      what: a
+      with:
+      - 1
+      - 2
+      children:
+      - type: rotate
+        children:
+        - type: rewrite
+          lhs: Ca Ca __
+          rhs: __ Ca Ca
+        - type: rewrite
+          lhs: Ta Ta Ta __
+          rhs: __ Ta Ta Ta
   - type: win
     number: 1
     children:
