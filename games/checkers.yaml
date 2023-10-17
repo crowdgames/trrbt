@@ -28,7 +28,7 @@ tree:
       children:
       - type: sequence
         children:
-        - type: sequence
+        - type: ident
           id: redturn
           children:
           - type: player
