@@ -34,52 +34,49 @@ tree:
           - type: player
             number: 1
             children:
-            - type: sequence
+            - type: rewrite
+              lhs: .    _  ;
+                   RaS  .  ;
+              rhs: .    RaS;
+                   _   .   ;
+            - type: rewrite
+              lhs: RKS .  ;
+                   .   _  ;
+              rhs: _   .  ;
+                   .    RKS;
+            - type: rewrite
+              lhs: .   .   _  ;
+                   .   BbS .  ;
+                   RaS .   .  ;
+              rhs: .   .   RaJ;
+                   .   _   .  ;
+                   _   .   .  ;
+            - type: rewrite
+              lhs: RKS .   .  ;
+                   .   BbS .  ;
+                   .   .   _  ;
+              rhs: _   .   .  ;
+                   .   _   .  ;
+                   .   .   RKJ;
+          - type: loop
+            children:
+            - type: player
+              number: 1
               children:
-              - type: choice
-                children:
-                - type: rewrite
-                  lhs: .    _  ;
-                       RaS  .  ;
-                  rhs: .    RaS;
-                       _   .   ;
-                - type: rewrite
-                  lhs: RKS .  ;
-                       .   _  ;
-                  rhs: _   .  ;
-                       .    RKS;
-                - type: rewrite
-                  lhs: .   .   _  ;
-                       .   BbS .  ;
-                       RaS .   .  ;
-                  rhs: .   .   RaJ;
-                       .   _   .  ;
-                       _   .   .  ;
-                - type: rewrite
-                  lhs: RKS .   .  ;
-                       .   BbS .  ;
-                       .   .   _  ;
-                  rhs: _   .   .  ;
-                       .   _   .  ;
-                       .   .   RKJ;
-              - type: loop
-                children:
-                - type: choice
-                  children:
-                  - type: rewrite
-                    lhs: .   .   _  ;
-                         .   BbS .  ;
-                         RaJ .   .  ;
-                    rhs: .   .   RaJ;
-                         .   _   .  ;
-                         _   .   .  ;
-                  - type: rewrite
-                    lhs: RKJ  .  .  ;
-                         .   BbS .  ;
-                         .   .   _  ;
-                    rhs: _   .   .  ;
-                         .   _   .  ;
-                         .   .   RKJ;
+              - type: rewrite
+                lhs: .   .   _  ;
+                     .   BbS .  ;
+                     RaJ .   .  ;
+                rhs: .   .   RaJ;
+                     .   _   .  ;
+                     _   .   .  ;
+              - type: rewrite
+                lhs: RKJ  .  .  ;
+                     .   BbS .  ;
+                     .   .   _  ;
+                rhs: _   .   .  ;
+                     .   _   .  ;
+                     .   .   RKJ;
           - type: rewrite
             lhs: RaJ
             rhs: RaS
