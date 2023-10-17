@@ -122,9 +122,11 @@ def node_xform_tiles(node, xforms, id_to_node):
 
     ret_nodes = []
 
-    if node['type'] in ['rotate', 'turn', 'mirror', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
+    if node['type'] in ['ident', 'rotate', 'turn', 'mirror', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
         fn = None
-        if node['type'] == 'rotate':
+        if node['type'] == 'ident':
+            fn = xform_identity
+        elif node['type'] == 'rotate':
             fn = xform_rule_rotate
         elif node['type'] == 'turn':
             fn = xform_rule_turn
@@ -143,10 +145,10 @@ def node_xform_tiles(node, xforms, id_to_node):
             ret_nodes += node_xform_tiles(child, [fn] + xforms, id_to_node)
 
     elif node['type'] == 'link':
-        ret_nodes.append(node_xform_tiles(id_to_node[node['to']], xforms, id_to_node)[0])
+        ret_nodes += node_xform_tiles(id_to_node[node['to']], xforms, id_to_node)
 
     elif node['type'] == 'nextplayer':
-        ret_nodes.append(node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)[0])
+        ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)
 
     else:
         xformed = [node.copy()]
@@ -197,7 +199,7 @@ def node_print_gv(node, next_gid, id_to_gid):
             nlabel = '\\n'.join([' '.join(row) for row in pattern])
 
     else:
-        if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
+        if ntype in ['ident', 'mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
             nshape = 'hexagon'
         elif ntype in ['player']:
             nshape = 'diamond'

@@ -7,7 +7,7 @@ start:
 tree:
   type: sequence
   children:
-  - type: sequence
+  - type: ident
     id: xturn
     children:
     - type: player
