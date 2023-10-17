@@ -14,80 +14,92 @@ start:
 tree:
   type: mirror
   children:
-  - type: sequence
+  - type: replaceonly
+    what: a
+    with:
+    - K
+    - P
     children:
-    - type: sequence
-      id: redturn
+    - type: replaceonly
+      what: b
+      with:
+      - K
+      - P
       children:
-      - type: player
-        number: 1
+      - type: sequence
         children:
         - type: sequence
+          id: redturn
           children:
-          - type: choice
+          - type: player
+            number: 1
             children:
-            - type: rewrite
-              lhs: .    _  ;
-                   RbS  .  ;
-              rhs: .    RbS;
-                   _   .   ;
-            - type: rewrite
-              lhs: RKS .  ;
-                   .   _  ;
-              rhs: _   .  ;
-                   .    RKS;
-            - type: rewrite
-              lhs: .   .   _  ;
-                   .   BxS .  ;
-                   RbS .   .  ;
-              rhs: .   .   RbJ;
-                   .   _   .  ;
-                   _   .   .  ;
-            - type: rewrite
-              lhs: RKS .   .  ;
-                   .   BxS .  ;
-                   .   .   _  ;
-              rhs: _   .   .  ;
-                   .   _   .  ;
-                   .   .   RKJ;
-          - type: loop
-            children:
-            - type: choice
+            - type: sequence
               children:
-              - type: rewrite
-                lhs: .   .   _  ;
-                     .   BxS .  ;
-                     RbJ .   .  ;
-                rhs: .   .   RbJ;
-                     .   _   .  ;
-                     _   .   .  ;
-              - type: rewrite
-                lhs: RKJ  .  .  ;
-                     .   BxS .  ;
-                     .   .   _  ;
-                rhs: _   .   .  ;
-                     .   _   .  ;
-                     .   .   RKJ;
-      - type: rewrite
-        lhs: RaJ
-        rhs: RaS
-      - type: rewrite
-        lhs: =  ; RPS
-        rhs: =  ; RKS
-      - type: win
-        number: 1
-        children:
-         - type: none
-           children:
-           - type: match
-             pattern: Babc
-    - type: nextplayer
-      children:
-      - type: fliponly
-        children:
-        - type: swaponly
-          what: R
-          with: B
+              - type: choice
+                children:
+                - type: rewrite
+                  lhs: .    _  ;
+                       RaS  .  ;
+                  rhs: .    RaS;
+                       _   .   ;
+                - type: rewrite
+                  lhs: RKS .  ;
+                       .   _  ;
+                  rhs: _   .  ;
+                       .    RKS;
+                - type: rewrite
+                  lhs: .   .   _  ;
+                       .   BbS .  ;
+                       RaS .   .  ;
+                  rhs: .   .   RaJ;
+                       .   _   .  ;
+                       _   .   .  ;
+                - type: rewrite
+                  lhs: RKS .   .  ;
+                       .   BbS .  ;
+                       .   .   _  ;
+                  rhs: _   .   .  ;
+                       .   _   .  ;
+                       .   .   RKJ;
+              - type: loop
+                children:
+                - type: choice
+                  children:
+                  - type: rewrite
+                    lhs: .   .   _  ;
+                         .   BbS .  ;
+                         RaJ .   .  ;
+                    rhs: .   .   RaJ;
+                         .   _   .  ;
+                         _   .   .  ;
+                  - type: rewrite
+                    lhs: RKJ  .  .  ;
+                         .   BbS .  ;
+                         .   .   _  ;
+                    rhs: _   .   .  ;
+                         .   _   .  ;
+                         .   .   RKJ;
+          - type: rewrite
+            lhs: RaJ
+            rhs: RaS
+          - type: rewrite
+            lhs: =  ; RPS
+            rhs: =  ; RKS
+          - type: win
+            number: 1
+            children:
+             - type: none
+               children:
+               - type: match
+                 pattern: BaS
+        - type: nextplayer
           children:
-          - type: link
-            to: redturn
+          - type: fliponly
+            children:
+            - type: swaponly
+              what: R
+              with: B
+              children:
+              - type: link
+                to: redturn
