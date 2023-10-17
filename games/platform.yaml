@@ -14,7 +14,7 @@ tree:
   - type: player
     number: 1
     children:
-    - type: or
+    - type: choice
       children:
       - type: rewrite
         lhs: Pa

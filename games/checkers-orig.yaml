@@ -26,9 +26,9 @@ rule:
       - type: player
         number: 1
         children:
-        - type: or
+        - type: choice
           children:
-          - type: or
+          - type: choice
             children:
             - type: rule
               lhs: .   __a;
@@ -42,7 +42,7 @@ rule:
                    .   RKb;
           - type: loop
             children:
-            - type: or
+            - type: choice
               children:
               - type: rule
                 lhs: .   .   __a;

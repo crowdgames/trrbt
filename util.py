@@ -94,7 +94,7 @@ def xform_rule_swaponly_fn(wht, wth):
 
     return rule_swaponly
 
-def xform_rule_replace_fn(wht, wth):
+def xform_rule_replace_fn(wht, wth, keep):
     def rule_replace_side(hs, wthi):
         ret_hs = ()
         for row in hs:
@@ -106,7 +106,7 @@ def xform_rule_replace_fn(wht, wth):
         return ret_hs
 
     def rule_replace(node):
-        return unique([node] + [rule_apply(node.copy(), lambda x: rule_replace_side(x, wthi)) for wthi in wth])
+        return unique(([node] if keep else []) + [rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi))) for wthi in wth])
 
     return rule_replace
 
@@ -122,7 +122,7 @@ def node_xform_tiles(node, xforms, id_to_node):
 
     ret_nodes = []
 
-    if node['type'] in ['rotate', 'turn', 'mirror', 'fliponly', 'swaponly', 'replace']:
+    if node['type'] in ['rotate', 'turn', 'mirror', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
         fn = None
         if node['type'] == 'rotate':
             fn = xform_rule_rotate
@@ -135,7 +135,9 @@ def node_xform_tiles(node, xforms, id_to_node):
         elif node['type'] == 'swaponly':
             fn = xform_rule_swaponly_fn(node['what'], node['with'])
         elif node['type'] == 'replace':
-            fn = xform_rule_replace_fn(node['what'], node['with'])
+            fn = xform_rule_replace_fn(node['what'], node['with'], True)
+        elif node['type'] == 'replaceonly':
+            fn = xform_rule_replace_fn(node['what'], node['with'], False)
 
         for child in node['children']:
             ret_nodes += node_xform_tiles(child, [fn] + xforms, id_to_node)
@@ -195,7 +197,7 @@ def node_print_gv(node, next_gid, id_to_gid):
             nlabel = '\\n'.join([' '.join(row) for row in pattern])
 
     else:
-        if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace']:
+        if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
             nshape = 'hexagon'
         elif ntype in ['player', 'nextplayer']:
             nshape = 'diamond'
@@ -215,11 +217,11 @@ def node_print_gv(node, next_gid, id_to_gid):
             nlabel += node['what']
             nlabel += ' ↔ '
             nlabel += node['with']
-        elif ntype == 'replace':
+        elif ntype in ['replace', 'replaceonly']:
             nlabel += '\\n'
             nlabel += node['what']
             nlabel += ' → '
-            nlabel += ' '.join(node['with'])
+            nlabel += ' '.join([str(ee) for ee in node['with']])
 
     print('  %s [label="%s", shape="%s", fontname="%s"];' % (id_str, nlabel, nshape, nfont))
 
