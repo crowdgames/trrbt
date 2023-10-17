@@ -197,9 +197,9 @@ def node_print_gv(node, next_gid, id_to_gid):
             nlabel = '\\n'.join([' '.join(row) for row in pattern])
 
     else:
-        if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
+        if ntype in ['mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
             nshape = 'hexagon'
-        elif ntype in ['player', 'nextplayer']:
+        elif ntype in ['player']:
             nshape = 'diamond'
         elif ntype in ['link']:
             nshape = 'invhouse'
