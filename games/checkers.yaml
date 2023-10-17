@@ -24,7 +24,7 @@ tree:
         children:
         - type: sequence
           children:
-          - type: or
+          - type: choice
             children:
             - type: rewrite
               lhs: .    _  ;
@@ -52,7 +52,7 @@ tree:
                    .   .   RKJ;
           - type: loop
             children:
-            - type: or
+            - type: choice
               children:
               - type: rewrite
                 lhs: .   .   _  ;
