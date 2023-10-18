@@ -32,4 +32,4 @@ tree:
       with: O
       children:
       - type: link
-        to: xturn
+        target: xturn

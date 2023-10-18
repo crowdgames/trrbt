@@ -145,7 +145,7 @@ def node_xform_tiles(node, xforms, id_to_node):
             ret_nodes += node_xform_tiles(child, [fn] + xforms, id_to_node)
 
     elif node['type'] == 'link':
-        ret_nodes += node_xform_tiles(id_to_node[node['to']], xforms, id_to_node)
+        ret_nodes += node_xform_tiles(id_to_node[node['target']], xforms, id_to_node)
 
     elif node['type'] == 'nextplayer':
         ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)
@@ -234,7 +234,7 @@ def node_print_gv(node, next_gid, id_to_gid):
             print('  %s -> %s;' % (id_str, child_id))
 
     if ntype == 'link':
-        print('  %s -> %s [style="dotted", constraint="false"];' % (id_str, id_to_gid[node['to']]))
+        print('  %s -> %s [style="dotted", constraint="false"];' % (id_str, id_to_gid[node['target']]))
 
     return id_str
 
