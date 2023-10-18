@@ -41,4 +41,4 @@ tree:
       with: Y
       children:
       - type: link
-        to: redturn
+        target: redturn

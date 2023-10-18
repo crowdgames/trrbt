@@ -99,4 +99,4 @@ tree:
               with: B
               children:
               - type: link
-                to: redturn
+                target: redturn
