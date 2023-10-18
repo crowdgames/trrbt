@@ -5,11 +5,9 @@
 ifeq ($(OS),Windows_NT)
     # Windows
     RM = del /q
-    PYTHON = python
 else
     # Unix/Linux
     RM = rm -rf
-    PYTHON = python3
 endif
 
 all: \
