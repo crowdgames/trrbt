@@ -1,5 +1,8 @@
+import io
+import sys
 import yaml
 
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
 class Game:
     def __init__(self, starts, tree):
