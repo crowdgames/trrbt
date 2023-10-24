@@ -19,8 +19,11 @@ def pad_tiles(ts):
 
     return [[[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in t] for t in ts]
 
+def tuplify(hs):
+    return tuple([tuple(row) for row in hs])
+
 def string_to_pattern(s):
-    return tuple([tuple([tile.strip() for tile in row.split()]) for row in s.split(';') if row.strip() != ''])
+    return tuplify([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != ''])
 
 def node_reshape_tiles(node):
     node = node.copy()
@@ -59,20 +62,31 @@ def xform_identity(node):
     return [node]
 
 def xform_rule_mirror(node):
-    return unique([node, rule_apply(node.copy(), lambda x: tuple([row[::-1] for row in x]))])
+    return unique([node, rule_apply(node.copy(), lambda x: tuplify([row[::-1] for row in x]))])
+
+def xform_rule_skew(node):
+    def rule_skew(hs):
+        rows = len(hs)
+        cols = len(hs[0])
+        ret = [['.' for ci in range(cols)] for ri in range(rows + cols - 1)]
+        for row in range(rows):
+            for col in range(cols):
+                ret[row + col][col] = hs[row][col]
+        return tuplify(ret)
+    return unique([node, rule_apply(node.copy(), rule_skew)])
 
 def xform_rule_fliponly(node):
-    return unique([rule_apply(node.copy(), lambda x: tuple(x[::-1]))])
+    return unique([rule_apply(node.copy(), lambda x: tuplify(x[::-1]))])
 
 def xform_rule_rotate(node):
     ret = [node]
     while len(ret) < 4:
-        ret.append(rule_apply(ret[-1].copy(), lambda x: tuple(zip(*x[::-1]))))
+        ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
     return unique(ret)
 
 def xform_rule_turn(node):
     ret = [node]
-    ret.append(rule_apply(ret[-1].copy(), lambda x: tuple(zip(*x[::-1]))))
+    ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
     return unique(ret)
 
 def xform_rule_swaponly_fn(wht, wth):
@@ -125,7 +139,7 @@ def node_xform_tiles(node, xforms, id_to_node):
 
     ret_nodes = []
 
-    if node['type'] in ['ident', 'rotate', 'turn', 'mirror', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
+    if node['type'] in ['ident', 'rotate', 'turn', 'mirror', 'skew', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
         fn = None
         if node['type'] == 'ident':
             fn = xform_identity
@@ -135,6 +149,8 @@ def node_xform_tiles(node, xforms, id_to_node):
             fn = xform_rule_turn
         elif node['type'] == 'mirror':
             fn = xform_rule_mirror
+        elif node['type'] == 'skew':
+            fn = xform_rule_skew
         elif node['type'] == 'fliponly':
             fn = xform_rule_fliponly
         elif node['type'] == 'swaponly':
@@ -202,7 +218,7 @@ def node_print_gv(node, next_gid, id_to_gid):
             nlabel = '\\n'.join([' '.join(row) for row in pattern])
 
     else:
-        if ntype in ['ident', 'mirror', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
+        if ntype in ['ident', 'mirror', 'skew', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
             nshape = 'hexagon'
         elif ntype in ['player']:
             nshape = 'diamond'

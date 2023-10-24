@@ -30,10 +30,10 @@ tree:
       children:
       - type: turn
         children:
-        - type: match
-          pattern: R R R R
-        - type: match
-          pattern: R . . .; . R . .; . . R .; . . . R
+        - type: skew
+          children:
+          - type: match
+            pattern: R R R R
   - type: nextplayer
     children:
     - type: swaponly
