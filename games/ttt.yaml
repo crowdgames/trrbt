@@ -21,10 +21,10 @@ tree:
       children:
       - type: turn
         children:
-        - type: match
-          pattern: X X X
-        - type: match
-          pattern: X . .; . X .; . . X
+        - type: skew
+          children:
+          - type: match
+            pattern: X X X
   - type: nextplayer
     children:
     - type: swaponly
