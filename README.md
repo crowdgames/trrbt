@@ -26,7 +26,7 @@ Then run `make` to create visualizations in the `out` folder.
 
 **loop**: Repeatedly executes children in order, until any child fails; if any child succeeds, returns success, otherwise returns failure.
 
-**all**: Executes children in order regardless of their success or failure
+**all**: Executes children in order regardless of their success or failure; ?returns success if any child succeeds, false otherwise? (what is the difference between all and sequence? all will apply all individual child rewrites and sequence just one from each rewrite node?)
 
 **none**: Executes children in order, until any child fails; if any child fails, returns failure, otherwise returns success.
 
