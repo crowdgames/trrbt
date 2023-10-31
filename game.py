@@ -28,6 +28,7 @@ class GameProcessor:
             return
         elif self.winner:
             print("Player", self.winner, "wins")
+            return
         elif self.loser:
             print("Player", self.loser, "loses")
 
