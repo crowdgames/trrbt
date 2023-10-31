@@ -1,16 +1,19 @@
+import argparse
 import random
 import util
 
 
 class GameProcessor:
     def __init__(self, filename):
+        bt = util.yaml2bt(filename, True)
+
         self.filename = filename
         self.game_ends = False
-        self.board = random.choice(util.yaml2bt(self.filename, True).starts).split(";")
+        self.board = random.choice(bt.starts).split(";")
         self.board = [row.split() for row in self.board if row]
         self.m = len(self.board)
         self.n = len(self.board[0])
-        self.tree = util.yaml2bt(self.filename, True).tree
+        self.tree = bt.tree
         self.current_player = None
         self.winner = None
         self.loser = None
@@ -193,6 +196,9 @@ class GameProcessor:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Play game YAML.')
+    parser.add_argument('filename', type=str, help='Filename to process.')
+    args = parser.parse_args()
 
-    game = GameProcessor("games/ttt.yaml")
+    game = GameProcessor(args.filename)
     game.game_play()
