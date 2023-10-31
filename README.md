@@ -26,6 +26,8 @@ Then run `make` to create visualizations in the `out` folder.
 
 **loop**: Repeatedly executes children in order, until any child fails; if any child succeeds, returns success, otherwise returns failure.
 
+**all**: Executes children in order regardless of their success or failure
+
 **none**: Executes children in order, until any child fails; if any child fails, returns failure, otherwise returns success.
 
 **rewrite**: If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
