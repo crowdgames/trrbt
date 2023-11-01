@@ -192,7 +192,7 @@ class GameProcessor:
     def display_board(self):
         print("current board is:")
         for row in self.board:
-            print(row)
+            print(' '.join(row))
 
 
 if __name__ == '__main__':
