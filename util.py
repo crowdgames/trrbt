@@ -139,37 +139,39 @@ def node_xform_tiles(node, xforms, id_to_node):
 
     ret_nodes = []
 
-    if node['type'] in ['ident', 'rotate', 'turn', 'mirror', 'skew', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
+    ntype = node['type']
+
+    if ntype in ['ident', 'rotate', 'turn', 'mirror', 'skew', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
         fn = None
-        if node['type'] == 'ident':
+        if ntype == 'ident':
             fn = xform_identity
-        elif node['type'] == 'rotate':
+        elif ntype == 'rotate':
             fn = xform_rule_rotate
-        elif node['type'] == 'turn':
+        elif ntype == 'turn':
             fn = xform_rule_turn
-        elif node['type'] == 'mirror':
+        elif ntype == 'mirror':
             fn = xform_rule_mirror
-        elif node['type'] == 'skew':
+        elif ntype == 'skew':
             fn = xform_rule_skew
-        elif node['type'] == 'fliponly':
+        elif ntype == 'fliponly':
             fn = xform_rule_fliponly
-        elif node['type'] == 'swaponly':
+        elif ntype == 'swaponly':
             fn = xform_rule_swaponly_fn(node['what'], node['with'])
-        elif node['type'] == 'replace':
+        elif ntype == 'replace':
             fn = xform_rule_replace_fn(node['what'], node['with'], True)
-        elif node['type'] == 'replaceonly':
+        elif ntype == 'replaceonly':
             fn = xform_rule_replace_fn(node['what'], node['with'], False)
 
         for child in node['children']:
             ret_nodes += node_xform_tiles(child, [fn] + xforms, id_to_node)
 
-    elif node['type'] == 'link':
+    elif ntype == 'link':
         ret_nodes += node_xform_tiles(id_to_node[node['target']], xforms, id_to_node)
 
-    elif node['type'] == 'nextplayer':
+    elif ntype == 'nextplayer':
         ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)
 
-    else:
+    elif ntype in ['all', 'sequence', 'none', 'player', 'rewrite', 'match', 'win', 'lose', 'loop']:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -185,6 +187,9 @@ def node_xform_tiles(node, xforms, id_to_node):
                 for child in children:
                     new_children += node_xform_tiles(child, xforms, id_to_node)
                 node['children'] = new_children
+
+    else:
+        raise RuntimeError('unrecognized node type %s' % ntype)
 
     return ret_nodes
 
@@ -226,8 +231,11 @@ def node_print_gv(node, next_gid, id_to_gid):
             nshape = 'invhouse'
         elif ntype in ['win', 'lose', 'draw']:
             nshape = 'octagon'
-        else:
+        elif ntype in ['all', 'sequence', 'none', 'loop']:
             nshape = 'oval'
+        else:
+            raise RuntimeError('unrecognized node type %s' % ntype)
+
         nfont = 'Times New Roman'
         nlabel = ntype
 
