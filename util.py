@@ -4,6 +4,10 @@ import yaml
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
+GVNEWLINE = '<BR/>'
+GVCOURBGN = '<FONT FACE="Courier New">'
+GVCOUREND = '</FONT>'
+
 class Game:
     def __init__(self, starts, tree):
         self.starts = starts
@@ -198,18 +202,18 @@ def node_print_gv(node, next_gid, id_to_gid):
     next_gid[0] += 1
 
     ntype = node['type']
+    nlabel = '<'
 
     if 'id' in node.keys():
         id_to_gid[node['id']] = id_str
 
     if ntype in ['rewrite', 'match']:
         nshape = 'box'
-        nfont = 'Courier New'
 
         if ntype == 'rewrite':
             lhs, rhs = pad_tiles([node['lhs'], node['rhs']])
 
-            nlabel = ''
+            nlabel += GVCOURBGN
             for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
                 nlabel += ' '.join(ll)
                 if ii == 0:#len(lhs) // 2:
@@ -217,10 +221,13 @@ def node_print_gv(node, next_gid, id_to_gid):
                 else:
                     nlabel += '   '
                 nlabel += ' '.join(rr)
-                nlabel += '\\n'
+                nlabel += GVNEWLINE
+            nlabel += GVCOUREND
         else:
             pattern = pad_tiles([node['pattern']])[0]
-            nlabel = '\\n'.join([' '.join(row) for row in pattern])
+            nlabel += GVCOURBGN
+            nlabel += GVNEWLINE.join([' '.join(row) for row in pattern])
+            nlabel += GVCOUREND
 
     else:
         if ntype in ['ident', 'mirror', 'skew', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
@@ -236,23 +243,28 @@ def node_print_gv(node, next_gid, id_to_gid):
         else:
             raise RuntimeError('unrecognized node type %s' % ntype)
 
-        nfont = 'Times New Roman'
-        nlabel = ntype
+        nlabel += ntype
 
         if ntype in ['player', 'win', 'lose', 'draw']:
             nlabel += ':' + str(node['number'])
         elif ntype == 'swaponly':
-            nlabel += '\\n'
+            nlabel += GVNEWLINE
+            nlabel += GVCOURBGN
             nlabel += node['what']
             nlabel += ' ↔ '
             nlabel += node['with']
+            nlabel += GVCOUREND
         elif ntype in ['replace', 'replaceonly']:
-            nlabel += '\\n'
+            nlabel += GVNEWLINE
+            nlabel += GVCOURBGN
             nlabel += node['what']
             nlabel += ' → '
             nlabel += ' '.join([str(ee) for ee in node['with']])
+            nlabel += GVCOUREND
 
-    print('  %s [label="%s", shape="%s", fontname="%s"];' % (id_str, nlabel, nshape, nfont))
+    nlabel += '>'
+
+    print('  %s [label=%s, shape="%s"];' % (id_str, nlabel, nshape))
 
     if 'children' in node.keys():
         children = node['children']
@@ -269,8 +281,8 @@ def game_print_gv(game):
     print('digraph G {')
     for ii, start in enumerate(game.starts):
         start = pad_tiles([string_to_pattern(start)])[0]
-        label = '\\n'.join([' '.join(row) for row in start])
-        print('  START%d [shape="box", fontname="Courier New", label="%s"];' % (ii, label))
+        label = GVNEWLINE.join([' '.join(row) for row in start])
+        print('  START%d [shape="box", label=<%s%s%s>];' % (ii, GVCOURBGN, label, GVCOUREND))
     node_print_gv(game.tree, [0], {})
     print('}')
 
