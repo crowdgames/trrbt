@@ -193,7 +193,7 @@ def node_xform_tiles(node, xforms, id_to_node):
                 node['children'] = new_children
 
     else:
-        raise RuntimeError('unrecognized node type %s' % ntype)
+        raise RuntimeError(f'unrecognized node type {ntype}')
 
     return ret_nodes
 
@@ -241,7 +241,7 @@ def node_print_gv(node, next_gid, id_to_gid):
         elif ntype in ['all', 'sequence', 'none', 'loop']:
             nshape = 'oval'
         else:
-            raise RuntimeError('unrecognized node type %s' % ntype)
+            raise RuntimeError('unrecognized node type {ntype}')
 
         nlabel += ntype
 
@@ -264,16 +264,17 @@ def node_print_gv(node, next_gid, id_to_gid):
 
     nlabel += '>'
 
-    print('  %s [label=%s, shape="%s"];' % (id_str, nlabel, nshape))
+    print(f'  {id_str} [shape="{nshape}", label={nlabel}];')
 
     if 'children' in node.keys():
         children = node['children']
         for child in children:
             child_id = node_print_gv(child, next_gid, id_to_gid)
-            print('  %s -> %s;' % (id_str, child_id))
+            print(f'  {id_str} -> {child_id};')
 
     if ntype == 'link':
-        print('  %s -> %s [style="dotted", constraint="false"];' % (id_str, id_to_gid[node['target']]))
+        target_id = id_to_gid[node['target']]
+        print(f'  {id_str} -> {target_id} [style="dotted", constraint="false"];')
 
     return id_str
 
@@ -282,7 +283,7 @@ def game_print_gv(game):
     for ii, start in enumerate(game.starts):
         start = pad_tiles([string_to_pattern(start)])[0]
         label = GVNEWLINE.join([' '.join(row) for row in start])
-        print('  START%d [shape="box", label=<%s%s%s>];' % (ii, GVCOURBGN, label, GVCOUREND))
+        print(f'  START{ii} [shape="box", label=<{GVCOURBGN}{label}{GVCOUREND}>];')
     node_print_gv(game.tree, [0], {})
     print('}')
 
