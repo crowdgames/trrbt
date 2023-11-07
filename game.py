@@ -19,7 +19,9 @@ class GameProcessor:
         self.loser = None
 
     def game_play(self):
-        # play the whole game
+        """
+        Play the whole game
+        """
         self.display_board()
         while not self.game_ends:
             self.play()
@@ -33,28 +35,44 @@ class GameProcessor:
             print("Player", self.loser, "loses")
 
     def play(self):
-        # play one round of the game
+        """
+        Play a single round of the game
+        """
         children = self.tree["children"]
-        for child in children:
-            if not self.game_ends:
-                self.process_sequence_node(child)
+        self.process_sequence_node(children)
 
-    def process_sequence_node(self, child):
-        child_type = child["type"]
-        if child_type == "player" and not self.game_ends:
-            self.current_player = child["number"]
-            if not self.process_player_node(child):
-                self.game_ends = True
-        elif child_type == "all" and not self.game_ends:
-            self.process_all_node(child)
-        elif child_type == "loop" and not self.game_ends:
-            self.process_loop_node(child)
-        elif child_type == "win" and not self.game_ends:
-            self.process_win_node(child)
-        elif child_type == "lose" and not self.game_ends:
-            self.process_lose_node(child)
+    def process_sequence_node(self, node):
+        # assume that sequence node is the entry point and only appears at the root of the tree
+        for child in node:
+            if self.game_ends:
+                break
+            child_type = child["type"]
+            if child_type == "player":
+                self.current_player = child["number"]
+                if not self.process_player_node(child):
+                    self.loser = self.current_player  # current player has no valid move
+                    self.game_ends = True
+            elif child_type == "all":
+                self.process_all_node(child)
+            elif child_type == "loop":
+                self.process_loop_node(child)
+            elif child_type == "win":
+                self.process_win_node(child)
+            elif child_type == "lose":
+                self.process_lose_node(child)
+            elif child_type == "rewrite":
+                self.process_rewite_node(child)
+
+    def process_rewite_node(self, node):
+        res = self.find_pattern(node)
+        if res:
+            res = res[1][0]
+            self.make_move(res)
+            return True
+        return False
 
     def process_player_node(self, node):
+        # assume that all children nodes of player node are rewrite nodes
         valid_moves = []
         if node["children"]:
             for child in node["children"]:
@@ -63,31 +81,41 @@ class GameProcessor:
                     if res:
                         res = res[1]
                         valid_moves.extend(res)
-            # print("valid moves:", valid_moves)
             if len(valid_moves) == 0:
-                # self.game_ends = True
                 return False
             choice = random.choice(valid_moves)
-            # print("choice =", choice)
             self.make_move(choice)
             return True
 
     def process_all_node(self, node):
         # todo
-        if node["children"]:
-            for child in node["children"]:
-                if child["type"] == "rewrite":
-                    res = self.find_pattern(child)
-                    if res:
-                        ret = res[1]
-                        # print("move in all node", ret, len(ret))
-                        self.make_move(ret[0])
+        # loop until all children fails == apply all once + loop ?
+        flag = False
+        for child in node["children"]:
+            child_type = child["type"]
+            if child_type == "rewrite":
+                flag = self.process_rewite_node(child)
+        return flag
 
     def process_loop_node(self, node):
-        # currently, I assume the children of loop nodes are rewrite nodes
+        # assume the children of loop nodes are player nodes or rewrite nodes
+        # loops until any child fails
         flag = True
-        while flag:
-            flag = self.process_player_node(node)
+        while flag and not self.game_ends:
+            for child in node["children"]:
+                if self.game_ends:
+                    break
+                child_type = child["type"]
+                if child_type == "player":
+                    flag = self.process_player_node(child)
+                elif child_type == "all":
+                    flag = self.process_all_node(child)
+                elif child_type == "win":
+                    self.process_win_node(child)
+                elif child_type == "lose":
+                    self.process_lose_node(child)
+                elif child_type == "rewrite":
+                    flag = self.process_rewite_node(child)
 
     def make_move(self, choice):
         if len(choice) != 3:
@@ -118,6 +146,10 @@ class GameProcessor:
         return True, x, y
 
     def process_win_node(self, node):
+        """
+        Process win node
+        :return: true if one of the players win and false otherwise
+        """
         child = node["children"]
         self.display_board()
         for item in child:
@@ -128,20 +160,23 @@ class GameProcessor:
                     print("Pattern matched:", pattern)
                     self.winner = self.current_player
                     self.game_ends = True
-                    return
+                    return True
             elif node_type == "none":
                 children = item["children"]
                 for none_node_child in children:
                     pattern = none_node_child["pattern"]
-                    # print(pattern)
                     if self.match_pattern(pattern):
-                        print("Pattern matched - none:", pattern)
-                        return
+                        # print("Pattern matched - none:", pattern)
+                        return False
                 self.game_ends = True
-                # print("none matched")
-                return
+                self.winner = self.current_player
+                return True
+        return False
 
     def process_lose_node(self, node):
+        """
+        Process lose node
+        """
         child = node["children"]
         self.display_board()
         for item in child:
@@ -152,30 +187,26 @@ class GameProcessor:
                     print("Pattern matched:", pattern)
                     self.loser = self.current_player
                     self.game_ends = True
-                    return
+                    return True
             elif node_type == "none":
                 children = item["children"]
                 for none_node_child in children:
                     pattern = none_node_child["pattern"]
                     if self.match_pattern(pattern):
-                        # print("Pattern matched - none:", pattern)
                         return
                 self.game_ends = True
                 self.loser = self.current_player
-                # print("none matched")
                 return
 
     def match_pattern(self, pattern):
-        rows = len(self.board)
-        cols = len(self.board[0])
         pattern_rows = len(pattern)
         pattern_cols = len(pattern[0])
 
-        if rows < pattern_rows or cols < pattern_cols:
+        if self.m < pattern_rows or self.n < pattern_cols:
             return False
 
-        for i in range(rows - pattern_rows + 1):
-            for j in range(cols - pattern_cols + 1):
+        for i in range(self.m - pattern_rows + 1):
+            for j in range(self.n - pattern_cols + 1):
                 match = True
                 for r in range(pattern_rows):
                     for c in range(pattern_cols):
@@ -186,12 +217,11 @@ class GameProcessor:
                     if not match:
                         break
                 if match:
-
                     return True
         return False
 
     def display_board(self):
-        print("current board is:")
+        print("Current board is:")
         for row in self.board:
             print(row)
 
