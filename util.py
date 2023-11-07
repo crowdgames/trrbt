@@ -175,7 +175,7 @@ def node_xform_tiles(node, xforms, id_to_node):
     elif ntype == 'nextplayer':
         ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)
 
-    elif ntype in ['all', 'sequence', 'none', 'player', 'rewrite', 'match', 'win', 'lose', 'loop']:
+    elif ntype in ['sequence', 'none', 'random', 'player', 'rewrite', 'match', 'win', 'lose', 'draw', 'loop-until-any', 'loop-until-all', 'loop-times']:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -238,14 +238,14 @@ def node_print_gv(node, next_gid, id_to_gid):
             nshape = 'invhouse'
         elif ntype in ['win', 'lose', 'draw']:
             nshape = 'octagon'
-        elif ntype in ['all', 'sequence', 'none', 'loop']:
+        elif ntype in ['sequence', 'none', 'random', 'loop-until-any', 'loop-until-all', 'loop-times']:
             nshape = 'oval'
         else:
-            raise RuntimeError('unrecognized node type {ntype}')
+            raise RuntimeError(f'unrecognized node type {ntype}')
 
         nlabel += ntype
 
-        if ntype in ['player', 'win', 'lose', 'draw']:
+        if ntype in ['player', 'win', 'lose']:
             nlabel += ':' + str(node['number'])
         elif ntype == 'swaponly':
             nlabel += GVNEWLINE

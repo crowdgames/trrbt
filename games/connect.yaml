@@ -20,7 +20,7 @@ tree:
       - type: rewrite
         lhs: =;_
         rhs: =;R
-    - type: loop
+    - type: loop-until-all
       children:
       - type: rewrite
         lhs: R;_

@@ -35,7 +35,7 @@ tree:
       - type: rewrite
         lhs: P0;X
         rhs: P2;X
-    - type: all
+    - type: loop-until-all
       children:
       - type: rewrite
         lhs: _  E
@@ -43,7 +43,7 @@ tree:
       - type: rewrite
         lhs: Pa E
         rhs: E  _
-    - type: all
+    - type: loop-until-all
       children:
       - type: rewrite
         lhs: E ; _
