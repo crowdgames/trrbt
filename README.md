@@ -14,7 +14,7 @@ pipenv install
 pipenv shell
 ```
 
-## Game Description Visuazliation
+## Game Description Visualization
 
 To visualize game descriptions you will also need [GraphViz](https://graphviz.org/) installed.
 Then run `make` to create visualizations in the `out` folder.
