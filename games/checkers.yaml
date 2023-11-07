@@ -58,7 +58,7 @@ tree:
               rhs: _   .   .  ;
                    .   _   .  ;
                    .   .   RKJ;
-          - type: loop
+          - type: loop-until-all
             children:
             - type: player
               number: 1

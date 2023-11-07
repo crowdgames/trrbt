@@ -22,13 +22,17 @@ Then run `make` to create visualizations in the `out` folder.
 
 ## Node Behaviors
 
-**sequence**: Executes all children in order (regardless of their success or failure); if any child fails, returns failure, otherwise returns success.
-
-**loop**: Repeatedly executes children in order, until any child fails; if any child succeeds, returns success, otherwise returns failure.
-
-**all**: Executes children in order regardless of their success or failure; ?returns success if any child succeeds, false otherwise? (what is the difference between all and sequence? all will apply all individual child rewrites and sequence just one from each rewrite node?)
+**sequence**: Executes children in order (regardless of their success or failure); if any child fails, returns failure, otherwise returns success.
 
 **none**: Executes children in order, until any child fails; if any child fails, returns failure, otherwise returns success.
+
+**random**: Executes a random child; if that child fails, returns failure, otherwise returns success.
+
+**loop-until-any**: Repeatedly executes children in order, until any child fails; if any child succeeds, returns success, otherwise returns failure.
+
+**loop-until-all**: Repeatedly executes children in order, until all children fail; if any child succeeds, returns success, otherwise returns failure.
+
+**loop-times**: Repeatedly executes children in order a fixed number of times; if any child succeeds, returns success, otherwise returns failure.
 
 **rewrite**: If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
 
@@ -36,4 +40,4 @@ Then run `make` to create visualizations in the `out` folder.
 
 **player**: *For now, assume all child nodes are **rewrite** nodes.* If any lhs of any child matches, player can choose which rhs rewrite to apply; returns success if there were any matches, otherwise, returns failure.
 
-**win**, **lose**: Executes children in order, until any child succeeds; if any child succeeds, the game ends with the given player winning (if a **win** node) or losing (if a **lose** node), otherwise returns success (?).
+**win**, **lose**, **draw**: Executes children in order, until any child succeeds; if any child succeeds, the game ends with the given player winning (if a **win** node) or losing (if a **lose** node), or as a draw (if a **draw** node); otherwise returns success (?).
