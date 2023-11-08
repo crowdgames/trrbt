@@ -1,13 +1,13 @@
 ---
 name: platformer
 start:
-  - _  _  _  _  _  _  _  _  _ ;
-    _  _  _  _  _  _  _  _  _ ;
-    _  _  _  _  _  _  Q  _  _ ;
-    _  _  _  _  _  _  _  _  _ ;
-    _  _  _  _  E  _  _  _  _ ;
-    P0 _  _  _  X  X  X  _  O ;
-    X  X  X  X  X  X  X  X  X ;
+  - _   _   _   _   _   _   _   _   _ ;
+    _   _   _   _   _   _   _   _   _ ;
+    _   _   _   _   _   _   Q   _   _ ;
+    _   _   _   _   _   _   _   _   _ ;
+    _   _   _   _   E   _   _   _   _ ;
+    P0  _   _   _   X   X   X   _   O ;
+    X   X   X   X   X   X   X   X   X ;
 tree:
   type: replaceonly
   what: a
@@ -27,66 +27,74 @@ tree:
       - type: mirror
         children:
         - type: rewrite
-          lhs: Pa _
-          rhs: _  Pa
+          lhs: Pa  _
+          rhs: _   Pa
         - type: rewrite
-          lhs: Pa O
-          rhs: _  W
+          lhs: Pa  O
+          rhs: _   W
       - type: rewrite
-        lhs: P0;X
-        rhs: P2;X
+        lhs: P0 ;X
+        rhs: P2 ;X
     - type: loop-until-all
       children:
       - type: rewrite
-        lhs: _  E
-        rhs: E  _
+        lhs: _   E
+        rhs: E'  _
       - type: rewrite
-        lhs: Pa E
-        rhs: E  _
+        lhs: Pa  E
+        rhs: E'   _
     - type: loop-until-all
       children:
       - type: rewrite
-        lhs: E ; _
-        rhs: _ ; E
+        lhs: E'
+        rhs: E
+    - type: loop-until-all
+      children:
       - type: rewrite
-        lhs: E ; Pa; X
-        rhs: _ ; E ; X
+        lhs: E  ;_
+        rhs: _  ;E'
       - type: rewrite
-        lhs: E ; P0; _
-        rhs: _ ; E ; P0
+        lhs: P0 ;_
+        rhs: _  ;P0'
       - type: rewrite
-        lhs: P0; _
-        rhs: _ ; P0
+        lhs: P0 ;O
+        rhs: _  ;W
+    - type: loop-until-all
+      children:
       - type: rewrite
-        lhs: P0; O
-        rhs: _ ; W
+        lhs: E  ;Pa
+        rhs: _  ;E'
       - type: rewrite
-        lhs: P0; E ; X
-        rhs: _ ; P0; X
+        lhs: P0 ;E
+        rhs: _  ;P0'
+    - type: loop-until-all
+      children:
       - type: rewrite
-        lhs: P0; E ; _
-        rhs: _ ; P0; E
+        lhs: _  ;P1
+        rhs: P0';_
       - type: rewrite
-        lhs: P0;X
-        rhs: P0;X
+        lhs: X  ;P1
+        rhs: X  ;P0'
       - type: rewrite
-        lhs: _ ;P1
-        rhs: P0;_
+        lhs: Q  ;P1
+        rhs: X  ;P0'
       - type: rewrite
-        lhs: X ;P1
-        rhs: X ;P0
+        lhs: _  ;P2
+        rhs: P1';_
       - type: rewrite
-        lhs: Q ;P1
-        rhs: X ;P0
+        lhs: X  ;P1
+        rhs: X  ;P0'
       - type: rewrite
-        lhs: _ ;P2
-        rhs: P1;_
+        lhs: Q  ;P1
+        rhs: X  ;P0'
+    - type: loop-until-all
+      children:
       - type: rewrite
-        lhs: X ;P1
-        rhs: X ;P0
+        lhs: E'
+        rhs: E
       - type: rewrite
-        lhs: Q ;P1
-        rhs: X ;P0
+        lhs: Pa'
+        rhs: Pa
     - type: win
       number: 1
       children:
