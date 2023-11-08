@@ -16,7 +16,8 @@ all: \
 	out/rushhour-base.pdf out/rushhour-xform.pdf \
 	out/checkers-base.pdf out/checkers-xform.pdf \
 	out/platform-base.pdf out/platform-xform.pdf \
-	out/eights-base.pdf out/eights-xform.pdf
+	out/eights-base.pdf out/eights-xform.pdf \
+	out/eights_random-base.pdf out/eights_random-xform.pdf
 
 out:
 	mkdir -p out
