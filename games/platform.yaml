@@ -1,13 +1,13 @@
 ---
 name: platformer
 start:
-  - _   _   _   _   _   _   _   _   _ ;
-    _   _   _   _   _   _   _   _   _ ;
-    _   _   _   _   _   _   Q   _   _ ;
-    _   _   _   _   _   _   _   _   _ ;
-    _   _   _   _   E   _   _   _   _ ;
-    P0  _   _   _   X   X   X   _   O ;
-    X   X   X   X   X   X   X   X   X ;
+- _   _   _   _   _   _   _   _   _ ;
+  _   _   _   _   _   _   _   _   _ ;
+  _   _   _   _   _   _   Q   _   _ ;
+  _   _   _   _   _   _   _   _   _ ;
+  _   _   _   _   E   _   _   _   _ ;
+  P0  _   _   _   X   X   X   _   O ;
+  X   X   X   X   X   X   X   X   X ;
 tree:
   type: replaceonly
   what: a

@@ -1,9 +1,9 @@
 ---
-name: eights
+name: eights-randomize
 start:
-  - 1 2 3;
-    4 5 6;
-    7 8 _;
+- 1 2 3;
+  4 5 6;
+  7 8 _;
 tree:
   type: sequence
   children:
@@ -14,33 +14,5 @@ tree:
       children:
       - type: link
         target: move
-  - type: loop-until-all
-    children:
-    - type: player
-      number: 1
-      children:
-      - type: replaceonly
-        id: move
-        what: a
-        with:
-        - 1
-        - 2
-        - 3
-        - 4
-        - 5
-        - 6
-        - 7
-        - 8
-        children:
-        - type: rotate
-          children:
-          - type: rewrite
-            lhs: _ a
-            rhs: a _
-    - type: win
-      number: 1
-      children:
-      - type: match
-        pattern: 1 2 3;
-                 4 5 6;
-                 7 8 _;
+  - type: file
+    target: eights

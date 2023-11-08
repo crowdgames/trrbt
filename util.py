@@ -1,4 +1,5 @@
 import io
+import os
 import sys
 import yaml
 
@@ -251,6 +252,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nshape = 'octagon'
         elif ntype in ['sequence', 'none', 'random', 'loop-until-any', 'loop-until-all', 'loop-times']:
             nshape = 'oval'
+        elif ntype in ['file']:
+            nshape = 'folder'
         else:
             raise RuntimeError(f'unrecognized node type {ntype}')
 
@@ -260,6 +263,9 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += ':' + str(node['number'])
         elif ntype in ['loop-times']:
             nlabel += ':' + str(node['times'])
+        elif ntype in ['file']:
+            nlabel += GVNEWLINE
+            nlabel += node['target']
         elif ntype == 'swaponly':
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
@@ -295,8 +301,14 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             print(f'  {nid} -> {child_id};')
 
     if ntype == 'link':
-        target_id = pid_to_nid[id(nid_to_node[node['target']])]
-        print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
+        node_target = node['target']
+        if node_target in nid_to_node:
+            target_id = pid_to_nid[id(nid_to_node[node_target])]
+            print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
+        else:
+            target_id = nid + 'TARGET'
+            print(f'  {target_id} [shape="house", label="{node_target}"];')
+            print(f'  {nid} -> {target_id} [style="dotted"];')
 
 def game_print_gv(game):
     nid_to_node, pid_to_nid = {}, {}
@@ -310,13 +322,34 @@ def game_print_gv(game):
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
-def yaml2bt(filename, xform):
+def yamlload(filename):
     with open(filename, 'rt') as f:
-        data = yaml.safe_load(f)
+        return yaml.safe_load(f)
+
+def resolve_file_links(folder, node):
+    if 'children' in node.keys():
+        new_children = []
+        for child in node['children']:
+            if child['type'] == 'file':
+                target = child['target']
+                filename = f'{folder}/{target}.yaml'
+                data = yamlload(filename)
+                new_children.append(data['tree'])
+            else:
+                new_children.append(child)
+        node['children'] = new_children
+
+    return node
+
+def yaml2bt(filename, xform):
+    data = yamlload(filename)
 
     root = data['tree']
 
+    root = resolve_file_links(os.path.dirname(filename), root)
+
     root = node_reshape_tiles(root)
+
     if xform:
         nid_to_node, pid_to_nid = {}, {}
         node_find_nids(root, nid_to_node, pid_to_nid)

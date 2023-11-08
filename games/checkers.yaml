@@ -1,16 +1,16 @@
 ---
 name: checkers BT
 start:
-  - =   =   =   =   =   =   =   =  ;
-    _   BPS _   BPS _   BPS _   BPS;
-    BPS _   BPS _   BPS _   BPS _  ;
-    _   BPS _   BPS _   BPS _   BPS;
-    _   _   _   _   _   _   _   _  ;
-    _   _   _   _   _   _   _   _  ;
-    RPS _   RPS _   RPS _   RPS _  ;
-    _   RPS _   RPS _   RPS _   RPS;
-    RPS _   RPS _   RPS _   RPS _  ;
-    =   =   =   =   =   =   =   =  ;
+- =   =   =   =   =   =   =   =  ;
+  _   BPS _   BPS _   BPS _   BPS;
+  BPS _   BPS _   BPS _   BPS _  ;
+  _   BPS _   BPS _   BPS _   BPS;
+  _   _   _   _   _   _   _   _  ;
+  _   _   _   _   _   _   _   _  ;
+  RPS _   RPS _   RPS _   RPS _  ;
+  _   RPS _   RPS _   RPS _   RPS;
+  RPS _   RPS _   RPS _   RPS _  ;
+  =   =   =   =   =   =   =   =  ;
 tree:
   type: mirror
   children:
