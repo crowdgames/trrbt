@@ -12,12 +12,14 @@ tree:
     children:
     - type: player
       number: 1
+      comment: player's move
       children:
       - type: rewrite
         lhs: _
         rhs: X
     - type: win
       number: 1
+      comment: check for player win
       children:
       - type: turn
         children:
