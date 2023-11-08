@@ -1,9 +1,9 @@
 ---
 name: tic-tac-toe BT
 start:
-  - _ _ _;
-    _ _ _;
-    _ _ _;
+- _ _ _;
+  _ _ _;
+  _ _ _;
 tree:
   type: sequence
   children:
