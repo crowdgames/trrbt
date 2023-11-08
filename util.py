@@ -5,8 +5,10 @@ import yaml
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
 GVNEWLINE = '<BR/>'
-GVCOURBGN = '<FONT FACE="Courier New">'
-GVCOUREND = '</FONT>'
+GVTILEBGN = '<FONT FACE="Courier New">'
+GVTILEEND = '</FONT>'
+GVCOMMBGN = '<FONT POINT-SIZE="6"><I>'
+GVCOMMEND = '</I></FONT>'
 
 class Game:
     def __init__(self, starts, tree):
@@ -222,7 +224,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
         if ntype == 'rewrite':
             lhs, rhs = pad_tiles([node['lhs'], node['rhs']])
 
-            nlabel += GVCOURBGN
+            nlabel += GVTILEBGN
             for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
                 nlabel += ' '.join(ll)
                 if ii == 0:#len(lhs) // 2:
@@ -231,12 +233,12 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
                     nlabel += '   '
                 nlabel += ' '.join(rr)
                 nlabel += GVNEWLINE
-            nlabel += GVCOUREND
+            nlabel += GVTILEEND
         else:
             pattern = pad_tiles([node['pattern']])[0]
-            nlabel += GVCOURBGN
+            nlabel += GVTILEBGN
             nlabel += GVNEWLINE.join([' '.join(row) for row in pattern])
-            nlabel += GVCOUREND
+            nlabel += GVTILEEND
 
     else:
         if ntype in ['ident', 'mirror', 'skew', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
@@ -260,18 +262,24 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += ':' + str(node['times'])
         elif ntype == 'swaponly':
             nlabel += GVNEWLINE
-            nlabel += GVCOURBGN
+            nlabel += GVTILEBGN
             nlabel += node['what']
             nlabel += ' ↔ '
             nlabel += node['with']
-            nlabel += GVCOUREND
+            nlabel += GVTILEEND
         elif ntype in ['replace', 'replaceonly']:
             nlabel += GVNEWLINE
-            nlabel += GVCOURBGN
+            nlabel += GVTILEBGN
             nlabel += node['what']
             nlabel += ' → '
             nlabel += ' '.join([str(ee) for ee in node['with']])
-            nlabel += GVCOUREND
+            nlabel += GVTILEEND
+
+    if 'comment' in node.keys():
+        nlabel += GVNEWLINE
+        nlabel += GVCOMMBGN
+        nlabel += node['comment']
+        nlabel += GVCOMMEND
 
     nlabel += '>'
 
@@ -298,7 +306,7 @@ def game_print_gv(game):
     for ii, start in enumerate(game.starts):
         start = pad_tiles([string_to_pattern(start)])[0]
         label = GVNEWLINE.join([' '.join(row) for row in start])
-        print(f'  START{ii} [shape="box", label=<{GVCOURBGN}{label}{GVCOUREND}>];')
+        print(f'  START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
