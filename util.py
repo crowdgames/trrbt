@@ -163,9 +163,9 @@ def node_xform_tiles(node, xforms, nid_to_node):
 
     ntype = node['type']
 
-    if ntype in ['ident', 'rotate', 'turn', 'mirror', 'skew', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
+    if ntype in ['file', 'ident', 'rotate', 'turn', 'mirror', 'skew', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
         fn = None
-        if ntype == 'ident':
+        if ntype in ['file', 'ident']:
             fn = xform_identity
         elif ntype == 'rotate':
             fn = xform_rule_rotate
@@ -264,8 +264,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
         elif ntype in ['loop-times']:
             nlabel += ':' + str(node['times'])
         elif ntype in ['file']:
-            nlabel += GVNEWLINE
-            nlabel += node['target']
+            nlabel += ':' + node['target']
         elif ntype == 'swaponly':
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
@@ -334,11 +333,9 @@ def resolve_file_links(folder, node):
                 target = child['target']
                 filename = f'{folder}/{target}.yaml'
                 data = yamlload(filename)
-                new_children.append(data['tree'])
-            else:
-                new_children.append(child)
+                child['children'] = [data['tree']]
+            new_children.append(resolve_file_links(folder, child))
         node['children'] = new_children
-
     return node
 
 def yaml2bt(filename, xform):
