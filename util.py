@@ -44,6 +44,24 @@ def node_reshape_tiles(node):
 
     return node
 
+def node_find_nids(node, nid_to_node, pid_to_nid):
+    if 'id' in node.keys(): # TODO: move after xform?
+        nid = node['id']
+        if len(nid) == 0 or nid[0] == '_':
+            raise RuntimeError(f'invalid node id {nid}')
+    else:
+        nid = ('_%04d' % len(nid_to_node))
+
+    if nid in nid_to_node:
+        raise RuntimeError(f'duplicate node id {nid}')
+
+    nid_to_node[nid] = node
+    pid_to_nid[id(node)] = nid
+
+    if 'children' in node.keys():
+        for child in node['children']:
+            node_find_nids(child, nid_to_node, pid_to_nid)
+
 def unique(nodes):
     ret = []
     for node in nodes:
@@ -137,10 +155,7 @@ def xform_player_next(node):
         node['number'] += 1
     return [node]
 
-def node_xform_tiles(node, xforms, id_to_node):
-    if 'id' in node.keys(): # TODO: move after xform?
-        id_to_node[node['id']] = node
-
+def node_xform_tiles(node, xforms, nid_to_node):
     ret_nodes = []
 
     ntype = node['type']
@@ -167,13 +182,13 @@ def node_xform_tiles(node, xforms, id_to_node):
             fn = xform_rule_replace_fn(node['what'], node['with'], False)
 
         for child in node['children']:
-            ret_nodes += node_xform_tiles(child, [fn] + xforms, id_to_node)
+            ret_nodes += node_xform_tiles(child, [fn] + xforms, nid_to_node)
 
     elif ntype == 'link':
-        ret_nodes += node_xform_tiles(id_to_node[node['target']], xforms, id_to_node)
+        ret_nodes += node_xform_tiles(nid_to_node[node['target']], xforms, nid_to_node)
 
     elif ntype == 'nextplayer':
-        ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, id_to_node)
+        ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, nid_to_node)
 
     elif ntype in ['sequence', 'none', 'random', 'player', 'rewrite', 'match', 'win', 'lose', 'draw', 'loop-until-any', 'loop-until-all', 'loop-times']:
         xformed = [node.copy()]
@@ -189,7 +204,7 @@ def node_xform_tiles(node, xforms, id_to_node):
                 children = node['children']
                 new_children = []
                 for child in children:
-                    new_children += node_xform_tiles(child, xforms, id_to_node)
+                    new_children += node_xform_tiles(child, xforms, nid_to_node)
                 node['children'] = new_children
 
     else:
@@ -197,15 +212,9 @@ def node_xform_tiles(node, xforms, id_to_node):
 
     return ret_nodes
 
-def node_print_gv(node, next_gid, id_to_gid):
-    id_str = ('%04d' % next_gid[0])
-    next_gid[0] += 1
-
+def node_print_gv(node, nid_to_node, pid_to_nid):
     ntype = node['type']
     nlabel = '<'
-
-    if 'id' in node.keys():
-        id_to_gid[node['id']] = id_str
 
     if ntype in ['rewrite', 'match']:
         nshape = 'box'
@@ -247,6 +256,8 @@ def node_print_gv(node, next_gid, id_to_gid):
 
         if ntype in ['player', 'win', 'lose']:
             nlabel += ':' + str(node['number'])
+        elif ntype in ['loop-times']:
+            nlabel += ':' + str(node['times'])
         elif ntype == 'swaponly':
             nlabel += GVNEWLINE
             nlabel += GVCOURBGN
@@ -264,27 +275,31 @@ def node_print_gv(node, next_gid, id_to_gid):
 
     nlabel += '>'
 
-    print(f'  {id_str} [shape="{nshape}", label={nlabel}];')
+    nid = pid_to_nid[id(node)]
+
+    print(f'  {nid} [shape="{nshape}", label={nlabel}];')
 
     if 'children' in node.keys():
         children = node['children']
         for child in children:
-            child_id = node_print_gv(child, next_gid, id_to_gid)
-            print(f'  {id_str} -> {child_id};')
+            node_print_gv(child, nid_to_node, pid_to_nid)
+            child_id = pid_to_nid[id(child)]
+            print(f'  {nid} -> {child_id};')
 
     if ntype == 'link':
-        target_id = id_to_gid[node['target']]
-        print(f'  {id_str} -> {target_id} [style="dotted", constraint="false"];')
-
-    return id_str
+        target_id = pid_to_nid[id(nid_to_node[node['target']])]
+        print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
 
 def game_print_gv(game):
+    nid_to_node, pid_to_nid = {}, {}
+    node_find_nids(game.tree, nid_to_node, pid_to_nid)
+
     print('digraph G {')
     for ii, start in enumerate(game.starts):
         start = pad_tiles([string_to_pattern(start)])[0]
         label = GVNEWLINE.join([' '.join(row) for row in start])
         print(f'  START{ii} [shape="box", label=<{GVCOURBGN}{label}{GVCOUREND}>];')
-    node_print_gv(game.tree, [0], {})
+    node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
 def yaml2bt(filename, xform):
@@ -292,9 +307,12 @@ def yaml2bt(filename, xform):
         data = yaml.safe_load(f)
 
     root = data['tree']
+
     root = node_reshape_tiles(root)
     if xform:
-        root = node_xform_tiles(root, [xform_identity], {})[0]
+        nid_to_node, pid_to_nid = {}, {}
+        node_find_nids(root, nid_to_node, pid_to_nid)
+        root = node_xform_tiles(root, [xform_identity], nid_to_node)[0]
 
     starts = data['start']
 
