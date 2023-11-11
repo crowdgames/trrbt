@@ -18,7 +18,7 @@ start:
   XX __ __ __ __ __ __ XX;
   XX XX XX XX XX XX XX XX;
 tree:
-  type: sequence
+  type: loop-until-all
   children:
   - type: player
     number: 1
