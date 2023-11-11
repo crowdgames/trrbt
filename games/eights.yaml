@@ -8,7 +8,7 @@ start:
   7 2 6;
   5 8 _;
 tree:
-  type: sequence
+  type: loop-until-all
   children:
   - type: player
     number: 1

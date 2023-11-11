@@ -26,7 +26,7 @@ tree:
       - K
       - P
       children:
-      - type: sequence
+      - type: loop-until-all
         children:
         - type: ident
           id: redturn

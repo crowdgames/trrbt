@@ -16,7 +16,7 @@ tree:
   - 1
   - 2
   children:
-  - type: sequence
+  - type: loop-until-all
     children:
     - type: player
       number: 1

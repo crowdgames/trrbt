@@ -5,7 +5,7 @@ start:
   _ _ _;
   _ _ _;
 tree:
-  type: sequence
+  type: loop-until-all
   children:
   - type: ident
     id: xturn
