@@ -10,7 +10,7 @@ class GameProcessor:
 
         self.filename = filename
         self.game_ends = False
-        self.board = util.string_to_list_pattern(random.choice(bt.starts))
+        self.board = util.listify(random.choice(bt.starts))
         self.m = len(self.board)
         self.n = len(self.board[0])
         self.tree = bt.tree
@@ -116,8 +116,8 @@ class GameProcessor:
             print("Your choices are:")
             idx = 0
             for node, row, col in valid_moves:
-                lhs = '; '.join([' '.join(row) for row in node['lhs']])
-                rhs = '; '.join([' '.join(row) for row in node['rhs']])
+                lhs = util.pattern_to_string(node['lhs'], ' ', '; ')
+                rhs = util.pattern_to_string(node['rhs'], ' ', '; ')
 
                 print(f'{1 + idx}: at {row},{col} {lhs} → {rhs}')
                 idx += 1
@@ -302,8 +302,8 @@ class GameProcessor:
 
     def display_board(self):
         print("Current board is:")
-        for row in util.pad_tiles([self.board], self.max_tile_width)[0]:
-            print(' '.join(row))
+        print(util.pattern_to_string(self.board, ' ', '\n', self.max_tile_width))
+
 
 
 if __name__ == '__main__':

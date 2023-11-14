@@ -17,6 +17,7 @@ class Game:
         self.tree = tree
 
 
+
 def pattern_max_tile_width(patt):
     tile_len = 0
     for row in patt:
@@ -24,7 +25,7 @@ def pattern_max_tile_width(patt):
             tile_len = max(tile_len, len(tile))
     return tile_len
 
-def pad_tiles(patts, tile_len=None):
+def pad_tiles_multiple(patts, tile_len=None):
     if tile_len is None:
         tile_len = 0
         for patt in patts:
@@ -32,8 +33,17 @@ def pad_tiles(patts, tile_len=None):
 
     return [[[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in patt] for patt in patts]
 
-def tuplify(hs):
-    return tuple([tuple(row) for row in hs])
+def pad_tiles_single(patt, tile_len=None):
+    return pad_tiles_multiple([patt], tile_len)[0]
+
+def pattern_to_string(patt, colsep, rowsep, tile_len=None):
+    return rowsep.join([colsep.join(row) for row in pad_tiles_single(patt, tile_len)])
+
+def listify(patt):
+    return list([list(row) for row in patt])
+
+def tuplify(patt):
+    return tuple([tuple(row) for row in patt])
 
 def string_to_list_pattern(s):
     return [[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != '']
@@ -248,7 +258,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
         nshape = 'box'
 
         if ntype == 'rewrite':
-            lhs, rhs = pad_tiles([node['lhs'], node['rhs']])
+            lhs, rhs = pad_tiles_multiple([node['lhs'], node['rhs']])
 
             nlabel += GVTILEBGN
             for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
@@ -262,9 +272,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
                     nlabel += GVNEWLINE
             nlabel += GVTILEEND
         else:
-            pattern = pad_tiles([node['pattern']])[0]
             nlabel += GVTILEBGN
-            nlabel += GVNEWLINE.join([' '.join(row) for row in pattern])
+            nlabel += pattern_to_string(node['pattern'], ' ', GVNEWLINE)
             nlabel += GVTILEEND
 
     else:
@@ -341,8 +350,7 @@ def game_print_gv(game):
 
     print('digraph G {')
     for ii, start in enumerate(game.starts):
-        start = pad_tiles([string_to_tuple_pattern(start)])[0]
-        label = GVNEWLINE.join([' '.join(row) for row in start])
+        label = pattern_to_string(start, ' ', GVNEWLINE)
         print(f'  START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
@@ -378,6 +386,6 @@ def yaml2bt(filename, xform):
         node_find_nids(root, nid_to_node, pid_to_nid)
         root = node_xform_tiles(root, [xform_identity], nid_to_node)[0]
 
-    starts = data['start']
+    starts = [string_to_tuple_pattern(start) for start in data['start']]
 
     return Game(starts, root)
