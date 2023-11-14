@@ -10,14 +10,14 @@ class GameProcessor:
 
         self.filename = filename
         self.game_ends = False
-        self.board = random.choice(bt.starts).split(";")
-        self.board = [row.split() for row in self.board if row]
+        self.board = util.string_to_pattern_list(random.choice(bt.starts))
         self.m = len(self.board)
         self.n = len(self.board[0])
         self.tree = bt.tree
         self.current_player = None
         self.winner = None
         self.loser = None
+        self.max_tile_width = util.node_max_tile_width(self.tree)
 
     def game_play(self):
         """
@@ -299,7 +299,7 @@ class GameProcessor:
 
     def display_board(self):
         print("Current board is:")
-        for row in self.board:
+        for row in util.pad_tiles([self.board], self.max_tile_width)[0]:
             print(' '.join(row))
 
 

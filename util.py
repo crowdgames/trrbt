@@ -17,35 +17,60 @@ class Game:
         self.tree = tree
 
 
-def pad_tiles(ts):
+def pattern_max_tile_width(patt):
     tile_len = 0
-    for t in ts:
-        for row in t:
-            for tile in row:
-                tile_len = max(tile_len, len(tile))
+    for row in patt:
+        for tile in row:
+            tile_len = max(tile_len, len(tile))
+    return tile_len
 
-    return [[[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in t] for t in ts]
+def pad_tiles(patts, tile_len=None):
+    if tile_len is None:
+        tile_len = 0
+        for patt in patts:
+            tile_len = max(tile_len, pattern_max_tile_width(patt))
+
+    return [[[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in patt] for patt in patts]
 
 def tuplify(hs):
     return tuple([tuple(row) for row in hs])
 
-def string_to_pattern(s):
-    return tuplify([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != ''])
+def string_to_pattern_list(s):
+    return [[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != '']
+
+def string_to_pattern_tuple(s):
+    return tuplify(string_to_pattern_list(s))
 
 def node_reshape_tiles(node):
     node = node.copy()
 
     if node['type'] == 'rewrite':
-        node['lhs'] = string_to_pattern(node['lhs'])
-        node['rhs'] = string_to_pattern(node['rhs'])
+        node['lhs'] = string_to_pattern_tuple(node['lhs'])
+        node['rhs'] = string_to_pattern_tuple(node['rhs'])
 
     if node['type'] == 'match':
-        node['pattern'] = string_to_pattern(node['pattern'])
+        node['pattern'] = string_to_pattern_tuple(node['pattern'])
 
     if 'children' in node.keys():
         node['children'] = [node_reshape_tiles(child) for child in node['children']]
 
     return node
+
+def node_max_tile_width(node):
+    tile_len = 0
+
+    if node['type'] == 'rewrite':
+        tile_len = max(tile_len, pattern_max_tile_width(node['lhs']))
+        tile_len = max(tile_len, pattern_max_tile_width(node['rhs']))
+
+    if node['type'] == 'match':
+        tile_len = max(tile_len, pattern_max_tile_width(node['pattern']))
+
+    if 'children' in node.keys():
+        for child in node['children']:
+            tile_len = max(tile_len, node_max_tile_width(child))
+
+    return tile_len
 
 def node_find_nids(node, nid_to_node, pid_to_nid):
     if 'id' in node.keys(): # TODO: move after xform?
@@ -316,7 +341,7 @@ def game_print_gv(game):
 
     print('digraph G {')
     for ii, start in enumerate(game.starts):
-        start = pad_tiles([string_to_pattern(start)])[0]
+        start = pad_tiles([string_to_pattern_tuple(start)])[0]
         label = GVNEWLINE.join([' '.join(row) for row in start])
         print(f'  START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
