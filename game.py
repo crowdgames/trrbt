@@ -1,5 +1,6 @@
 import argparse
 import random
+import time
 import util
 
 
@@ -74,8 +75,14 @@ class GameProcessor:
         while times > 0:
             times -= 1
             for child in node["children"]:
+                if self.game_ends:
+                    break
+                child_type = child["type"]
                 # todo: what if child type is not random?
-                self.process_rondom_try_node(child)
+                if child_type == "sequence":
+                    self.process_sequence_node(child)
+                elif child_type == "random-try":
+                    self.process_rondom_try_node(child)
                 # print(child)
         print("Randomzing board...")
         self.display_board()
@@ -299,7 +306,12 @@ class GameProcessor:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
+    parser.add_argument('--random', type=int, help='Random seed.')
     args = parser.parse_args()
+
+    random_seed = args.random if args.random is not None else int(time.time()) % 10000
+    print(f'Using random seed {random_seed}')
+    random.seed(random_seed)
 
     game = GameProcessor(args.filename)
     game.game_play()

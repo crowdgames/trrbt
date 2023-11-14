@@ -23,28 +23,30 @@ tree:
   - type: player
     number: 1
     children:
-    - type: mirror
-      comment: red car moves side to side
-      children:
-      - type: rewrite
-        lhs: CR CR __
-        rhs: __ CR CR
-    - type: replaceonly
-      comment: cars and trucks move
-      what: a
+    - type: ident
       id: move
-      with:
-      - 1
-      - 2
       children:
-      - type: rotate
+      - type: mirror
+        comment: red car moves side to side
         children:
         - type: rewrite
-          lhs: Ca Ca __
-          rhs: __ Ca Ca
-        - type: rewrite
-          lhs: Ta Ta Ta __
-          rhs: __ Ta Ta Ta
+          lhs: CR CR __
+          rhs: __ CR CR
+      - type: replaceonly
+        comment: cars and trucks move
+        what: a
+        with:
+        - 1
+        - 2
+        children:
+        - type: rotate
+          children:
+          - type: rewrite
+            lhs: Ca Ca __
+            rhs: __ Ca Ca
+          - type: rewrite
+            lhs: Ta Ta Ta __
+            rhs: __ Ta Ta Ta
   - type: win
     comment: win if red car at exit
     number: 1
