@@ -2,22 +2,43 @@
 name: rushhour-randomize
 start:
 - XX XX XX XX XX XX XX XX;
-  XX __ __ __ __ T1 __ XX;
-  XX __ __ __ __ T1 __ XX;
-  XX CR CR __ __ T1 __ OO;
-  XX __ __ __ __ C1 C1 XX;
-  XX __ __ __ T2 T2 T2 XX;
+  XX __ __ __ __ __ __ XX;
+  XX __ __ __ __ __ __ XX;
+  XX __ __ __ __ CR CR OO;
+  XX __ __ __ __ __ __ XX;
+  XX __ __ __ __ __ __ XX;
   XX __ __ __ __ __ __ XX;
   XX XX XX XX XX XX XX XX;
 tree:
   type: sequence
   children:
-  - type: loop-times
-    times: 15
+  - type: sequence
+    comment: place cars and trucks randomly
     children:
-    - type: random-try
+    - type: rewrite
+      lhs: __; __
+      rhs: C1; C1
+    - type: rewrite
+      lhs: __; __; __
+      rhs: T1; T1; T1
+    - type: rewrite
+      lhs: __ __
+      rhs: C2 C2
+    - type: rewrite
+      lhs: __ __ __
+      rhs: T2 T2 T2
+  - type: loop-times
+    comment: shuffle cars and trucks
+    times: 25
+    children:
+    - type: sequence
       children:
-      - type: link
-        target: move
+      - type: rewrite
+        lhs: __ CR CR
+        rhs: CR CR __
+      - type: random-try
+        children:
+        - type: link
+          target: move
   - type: file
     target: rushhour
