@@ -35,21 +35,21 @@ def pad_tiles(patts, tile_len=None):
 def tuplify(hs):
     return tuple([tuple(row) for row in hs])
 
-def string_to_pattern_list(s):
+def string_to_list_pattern(s):
     return [[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != '']
 
-def string_to_pattern_tuple(s):
-    return tuplify(string_to_pattern_list(s))
+def string_to_tuple_pattern(s):
+    return tuplify(string_to_list_pattern(s))
 
 def node_reshape_tiles(node):
     node = node.copy()
 
     if node['type'] == 'rewrite':
-        node['lhs'] = string_to_pattern_tuple(node['lhs'])
-        node['rhs'] = string_to_pattern_tuple(node['rhs'])
+        node['lhs'] = string_to_tuple_pattern(node['lhs'])
+        node['rhs'] = string_to_tuple_pattern(node['rhs'])
 
     if node['type'] == 'match':
-        node['pattern'] = string_to_pattern_tuple(node['pattern'])
+        node['pattern'] = string_to_tuple_pattern(node['pattern'])
 
     if 'children' in node.keys():
         node['children'] = [node_reshape_tiles(child) for child in node['children']]
@@ -341,7 +341,7 @@ def game_print_gv(game):
 
     print('digraph G {')
     for ii, start in enumerate(game.starts):
-        start = pad_tiles([string_to_pattern_tuple(start)])[0]
+        start = pad_tiles([string_to_tuple_pattern(start)])[0]
         label = GVNEWLINE.join([' '.join(row) for row in start])
         print(f'  START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)

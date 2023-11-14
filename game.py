@@ -10,7 +10,7 @@ class GameProcessor:
 
         self.filename = filename
         self.game_ends = False
-        self.board = util.string_to_pattern_list(random.choice(bt.starts))
+        self.board = util.string_to_list_pattern(random.choice(bt.starts))
         self.m = len(self.board)
         self.n = len(self.board[0])
         self.tree = bt.tree
