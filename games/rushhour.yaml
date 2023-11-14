@@ -32,6 +32,7 @@ tree:
     - type: replaceonly
       comment: cars and trucks move
       what: a
+      id: move
       with:
       - 1
       - 2

@@ -1,0 +1,23 @@
+---
+name: rushhour-randomize
+start:
+- XX XX XX XX XX XX XX XX;
+  XX __ __ __ __ T1 __ XX;
+  XX __ __ __ __ T1 __ XX;
+  XX CR CR __ __ T1 __ OO;
+  XX __ __ __ __ C1 C1 XX;
+  XX __ __ __ T2 T2 T2 XX;
+  XX __ __ __ __ __ __ XX;
+  XX XX XX XX XX XX XX XX;
+tree:
+  type: sequence
+  children:
+  - type: loop-times
+    times: 15
+    children:
+    - type: random-try
+      children:
+      - type: link
+        target: move
+  - type: file
+    target: rushhour
