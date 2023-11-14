@@ -115,8 +115,11 @@ class GameProcessor:
                 return False
             print("Your choices are:")
             idx = 0
-            for valid_move in valid_moves:
-                print(idx, valid_move)
+            for node, row, col in valid_moves:
+                lhs = '; '.join([' '.join(row) for row in node['lhs']])
+                rhs = '; '.join([' '.join(row) for row in node['rhs']])
+
+                print(f'{idx}: at {row},{col} {lhs} → {rhs}')
                 idx += 1
             while True:
                 try:
