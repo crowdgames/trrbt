@@ -193,7 +193,7 @@ def node_xform_tiles(node, xforms, nid_to_node):
     elif ntype == 'nextplayer':
         ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, nid_to_node)
 
-    elif ntype in ['sequence', 'none', 'random', 'player', 'rewrite', 'match', 'win', 'lose', 'draw', 'loop-until-any', 'loop-until-all', 'loop-times']:
+    elif ntype in ['sequence', 'none', 'random-try', 'random-one', 'player', 'rewrite', 'match', 'win', 'lose', 'draw', 'loop-until-any', 'loop-until-all', 'loop-times']:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -250,7 +250,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nshape = 'invhouse'
         elif ntype in ['win', 'lose', 'draw']:
             nshape = 'octagon'
-        elif ntype in ['sequence', 'none', 'random', 'loop-until-any', 'loop-until-all', 'loop-times']:
+        elif ntype in ['sequence', 'none', 'random-try', 'random-one', 'loop-until-any', 'loop-until-all', 'loop-times']:
             nshape = 'oval'
         elif ntype in ['file']:
             nshape = 'folder'

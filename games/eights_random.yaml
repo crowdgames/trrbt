@@ -10,7 +10,7 @@ tree:
   - type: loop-times
     times: 10
     children:
-    - type: random
+    - type: random-try
       children:
       - type: link
         target: move
