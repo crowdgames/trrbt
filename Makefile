@@ -4,21 +4,14 @@
 # Determine the operating system
 ifeq ($(OS),Windows_NT)
     # Windows
-    RM = del /q
+    RMRF = del /q
 else
     # Unix/Linux
-    RM = rm -rf
+    RMRF = rm -rf
 endif
 
-all: \
-	out/ttt-base.pdf out/ttt-xform.pdf \
-	out/connect-base.pdf out/connect-xform.pdf \
-	out/rushhour-base.pdf out/rushhour-xform.pdf \
-	out/rushhour_random-base.pdf out/rushhour_random-xform.pdf \
-	out/checkers-base.pdf out/checkers-xform.pdf \
-	out/platform-base.pdf out/platform-xform.pdf \
-	out/eights-base.pdf out/eights-xform.pdf \
-	out/eights_random-base.pdf out/eights_random-xform.pdf
+all: $(addprefix out/, $(addsuffix -base.pdf, $(basename $(notdir $(shell ls games/*.yaml))))) \
+     $(addprefix out/, $(addsuffix -xform.pdf, $(basename $(notdir $(shell ls games/*.yaml)))))
 
 out:
 	mkdir -p out
@@ -33,4 +26,4 @@ out/%-xform.gv: games/%.yaml yaml2bt.py util.py | out
 	python yaml2bt.py --xform $< > $@
 
 clean:
-	$(RM) out
+	$(RMRF) out
