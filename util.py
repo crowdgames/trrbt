@@ -233,7 +233,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
                 else:
                     nlabel += '   '
                 nlabel += ' '.join(rr)
-                nlabel += GVNEWLINE
+                if ii + 1 < len(lhs):
+                    nlabel += GVNEWLINE
             nlabel += GVTILEEND
         else:
             pattern = pad_tiles([node['pattern']])[0]
