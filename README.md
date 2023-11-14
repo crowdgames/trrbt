@@ -26,7 +26,9 @@ Then run `make` to create visualizations in the `out` folder.
 
 **none**: Executes children in order, until any child fails; if any child fails, returns failure, otherwise returns success.
 
-**random**: Executes a random child; if that child fails, returns failure, otherwise returns success.
+**random-try**: Executes children in random order until one succeeds; if any child succeeds, returns success, otherwise returns failure.
+
+**random-one**: Executes a random child; if that child fails, returns failure, otherwise returns success.
 
 **loop-until-any**: Repeatedly executes children in order, until any child fails; if any child succeeds, returns success, otherwise returns failure.
 
