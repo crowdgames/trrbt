@@ -11,15 +11,15 @@ tree:
     id: xturn
     children:
     - type: player
+      comment: player moves
       number: 1
-      comment: player's move
       children:
       - type: rewrite
         lhs: _
         rhs: X
     - type: win
-      number: 1
       comment: check for player win
+      number: 1
       children:
       - type: turn
         children:

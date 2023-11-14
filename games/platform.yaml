@@ -22,9 +22,11 @@ tree:
       number: 1
       children:
       - type: rewrite
+        comment: player stays still
         lhs: Pa
         rhs: Pa
       - type: mirror
+        comment: player moves to side
         children:
         - type: rewrite
           lhs: Pa  _
@@ -33,9 +35,11 @@ tree:
           lhs: Pa  O
           rhs: _   W
       - type: rewrite
+        comment: player on ground jumps
         lhs: P0 ;X
         rhs: P2 ;X
     - type: loop-until-all
+      comment: all enemies move, tagged
       children:
       - type: rewrite
         lhs: _   E
@@ -44,11 +48,13 @@ tree:
         lhs: Pa  E
         rhs: E'   _
     - type: loop-until-all
+      comment: enemy tags removed
       children:
       - type: rewrite
         lhs: E'
         rhs: E
     - type: loop-until-all
+      comment: things fall into spaces, tagged
       children:
       - type: rewrite
         lhs: E  ;_
@@ -60,6 +66,7 @@ tree:
         lhs: P0 ;O
         rhs: _  ;W
     - type: loop-until-all
+      comment: things land on what's below them
       children:
       - type: rewrite
         lhs: E  ;Pa
@@ -68,6 +75,7 @@ tree:
         lhs: P0 ;E
         rhs: _  ;P0'
     - type: loop-until-all
+      comment: if jumping, player moves up or hits something
       children:
       - type: rewrite
         lhs: _  ;P1
@@ -88,6 +96,7 @@ tree:
         lhs: Q  ;P1
         rhs: X  ;P0'
     - type: loop-until-all
+      comment: tags removed
       children:
       - type: rewrite
         lhs: E'
@@ -96,11 +105,13 @@ tree:
         lhs: Pa'
         rhs: Pa
     - type: win
+      comment: player wins if reached goal
       number: 1
       children:
       - type: match
         pattern: W
     - type: lose
+      comment: player loses if captured
       number: 1
       children:
       - type: none

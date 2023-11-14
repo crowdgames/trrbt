@@ -24,11 +24,13 @@ tree:
     number: 1
     children:
     - type: mirror
+      comment: red car moves side to side
       children:
       - type: rewrite
         lhs: CR CR __
         rhs: __ CR CR
     - type: replaceonly
+      comment: cars and trucks move
       what: a
       with:
       - 1
@@ -43,6 +45,7 @@ tree:
           lhs: Ta Ta Ta __
           rhs: __ Ta Ta Ta
   - type: win
+    comment: win if red car at exit
     number: 1
     children:
     - type: match
