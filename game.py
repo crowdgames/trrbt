@@ -119,11 +119,11 @@ class GameProcessor:
                 lhs = '; '.join([' '.join(row) for row in node['lhs']])
                 rhs = '; '.join([' '.join(row) for row in node['rhs']])
 
-                print(f'{idx}: at {row},{col} {lhs} → {rhs}')
+                print(f'{1 + idx}: at {row},{col} {lhs} → {rhs}')
                 idx += 1
             while True:
                 try:
-                    user_input = int(input(f"Please enter the index of your choice, from 0 to {idx - 1}: "))
+                    user_input = -1 + int(input(f"Please enter the index of your choice, from 1 to {idx}: "))
                     if user_input < 0 or user_input >= idx:
                         print("Your index is out of range!")
                         continue
