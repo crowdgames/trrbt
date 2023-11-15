@@ -12,7 +12,8 @@ GVCOMMBGN = '<FONT POINT-SIZE="6"><I>'
 GVCOMMEND = '</I></FONT>'
 
 class Game:
-    def __init__(self, starts, tree):
+    def __init__(self, name, starts, tree):
+        self.name = name
         self.starts = starts
         self.tree = tree
 
@@ -349,9 +350,10 @@ def game_print_gv(game):
     node_find_nids(game.tree, nid_to_node, pid_to_nid)
 
     print('digraph G {')
+    print(f'  _NAME [shape="note", label=<{game.name}>];')
     for ii, start in enumerate(game.starts):
         label = pattern_to_string(start, ' ', GVNEWLINE)
-        print(f'  START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
+        print(f'  _START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
@@ -375,6 +377,8 @@ def resolve_file_links(folder, node):
 def yaml2bt(filename, xform):
     data = yamlload(filename)
 
+    name = data['name']
+
     root = data['tree']
 
     root = resolve_file_links(os.path.dirname(filename), root)
@@ -388,4 +392,4 @@ def yaml2bt(filename, xform):
 
     starts = [string_to_tuple_pattern(start) for start in data['start']]
 
-    return Game(starts, root)
+    return Game(name, starts, root)

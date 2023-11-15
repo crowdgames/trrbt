@@ -1,0 +1,97 @@
+---
+name: ultimate tic-tac-toe
+start:
+- = = = = = = = = = = = = =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = = = = = = = = = = = = =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = = = = = = = = = = = = =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = _ _ _ = _ _ _ = _ _ _ =;
+  = = = = = = = = = = = = =;
+tree:
+  type: loop-until-all
+  children:
+  - type: ident
+    id: xturn
+    children:
+    - type: player
+      number: 1
+      children:
+      - type: rewrite
+        lhs: _
+        rhs: X
+    - type: loop-until-all
+      children:
+      - type: turn
+        children:
+        - type: rewrite
+          lhs: = = = = =;
+               = X X X =;
+               = . . . =;
+               = . . . =;
+               = = = = =;
+          rhs: = = = = =;
+               = x x x =;
+               = x x x =;
+               = x x x =;
+               = = = = =;
+        - type: rewrite
+          lhs: = = = = =;
+               = . . . =;
+               = X X X =;
+               = . . . =;
+               = = = = =;
+          rhs: = = = = =;
+               = x x x =;
+               = x x x =;
+               = x x x =;
+               = = = = =;
+        - type: rewrite
+          lhs: = = = = =;
+               = . . . =;
+               = . . . =;
+               = X X X =;
+               = = = = =;
+          rhs: = = = = =;
+               = x x x =;
+               = x x x =;
+               = x x x =;
+               = = = = =;
+        - type: rewrite
+          lhs: = = = = =;
+               = X . . =;
+               = . X . =;
+               = . . X =;
+               = = = = =;
+          rhs: = = = = =;
+               = x x x =;
+               = x x x =;
+               = x x x =;
+               = = = = =;
+    - type: win
+      number: 1
+      children:
+      - type: turn
+        children:
+        - type: skew
+          children:
+          - type: match
+            pattern: x . . . x . . . x
+  - type: nextplayer
+    children:
+    - type: swaponly
+      what: X
+      with: O
+      children:
+      - type: swaponly
+        what: x
+        with: o
+        children:
+        - type: link
+          target: xturn

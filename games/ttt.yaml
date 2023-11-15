@@ -1,5 +1,5 @@
 ---
-name: tic-tac-toe BT
+name: tic-tac-toe
 start:
 - _ _ _;
   _ _ _;

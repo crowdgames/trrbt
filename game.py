@@ -8,6 +8,7 @@ class GameProcessor:
     def __init__(self, filename):
         bt = util.yaml2bt(filename, True)
 
+        self.name = bt.name
         self.filename = filename
         self.game_ends = False
         self.board = util.listify(random.choice(bt.starts))
@@ -23,7 +24,7 @@ class GameProcessor:
         """
         Play the whole game
         """
-        self.display_board()
+        print(f"Playing {self.name}")
         # Process the root node
         root_type = self.tree["type"]
         if root_type == "sequence":
@@ -32,12 +33,15 @@ class GameProcessor:
             self.process_loop_until_all_node(self.tree)
         # Game ends
         if self.winner is None and self.loser is None:
+            self.display_board()
             print("A TIE")
             return
         elif self.winner:
+            self.display_board()
             print("Player", self.winner, "wins")
             return
         elif self.loser:
+            self.display_board()
             print("Player", self.loser, "loses")
 
     def process_sequence_node(self, node):
@@ -85,7 +89,6 @@ class GameProcessor:
                     self.process_rondom_try_node(child)
                 # print(child)
         print("Randomzing board...")
-        self.display_board()
 
     def process_rewite_node(self, node):
         res = self.find_pattern(node)
@@ -100,6 +103,8 @@ class GameProcessor:
         Prompt the player to make a choice from a list of valid moves.
         :return: True if the player has at least one valid move. False otherwise.
         """
+        self.display_board()
+
         # assume that all children nodes of player node are rewrite nodes
         valid_moves = []
         self.current_player = node["number"]
@@ -113,6 +118,8 @@ class GameProcessor:
             if len(valid_moves) == 0:
                 print("You don't have a valid move!")
                 return False
+
+            print()
             print("Your choices are:")
             idx = 0
             for node, row, col in valid_moves:
@@ -231,7 +238,6 @@ class GameProcessor:
         :return: true if one of the players win and false otherwise
         """
         child = node["children"]
-        self.display_board()
         for item in child:
             node_type = item["type"]
             if node_type == "match":
@@ -258,7 +264,6 @@ class GameProcessor:
         Process lose node
         """
         child = node["children"]
-        self.display_board()
         for item in child:
             node_type = item["type"]
             if node_type == "match":
@@ -301,6 +306,7 @@ class GameProcessor:
         return False
 
     def display_board(self):
+        print()
         print("Current board is:")
         print(util.pattern_to_string(self.board, ' ', '\n', self.max_tile_width))
 
