@@ -5,13 +5,15 @@
 ifeq ($(OS),Windows_NT)
     # Windows
     RMRF = del /q
+    PATH = dir /B games\*.yaml
 else
     # Unix/Linux
     RMRF = rm -rf
+    PATH = ls games/*.yaml
 endif
 
-all: $(addprefix out/, $(addsuffix -base.pdf, $(basename $(notdir $(shell ls games/*.yaml))))) \
-     $(addprefix out/, $(addsuffix -xform.pdf, $(basename $(notdir $(shell ls games/*.yaml)))))
+all: $(addprefix out/, $(addsuffix -base.pdf, $(basename $(notdir $(shell $(PATH)))))) \
+     $(addprefix out/, $(addsuffix -xform.pdf, $(basename $(notdir $(shell $(PATH))))))
 
 out:
 	mkdir -p out
