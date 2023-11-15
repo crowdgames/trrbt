@@ -19,6 +19,7 @@ class GameProcessor:
         self.winner = None
         self.loser = None
         self.max_tile_width = util.node_max_tile_width(self.tree)
+        self.previous_moves = {}
 
     def game_play(self):
         """
@@ -121,24 +122,45 @@ class GameProcessor:
 
             print()
             print("Your choices are:")
-            idx = 0
-            for node, row, col in valid_moves:
+
+            this_turn_moves = {}
+
+            idx = 1
+            for choice in valid_moves:
+                node, row, col = choice
+
                 lhs = util.pattern_to_string(node['lhs'], ' ', '; ')
                 rhs = util.pattern_to_string(node['rhs'], ' ', '; ')
 
-                print(f'{1 + idx}: at {row},{col} {lhs} → {rhs}')
+                choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
+                for choice_key in choice_keys:
+                    if choice_key in self.previous_moves:
+                        idx = self.previous_moves[choice_key]
+                        break
+
+                while idx in this_turn_moves:
+                    idx += 1
+
+                print(f'{idx}: {lhs} → {rhs} at {row},{col}')
+
+                this_turn_moves[idx] = choice
+
+                for choice_key in choice_keys:
+                    self.previous_moves[choice_key] = idx
+
                 idx += 1
+
             while True:
                 try:
-                    user_input = -1 + int(input(f"Please enter the index of your choice, from 1 to {idx}: "))
-                    if user_input < 0 or user_input >= idx:
-                        print("Your index is out of range!")
+                    user_input = int(input(f"Please enter the number of your choice: "))
+                    if user_input not in this_turn_moves:
+                        print("Your number is out of range!")
                         continue
                     break
                 except ValueError:
-                    print("Error: Please enter a valid integer.")
+                    print("Error: Please enter a valid number.")
 
-            choice = valid_moves[user_input]
+            choice = this_turn_moves[user_input]
             self.make_move(choice)
             return True
 
