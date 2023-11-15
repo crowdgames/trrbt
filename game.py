@@ -120,17 +120,16 @@ class GameProcessor:
                 print("You don't have a valid move!")
                 return False
 
-            print()
-            print("Your choices are:")
+            this_turn_choices = {}
+            this_turn_info = {}
 
-            this_turn_moves = {}
-
-            idx = 1
             for choice in valid_moves:
                 node, row, col = choice
 
                 lhs = util.pattern_to_string(node['lhs'], ' ', '; ')
                 rhs = util.pattern_to_string(node['rhs'], ' ', '; ')
+
+                idx = None
 
                 choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
                 for choice_key in choice_keys:
@@ -138,29 +137,35 @@ class GameProcessor:
                         idx = self.previous_moves[choice_key]
                         break
 
-                while idx in this_turn_moves:
+                if idx is None:
+                    idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
+
+                while idx in this_turn_choices:
                     idx += 1
 
-                print(f'{idx}: {lhs} → {rhs} at {row},{col}')
-
-                this_turn_moves[idx] = choice
+                this_turn_choices[idx] = choice
+                this_turn_info[idx] = (lhs, rhs, row, col)
 
                 for choice_key in choice_keys:
                     self.previous_moves[choice_key] = idx
 
-                idx += 1
+            print()
+            print("Your choices are:")
+            for idx in sorted(this_turn_choices.keys()):
+                lhs, rhs, row, col = this_turn_info[idx]
+                print(f'{idx}: {lhs} → {rhs} at {row},{col}')
 
             while True:
                 try:
                     user_input = int(input(f"Please enter the number of your choice: "))
-                    if user_input not in this_turn_moves:
+                    if user_input not in this_turn_choices:
                         print("Your number is out of range!")
                         continue
                     break
                 except ValueError:
                     print("Error: Please enter a valid number.")
 
-            choice = this_turn_moves[user_input]
+            choice = this_turn_choices[user_input]
             self.make_move(choice)
             return True
 
