@@ -243,7 +243,7 @@ class GameProcessor:
             if node_type == "match":
                 pattern = item['pattern']
                 if self.match_pattern(pattern):
-                    print("Pattern matched:", pattern)
+                    print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
                     self.winner = self.current_player
                     print("winner", self.winner)
                     self.game_ends = True
