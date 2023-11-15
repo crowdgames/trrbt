@@ -1,5 +1,5 @@
 ---
-name: connect four BT
+name: connect four
 start:
 - = = = = = = =;
   _ _ _ _ _ _ _;
