@@ -46,21 +46,18 @@ def listify(patt):
 def tuplify(patt):
     return tuple([tuple(row) for row in patt])
 
-def string_to_list_pattern(s):
-    return [[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != '']
-
-def string_to_tuple_pattern(s):
-    return tuplify(string_to_list_pattern(s))
+def string_to_pattern(s):
+    return tuplify([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != ''])
 
 def node_reshape_tiles(node):
     node = node.copy()
 
     if node['type'] == 'rewrite':
-        node['lhs'] = string_to_tuple_pattern(node['lhs'])
-        node['rhs'] = string_to_tuple_pattern(node['rhs'])
+        node['lhs'] = string_to_pattern(node['lhs'])
+        node['rhs'] = string_to_pattern(node['rhs'])
 
     if node['type'] == 'match':
-        node['pattern'] = string_to_tuple_pattern(node['pattern'])
+        node['pattern'] = string_to_pattern(node['pattern'])
 
     if 'children' in node.keys():
         node['children'] = [node_reshape_tiles(child) for child in node['children']]
@@ -390,6 +387,6 @@ def yaml2bt(filename, xform):
         node_find_nids(root, nid_to_node, pid_to_nid)
         root = node_xform_tiles(root, [xform_identity], nid_to_node)[0]
 
-    starts = [string_to_tuple_pattern(start) for start in data['start']]
+    starts = [string_to_pattern(start) for start in data['start']]
 
     return Game(name, starts, root)
