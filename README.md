@@ -14,10 +14,16 @@ pipenv install
 pipenv shell
 ```
 
+
 ## Game Description Visualization
 
 To visualize game descriptions you will also need [GraphViz](https://graphviz.org/) installed.
 Then run `make` to create visualizations in the `out` folder.
+
+
+## Playing Games
+
+To play a game, run `python game.py games/NAME.yaml`.
 
 
 ## Node Behaviors
