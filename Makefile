@@ -4,14 +4,16 @@
 # Determine the operating system
 ifeq ($(OS),Windows_NT)
     # Windows
-    RMRF = del /q
+    RMRF=del /q
 else
     # Unix/Linux
-    RMRF = rm -rf
+    RMRF=rm -rf
 endif
 
-all: $(addprefix out/, $(addsuffix -base.pdf, $(basename $(notdir $(shell ls games/*.yaml))))) \
-     $(addprefix out/, $(addsuffix -xform.pdf, $(basename $(notdir $(shell ls games/*.yaml)))))
+GAMES=$(basename $(notdir $(wildcard games/*.yaml)))
+
+all: $(addprefix out/, $(addsuffix -base.pdf, $(GAMES))) \
+     $(addprefix out/, $(addsuffix -xform.pdf, $(GAMES)))
 
 out:
 	mkdir -p out

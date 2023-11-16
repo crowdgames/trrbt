@@ -21,77 +21,72 @@ class GameProcessor:
         self.max_tile_width = util.node_max_tile_width(self.tree)
         self.previous_moves = {}
 
+        self.node_func_map = {
+            "sequence": self.execute_sequence_node,
+            "loop-until-all": self.execute_loop_until_all_node,
+            "win": self.execute_win_node,
+            "lose": self.execute_lose_node,
+            "rewrite": self.execute_rewite_node,
+            "loop-times": self.execute_loop_times_node,
+            "random-try": self.execute_rondom_try_node,
+            "player": self.execute_player_node,
+            "match": self.execute_match_node,
+            "none": self.execute_none_node,
+        }
+
+    def execute_node(self, node):
+        fn = self.node_func_map[node["type"]]
+        return fn(node)
+
     def game_play(self):
         """
         Play the whole game
         """
-        print(f"Playing {self.name}")
-        # Process the root node
-        root_type = self.tree["type"]
-        if root_type == "sequence":
-            self.process_sequence_node(self.tree)
-        elif root_type == "loop-until-all":
-            self.process_loop_until_all_node(self.tree)
-        # Game ends
-        if self.winner is None and self.loser is None:
-            self.display_board()
-            print("A TIE")
-            return
-        elif self.winner:
-            self.display_board()
-            print("Player", self.winner, "wins")
-            return
-        elif self.loser:
-            self.display_board()
-            print("Player", self.loser, "loses")
+        self.display_board()
+        self.execute_node(self.tree)
+        if self.game_ends:
+            print("game ends")
+            if self.winner is None and self.loser is None:
+                print("A TIE")
+                return
+            elif self.winner:
+                print("Player", self.winner, "wins")
+                return
+            elif self.loser:
+                print("Player", self.loser, "loses")
 
-    def process_sequence_node(self, node):
-        # assume that sequence node is the entry point and only appears at the root of the tree
+    def execute_sequence_node(self, node):
+        """
+        Executes children in order (regardless of their success or failure)
+        :return: If any child fails, returns failure, otherwise returns success.
+        """
+        flag = True
         for child in node["children"]:
             if self.game_ends:
                 break
-            child_type = child["type"]
-            if child_type == "player":  # todo
-                self.current_player = child["number"]
-                if not self.process_player_node(child):
-                    # current player has no valid move
-                    self.loser = self.current_player
-                    self.game_ends = True
-            elif child_type == "all":
-                self.process_all_node(child)
-            elif child_type == "loop-until-all":
-                self.process_loop_until_all_node(child)
-            elif child_type == "win":
-                self.process_win_node(child)
-            elif child_type == "lose":
-                self.process_lose_node(child)
-            elif child_type == "rewrite":
-                self.process_rewite_node(child)
-            elif child_type == "sequence":
-                self.process_sequence_node(child)
-            elif child_type == "loop-times":
-                self.process_loop_times_node(child)
-            elif child_type == "random-try":
-                self.process_rondom_try_node(child)
+            if not self.execute_node(child):
+                flag = False
+        return flag
 
-    def process_loop_times_node(self, node):
-        # currently this function is used to randomize board
+    def execute_loop_times_node(self, node):
+        """
+        Repeatedly executes children in order a fixed number of times
+        Currently this function is used to randomize board
+        :return: If any child succeeds, returns success, otherwise returns failure.
+        """
         times = node["times"]
         while times > 0:
             times -= 1
             for child in node["children"]:
-                if self.game_ends:
-                    break
-                child_type = child["type"]
-                # todo: what if child type is not random?
-                if child_type == "sequence":
-                    self.process_sequence_node(child)
-                elif child_type == "random-try":
-                    self.process_rondom_try_node(child)
-                # print(child)
+                self.execute_node(child)
         print("Randomzing board...")
+        self.display_board()
 
-    def process_rewite_node(self, node):
+    def execute_rewite_node(self, node):
+        """
+        If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
+        :return: If any rewrite rule is applied successfully, return true, otherwise return false.
+        """
         res = self.find_pattern(node)
         if res:
             res = res[1][0]
@@ -99,14 +94,12 @@ class GameProcessor:
             return True
         return False
 
-    def process_player_node(self, node):
+    def execute_player_node(self, node):
         """
         Prompt the player to make a choice from a list of valid moves.
+        All children nodes of player node are rewrite nodes
         :return: True if the player has at least one valid move. False otherwise.
         """
-        self.display_board()
-
-        # assume that all children nodes of player node are rewrite nodes
         valid_moves = []
         self.current_player = node["number"]
         if node["children"]:
@@ -169,67 +162,89 @@ class GameProcessor:
             self.make_move(choice)
             return True
 
-    def process_rondom_try_node(self, node):
+    def execute_rondom_try_node(self, node):
         """
-        The system will pick a rondom move. No need for player to make a choice.
-        :param node:
-        :return:
+        Executes children in random order until one succeeds.
+        :return: If any child succeeds, returns success, otherwise returns failure.
         """
-        # assume that all children nodes of player node are rewrite nodes
-        valid_moves = []
         if node["children"]:
-            for child in node["children"]:
-                if child["type"] == "rewrite":
-                    res = self.find_pattern(child)
-                    if res:
-                        res = res[1]
-                        valid_moves.extend(res)
-                else:
-                    # todo
-                    print("type =", child['type'])
-            if len(valid_moves) == 0:
-                return False
-            choice = random.choice(valid_moves)
-            self.make_move(choice)
-            return True
+            list_of_children = node["children"]
+            random.shuffle(list_of_children)
+            for child in list_of_children:
+                if self.execute_node(child):
+                    return True
 
-    def process_all_node(self, node):
-        # todo
-        # loop until all children fail == apply all once + loop ?
-        flag = False
-        for child in node["children"]:
-            child_type = child["type"]
-            if child_type == "rewrite":
-                flag = self.process_rewite_node(child)
-        return flag
-
-    def process_loop_until_all_node(self, node):
-        # loops until all children fail
+    def execute_loop_until_all_node(self, node):
+        """
+        Repeatedly executes children in order, until all children fail.
+        :return: If any child succeeds, returns success, otherwise returns failure.
+        """
         flag = True
         while flag and not self.game_ends:
-            # self.process_sequence_node(node)
             flag = False
             for child in node["children"]:
                 if self.game_ends:
                     break
-                child_type = child["type"]
-                if child_type == "player":
-                    if self.process_player_node(child):
-                        flag = True
-                elif child_type == "loop-until-all":
-                    if self.process_loop_until_all_node(child):
-                        flag = True
-                elif child_type == "win":
-                    self.process_win_node(child)
-                elif child_type == "lose":
-                    self.process_lose_node(child)
-                elif child_type == "rewrite":
-                    if self.process_rewite_node(child):
-                        flag = True
-                elif child_type == "random-try":
-                    if self.process_rondom_try_node(child):
-                        flag = True
+                if self.execute_node(child):
+                    flag = True
         return flag
+
+    def execute_match_node(self, node):
+        """
+        Executes match node
+        :return: Returns success if pattern matches current board, otherwise returns failure.
+        """
+        pattern = node["pattern"]
+        if self.match_pattern(pattern):
+            print("Pattern matched:", pattern)
+            return True
+        return False
+
+    def execute_none_node(self, node):
+        """
+        Executes children in order, until any child succeeds.
+        :return: If any child succeeds, returns failure, otherwise returns success.
+        """
+        children = node["children"]
+        if not children:
+            return True
+        for child in children:
+            if self.execute_node(child):
+                return False
+        return True
+
+    def execute_win_node(self, node):
+        """
+        Executes children in order, until any child succeeds
+        :return: true if one of the players win and false otherwise
+        """
+        children = node["children"]
+        self.display_board()
+        for child in children:
+            if self.execute_node(child):
+                self.winner = self.current_player
+                self.game_ends = True
+                return True
+        return False
+
+    def execute_lose_node(self, node):
+        """
+        Executes children in order, until any child succeeds
+        :return: true if one of the players lose and false otherwise
+        """
+        children = node["children"]
+        self.display_board()
+        for child in children:
+            if self.execute_node(child):
+                self.loser = self.current_player
+                self.game_ends = True
+                return True
+        return False
+
+    def execute_tie_node(self, node):
+        # todo
+        if node["children"]:
+            print("..")
 
     def make_move(self, choice):
         if len(choice) != 3:
@@ -259,57 +274,6 @@ class GameProcessor:
                         return False
         return True, x, y
 
-    def process_win_node(self, node):
-        """
-        Process win node
-        :return: true if one of the players win and false otherwise
-        """
-        child = node["children"]
-        for item in child:
-            node_type = item["type"]
-            if node_type == "match":
-                pattern = item['pattern']
-                if self.match_pattern(pattern):
-                    print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
-                    self.winner = self.current_player
-                    print("winner", self.winner)
-                    self.game_ends = True
-                    return True
-            elif node_type == "none":
-                children = item["children"]
-                for none_node_child in children:
-                    pattern = none_node_child["pattern"]
-                    if self.match_pattern(pattern):
-                        return False
-                self.game_ends = True
-                self.winner = self.current_player
-                return True
-        return False
-
-    def process_lose_node(self, node):
-        """
-        Process lose node
-        """
-        child = node["children"]
-        for item in child:
-            node_type = item["type"]
-            if node_type == "match":
-                pattern = item['pattern']
-                if self.match_pattern(pattern):
-                    print("Pattern matched:", pattern)
-                    self.loser = self.current_player
-                    self.game_ends = True
-                    return True
-            elif node_type == "none":
-                children = item["children"]
-                for none_node_child in children:
-                    pattern = none_node_child["pattern"]
-                    if self.match_pattern(pattern):
-                        return
-                self.game_ends = True
-                self.loser = self.current_player
-                return
-
     def match_pattern(self, pattern):
         pattern_rows = len(pattern)
         pattern_cols = len(pattern[0])
@@ -322,7 +286,7 @@ class GameProcessor:
                 match = True
                 for r in range(pattern_rows):
                     for c in range(pattern_cols):
-                        if pattern[r][c] != '.':
+                        if pattern[r][c] != ".":
                             if self.board[i + r][j + c] != pattern[r][c]:
                                 match = False
                                 break
@@ -336,7 +300,6 @@ class GameProcessor:
         print()
         print("Current board is:")
         print(util.pattern_to_string(self.board, ' ', '\n', self.max_tile_width))
-
 
 
 if __name__ == '__main__':

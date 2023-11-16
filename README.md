@@ -24,7 +24,7 @@ Then run `make` to create visualizations in the `out` folder.
 
 **sequence**: Executes children in order (regardless of their success or failure); if any child fails, returns failure, otherwise returns success.
 
-**none**: Executes children in order, until any child fails; if any child fails, returns failure, otherwise returns success.
+**none**: Executes children in order, until any child succeeds; if any child succeeds, returns failure, otherwise returns success.
 
 **random-try**: Executes children in random order until one succeeds; if any child succeeds, returns success, otherwise returns failure.
 
