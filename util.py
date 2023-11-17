@@ -347,10 +347,10 @@ def game_print_gv(game):
     node_find_nids(game.tree, nid_to_node, pid_to_nid)
 
     print('digraph G {')
-    print(f'  _NAME [shape="note", label=<{game.name}>];')
+    print(f'  _NAME [shape="component", label=<{game.name}>];')
     for ii, start in enumerate(game.starts):
         label = pattern_to_string(start, ' ', GVNEWLINE)
-        print(f'  _START{ii} [shape="box", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
+        print(f'  _START{ii} [shape="note", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
