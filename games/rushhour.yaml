@@ -24,7 +24,7 @@ tree:
     number: 1
     children:
     - type: x-ident
-      id: move
+      nid: move
       children:
       - type: x-mirror
         comment: red car moves side to side

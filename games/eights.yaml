@@ -15,7 +15,7 @@ tree:
     children:
     - type: x-replaceonly
       what: a
-      id: move
+      nid: move
       with:
       - 1
       - 2
