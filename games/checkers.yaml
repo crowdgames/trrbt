@@ -32,7 +32,7 @@ tree:
           nid: redturn
           children:
           - type: player
-            number: 1
+            pid: R
             children:
             - type: rewrite
               lhs: .    _  ;
@@ -61,7 +61,7 @@ tree:
           - type: loop-until-all
             children:
             - type: player
-              number: 1
+              pid: R
               children:
               - type: rewrite
                 lhs: .   .   _  ;
@@ -84,13 +84,14 @@ tree:
             lhs: =  ; RPS
             rhs: =  ; RKS
           - type: win
-            number: 1
+            pid: R
             children:
              - type: none
                children:
                - type: match
                  pattern: BaS
-        - type: x-nextplayer
+        - type: x-newplayer
+          pid: B
           children:
           - type: x-fliponly
             children:

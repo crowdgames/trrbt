@@ -19,7 +19,7 @@ tree:
   - type: loop-until-all
     children:
     - type: player
-      number: 1
+      pid: 1
       children:
       - type: rewrite
         comment: player stays still
@@ -106,13 +106,13 @@ tree:
         rhs: Pa
     - type: win
       comment: player wins if reached goal
-      number: 1
+      pid: 1
       children:
       - type: match
         pattern: W
     - type: lose
       comment: player loses if captured
-      number: 1
+      pid: 1
       children:
       - type: none
         children:

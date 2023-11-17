@@ -21,7 +21,7 @@ tree:
     nid: xturn
     children:
     - type: player
-      number: 1
+      pid: X
       children:
       - type: rewrite
         lhs: _
@@ -75,7 +75,7 @@ tree:
                = ~ ~ ~ =;
                = = = = =;
     - type: win
-      number: 1
+      pid: X
       children:
       - type: x-turn
         children:
@@ -83,7 +83,8 @@ tree:
           children:
           - type: match
             pattern: x . . . x . . . x
-  - type: x-nextplayer
+  - type: x-newplayer
+    pid: O
     children:
     - type: x-swaponly
       what: X
