@@ -3,6 +3,14 @@ import random
 import time
 import util
 
+END_WIN  = 'win'
+END_LOSE = 'lose'
+END_DRAW = 'draw'
+
+class GameOverException(Exception):
+    def __init__(self, result, player):
+        self.result = result
+        self.player = player
 
 class GameProcessor:
     def __init__(self, filename):
@@ -10,14 +18,10 @@ class GameProcessor:
 
         self.name = bt.name
         self.filename = filename
-        self.game_ends = False
         self.board = util.listify(random.choice(bt.starts))
         self.m = len(self.board)
         self.n = len(self.board[0])
         self.tree = bt.tree
-        self.current_player = None
-        self.winner = None
-        self.loser = None
         self.max_tile_width = util.node_max_tile_width(self.tree)
         self.previous_moves = {}
 
@@ -26,6 +30,7 @@ class GameProcessor:
             "loop-until-all": self.execute_loop_until_all_node,
             "win": self.execute_win_node,
             "lose": self.execute_lose_node,
+            "draw": self.execute_draw_node,
             "rewrite": self.execute_rewite_node,
             "loop-times": self.execute_loop_times_node,
             "random-try": self.execute_rondom_try_node,
@@ -43,17 +48,19 @@ class GameProcessor:
         Play the whole game
         """
         self.display_board()
-        self.execute_node(self.tree)
-        if self.game_ends:
-            print("game ends")
-            if self.winner is None and self.loser is None:
-                print("A TIE")
-                return
-            elif self.winner:
-                print("Player", self.winner, "wins")
-                return
-            elif self.loser:
-                print("Player", self.loser, "loses")
+        try:
+            self.execute_node(self.tree)
+        except GameOverException as e:
+            if e.result == END_WIN:
+                print("Player", e.player, "wins")
+            elif e.result == END_LOSE:
+                print("Player", e.player, "loses")
+            elif e.result == END_DRAW:
+                print("A draw")
+            else:
+                print("Unrecognized game result:", e.result)
+        else:
+            print("Stalemate - root node exited but game has not ended")
 
     def execute_sequence_node(self, node):
         """
@@ -62,8 +69,6 @@ class GameProcessor:
         """
         flag = True
         for child in node["children"]:
-            if self.game_ends:
-                break
             if not self.execute_node(child):
                 flag = False
         return flag
@@ -101,7 +106,6 @@ class GameProcessor:
         :return: True if the player has at least one valid move. False otherwise.
         """
         valid_moves = []
-        self.current_player = node["number"]
         if node["children"]:
             for child in node["children"]:
                 if child["type"] == "rewrite":
@@ -180,11 +184,9 @@ class GameProcessor:
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
         flag = True
-        while flag and not self.game_ends:
+        while flag:
             flag = False
             for child in node["children"]:
-                if self.game_ends:
-                    break
                 if self.execute_node(child):
                     flag = True
         return flag
@@ -196,7 +198,7 @@ class GameProcessor:
         """
         pattern = node["pattern"]
         if self.match_pattern(pattern):
-            print("Pattern matched:", pattern)
+            print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
 
@@ -216,35 +218,40 @@ class GameProcessor:
     def execute_win_node(self, node):
         """
         Executes children in order, until any child succeeds
-        :return: true if one of the players win and false otherwise
+        :return: when a child succeeds, game ends immediately as a win, and false otherwise
         """
         children = node["children"]
+        player = int(node["number"])
         self.display_board()
         for child in children:
             if self.execute_node(child):
-                self.winner = self.current_player
-                self.game_ends = True
-                return True
+                raise GameOverException(END_WIN, player)
         return False
 
     def execute_lose_node(self, node):
         """
         Executes children in order, until any child succeeds
-        :return: true if one of the players lose and false otherwise
+        :return: when a child succeeds, game ends immediately as a lose, and false otherwise
+        """
+        children = node["children"]
+        player = int(node["number"])
+        self.display_board()
+        for child in children:
+            if self.execute_node(child):
+                raise GameOverException(END_LOSE, player)
+        return False
+
+    def execute_draw_node(self, node):
+        """
+        Executes children in order, until any child succeeds
+        :return: when a child succeeds, game ends immediately as a draw, and false otherwise
         """
         children = node["children"]
         self.display_board()
         for child in children:
             if self.execute_node(child):
-                self.loser = self.current_player
-                self.game_ends = True
-                return True
+                raise GameOverException(END_DRAW, None)
         return False
-
-    def execute_tie_node(self, node):
-        # todo
-        if node["children"]:
-            print("..")
 
     def make_move(self, choice):
         if len(choice) != 3:
