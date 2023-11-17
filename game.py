@@ -13,7 +13,7 @@ class GameOverException(Exception):
         self.player = player
 
 class GameProcessor:
-    def __init__(self, filename):
+    def __init__(self, filename, random_players):
         bt = util.yaml2bt(filename, True)
 
         self.name = bt.name
@@ -24,6 +24,8 @@ class GameProcessor:
         self.tree = bt.tree
         self.max_tile_width = util.node_max_tile_width(self.tree)
         self.previous_moves = {}
+
+        self.random_players = random_players
 
         self.node_func_map = {
             "sequence": self.execute_sequence_node,
@@ -47,25 +49,23 @@ class GameProcessor:
         """
         Play the whole game
         """
-        self.display_board()
         try:
             self.execute_node(self.tree)
         except GameOverException as e:
-            if e.result == END_WIN:
-                print()
-                print("Player", e.player, "wins")
-            elif e.result == END_LOSE:
-                print()
-                print("Player", e.player, "loses")
-            elif e.result == END_DRAW:
-                print()
-                print("A draw")
-            else:
-                print()
-                print("Unrecognized game result:", e.result)
-        else:
+            self.display_board()
             print()
-            print("Stalemate - root node exited but game has not ended")
+            if e.result == END_WIN:
+                print("Game over, player", e.player, "wins")
+            elif e.result == END_LOSE:
+                print("Game over, player", e.player, "loses")
+            elif e.result == END_DRAW:
+                print("Game over, draw")
+            else:
+                print("Game over, unrecognized game result:", e.result)
+        else:
+            self.display_board()
+            print()
+            print("Game over, stalemate - root node exited but game has not ended")
 
     def execute_sequence_node(self, node):
         """
@@ -111,47 +111,60 @@ class GameProcessor:
         :return: True if the player has at least one valid move. False otherwise.
         """
         valid_moves = []
-        if node["children"]:
-            for child in node["children"]:
-                if child["type"] == "rewrite":
-                    res = self.find_pattern(child)
-                    if res:
-                        res = res[1]
-                        valid_moves.extend(res)
-            if len(valid_moves) == 0:
-                print("You don't have a valid move!")
-                return False
+        player_id = int(node["number"])
 
-            this_turn_choices = {}
-            this_turn_info = {}
+        self.display_board()
+        print()
 
-            for choice in valid_moves:
-                node, row, col = choice
+        for child in node["children"]:
+            if child["type"] == "rewrite":
+                res = self.find_pattern(child)
+                if res:
+                    res = res[1]
+                    valid_moves.extend(res)
+            else:
+                raise RuntimeError('All children of player nodes must be rewrite')
 
-                lhs = util.pattern_to_string(node['lhs'], ' ', '; ')
-                rhs = util.pattern_to_string(node['rhs'], ' ', '; ')
+        if len(valid_moves) == 0:
+            print("You don't have a valid move!")
+            return False
 
-                idx = None
+        this_turn_choices = {}
+        this_turn_info = {}
 
-                choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
-                for choice_key in choice_keys:
-                    if choice_key in self.previous_moves:
-                        idx = self.previous_moves[choice_key]
-                        break
+        for choice in valid_moves:
+            node, row, col = choice
 
-                if idx is None:
-                    idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
+            lhs = util.pattern_to_string(node['lhs'], ' ', '; ')
+            rhs = util.pattern_to_string(node['rhs'], ' ', '; ')
 
-                while idx in this_turn_choices:
-                    idx += 1
+            idx = None
 
-                this_turn_choices[idx] = choice
-                this_turn_info[idx] = (lhs, rhs, row, col)
+            choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
+            for choice_key in choice_keys:
+                if choice_key in self.previous_moves:
+                    idx = self.previous_moves[choice_key]
+                    break
 
-                for choice_key in choice_keys:
-                    self.previous_moves[choice_key] = idx
+            if idx is None:
+                idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
 
-            print()
+            while idx in this_turn_choices:
+                idx += 1
+
+            this_turn_choices[idx] = choice
+            this_turn_info[idx] = (lhs, rhs, row, col)
+
+            for choice_key in choice_keys:
+                self.previous_moves[choice_key] = idx
+
+        if player_id in self.random_players:
+            user_input = random.choice(list(this_turn_choices.keys()))
+
+            lhs, rhs, row, col = this_turn_info[user_input]
+            print(f'choice: {lhs} → {rhs} at {row},{col}')
+
+        else:
             print("Your choices are:")
             for idx in sorted(this_turn_choices.keys()):
                 lhs, rhs, row, col = this_turn_info[idx]
@@ -167,9 +180,9 @@ class GameProcessor:
                 except ValueError:
                     print("Error: Please enter a valid number.")
 
-            choice = this_turn_choices[user_input]
-            self.make_move(choice)
-            return True
+        choice = this_turn_choices[user_input]
+        self.make_move(choice)
+        return True
 
     def execute_rondom_try_node(self, node):
         """
@@ -227,7 +240,6 @@ class GameProcessor:
         """
         children = node["children"]
         player = int(node["number"])
-        self.display_board()
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_WIN, player)
@@ -240,7 +252,6 @@ class GameProcessor:
         """
         children = node["children"]
         player = int(node["number"])
-        self.display_board()
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_LOSE, player)
@@ -252,7 +263,6 @@ class GameProcessor:
         :return: when a child succeeds, game ends immediately as a draw, and false otherwise
         """
         children = node["children"]
-        self.display_board()
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_DRAW, None)
@@ -317,6 +327,7 @@ class GameProcessor:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
+    parser.add_argument('--player-random', type=int, nargs='+', help='Player IDs to play randomly.', default=[])
     parser.add_argument('--random', type=int, help='Random seed.')
     args = parser.parse_args()
 
@@ -324,5 +335,5 @@ if __name__ == '__main__':
     print(f'Using random seed {random_seed}')
     random.seed(random_seed)
 
-    game = GameProcessor(args.filename)
+    game = GameProcessor(args.filename, args.player_random)
     game.game_play()
