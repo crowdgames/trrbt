@@ -52,14 +52,19 @@ class GameProcessor:
             self.execute_node(self.tree)
         except GameOverException as e:
             if e.result == END_WIN:
+                print()
                 print("Player", e.player, "wins")
             elif e.result == END_LOSE:
+                print()
                 print("Player", e.player, "loses")
             elif e.result == END_DRAW:
+                print()
                 print("A draw")
             else:
+                print()
                 print("Unrecognized game result:", e.result)
         else:
+            print()
             print("Stalemate - root node exited but game has not ended")
 
     def execute_sequence_node(self, node):
@@ -198,7 +203,7 @@ class GameProcessor:
         """
         pattern = node["pattern"]
         if self.match_pattern(pattern):
-            print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
+            #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
 
