@@ -12,14 +12,14 @@ tree:
     children:
     - type: player
       comment: player moves
-      number: 1
+      pid: X
       children:
       - type: rewrite
         lhs: _
         rhs: X
     - type: win
       comment: check for player win
-      number: 1
+      pid: X
       children:
       - type: x-turn
         children:
@@ -34,7 +34,8 @@ tree:
         children:
         - type: match
           pattern: _
-  - type: x-nextplayer
+  - type: x-newplayer
+    pid: O
     children:
     - type: x-swaponly
       what: X

@@ -14,7 +14,7 @@ NDX_FLIPONLY       = 'x-fliponly'
 NDX_SWAPONLY       = 'x-swaponly'
 NDX_REPLACE        = 'x-replace'
 NDX_REPLACEONLY    = 'x-replaceonly'
-NDX_NEXTPLAYER     = 'x-nextplayer'
+NDX_NEWPLAYER      = 'x-newplayer'
 
 NDX_LINK           = 'x-link'
 NDX_FILE           = 'x-file'
@@ -44,7 +44,7 @@ NKEY_PATTERN       = 'pattern'
 NKEY_LHS           = 'lhs'
 NKEY_RHS           = 'rhs'
 
-NKEY_NUMBER        = 'number'
+NKEY_PID           = 'pid'
 NKEY_TIMES         = 'times'
 NKEY_WHAT          = 'what'
 NKEY_WITH          = 'with'
@@ -241,11 +241,14 @@ def xform_rule_replace_fn(wht, wth, keep):
 
     return rule_replace
 
-def xform_player_next(node):
-    if NKEY_NUMBER in node.keys():
-        node = node.copy()
-        node[NKEY_NUMBER] += 1
-    return [node]
+def xform_player_new_fn(new_pid):
+    def player_new(node):
+        if NKEY_PID in node.keys():
+            node = node.copy()
+            node[NKEY_PID] = new_pid
+        return [node]
+
+    return player_new
 
 def node_xform_tiles(node, xforms, nid_to_node):
     ret_nodes = []
@@ -279,8 +282,9 @@ def node_xform_tiles(node, xforms, nid_to_node):
     elif ntype == NDX_LINK:
         ret_nodes += node_xform_tiles(nid_to_node[node[NKEY_TARGET]], xforms, nid_to_node)
 
-    elif ntype == NDX_NEXTPLAYER:
-        ret_nodes += node_xform_tiles(node[NKEY_CHILDREN][0], [xform_player_next] + xforms, nid_to_node)
+    elif ntype == NDX_NEWPLAYER:
+        for child in node[NKEY_CHILDREN]:
+            ret_nodes += node_xform_tiles(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
     elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
@@ -331,7 +335,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVTILEEND
 
     else:
-        if ntype in [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY, NDX_NEXTPLAYER]:
+        if ntype in [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY, NDX_NEWPLAYER]:
             nshape = 'hexagon'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
@@ -348,8 +352,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
 
         nlabel += ntype
 
-        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
-            nlabel += ':' + str(node[NKEY_NUMBER])
+        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE, NDX_NEWPLAYER]:
+            nlabel += ':' + str(node[NKEY_PID])
         elif ntype in [ND_LOOP_TIMES]:
             nlabel += ':' + str(node[NKEY_TIMES])
         elif ntype in [NDX_FILE]:

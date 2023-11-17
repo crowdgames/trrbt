@@ -11,7 +11,7 @@ tree:
   type: loop-until-all
   children:
   - type: player
-    number: 1
+    pid: 1
     children:
     - type: x-replaceonly
       what: a
@@ -32,7 +32,7 @@ tree:
           lhs: _ a
           rhs: a _
   - type: win
-    number: 1
+    pid: 1
     children:
     - type: match
       pattern: 1 2 3;

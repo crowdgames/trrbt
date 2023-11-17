@@ -111,7 +111,7 @@ class GameProcessor:
         :return: True if the player has at least one valid move. False otherwise.
         """
         valid_moves = []
-        player_id = int(node[util.NKEY_NUMBER])
+        player_id = str(node[util.NKEY_PID])
 
         self.display_board()
         print()
@@ -239,7 +239,7 @@ class GameProcessor:
         :return: when a child succeeds, game ends immediately as a win, and false otherwise
         """
         children = node[util.NKEY_CHILDREN]
-        player = int(node[util.NKEY_NUMBER])
+        player = str(node[util.NKEY_PID])
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_WIN, player)
@@ -251,7 +251,7 @@ class GameProcessor:
         :return: when a child succeeds, game ends immediately as a lose, and false otherwise
         """
         children = node[util.NKEY_CHILDREN]
-        player = int(node[util.NKEY_NUMBER])
+        player = str(node[util.NKEY_PID])
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_LOSE, player)
@@ -327,7 +327,7 @@ class GameProcessor:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
-    parser.add_argument('--player-random', type=int, nargs='+', help='Player IDs to play randomly.', default=[])
+    parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
     parser.add_argument('--random', type=int, help='Random seed.')
     args = parser.parse_args()
 

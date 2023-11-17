@@ -21,7 +21,7 @@ tree:
   type: loop-until-all
   children:
   - type: player
-    number: 1
+    pid: 1
     children:
     - type: x-ident
       nid: move
@@ -49,7 +49,7 @@ tree:
             rhs: __ Ta Ta Ta
   - type: win
     comment: win if red car at exit
-    number: 1
+    pid: 1
     children:
     - type: match
       pattern: CR CR OO
