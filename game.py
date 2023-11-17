@@ -126,7 +126,7 @@ class GameProcessor:
                 raise RuntimeError('All children of player nodes must be rewrite')
 
         if len(valid_moves) == 0:
-            print("You don't have a valid move!")
+            print(f"Player {player_id} doesn't have a valid move!")
             return False
 
         this_turn_choices = {}
@@ -162,10 +162,10 @@ class GameProcessor:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
-            print(f'choice: {lhs} → {rhs} at {row},{col}')
+            print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
         else:
-            print("Your choices are:")
+            print(f"Choices for player {player_id} are:")
             for idx in sorted(this_turn_choices.keys()):
                 lhs, rhs, row, col = this_turn_info[idx]
                 print(f'{idx}: {lhs} → {rhs} at {row},{col}')
