@@ -27,6 +27,13 @@ tree:
           children:
           - type: match
             pattern: X X X
+    - type: draw
+      comment: check for draw
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: _
   - type: nextplayer
     children:
     - type: swaponly
