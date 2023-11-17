@@ -42,7 +42,7 @@ class GameProcessor:
         }
 
     def execute_node(self, node):
-        fn = self.node_func_map[node["type"]]
+        fn = self.node_func_map[node[util.NKEY_TYPE]]
         return fn(node)
 
     def game_play(self):
@@ -73,7 +73,7 @@ class GameProcessor:
         :return: If any child fails, returns failure, otherwise returns success.
         """
         flag = True
-        for child in node["children"]:
+        for child in node[util.NKEY_CHILDREN]:
             if not self.execute_node(child):
                 flag = False
         return flag
@@ -84,10 +84,10 @@ class GameProcessor:
         Currently this function is used to randomize board
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
-        times = node["times"]
+        times = node[util.NKEY_TIMES]
         while times > 0:
             times -= 1
-            for child in node["children"]:
+            for child in node[util.NKEY_CHILDREN]:
                 self.execute_node(child)
         print("Randomzing board...")
         self.display_board()
@@ -111,13 +111,13 @@ class GameProcessor:
         :return: True if the player has at least one valid move. False otherwise.
         """
         valid_moves = []
-        player_id = int(node["number"])
+        player_id = int(node[util.NKEY_NUMBER])
 
         self.display_board()
         print()
 
-        for child in node["children"]:
-            if child["type"] == "rewrite":
+        for child in node[util.NKEY_CHILDREN]:
+            if child[util.NKEY_TYPE] == util.ND_REWRITE:
                 res = self.find_pattern(child)
                 if res:
                     res = res[1]
@@ -189,8 +189,8 @@ class GameProcessor:
         Executes children in random order until one succeeds.
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
-        if node["children"]:
-            list_of_children = node["children"]
+        if node[util.NKEY_CHILDREN]:
+            list_of_children = node[util.NKEY_CHILDREN]
             random.shuffle(list_of_children)
             for child in list_of_children:
                 if self.execute_node(child):
@@ -204,7 +204,7 @@ class GameProcessor:
         flag = True
         while flag:
             flag = False
-            for child in node["children"]:
+            for child in node[util.NKEY_CHILDREN]:
                 if self.execute_node(child):
                     flag = True
         return flag
@@ -214,7 +214,7 @@ class GameProcessor:
         Executes match node
         :return: Returns success if pattern matches current board, otherwise returns failure.
         """
-        pattern = node["pattern"]
+        pattern = node[util.NKEY_PATTERN]
         if self.match_pattern(pattern):
             #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
@@ -225,7 +225,7 @@ class GameProcessor:
         Executes children in order, until any child succeeds.
         :return: If any child succeeds, returns failure, otherwise returns success.
         """
-        children = node["children"]
+        children = node[util.NKEY_CHILDREN]
         if not children:
             return True
         for child in children:
@@ -238,8 +238,8 @@ class GameProcessor:
         Executes children in order, until any child succeeds
         :return: when a child succeeds, game ends immediately as a win, and false otherwise
         """
-        children = node["children"]
-        player = int(node["number"])
+        children = node[util.NKEY_CHILDREN]
+        player = int(node[util.NKEY_NUMBER])
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_WIN, player)
@@ -250,8 +250,8 @@ class GameProcessor:
         Executes children in order, until any child succeeds
         :return: when a child succeeds, game ends immediately as a lose, and false otherwise
         """
-        children = node["children"]
-        player = int(node["number"])
+        children = node[util.NKEY_CHILDREN]
+        player = int(node[util.NKEY_NUMBER])
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_LOSE, player)
@@ -262,7 +262,7 @@ class GameProcessor:
         Executes children in order, until any child succeeds
         :return: when a child succeeds, game ends immediately as a draw, and false otherwise
         """
-        children = node["children"]
+        children = node[util.NKEY_CHILDREN]
         for child in children:
             if self.execute_node(child):
                 raise GameOverException(END_DRAW, None)
@@ -272,7 +272,7 @@ class GameProcessor:
         if len(choice) != 3:
             return
         node, x, y = choice[0], choice[1], choice[2]
-        lhs, rhs = node["lhs"], node["rhs"]
+        lhs, rhs = node[util.NKEY_LHS], node[util.NKEY_RHS]
         for i in range(len(lhs)):
             for j in range(len(lhs[i])):
                 if rhs[i][j] != '.':
@@ -282,7 +282,7 @@ class GameProcessor:
         ret = []
         for i in range(self.m):
             for j in range(self.n):
-                if self.is_match(child["lhs"], i, j):
+                if self.is_match(child[util.NKEY_LHS], i, j):
                     ret.append([child, i, j])
         if len(ret) == 0:
             return False

@@ -18,7 +18,7 @@ tree:
   type: loop-until-all
   children:
   - type: x-ident
-    id: xturn
+    nid: xturn
     children:
     - type: player
       number: 1

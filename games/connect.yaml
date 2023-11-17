@@ -12,7 +12,7 @@ tree:
   type: loop-until-all
   children:
   - type: x-ident
-    id: redturn
+    nid: redturn
     children:
     - type: player
       number: 1
