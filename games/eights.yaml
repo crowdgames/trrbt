@@ -13,7 +13,7 @@ tree:
   - type: player
     number: 1
     children:
-    - type: replaceonly
+    - type: x-replaceonly
       what: a
       id: move
       with:
@@ -26,7 +26,7 @@ tree:
       - 7
       - 8
       children:
-      - type: rotate
+      - type: x-rotate
         children:
         - type: rewrite
           lhs: _ a

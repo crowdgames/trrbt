@@ -12,15 +12,15 @@ start:
   RPS _   RPS _   RPS _   RPS _  ;
   =   =   =   =   =   =   =   =  ;
 tree:
-  type: mirror
+  type: x-mirror
   children:
-  - type: replaceonly
+  - type: x-replaceonly
     what: a
     with:
     - K
     - P
     children:
-    - type: replaceonly
+    - type: x-replaceonly
       what: b
       with:
       - K
@@ -28,7 +28,7 @@ tree:
       children:
       - type: loop-until-all
         children:
-        - type: ident
+        - type: x-ident
           id: redturn
           children:
           - type: player
@@ -90,13 +90,13 @@ tree:
                children:
                - type: match
                  pattern: BaS
-        - type: nextplayer
+        - type: x-nextplayer
           children:
-          - type: fliponly
+          - type: x-fliponly
             children:
-            - type: swaponly
+            - type: x-swaponly
               what: R
               with: B
               children:
-              - type: link
+              - type: x-link
                 target: redturn

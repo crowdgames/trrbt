@@ -38,7 +38,7 @@ tree:
         rhs: CR CR __
       - type: random-try
         children:
-        - type: link
+        - type: x-link
           target: move
-  - type: file
+  - type: x-file
     target: rushhour

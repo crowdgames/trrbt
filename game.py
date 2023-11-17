@@ -28,17 +28,17 @@ class GameProcessor:
         self.random_players = random_players
 
         self.node_func_map = {
-            "sequence": self.execute_sequence_node,
-            "loop-until-all": self.execute_loop_until_all_node,
-            "win": self.execute_win_node,
-            "lose": self.execute_lose_node,
-            "draw": self.execute_draw_node,
-            "rewrite": self.execute_rewite_node,
-            "loop-times": self.execute_loop_times_node,
-            "random-try": self.execute_rondom_try_node,
-            "player": self.execute_player_node,
-            "match": self.execute_match_node,
-            "none": self.execute_none_node,
+            util.ND_SEQ: self.execute_sequence_node,
+            util.ND_LOOP_UNTIL_ALL: self.execute_loop_until_all_node,
+            util.ND_WIN: self.execute_win_node,
+            util.ND_LOSE: self.execute_lose_node,
+            util.ND_DRAW: self.execute_draw_node,
+            util.ND_REWRITE: self.execute_rewite_node,
+            util.ND_LOOP_TIMES: self.execute_loop_times_node,
+            util.ND_RND_TRY: self.execute_rondom_try_node,
+            util.ND_PLAYER: self.execute_player_node,
+            util.ND_MATCH: self.execute_match_node,
+            util.ND_NONE: self.execute_none_node,
         }
 
     def execute_node(self, node):

@@ -3,6 +3,47 @@ import os
 import sys
 import yaml
 
+
+
+NDX_IDENT          = 'x-ident'
+NDX_MIRROR         = 'x-mirror'
+NDX_SKEW           = 'x-skew'
+NDX_ROTATE         = 'x-rotate'
+NDX_TURN           = 'x-turn'
+NDX_FLIPONLY       = 'x-fliponly'
+NDX_SWAPONLY       = 'x-swaponly'
+NDX_REPLACE        = 'x-replace'
+NDX_REPLACEONLY    = 'x-replaceonly'
+NDX_NEXTPLAYER     = 'x-nextplayer'
+
+NDX_LINK           = 'x-link'
+NDX_FILE           = 'x-file'
+
+ND_PLAYER          = 'player'
+
+ND_WIN             = 'win'
+ND_LOSE            = 'lose'
+ND_DRAW            = 'draw'
+
+ND_SEQ             = 'sequence'
+ND_NONE            = 'none'
+ND_RND_TRY         = 'random-try'
+ND_LOOP_UNTIL_ALL  = 'loop-until-all'
+ND_LOOP_TIMES      = 'loop-times'
+
+ND_REWRITE         = 'rewrite'
+ND_MATCH           = 'match'
+
+
+
+class Game:
+    def __init__(self, name, starts, tree):
+        self.name = name
+        self.starts = starts
+        self.tree = tree
+
+
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
 GVNEWLINE = '<BR/>'
@@ -10,12 +51,6 @@ GVTILEBGN = '<FONT FACE="Courier New">'
 GVTILEEND = '</FONT>'
 GVCOMMBGN = '<FONT POINT-SIZE="6"><I>'
 GVCOMMEND = '</I></FONT>'
-
-class Game:
-    def __init__(self, name, starts, tree):
-        self.name = name
-        self.starts = starts
-        self.tree = tree
 
 
 
@@ -52,11 +87,11 @@ def string_to_pattern(s):
 def node_reshape_tiles(node):
     node = node.copy()
 
-    if node['type'] == 'rewrite':
+    if node['type'] == ND_REWRITE:
         node['lhs'] = string_to_pattern(node['lhs'])
         node['rhs'] = string_to_pattern(node['rhs'])
 
-    if node['type'] == 'match':
+    if node['type'] == ND_MATCH:
         node['pattern'] = string_to_pattern(node['pattern'])
 
     if 'children' in node.keys():
@@ -67,11 +102,11 @@ def node_reshape_tiles(node):
 def node_max_tile_width(node):
     tile_len = 0
 
-    if node['type'] == 'rewrite':
+    if node['type'] == ND_REWRITE:
         tile_len = max(tile_len, pattern_max_tile_width(node['lhs']))
         tile_len = max(tile_len, pattern_max_tile_width(node['rhs']))
 
-    if node['type'] == 'match':
+    if node['type'] == ND_MATCH:
         tile_len = max(tile_len, pattern_max_tile_width(node['pattern']))
 
     if 'children' in node.keys():
@@ -196,37 +231,37 @@ def node_xform_tiles(node, xforms, nid_to_node):
 
     ntype = node['type']
 
-    if ntype in ['file', 'ident', 'rotate', 'turn', 'mirror', 'skew', 'fliponly', 'swaponly', 'replace', 'replaceonly']:
+    if ntype in [NDX_FILE, NDX_IDENT, NDX_ROTATE, NDX_TURN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY]:
         fn = None
-        if ntype in ['file', 'ident']:
+        if ntype in [NDX_FILE, NDX_IDENT]:
             fn = xform_identity
-        elif ntype == 'rotate':
+        elif ntype == NDX_ROTATE:
             fn = xform_rule_rotate
-        elif ntype == 'turn':
+        elif ntype == NDX_TURN:
             fn = xform_rule_turn
-        elif ntype == 'mirror':
+        elif ntype == NDX_MIRROR:
             fn = xform_rule_mirror
-        elif ntype == 'skew':
+        elif ntype == NDX_SKEW:
             fn = xform_rule_skew
-        elif ntype == 'fliponly':
+        elif ntype == NDX_FLIPONLY:
             fn = xform_rule_fliponly
-        elif ntype == 'swaponly':
+        elif ntype == NDX_SWAPONLY:
             fn = xform_rule_swaponly_fn(node['what'], node['with'])
-        elif ntype == 'replace':
+        elif ntype == NDX_REPLACE:
             fn = xform_rule_replace_fn(node['what'], node['with'], True)
-        elif ntype == 'replaceonly':
+        elif ntype == NDX_REPLACEONLY:
             fn = xform_rule_replace_fn(node['what'], node['with'], False)
 
         for child in node['children']:
             ret_nodes += node_xform_tiles(child, [fn] + xforms, nid_to_node)
 
-    elif ntype == 'link':
+    elif ntype == NDX_LINK:
         ret_nodes += node_xform_tiles(nid_to_node[node['target']], xforms, nid_to_node)
 
-    elif ntype == 'nextplayer':
+    elif ntype == NDX_NEXTPLAYER:
         ret_nodes += node_xform_tiles(node['children'][0], [xform_player_next] + xforms, nid_to_node)
 
-    elif ntype in ['sequence', 'none', 'random-try', 'random-one', 'player', 'rewrite', 'match', 'win', 'lose', 'draw', 'loop-until-any', 'loop-until-all', 'loop-times']:
+    elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -252,10 +287,10 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
     ntype = node['type']
     nlabel = '<'
 
-    if ntype in ['rewrite', 'match']:
+    if ntype in [ND_REWRITE, ND_MATCH]:
         nshape = 'box'
 
-        if ntype == 'rewrite':
+        if ntype == ND_REWRITE:
             lhs, rhs = pad_tiles_multiple([node['lhs'], node['rhs']])
 
             nlabel += GVTILEBGN
@@ -275,37 +310,37 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVTILEEND
 
     else:
-        if ntype in ['ident', 'mirror', 'skew', 'rotate', 'turn', 'fliponly', 'swaponly', 'replace', 'replaceonly', 'nextplayer']:
+        if ntype in [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY, NDX_NEXTPLAYER]:
             nshape = 'hexagon'
-        elif ntype in ['player']:
-            nshape = 'diamond'
-        elif ntype in ['link']:
+        elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
-        elif ntype in ['win', 'lose', 'draw']:
-            nshape = 'octagon'
-        elif ntype in ['sequence', 'none', 'random-try', 'random-one', 'loop-until-any', 'loop-until-all', 'loop-times']:
-            nshape = 'oval'
-        elif ntype in ['file']:
+        elif ntype in [NDX_FILE]:
             nshape = 'folder'
+        elif ntype in [ND_PLAYER]:
+            nshape = 'diamond'
+        elif ntype in [ND_WIN, ND_LOSE, ND_DRAW]:
+            nshape = 'octagon'
+        elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
+            nshape = 'oval'
         else:
             raise RuntimeError(f'unrecognized node type {ntype}')
 
         nlabel += ntype
 
-        if ntype in ['player', 'win', 'lose']:
+        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
             nlabel += ':' + str(node['number'])
-        elif ntype in ['loop-times']:
+        elif ntype in [ND_LOOP_TIMES]:
             nlabel += ':' + str(node['times'])
-        elif ntype in ['file']:
+        elif ntype in [NDX_FILE]:
             nlabel += ':' + node['target']
-        elif ntype == 'swaponly':
+        elif ntype == NDX_SWAPONLY:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node['what']
             nlabel += ' ↔ '
             nlabel += node['with']
             nlabel += GVTILEEND
-        elif ntype in ['replace', 'replaceonly']:
+        elif ntype in [NDX_REPLACE, NDX_REPLACEONLY]:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node['what']
@@ -332,7 +367,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             child_id = pid_to_nid[id(child)]
             print(f'  {nid} -> {child_id};')
 
-    if ntype == 'link':
+    if ntype == NDX_LINK:
         node_target = node['target']
         if node_target in nid_to_node:
             target_id = pid_to_nid[id(nid_to_node[node_target])]
@@ -350,7 +385,7 @@ def game_print_gv(game):
     print(f'  _NAME [shape="component", label=<{game.name}>];')
     for ii, start in enumerate(game.starts):
         label = pattern_to_string(start, ' ', GVNEWLINE)
-        print(f'  _START{ii} [shape="note", label=<{GVTILEBGN}{label}{GVTILEEND}>];')
+        print(f'  _START{ii} [shape="note", label=<start:{GVNEWLINE}{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
@@ -362,7 +397,7 @@ def resolve_file_links(folder, node):
     if 'children' in node.keys():
         new_children = []
         for child in node['children']:
-            if child['type'] == 'file':
+            if child['type'] == NDX_FILE:
                 target = child['target']
                 filename = f'{folder}/{target}.yaml'
                 data = yamlload(filename)

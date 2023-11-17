@@ -23,23 +23,23 @@ tree:
   - type: player
     number: 1
     children:
-    - type: ident
+    - type: x-ident
       id: move
       children:
-      - type: mirror
+      - type: x-mirror
         comment: red car moves side to side
         children:
         - type: rewrite
           lhs: CR CR __
           rhs: __ CR CR
-      - type: replaceonly
+      - type: x-replaceonly
         comment: cars and trucks move
         what: a
         with:
         - 1
         - 2
         children:
-        - type: rotate
+        - type: x-rotate
           children:
           - type: rewrite
             lhs: Ca Ca __

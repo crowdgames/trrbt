@@ -9,7 +9,7 @@ start:
   P0  _   _   _   X   X   X   _   O ;
   X   X   X   X   X   X   X   X   X ;
 tree:
-  type: replaceonly
+  type: x-replaceonly
   what: a
   with:
   - 0
@@ -25,7 +25,7 @@ tree:
         comment: player stays still
         lhs: Pa
         rhs: Pa
-      - type: mirror
+      - type: x-mirror
         comment: player moves to side
         children:
         - type: rewrite

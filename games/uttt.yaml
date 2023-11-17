@@ -17,7 +17,7 @@ start:
 tree:
   type: loop-until-all
   children:
-  - type: ident
+  - type: x-ident
     id: xturn
     children:
     - type: player
@@ -28,7 +28,7 @@ tree:
         rhs: X
     - type: loop-until-all
       children:
-      - type: turn
+      - type: x-turn
         children:
         - type: rewrite
           lhs: = = = = =;
@@ -77,21 +77,21 @@ tree:
     - type: win
       number: 1
       children:
-      - type: turn
+      - type: x-turn
         children:
-        - type: skew
+        - type: x-skew
           children:
           - type: match
             pattern: x . . . x . . . x
-  - type: nextplayer
+  - type: x-nextplayer
     children:
-    - type: swaponly
+    - type: x-swaponly
       what: X
       with: O
       children:
-      - type: swaponly
+      - type: x-swaponly
         what: x
         with: o
         children:
-        - type: link
+        - type: x-link
           target: xturn

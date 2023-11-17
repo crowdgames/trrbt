@@ -12,7 +12,7 @@ tree:
     children:
     - type: random-try
       children:
-      - type: link
+      - type: x-link
         target: move
-  - type: file
+  - type: x-file
     target: eights
