@@ -11,7 +11,7 @@ start:
 tree:
   type: loop-until-all
   children:
-  - type: ident
+  - type: x-ident
     id: redturn
     children:
     - type: player
@@ -28,17 +28,17 @@ tree:
     - type: win
       number: 1
       children:
-      - type: turn
+      - type: x-turn
         children:
-        - type: skew
+        - type: x-skew
           children:
           - type: match
             pattern: R R R R
-  - type: nextplayer
+  - type: x-nextplayer
     children:
-    - type: swaponly
+    - type: x-swaponly
       what: R
       with: Y
       children:
-      - type: link
+      - type: x-link
         target: redturn

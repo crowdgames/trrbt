@@ -7,7 +7,7 @@ start:
 tree:
   type: loop-until-all
   children:
-  - type: ident
+  - type: x-ident
     id: xturn
     children:
     - type: player
@@ -21,9 +21,9 @@ tree:
       comment: check for player win
       number: 1
       children:
-      - type: turn
+      - type: x-turn
         children:
-        - type: skew
+        - type: x-skew
           children:
           - type: match
             pattern: X X X
@@ -34,11 +34,11 @@ tree:
         children:
         - type: match
           pattern: _
-  - type: nextplayer
+  - type: x-nextplayer
     children:
-    - type: swaponly
+    - type: x-swaponly
       what: X
       with: O
       children:
-      - type: link
+      - type: x-link
         target: xturn
