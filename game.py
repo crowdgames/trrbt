@@ -135,8 +135,9 @@ class GameProcessor:
         for choice in valid_moves:
             node, row, col = choice
 
-            lhs = util.pattern_to_string(node['lhs'], ' ', '; ')
-            rhs = util.pattern_to_string(node['rhs'], ' ', '; ')
+            lhs, rhs = util.pad_tiles_multiple([node[util.NKEY_LHS], node[util.NKEY_RHS]])
+            lhs = util.pattern_to_string(lhs, ' ', '; ')
+            rhs = util.pattern_to_string(rhs, ' ', '; ')
 
             idx = None
 
