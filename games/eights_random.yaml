@@ -8,9 +8,8 @@ tree:
   type: sequence
   children:
   - type: loop-until-all
-    condition:
     children:
-    - type: sequence
+    - type: none
       children:
       - type: loop-times
         times: 10
@@ -19,7 +18,6 @@ tree:
           children:
           - type: x-link
             target: move
-      - type: fail
     - type: match
       pattern: 1 2 3;
                4 5 6;

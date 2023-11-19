@@ -35,11 +35,10 @@ class GameProcessor:
             util.ND_DRAW: self.execute_draw_node,
             util.ND_REWRITE: self.execute_rewite_node,
             util.ND_LOOP_TIMES: self.execute_loop_times_node,
-            util.ND_RND_TRY: self.execute_rondom_try_node,
+            util.ND_RND_TRY: self.execute_random_try_node,
             util.ND_PLAYER: self.execute_player_node,
             util.ND_MATCH: self.execute_match_node,
             util.ND_NONE: self.execute_none_node,
-            util.ND_FAIL: self.execute_fail_node,
         }
 
     def execute_node(self, node):
@@ -71,29 +70,26 @@ class GameProcessor:
     def execute_sequence_node(self, node):
         """
         Executes children in order (regardless of their success or failure)
-        :return: If any child fails, returns failure, otherwise returns success.
+        :return: If any child succeeds, returns success, otherwise returns failure.
         """
-        flag = True
+        flag = False
         for child in node[util.NKEY_CHILDREN]:
-            if not self.execute_node(child):
-                flag = False
+            if self.execute_node(child):
+                flag = True
         return flag
 
     def execute_loop_times_node(self, node):
         """
         Repeatedly executes children in order a fixed number of times
-        Currently this function is used to randomize board
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
-        times = node[util.NKEY_TIMES]
-
         flag = False
+        times = node[util.NKEY_TIMES]
         while times > 0:
             times -= 1
             for child in node[util.NKEY_CHILDREN]:
                 if self.execute_node(child):
                     flag = True
-
         return flag
 
     def execute_rewite_node(self, node):
@@ -189,7 +185,7 @@ class GameProcessor:
         self.make_move(choice)
         return True
 
-    def execute_rondom_try_node(self, node):
+    def execute_random_try_node(self, node):
         """
         Executes children in random order until one succeeds.
         :return: If any child succeeds, returns success, otherwise returns failure.
@@ -200,6 +196,7 @@ class GameProcessor:
             for child in list_of_children:
                 if self.execute_node(child):
                     return True
+        return False
 
     def execute_loop_until_all_node(self, node):
         """
@@ -207,11 +204,13 @@ class GameProcessor:
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
         flag = True
-        while flag:
-            flag = False
+        keep_going = True
+        while keep_going:
+            keep_going = False
             for child in node[util.NKEY_CHILDREN]:
                 if self.execute_node(child):
                     flag = True
+                    keep_going = True
         return flag
 
     def execute_match_node(self, node):
@@ -231,18 +230,10 @@ class GameProcessor:
         :return: If any child succeeds, returns failure, otherwise returns success.
         """
         children = node[util.NKEY_CHILDREN]
-        if not children:
-            return True
         for child in children:
             if self.execute_node(child):
                 return False
         return True
-
-    def execute_fail_node(self, node):
-        """
-        :return: Always returns failure.
-        """
-        return False
 
     def execute_win_node(self, node):
         """

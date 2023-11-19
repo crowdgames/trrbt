@@ -30,7 +30,6 @@ ND_NONE            = 'none'
 ND_RND_TRY         = 'random-try'
 ND_LOOP_UNTIL_ALL  = 'loop-until-all'
 ND_LOOP_TIMES      = 'loop-times'
-ND_FAIL            = 'fail'
 
 ND_REWRITE         = 'rewrite'
 ND_MATCH           = 'match'
@@ -287,7 +286,7 @@ def node_xform_tiles(node, xforms, nid_to_node):
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_xform_tiles(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
-    elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_FAIL]:
+    elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -346,7 +345,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nshape = 'diamond'
         elif ntype in [ND_WIN, ND_LOSE, ND_DRAW]:
             nshape = 'octagon'
-        elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_FAIL]:
+        elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
             nshape = 'oval'
         else:
             raise RuntimeError(f'unrecognized node type {ntype}')

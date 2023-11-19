@@ -28,15 +28,13 @@ To play a game, run `python game.py games/NAME.yaml`.
 
 ## Node Behaviors
 
-**sequence**: Executes children in order (regardless of their success or failure); if any child fails, returns failure, otherwise returns success.
-
-**fail**: Returns failure.
+**sequence**: Executes children in order (regardless of their success or failure); if any child succeeds, returns success, otherwise returns failure.
 
 **none**: Executes children in order, until any child succeeds; if any child succeeds, returns failure, otherwise returns success.
 
 **random-try**: Executes children in random order until one succeeds; if any child succeeds, returns success, otherwise returns failure.
 
-**loop-until-all**: Repeatedly executes children in order, until all children fail; if any child succeeds, returns success, otherwise returns failure.
+**loop-until-all**: Repeatedly executes children in order, until all children fail on one loop; if any child succeeds, returns success, otherwise returns failure.
 
 **loop-times**: Repeatedly executes children in order a fixed number of times; if any child succeeds, returns success, otherwise returns failure.
 
@@ -46,4 +44,4 @@ To play a game, run `python game.py games/NAME.yaml`.
 
 **player**: *For now, assume all child nodes are **rewrite** nodes.* If any lhs of any child matches, player can choose which rhs rewrite to apply; returns success if there were any matches, otherwise, returns failure.
 
-**win**, **lose**, **draw**: Executes children in order, until any child succeeds; if any child succeeds, the game ends with the given player winning (if a **win** node) or losing (if a **lose** node), or as a draw (if a **draw** node); otherwise returns success (?).
+**win**, **lose**, **draw**: Executes children in order, until any child succeeds; if any child succeeds, the game ends with the given player winning (if a **win** node) or losing (if a **lose** node), or as a draw (if a **draw** node); otherwise returns failure.
