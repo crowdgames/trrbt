@@ -226,6 +226,9 @@ def xform_rule_swaponly_fn(wht, wth):
     return rule_swaponly
 
 def xform_rule_replace_fn(wht, wth, keep):
+    if type(wth) != list:
+        raise RuntimeError(f'replace with must be list')
+
     def rule_replace_side(hs, wthi):
         ret_hs = ()
         for row in hs:
