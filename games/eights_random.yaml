@@ -7,12 +7,22 @@ start:
 tree:
   type: sequence
   children:
-  - type: loop-times
-    times: 10
+  - type: loop-until-all
+    condition:
     children:
-    - type: random-try
+    - type: sequence
       children:
-      - type: x-link
-        target: move
+      - type: loop-times
+        times: 10
+        children:
+        - type: random-try
+          children:
+          - type: x-link
+            target: move
+      - type: fail
+    - type: match
+      pattern: 1 2 3;
+               4 5 6;
+               7 8 _;
   - type: x-file
     target: eights
