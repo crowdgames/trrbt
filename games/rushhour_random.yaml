@@ -22,7 +22,6 @@ tree:
           comment: erase any previous cars and trucks
           children:
           - type: x-replaceonly
-            comment: cars and trucks move
             what: a
             with:
             - 1
