@@ -1,5 +1,5 @@
 ---
-name: tic-tac-toe
+name: dungeon
 start:
 - X X X X X X X X X X;
   X P _ _ _ _ _ _ _ X;
