@@ -30,13 +30,11 @@ To play a game, run `python game.py games/NAME.yaml`.
 
 **sequence**: Executes children in order (regardless of their success or failure); if any child fails, returns failure, otherwise returns success.
 
+**fail**: Returns failure.
+
 **none**: Executes children in order, until any child succeeds; if any child succeeds, returns failure, otherwise returns success.
 
 **random-try**: Executes children in random order until one succeeds; if any child succeeds, returns success, otherwise returns failure.
-
-**random-one**: Executes a random child; if that child fails, returns failure, otherwise returns success.
-
-**loop-until-any**: Repeatedly executes children in order, until any child fails; if any child succeeds, returns success, otherwise returns failure.
 
 **loop-until-all**: Repeatedly executes children in order, until all children fail; if any child succeeds, returns success, otherwise returns failure.
 

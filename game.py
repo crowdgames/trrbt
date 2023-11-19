@@ -39,6 +39,7 @@ class GameProcessor:
             util.ND_PLAYER: self.execute_player_node,
             util.ND_MATCH: self.execute_match_node,
             util.ND_NONE: self.execute_none_node,
+            util.ND_FAIL: self.execute_fail_node,
         }
 
     def execute_node(self, node):
@@ -85,12 +86,15 @@ class GameProcessor:
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
         times = node[util.NKEY_TIMES]
+
+        flag = False
         while times > 0:
             times -= 1
             for child in node[util.NKEY_CHILDREN]:
-                self.execute_node(child)
-        print("Randomzing board...")
-        self.display_board()
+                if self.execute_node(child):
+                    flag = True
+
+        return flag
 
     def execute_rewite_node(self, node):
         """
@@ -99,7 +103,7 @@ class GameProcessor:
         """
         res = self.find_pattern(node)
         if res:
-            res = res[1][0]
+            res = random.choice(res[1])
             self.make_move(res)
             return True
         return False
@@ -233,6 +237,12 @@ class GameProcessor:
             if self.execute_node(child):
                 return False
         return True
+
+    def execute_fail_node(self, node):
+        """
+        :return: Always returns failure.
+        """
+        return False
 
     def execute_win_node(self, node):
         """

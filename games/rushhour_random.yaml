@@ -12,33 +12,71 @@ start:
 tree:
   type: sequence
   children:
-  - type: sequence
-    comment: place cars and trucks randomly
-    children:
-    - type: rewrite
-      lhs: __; __
-      rhs: C1; C1
-    - type: rewrite
-      lhs: __; __; __
-      rhs: T1; T1; T1
-    - type: rewrite
-      lhs: __ __
-      rhs: C2 C2
-    - type: rewrite
-      lhs: __ __ __
-      rhs: T2 T2 T2
-  - type: loop-times
-    comment: shuffle cars and trucks
-    times: 25
+  - type: loop-until-all
     children:
     - type: sequence
       children:
-      - type: rewrite
-        lhs: __ CR CR
-        rhs: CR CR __
-      - type: random-try
+      - type: loop-until-all
+        comment: erase any previous cars and trucks
         children:
-        - type: x-link
-          target: move
+        - type: x-replaceonly
+          comment: cars and trucks move
+          what: a
+          with:
+          - 1
+          - 2
+          - 3
+          children:
+          - type: rewrite
+            lhs: Ca
+            rhs: __
+          - type: rewrite
+            lhs: Ta
+            rhs: __
+      - type: loop-until-all
+        comment: move red car to exit
+        children:
+        - type: rewrite
+          lhs: CR CR __
+          rhs: __ CR CR
+      - type: sequence
+        comment: place cars and trucks randomly
+        children:
+        - type: rewrite
+          lhs: __; __
+          rhs: C1; C1
+        - type: rewrite
+          lhs: __; __; __
+          rhs: T1; T1; T1
+        - type: rewrite
+          lhs: __ __
+          rhs: C2 C2
+        - type: rewrite
+          lhs: __ __ __
+          rhs: T2 T2 T2
+        - type: rewrite
+          lhs: __; __
+          rhs: C3; C3
+        - type: rewrite
+          lhs: __; __; __
+          rhs: T3; T3; T3
+      - type: loop-times
+        comment: shuffle cars and trucks
+        times: 20
+        children:
+        - type: rewrite
+          lhs: __ CR CR
+          rhs: CR CR __
+        - type: random-try
+          children:
+          - type: x-link
+            target: move
+      - type: fail
+    - type: none
+      children:
+      - type: match
+        pattern: XX CR CR
+    - type: match
+      pattern: CR CR __ __ __ __ OO
   - type: x-file
     target: rushhour
