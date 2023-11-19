@@ -31,33 +31,41 @@ tree:
         - type: x-ident
           nid: redturn
           children:
-          - type: player
-            pid: R
+          - type: none
+            comment: player loses if no move
             children:
-            - type: rewrite
-              lhs: .    _  ;
-                   RaS  .  ;
-              rhs: .    RaS;
-                   _   .   ;
-            - type: rewrite
-              lhs: RKS .  ;
-                   .   _  ;
-              rhs: _   .  ;
-                   .    RKS;
-            - type: rewrite
-              lhs: .   .   _  ;
-                   .   BbS .  ;
-                   RaS .   .  ;
-              rhs: .   .   RaJ;
-                   .   _   .  ;
-                   _   .   .  ;
-            - type: rewrite
-              lhs: RKS .   .  ;
-                   .   BbS .  ;
-                   .   .   _  ;
-              rhs: _   .   .  ;
-                   .   _   .  ;
-                   .   .   RKJ;
+            - type: lose
+              pid: X
+              children:
+              - type: none
+                children:
+                - type: player
+                  pid: R
+                  children:
+                  - type: rewrite
+                    lhs: .    _  ;
+                         RaS  .  ;
+                    rhs: .    RaS;
+                         _   .   ;
+                  - type: rewrite
+                    lhs: RKS .  ;
+                         .   _  ;
+                    rhs: _   .  ;
+                         .    RKS;
+                  - type: rewrite
+                    lhs: .   .   _  ;
+                         .   BbS .  ;
+                         RaS .   .  ;
+                    rhs: .   .   RaJ;
+                         .   _   .  ;
+                         _   .   .  ;
+                  - type: rewrite
+                    lhs: RKS .   .  ;
+                         .   BbS .  ;
+                         .   .   _  ;
+                    rhs: _   .   .  ;
+                         .   _   .  ;
+                         .   .   RKJ;
           - type: loop-until-all
             children:
             - type: player
