@@ -358,6 +358,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += ':' + str(node[NKEY_TIMES])
         elif ntype in [NDX_FILE]:
             nlabel += ':' + node[NKEY_TARGET]
+        elif ntype in [NDX_LINK]:
+            nlabel += ':' + node[NKEY_TARGET]
         elif ntype == NDX_SWAPONLY:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
