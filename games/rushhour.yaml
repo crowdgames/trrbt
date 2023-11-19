@@ -38,6 +38,7 @@ tree:
         with:
         - 1
         - 2
+        - 3
         children:
         - type: x-rotate
           children:
