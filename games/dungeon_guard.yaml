@@ -1,0 +1,55 @@
+---
+name: dungeon guard
+start:
+- X X X X X X X X X X;
+  X P _ _ _ _ _ X + X;
+  X _ _ _ _ _ _ L + X;
+  X _ _ _ _ _ _ X + X;
+  X _ _ _ _ _ _ X + X;
+  X _ _ _ _ _ _ X O X;
+  X X X X X X X X X X;
+tree:
+  type: sequence
+  children:
+  - type: random-try
+    children:
+    - type: x-rotate
+      children:
+      - type: rewrite
+        lhs: _ _
+        rhs: K G
+  - type: rewrite
+    lhs: _
+    rhs: G
+  - type: loop-until-all
+    children:
+    - type: rewrite
+      lhs: +
+      rhs: _
+  - type: x-prune
+    children:
+    - type: x-ident
+      nid: plugin
+      children:
+      - type: loop-until-all
+        children:
+        - type: x-replace
+          what: P
+          with:
+          - PK
+          children:
+          - type: x-rotate
+            children:
+            - type: rewrite
+              lhs: G  P
+              rhs: _  G'
+            - type: rewrite
+              lhs: G  _  P
+              rhs: _  G' P
+      - type: loop-until-all
+        children:
+        - type: rewrite
+          lhs: G'
+          rhs: G
+  - type: x-file
+    target: dungeon
