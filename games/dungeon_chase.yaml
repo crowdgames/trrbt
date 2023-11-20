@@ -1,5 +1,5 @@
 ---
-name: dungeon guard
+name: dungeon chase
 start:
 - X  X  X  X  X  X  X  X  X  X;
   X  PN _  +  +  +  +  X  _  X;
