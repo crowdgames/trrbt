@@ -1,5 +1,7 @@
 import argparse
+import os
 import random
+import sys
 import time
 import util
 
@@ -7,13 +9,18 @@ END_WIN  = 'win'
 END_LOSE = 'lose'
 END_DRAW = 'draw'
 
+def cls():
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 class GameOverException(Exception):
     def __init__(self, result, player):
         self.result = result
         self.player = player
 
 class GameProcessor:
-    def __init__(self, filename, random_players):
+    def __init__(self, filename, random_players, clear_screen):
         bt = util.yaml2bt(filename, True)
 
         self.name = bt.name
@@ -26,6 +33,7 @@ class GameProcessor:
         self.previous_moves = {}
 
         self.random_players = random_players
+        self.clear_screen = clear_screen
 
         self.node_func_map = {
             util.ND_SEQ: self.execute_sequence_node,
@@ -321,7 +329,11 @@ class GameProcessor:
         return False
 
     def display_board(self):
-        print()
+        if self.clear_screen:
+            cls()
+        else:
+            print()
+
         print("Current board is:")
         print(util.pattern_to_string(self.board, ' ', '\n', self.max_tile_width))
 
@@ -331,11 +343,12 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
     parser.add_argument('--random', type=int, help='Random seed.')
+    parser.add_argument('--cls', action='store_true', help='Clear screen before moves.')
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
     print(f'Using random seed {random_seed}')
     random.seed(random_seed)
 
-    game = GameProcessor(args.filename, args.player_random)
+    game = GameProcessor(args.filename, args.player_random, args.cls)
     game.game_play()
