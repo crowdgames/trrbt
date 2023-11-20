@@ -73,6 +73,8 @@ GVTILEBGN = '<FONT FACE="Courier New">'
 GVTILEEND = '</FONT>'
 GVCOMMBGN = '<FONT POINT-SIZE="6"><I>'
 GVCOMMEND = '</I></FONT>'
+GVNIDBGN  = '<FONT POINT-SIZE="6"><B>'
+GVNIDEND  = '</B></FONT>'
 
 
 
@@ -375,16 +377,27 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WHAT]
-            nlabel += ' ↔ '
+            nlabel += GVTILEEND
+            nlabel += ' with '
+            nlabel += GVTILEBGN
             nlabel += node[NKEY_WITH]
             nlabel += GVTILEEND
         elif ntype in [NDX_REPLACE, NDX_REPLACEONLY]:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WHAT]
-            nlabel += ' → '
-            nlabel += ' '.join([str(ee) for ee in node[NKEY_WITH]])
             nlabel += GVTILEEND
+            nlabel += ' with '
+            nlabel += GVTILEBGN
+            nlabel += (GVTILEEND + ', ' + GVTILEBGN).join([str(ee) for ee in node[NKEY_WITH]])
+            nlabel += GVTILEEND
+
+    if NKEY_NID in node.keys():
+        nlabel += GVNEWLINE
+        nlabel += GVNIDBGN
+        nlabel += '@'
+        nlabel += node[NKEY_NID]
+        nlabel += GVNIDEND
 
     if NKEY_COMMENT in node.keys():
         nlabel += GVNEWLINE
@@ -420,6 +433,7 @@ def game_print_gv(game):
     node_find_nids(game.tree, nid_to_node, pid_to_nid)
 
     print('digraph G {')
+    print(f'  graph [ordering="out"];')
     print(f'  _NAME [shape="component", label=<{game.name}>];')
     for ii, start in enumerate(game.starts):
         label = pattern_to_string(start, ' ', GVNEWLINE)
