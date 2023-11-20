@@ -6,6 +6,7 @@ import yaml
 
 
 NDX_IDENT          = 'x-ident'
+NDX_PRUNE          = 'x-prune'
 NDX_MIRROR         = 'x-mirror'
 NDX_SKEW           = 'x-skew'
 NDX_ROTATE         = 'x-rotate'
@@ -175,6 +176,9 @@ def rule_apply(node, app):
 def xform_identity(node):
     return [node]
 
+def xform_prune(node):
+    return []
+
 def xform_rule_mirror(node):
     return unique([node, rule_apply(node.copy(), lambda x: tuplify([row[::-1] for row in x]))])
 
@@ -258,10 +262,12 @@ def node_xform_tiles(node, xforms, nid_to_node):
 
     ntype = node[NKEY_TYPE]
 
-    if ntype in [NDX_FILE, NDX_IDENT, NDX_ROTATE, NDX_TURN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY]:
+    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_TURN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY]:
         fn = None
         if ntype in [NDX_FILE, NDX_IDENT]:
             fn = xform_identity
+        elif ntype in [NDX_PRUNE]:
+            fn = xform_prune
         elif ntype == NDX_ROTATE:
             fn = xform_rule_rotate
         elif ntype == NDX_TURN:
@@ -283,7 +289,9 @@ def node_xform_tiles(node, xforms, nid_to_node):
             ret_nodes += node_xform_tiles(child, [fn] + xforms, nid_to_node)
 
     elif ntype == NDX_LINK:
-        ret_nodes += node_xform_tiles(nid_to_node[node[NKEY_TARGET]], xforms, nid_to_node)
+        nid_target = node[NKEY_TARGET]
+        if nid_target in nid_to_node:
+            ret_nodes += node_xform_tiles(nid_to_node[nid_target], xforms, nid_to_node)
 
     elif ntype == NDX_NEWPLAYER:
         for child in node[NKEY_CHILDREN]:
@@ -338,7 +346,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVTILEEND
 
     else:
-        if ntype in [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY, NDX_NEWPLAYER]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY, NDX_NEWPLAYER]:
             nshape = 'hexagon'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
@@ -398,13 +406,13 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             print(f'  {nid} -> {child_id};')
 
     if ntype == NDX_LINK:
-        node_target = node[NKEY_TARGET]
-        if node_target in nid_to_node:
-            target_id = pid_to_nid[id(nid_to_node[node_target])]
+        nid_target = node[NKEY_TARGET]
+        if nid_target in nid_to_node:
+            target_id = pid_to_nid[id(nid_to_node[nid_target])]
             print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
         else:
-            target_id = nid + 'TARGET'
-            print(f'  {target_id} [shape="house", label="{node_target}"];')
+            target_id = nid + '_TARGET_MISSING'
+            print(f'  {target_id} [shape="house", label=<<i>MISSING</i>>];')
             print(f'  {nid} -> {target_id} [style="dotted"];')
 
 def game_print_gv(game):
