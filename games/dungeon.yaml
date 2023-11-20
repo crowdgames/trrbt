@@ -1,62 +1,59 @@
 ---
 name: dungeon
 start:
-- X X X X X X X X X X;
-  X P _ _ _ _ _ X _ X;
-  X _ _ _ _ _ _ L _ X;
-  X _ _ _ _ _ _ X _ X;
-  X _ _ _ _ _ _ X _ X;
-  X _ _ _ K _ _ X O X;
-  X X X X X X X X X X;
+- X  X  X  X  X  X  X  X  X  X;
+  X  PN _  _  _  _  _  X  _  X;
+  X  _  _  _  _  _  _  L  _  X;
+  X  _  _  _  _  _  _  X  _  X;
+  X  _  _  _  _  _  _  X  _  X;
+  X  _  _  _  K  _  _  X  O  X;
+  X  X  X  X  X  X  X  X  X  X;
 tree:
   type: loop-until-all
   children:
-  - type: player
-    pid: 1
+  - type: x-replaceonly
+    comment: player inventory is nothing or key
+    what: i
+    with:
+    - N
+    - K
     children:
-    - type: x-replace
-      what: P
-      with:
-      - PK
+    - type: player
+      pid: 1
       children:
       - type: rewrite
         comment: player stays still
-        lhs: P
-        rhs: P
+        lhs: Pi
+        rhs: Pi
       - type: x-rotate
         comment: player moves
         children:
         - type: rewrite
-          lhs: P _
-          rhs: _ P
+          lhs: Pi _
+          rhs: _  Pi
         - type: rewrite
-          lhs: P O
-          rhs: _ W
-    - type: x-rotate
-      comment: player, key, lock
+          lhs: Pi O
+          rhs: _  W
+      - type: x-rotate
+        comment: player gets or uses key
+        children:
+        - type: rewrite
+          lhs: PN K
+          rhs: _  PK
+        - type: rewrite
+          lhs: PK L
+          rhs: _  PN
+    - type: x-link
+      target: plugin
+    - type: win
+      pid: 1
       children:
-      - type: rewrite
-        lhs: P K
-        rhs: _ PK
-      - type: rewrite
-        lhs: PK L
-        rhs: _  P
-  - type: x-link
-    target: plugin
-  - type: win
-    pid: 1
-    children:
-    - type: match
-      pattern: W
-  - type: lose
-    pid: 1
-    children:
-    - type: none
+      - type: match
+        pattern: W
+    - type: lose
+      pid: 1
       children:
-      - type: x-replace
-        what: P
-        with:
-        - PK
+      - type: none
         children:
         - type: match
-          pattern: P
+          pattern: Pi

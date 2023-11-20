@@ -259,8 +259,12 @@ def xform_player_new_fn(new_pid):
 
     return player_new
 
-def node_xform_tiles(node, xforms, nid_to_node):
+def node_apply_xforms(node, xforms, nid_to_node):
     ret_nodes = []
+
+    node = node.copy()
+    if NKEY_COMMENT in node:
+        del node[NKEY_COMMENT]
 
     ntype = node[NKEY_TYPE]
 
@@ -288,16 +292,16 @@ def node_xform_tiles(node, xforms, nid_to_node):
             fn = xform_rule_replace_fn(node[NKEY_WHAT], node[NKEY_WITH], False)
 
         for child in node[NKEY_CHILDREN]:
-            ret_nodes += node_xform_tiles(child, [fn] + xforms, nid_to_node)
+            ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
 
     elif ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
-            ret_nodes += node_xform_tiles(nid_to_node[nid_target], xforms, nid_to_node)
+            ret_nodes += node_apply_xforms(nid_to_node[nid_target], xforms, nid_to_node)
 
     elif ntype == NDX_NEWPLAYER:
         for child in node[NKEY_CHILDREN]:
-            ret_nodes += node_xform_tiles(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
+            ret_nodes += node_apply_xforms(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
     elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
@@ -313,7 +317,7 @@ def node_xform_tiles(node, xforms, nid_to_node):
                 children = node[NKEY_CHILDREN]
                 new_children = []
                 for child in children:
-                    new_children += node_xform_tiles(child, xforms, nid_to_node)
+                    new_children += node_apply_xforms(child, xforms, nid_to_node)
                 node[NKEY_CHILDREN] = new_children
 
     else:
@@ -472,7 +476,7 @@ def yaml2bt(filename, xform):
     if xform:
         nid_to_node, pid_to_nid = {}, {}
         node_find_nids(root, nid_to_node, pid_to_nid)
-        root = node_xform_tiles(root, [xform_identity], nid_to_node)[0]
+        root = node_apply_xforms(root, [xform_identity], nid_to_node)[0]
 
     starts = [string_to_pattern(start) for start in data[FKEY_START]]
 

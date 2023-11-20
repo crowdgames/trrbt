@@ -1,17 +1,18 @@
 ---
 name: dungeon guard
 start:
-- X X X X X X X X X X;
-  X P + _ _ _ _ X + X;
-  X + + _ _ _ _ L + X;
-  X _ _ _ _ _ _ X + X;
-  X _ _ _ _ _ _ X + X;
-  X _ _ _ _ _ _ X O X;
-  X X X X X X X X X X;
+- X  X  X  X  X  X  X  X  X  X;
+  X  PN +  _  _  _  _  X  +  X;
+  X  +  +  _  _  _  _  L  +  X;
+  X  _  _  _  _  _  _  X  +  X;
+  X  _  _  _  _  _  _  X  +  X;
+  X  _  _  _  _  _  _  X  O  X;
+  X  X  X  X  X  X  X  X  X  X;
 tree:
   type: sequence
   children:
   - type: random-try
+    comment: add guard near key
     children:
     - type: x-rotate
       children:
@@ -19,34 +20,34 @@ tree:
         lhs: _ _
         rhs: K G
   - type: rewrite
+    comment: add another guard
     lhs: _
     rhs: G
   - type: loop-until-all
+    comment: clear unplaceable tiles
     children:
     - type: rewrite
       lhs: +
       rhs: _
   - type: x-prune
+    comment: move plugin
     children:
     - type: x-ident
       nid: plugin
       children:
       - type: loop-until-all
+        comment: guards chase player, tagged
         children:
-        - type: x-replace
-          what: P
-          with:
-          - PK
+        - type: x-rotate
           children:
-          - type: x-rotate
-            children:
-            - type: rewrite
-              lhs: G  P
-              rhs: _  G'
-            - type: rewrite
-              lhs: G  _  P
-              rhs: _  G' P
+          - type: rewrite
+            lhs: G  _  Pi
+            rhs: _  G' Pi
+          - type: rewrite
+            lhs: G  Pi
+            rhs: _  G'
       - type: loop-until-all
+        comment: clear tags
         children:
         - type: rewrite
           lhs: G'
