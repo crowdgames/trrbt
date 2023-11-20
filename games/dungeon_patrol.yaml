@@ -1,0 +1,68 @@
+---
+name: dungeon patrol
+start:
+- X  X  X  X  X  X  X  X  X  X;
+  X  PN _  _  _  _  +  X  _  X;
+  X  _  _  _  _  _  +  D  _  X;
+  X  _  _  _  _  _  +  X  _  X;
+  X  _  _  _  _  _  +  X  _  X;
+  X  _  _  K  _  _  +  X  O  X;
+  X  X  X  X  X  X  X  X  X  X;
+tree:
+  type: sequence
+  children:
+  - type: rewrite
+    comment: add patroller
+    lhs: +
+    rhs: L
+  - type: loop-until-all
+    comment: clear spawn tiles
+    children:
+    - type: rewrite
+      lhs: +
+      rhs: _
+  - type: x-prune
+    comment: move plugin
+    children:
+    - type: x-ident
+      nid: plugin
+      children:
+      - type: loop-until-all
+        comment: patrol, tagged
+        children:
+        - type: x-replaceonly
+          what: w
+          with:
+          - X
+          - D
+          - K
+          children:
+          - type: rewrite
+            lhs: _  L
+            rhs: L' _
+          - type: rewrite
+            lhs: Pi  L
+            rhs: L'  _
+          - type: rewrite
+            lhs: w  L
+            rhs: w  R'
+          - type: rewrite
+            lhs: R  _
+            rhs: _  R'
+          - type: rewrite
+            lhs: R  Pi
+            rhs: _  R'
+          - type: rewrite
+            lhs: R  w
+            rhs: L' w
+      - type: loop-until-all
+        comment: clear tags
+        children:
+        - type: rewrite
+          lhs: L'
+          rhs: L
+        - type: rewrite
+          lhs: R'
+          rhs: R
+  - type: x-file
+    target: dungeon

@@ -3,7 +3,7 @@ name: dungeon
 start:
 - X  X  X  X  X  X  X  X  X  X;
   X  PN _  _  _  _  _  X  _  X;
-  X  _  _  _  _  _  _  L  _  X;
+  X  _  _  _  _  _  _  D  _  X;
   X  _  _  _  _  _  _  X  _  X;
   X  _  _  _  _  _  _  X  _  X;
   X  _  _  _  K  _  _  X  O  X;
@@ -41,7 +41,7 @@ tree:
           lhs: PN K
           rhs: _  PK
         - type: rewrite
-          lhs: PK L
+          lhs: PK D
           rhs: _  PN
     - type: x-link
       target: plugin
