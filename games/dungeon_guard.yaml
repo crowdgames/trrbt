@@ -2,8 +2,8 @@
 name: dungeon guard
 start:
 - X X X X X X X X X X;
-  X P _ _ _ _ _ X + X;
-  X _ _ _ _ _ _ L + X;
+  X P + _ _ _ _ X + X;
+  X + + _ _ _ _ L + X;
   X _ _ _ _ _ _ X + X;
   X _ _ _ _ _ _ X + X;
   X _ _ _ _ _ _ X O X;
