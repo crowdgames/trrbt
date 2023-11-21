@@ -211,7 +211,7 @@ class GameProcessor:
         Repeatedly executes children in order, until all children fail.
         :return: If any child succeeds, returns success, otherwise returns failure.
         """
-        flag = True
+        flag = False
         keep_going = True
         while keep_going:
             keep_going = False
