@@ -13,7 +13,6 @@ NDX_ROTATE         = 'x-rotate'
 NDX_TURN           = 'x-turn'
 NDX_FLIPONLY       = 'x-fliponly'
 NDX_SWAPONLY       = 'x-swaponly'
-NDX_REPLACE        = 'x-replace'
 NDX_REPLACEONLY    = 'x-replaceonly'
 NDX_NEWPLAYER      = 'x-newplayer'
 
@@ -210,7 +209,7 @@ def xform_rule_turn(node):
     return unique(ret)
 
 def xform_rule_swaponly_fn(wht, wth):
-    def rule_swaponly_side(hs):
+    def rule_swap_side(hs):
         ret_hs = ()
         for row in hs:
             ret_row = ()
@@ -227,11 +226,11 @@ def xform_rule_swaponly_fn(wht, wth):
         return ret_hs
 
     def rule_swaponly(node):
-        return unique([rule_apply(node.copy(), lambda x: rule_swaponly_side(x))])
+        return unique([rule_apply(node.copy(), lambda x: rule_swap_side(x))])
 
     return rule_swaponly
 
-def xform_rule_replace_fn(wht, wth, keep):
+def xform_rule_replaceonly_fn(wht, wth):
     if type(wth) != list:
         raise RuntimeError(f'replace with must be list')
 
@@ -246,7 +245,7 @@ def xform_rule_replace_fn(wht, wth, keep):
         return ret_hs
 
     def rule_replace(node):
-        return unique(([node] if keep else []) + [rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi))) for wthi in wth])
+        return unique([rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi))) for wthi in wth])
 
     return rule_replace
 
@@ -268,7 +267,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
 
     ntype = node[NKEY_TYPE]
 
-    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_TURN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY]:
+    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_TURN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY]:
         fn = None
         if ntype in [NDX_FILE, NDX_IDENT]:
             fn = xform_identity
@@ -286,10 +285,8 @@ def node_apply_xforms(node, xforms, nid_to_node):
             fn = xform_rule_fliponly
         elif ntype == NDX_SWAPONLY:
             fn = xform_rule_swaponly_fn(node[NKEY_WHAT], node[NKEY_WITH])
-        elif ntype == NDX_REPLACE:
-            fn = xform_rule_replace_fn(node[NKEY_WHAT], node[NKEY_WITH], True)
         elif ntype == NDX_REPLACEONLY:
-            fn = xform_rule_replace_fn(node[NKEY_WHAT], node[NKEY_WITH], False)
+            fn = xform_rule_replaceonly_fn(node[NKEY_WHAT], node[NKEY_WITH])
 
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
@@ -352,7 +349,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVTILEEND
 
     else:
-        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACE, NDX_REPLACEONLY, NDX_NEWPLAYER]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_NEWPLAYER]:
             nshape = 'hexagon'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
@@ -386,7 +383,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WITH]
             nlabel += GVTILEEND
-        elif ntype in [NDX_REPLACE, NDX_REPLACEONLY]:
+        elif ntype in [NDX_REPLACEONLY]:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WHAT]
