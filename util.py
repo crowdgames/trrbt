@@ -327,9 +327,9 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
     nlabel = '<'
 
     if ntype in [ND_REWRITE, ND_MATCH]:
-        nshape = 'box'
-
         if ntype == ND_REWRITE:
+            nshape = 'box'
+
             lhs, rhs = pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
 
             nlabel += GVTILEBGN
@@ -344,6 +344,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
                     nlabel += GVNEWLINE
             nlabel += GVTILEEND
         else:
+            nshape = 'note'
+
             nlabel += GVTILEBGN
             nlabel += pattern_to_string(node[NKEY_PATTERN], ' ', GVNEWLINE)
             nlabel += GVTILEEND
@@ -438,7 +440,7 @@ def game_print_gv(game):
     print(f'  _NAME [shape="component", label=<{game.name}>];')
     for ii, start in enumerate(game.starts):
         label = pattern_to_string(start, ' ', GVNEWLINE)
-        print(f'  _START{ii} [shape="note", label=<start:{GVNEWLINE}{GVTILEBGN}{label}{GVTILEEND}>];')
+        print(f'  _START{ii} [shape="tab", label=<start:{GVNEWLINE}{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
