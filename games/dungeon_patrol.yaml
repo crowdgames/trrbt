@@ -1,16 +1,16 @@
 ---
 name: dungeon patrol
-start:
-- X  X  X  X  X  X  X  X  X  X;
-  X  PN _  _  _  _  +  X  _  X;
-  X  _  _  _  _  _  +  D  _  X;
-  X  _  _  _  _  _  +  X  _  X;
-  X  _  _  _  _  _  +  X  _  X;
-  X  _  _  K  _  _  +  X  O  X;
-  X  X  X  X  X  X  X  X  X  X;
 tree:
   type: sequence
   children:
+  - type: set-board
+    pattern: X  X  X  X  X  X  X  X  X  X;
+             X  PN _  _  _  _  +  X  _  X;
+             X  _  _  _  _  _  +  D  _  X;
+             X  _  _  _  _  _  +  X  _  X;
+             X  _  _  _  _  _  +  X  _  X;
+             X  _  _  K  _  _  +  X  O  X;
+             X  X  X  X  X  X  X  X  X  X;
   - type: rewrite
     comment: add patroller
     lhs: +
@@ -65,4 +65,5 @@ tree:
           lhs: R'
           rhs: R
   - type: x-file
-    target: dungeon
+    file: dungeon
+    target: gameloop

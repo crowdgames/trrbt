@@ -98,7 +98,7 @@ tree:
                children:
                - type: match
                  pattern: BaS
-        - type: x-newplayer
+        - type: x-set-player
           pid: B
           children:
           - type: x-fliponly

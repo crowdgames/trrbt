@@ -1,12 +1,12 @@
 ---
 name: eights-randomize
-start:
-- 1 2 3;
-  4 5 6;
-  7 8 _;
 tree:
   type: sequence
   children:
+  - type: set-board
+    pattern: 1 2 3;
+             4 5 6;
+             7 8 _;
   - type: loop-until-all
     children:
     - type: none
@@ -23,4 +23,5 @@ tree:
                4 5 6;
                7 8 _;
   - type: x-file
-    target: eights
+    file: eights
+    target: gameloop

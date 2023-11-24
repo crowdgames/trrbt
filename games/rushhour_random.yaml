@@ -79,4 +79,5 @@ tree:
     - type: match
       pattern: CR CR __ __ __ __ OO
   - type: x-file
-    target: rushhour
+    file: rushhour
+    target: gameloop

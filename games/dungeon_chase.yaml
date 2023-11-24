@@ -1,16 +1,16 @@
 ---
 name: dungeon chase
-start:
-- X  X  X  X  X  X  X  X  X  X;
-  X  PN _  +  +  +  +  X  _  X;
-  X  _  _  +  +  +  +  D  _  X;
-  X  +  +  +  +  +  +  X  _  X;
-  X  +  +  +  +  +  +  X  _  X;
-  X  +  +  +  +  +  +  X  O  X;
-  X  X  X  X  X  X  X  X  X  X;
 tree:
   type: sequence
   children:
+  - type: set-board
+    pattern: X  X  X  X  X  X  X  X  X  X;
+             X  PN _  +  +  +  +  X  _  X;
+             X  _  _  +  +  +  +  D  _  X;
+             X  +  +  +  +  +  +  X  _  X;
+             X  +  +  +  +  +  +  X  _  X;
+             X  +  +  +  +  +  +  X  O  X;
+             X  X  X  X  X  X  X  X  X  X;
   - type: random-try
     comment: add guard near key
     children:
@@ -53,4 +53,5 @@ tree:
           lhs: G'
           rhs: G
   - type: x-file
-    target: dungeon
+    file: dungeon
+    target: gameloop

@@ -1,45 +1,48 @@
 ---
 name: connect four
-start:
-- = = = = = = =;
-  _ _ _ _ _ _ _;
-  _ _ _ _ _ _ _;
-  _ _ _ _ _ _ _;
-  _ _ _ _ _ _ _;
-  _ _ _ _ _ _ _;
-  _ _ _ _ _ _ _;
 tree:
-  type: loop-until-all
+  type: sequence
   children:
-  - type: x-ident
-    nid: redturn
+  - type: set-board
+    pattern: = = = = = = =;
+             _ _ _ _ _ _ _;
+             _ _ _ _ _ _ _;
+             _ _ _ _ _ _ _;
+             _ _ _ _ _ _ _;
+             _ _ _ _ _ _ _;
+             _ _ _ _ _ _ _;
+  - type: loop-until-all
+    nid: gameloop
     children:
-    - type: player
-      pid: R
+    - type: x-ident
+      nid: redturn
       children:
-      - type: rewrite
-        lhs: =;_
-        rhs: =;R
-    - type: loop-until-all
-      children:
-      - type: rewrite
-        lhs: R;_
-        rhs: _;R
-    - type: win
-      pid: R
-      children:
-      - type: x-turn
+      - type: player
+        pid: R
         children:
-        - type: x-skew
+        - type: rewrite
+          lhs: =;_
+          rhs: =;R
+      - type: loop-until-all
+        children:
+        - type: rewrite
+          lhs: R;_
+          rhs: _;R
+      - type: win
+        pid: R
+        children:
+        - type: x-turn
           children:
-          - type: match
-            pattern: R R R R
-  - type: x-newplayer
-    pid: Y
-    children:
-    - type: x-swaponly
-      what: R
-      with: Y
+          - type: x-skew
+            children:
+            - type: match
+              pattern: R R R R
+    - type: x-set-player
+      pid: Y
       children:
-      - type: x-link
-        target: redturn
+      - type: x-swaponly
+        what: R
+        with: Y
+        children:
+        - type: x-link
+          target: redturn

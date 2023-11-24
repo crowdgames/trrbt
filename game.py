@@ -25,9 +25,9 @@ class GameProcessor:
 
         self.name = bt.name
         self.filename = filename
-        self.board = util.listify(random.choice(bt.starts))
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.board = None
+        self.m = None
+        self.n = None
         self.tree = bt.tree
         self.max_tile_width = util.node_max_tile_width(self.tree)
         self.previous_moves = {}
@@ -36,6 +36,7 @@ class GameProcessor:
         self.clear_screen = clear_screen
 
         self.node_func_map = {
+            util.ND_SET_BOARD: self.execute_setboard_node,
             util.ND_SEQ: self.execute_sequence_node,
             util.ND_LOOP_UNTIL_ALL: self.execute_loop_until_all_node,
             util.ND_WIN: self.execute_win_node,
@@ -74,6 +75,16 @@ class GameProcessor:
             self.display_board()
             print()
             print("Game over, stalemate - root node exited but game has not ended")
+
+    def execute_setboard_node(self, node):
+        """
+        Sets current board to given pattern.
+        :return: Success.
+        """
+        self.board = util.listify(node[util.NKEY_PATTERN])
+        self.m = len(self.board)
+        self.n = len(self.board[0])
+        return True
 
     def execute_sequence_node(self, node):
         """
@@ -279,8 +290,11 @@ class GameProcessor:
         return False
 
     def make_move(self, choice):
+        if self.board is None:
+            raise RuntimeError('Cannot make move without board.')
         if len(choice) != 3:
-            return
+            raise RuntimeError('Choice wrong size.')
+
         node, x, y = choice[0], choice[1], choice[2]
         lhs, rhs = node[util.NKEY_LHS], node[util.NKEY_RHS]
         for i in range(len(lhs)):
@@ -289,6 +303,9 @@ class GameProcessor:
                     self.board[x + i][y + j] = rhs[i][j]
 
     def find_pattern(self, child):
+        if self.board is None:
+            raise RuntimeError('Cannot find pattern without board.')
+
         ret = []
         for i in range(self.m):
             for j in range(self.n):
@@ -299,6 +316,9 @@ class GameProcessor:
         return True, ret
 
     def is_match(self, lhs, x, y):
+        if self.board is None:
+            raise RuntimeError('Cannot match without board.')
+
         for i in range(len(lhs)):
             for j in range(len(lhs[i])):
                 if lhs[i][j] != '.':
@@ -307,6 +327,9 @@ class GameProcessor:
         return True, x, y
 
     def match_pattern(self, pattern):
+        if self.board is None:
+            raise RuntimeError('Cannot match without board.')
+
         pattern_rows = len(pattern)
         pattern_cols = len(pattern[0])
 
@@ -329,6 +352,9 @@ class GameProcessor:
         return False
 
     def display_board(self):
+        if self.board is None:
+            raise RuntimeError('Cannot display without board.')
+
         if self.clear_screen:
             cls()
         else:
