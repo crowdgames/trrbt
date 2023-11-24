@@ -1,111 +1,113 @@
 ---
 name: checkers
-start:
-- =   =   =   =   =   =   =   =  ;
-  _   BPS _   BPS _   BPS _   BPS;
-  BPS _   BPS _   BPS _   BPS _  ;
-  _   BPS _   BPS _   BPS _   BPS;
-  _   _   _   _   _   _   _   _  ;
-  _   _   _   _   _   _   _   _  ;
-  RPS _   RPS _   RPS _   RPS _  ;
-  _   RPS _   RPS _   RPS _   RPS;
-  RPS _   RPS _   RPS _   RPS _  ;
-  =   =   =   =   =   =   =   =  ;
 tree:
-  type: x-mirror
+  type: sequence
   children:
-  - type: x-replaceonly
-    what: a
-    with:
-    - K
-    - P
+  - type: set-board
+    pattern: =   =   =   =   =   =   =   =  ;
+             _   BPS _   BPS _   BPS _   BPS;
+             BPS _   BPS _   BPS _   BPS _  ;
+             _   BPS _   BPS _   BPS _   BPS;
+             _   _   _   _   _   _   _   _  ;
+             _   _   _   _   _   _   _   _  ;
+             RPS _   RPS _   RPS _   RPS _  ;
+             _   RPS _   RPS _   RPS _   RPS;
+             RPS _   RPS _   RPS _   RPS _  ;
+             =   =   =   =   =   =   =   =  ;
+  - type: x-mirror
     children:
     - type: x-replaceonly
-      what: b
+      what: a
       with:
       - K
       - P
       children:
-      - type: loop-until-all
+      - type: x-replaceonly
+        what: b
+        with:
+        - K
+        - P
         children:
-        - type: x-ident
-          nid: redturn
+        - type: loop-until-all
           children:
-          - type: none
-            comment: player loses if no move
+          - type: x-ident
+            nid: move
             children:
-            - type: lose
-              pid: X
+            - type: none
+              comment: player loses if no move
               children:
-              - type: none
+              - type: lose
+                pid: X
                 children:
-                - type: player
-                  pid: R
+                - type: none
                   children:
-                  - type: rewrite
-                    lhs: .    _  ;
-                         RaS  .  ;
-                    rhs: .    RaS;
-                         _   .   ;
-                  - type: rewrite
-                    lhs: RKS .  ;
-                         .   _  ;
-                    rhs: _   .  ;
-                         .    RKS;
-                  - type: rewrite
-                    lhs: .   .   _  ;
-                         .   BbS .  ;
-                         RaS .   .  ;
-                    rhs: .   .   RaJ;
-                         .   _   .  ;
-                         _   .   .  ;
-                  - type: rewrite
-                    lhs: RKS .   .  ;
-                         .   BbS .  ;
-                         .   .   _  ;
-                    rhs: _   .   .  ;
-                         .   _   .  ;
-                         .   .   RKJ;
-          - type: loop-until-all
-            children:
-            - type: player
+                  - type: player
+                    pid: R
+                    children:
+                    - type: rewrite
+                      lhs: .    _  ;
+                           RaS  .  ;
+                      rhs: .    RaS;
+                           _   .   ;
+                    - type: rewrite
+                      lhs: RKS .  ;
+                           .   _  ;
+                      rhs: _   .  ;
+                           .    RKS;
+                    - type: rewrite
+                      lhs: .   .   _  ;
+                           .   BbS .  ;
+                           RaS .   .  ;
+                      rhs: .   .   RaJ;
+                           .   _   .  ;
+                           _   .   .  ;
+                    - type: rewrite
+                      lhs: RKS .   .  ;
+                           .   BbS .  ;
+                           .   .   _  ;
+                      rhs: _   .   .  ;
+                           .   _   .  ;
+                           .   .   RKJ;
+            - type: loop-until-all
+              children:
+              - type: player
+                pid: R
+                children:
+                - type: rewrite
+                  lhs: .   .   _  ;
+                       .   BbS .  ;
+                       RaJ .   .  ;
+                  rhs: .   .   RaJ;
+                       .   _   .  ;
+                       _   .   .  ;
+                - type: rewrite
+                  lhs: RKJ  .  .  ;
+                       .   BbS .  ;
+                       .   .   _  ;
+                  rhs: _   .   .  ;
+                       .   _   .  ;
+                       .   .   RKJ;
+            - type: rewrite
+              lhs: RaJ
+              rhs: RaS
+            - type: rewrite
+              lhs: =  ; RPS
+              rhs: =  ; RKS
+            - type: win
               pid: R
               children:
-              - type: rewrite
-                lhs: .   .   _  ;
-                     .   BbS .  ;
-                     RaJ .   .  ;
-                rhs: .   .   RaJ;
-                     .   _   .  ;
-                     _   .   .  ;
-              - type: rewrite
-                lhs: RKJ  .  .  ;
-                     .   BbS .  ;
-                     .   .   _  ;
-                rhs: _   .   .  ;
-                     .   _   .  ;
-                     .   .   RKJ;
-          - type: rewrite
-            lhs: RaJ
-            rhs: RaS
-          - type: rewrite
-            lhs: =  ; RPS
-            rhs: =  ; RKS
-          - type: win
-            pid: R
+               - type: none
+                 children:
+                 - type: match
+                   pattern: BaS
+          - type: x-set-player
+            pid: B
             children:
-             - type: none
-               children:
-               - type: match
-                 pattern: BaS
-        - type: x-set-player
-          pid: B
-          children:
-          - type: x-fliponly
-            children:
-            - type: x-swaponly
-              what: R
-              with: B
+            - type: x-fliponly
               children:
-              - type: x-link
-                target: redturn
+              - type: x-swaponly
+                what: R
+                with: B
+                children:
+                - type: x-link
+                  target: move
