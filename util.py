@@ -325,37 +325,56 @@ def node_apply_xforms(node, xforms, nid_to_node):
 def node_print_gv(node, nid_to_node, pid_to_nid):
     ntype = node[NKEY_TYPE]
     nlabel = '<'
-
-    nlabel += ntype
+    nmisc = ''
 
     if ntype in [ND_REWRITE, ND_MATCH, ND_SET_BOARD]:
-        if ntype == ND_REWRITE:
-            nshape = 'box'
+        nshape = 'box'
+        nmisc += ', style="rounded"'
 
+        nlabel += '<TABLE BORDER="0">'
+        nlabel += '<TR><TD COLSPAN="3">'
+        nlabel += ntype
+        nlabel += '</TD></TR>'
+
+        if ntype == ND_REWRITE:
             lhs, rhs = pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
 
-            nlabel += GVNEWLINE
+            nlabel += '<TR>'
+            nlabel += '<TD BORDER="1" COLOR="gray">'
             nlabel += GVTILEBGN
-            for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
-                nlabel += ' '.join(ll)
-                if ii == 0:#len(lhs) // 2:
-                    nlabel += ' → '
-                else:
-                    nlabel += '   '
-                nlabel += ' '.join(rr)
-                if ii + 1 < len(lhs):
-                    nlabel += GVNEWLINE
+            nlabel += pattern_to_string(lhs, ' ', GVNEWLINE)
             nlabel += GVTILEEND
-        else:
-            if ntype == ND_MATCH:
-                nshape = 'tab'
-            else:
-                nshape = 'note'
+            nlabel += '</TD>'
+            nlabel += '<TD>→</TD>'
+            nlabel += '<TD BORDER="1" COLOR="gray">'
+            nlabel += GVTILEBGN
+            nlabel += pattern_to_string(rhs, ' ', GVNEWLINE)
+            nlabel += GVTILEEND
+            nlabel += '</TD>'
+            nlabel += '</TR>'
 
-            nlabel += GVNEWLINE
+        else:
+            nlabel += '<TR><TD></TD><TD BORDER="1" COLOR="gray">'
             nlabel += GVTILEBGN
             nlabel += pattern_to_string(node[NKEY_PATTERN], ' ', GVNEWLINE)
             nlabel += GVTILEEND
+            nlabel += '</TD><TD></TD></TR>'
+
+        if NKEY_NID in node.keys():
+            nlabel += '<TR><TD COLSPAN="3">'
+            nlabel += GVNIDBGN
+            nlabel += '@'
+            nlabel += node[NKEY_NID]
+            nlabel += '</TD></TR>'
+
+        if NKEY_COMMENT in node.keys():
+            nlabel += '<TR><TD COLSPAN="3">'
+            nlabel += GVCOMMBGN
+            nlabel += node[NKEY_COMMENT]
+            nlabel += GVCOMMEND
+            nlabel += '</TD></TR>'
+
+        nlabel += '</TABLE>'
 
     else:
         if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_SET_PLAYER]:
@@ -372,6 +391,8 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nshape = 'oval'
         else:
             raise RuntimeError(f'unrecognized node type {ntype}')
+
+        nlabel += ntype
 
         if ntype in [ND_PLAYER, ND_WIN, ND_LOSE, NDX_SET_PLAYER]:
             nlabel += ':' + str(node[NKEY_PID])
@@ -400,24 +421,24 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += (GVTILEEND + ', ' + GVTILEBGN).join([str(ee) for ee in node[NKEY_WITH]])
             nlabel += GVTILEEND
 
-    if NKEY_NID in node.keys():
-        nlabel += GVNEWLINE
-        nlabel += GVNIDBGN
-        nlabel += '@'
-        nlabel += node[NKEY_NID]
-        nlabel += GVNIDEND
+        if NKEY_NID in node.keys():
+            nlabel += GVNEWLINE
+            nlabel += GVNIDBGN
+            nlabel += '@'
+            nlabel += node[NKEY_NID]
+            nlabel += GVNIDEND
 
-    if NKEY_COMMENT in node.keys():
-        nlabel += GVNEWLINE
-        nlabel += GVCOMMBGN
-        nlabel += node[NKEY_COMMENT]
-        nlabel += GVCOMMEND
+        if NKEY_COMMENT in node.keys():
+            nlabel += GVNEWLINE
+            nlabel += GVCOMMBGN
+            nlabel += node[NKEY_COMMENT]
+            nlabel += GVCOMMEND
 
     nlabel += '>'
 
     nid = pid_to_nid[id(node)]
 
-    print(f'  {nid} [shape="{nshape}", label={nlabel}];')
+    print(f'  {nid} [shape="{nshape}", label={nlabel}{nmisc}];')
 
     if NKEY_CHILDREN in node.keys():
         children = node[NKEY_CHILDREN]
