@@ -1,45 +1,48 @@
 ---
 name: tic-tac-toe
-start:
-- _ _ _;
-  _ _ _;
-  _ _ _;
 tree:
-  type: loop-until-all
+  type: sequence
   children:
-  - type: x-ident
-    nid: xturn
+  - type: set-board
+    pattern: _ _ _;
+             _ _ _;
+             _ _ _;
+  - type: loop-until-all
+    nid: gameloop
     children:
-    - type: player
-      comment: player moves
-      pid: X
+    - type: x-ident
+      nid: move
       children:
-      - type: rewrite
-        lhs: _
-        rhs: X
-    - type: win
-      comment: check for player win
-      pid: X
-      children:
-      - type: x-turn
+      - type: player
+        comment: player moves
+        pid: X
         children:
-        - type: x-skew
+        - type: rewrite
+          lhs: _
+          rhs: X
+      - type: win
+        comment: check for player win
+        pid: X
+        children:
+        - type: x-turn
+          children:
+          - type: x-skew
+            children:
+            - type: match
+              pattern: X X X
+      - type: draw
+        comment: check for draw
+        children:
+        - type: none
           children:
           - type: match
-            pattern: X X X
-    - type: draw
-      comment: check for draw
+            pattern: _
+    - type: x-set-player
+      pid: O
       children:
-      - type: none
+      - type: x-swaponly
+        what: X
+        with: O
         children:
-        - type: match
-          pattern: _
-  - type: x-newplayer
-    pid: O
-    children:
-    - type: x-swaponly
-      what: X
-      with: O
-      children:
-      - type: x-link
-        target: xturn
+        - type: x-link
+          target: move

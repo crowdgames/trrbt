@@ -1,98 +1,101 @@
 ---
 name: ultimate tic-tac-toe
-start:
-- = = = = = = = = = = = = =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = = = = = = = = = = = = =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = = = = = = = = = = = = =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = _ _ _ = _ _ _ = _ _ _ =;
-  = = = = = = = = = = = = =;
 tree:
-  type: loop-until-all
+  type: sequence
   children:
-  - type: x-ident
-    nid: xturn
+  - type: set-board
+    pattern: = = = = = = = = = = = = =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = = = = = = = = = = = = =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = = = = = = = = = = = = =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = _ _ _ = _ _ _ = _ _ _ =;
+             = = = = = = = = = = = = =;
+  - type: loop-until-all
+    nid: gameloop
     children:
-    - type: player
-      pid: X
+    - type: x-ident
+      nid: xturn
       children:
-      - type: rewrite
-        lhs: _
-        rhs: X
-    - type: loop-until-all
-      children:
-      - type: x-turn
+      - type: player
+        pid: X
         children:
         - type: rewrite
-          lhs: = = = = =;
-               = X X X =;
-               = . . . =;
-               = . . . =;
-               = = = = =;
-          rhs: = = = = =;
-               = ~ ~ ~ =;
-               = ~ x ~ =;
-               = ~ ~ ~ =;
-               = = = = =;
-        - type: rewrite
-          lhs: = = = = =;
-               = . . . =;
-               = X X X =;
-               = . . . =;
-               = = = = =;
-          rhs: = = = = =;
-               = ~ ~ ~ =;
-               = ~ x ~ =;
-               = ~ ~ ~ =;
-               = = = = =;
-        - type: rewrite
-          lhs: = = = = =;
-               = . . . =;
-               = . . . =;
-               = X X X =;
-               = = = = =;
-          rhs: = = = = =;
-               = ~ ~ ~ =;
-               = ~ x ~ =;
-               = ~ ~ ~ =;
-               = = = = =;
-        - type: rewrite
-          lhs: = = = = =;
-               = X . . =;
-               = . X . =;
-               = . . X =;
-               = = = = =;
-          rhs: = = = = =;
-               = ~ ~ ~ =;
-               = ~ x ~ =;
-               = ~ ~ ~ =;
-               = = = = =;
-    - type: win
-      pid: X
-      children:
-      - type: x-turn
+          lhs: _
+          rhs: X
+      - type: loop-until-all
         children:
-        - type: x-skew
+        - type: x-turn
           children:
-          - type: match
-            pattern: x . . . x . . . x
-  - type: x-newplayer
-    pid: O
-    children:
-    - type: x-swaponly
-      what: X
-      with: O
+          - type: rewrite
+            lhs: = = = = =;
+                 = X X X =;
+                 = . . . =;
+                 = . . . =;
+                 = = = = =;
+            rhs: = = = = =;
+                 = ~ ~ ~ =;
+                 = ~ x ~ =;
+                 = ~ ~ ~ =;
+                 = = = = =;
+          - type: rewrite
+            lhs: = = = = =;
+                 = . . . =;
+                 = X X X =;
+                 = . . . =;
+                 = = = = =;
+            rhs: = = = = =;
+                 = ~ ~ ~ =;
+                 = ~ x ~ =;
+                 = ~ ~ ~ =;
+                 = = = = =;
+          - type: rewrite
+            lhs: = = = = =;
+                 = . . . =;
+                 = . . . =;
+                 = X X X =;
+                 = = = = =;
+            rhs: = = = = =;
+                 = ~ ~ ~ =;
+                 = ~ x ~ =;
+                 = ~ ~ ~ =;
+                 = = = = =;
+          - type: rewrite
+            lhs: = = = = =;
+                 = X . . =;
+                 = . X . =;
+                 = . . X =;
+                 = = = = =;
+            rhs: = = = = =;
+                 = ~ ~ ~ =;
+                 = ~ x ~ =;
+                 = ~ ~ ~ =;
+                 = = = = =;
+      - type: win
+        pid: X
+        children:
+        - type: x-turn
+          children:
+          - type: x-skew
+            children:
+            - type: match
+              pattern: x . . . x . . . x
+    - type: x-set-player
+      pid: O
       children:
       - type: x-swaponly
-        what: x
-        with: o
+        what: X
+        with: O
         children:
-        - type: x-link
-          target: xturn
+        - type: x-swaponly
+          what: x
+          with: o
+          children:
+          - type: x-link
+            target: xturn

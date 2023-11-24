@@ -14,7 +14,7 @@ NDX_TURN           = 'x-turn'
 NDX_FLIPONLY       = 'x-fliponly'
 NDX_SWAPONLY       = 'x-swaponly'
 NDX_REPLACEONLY    = 'x-replaceonly'
-NDX_NEWPLAYER      = 'x-newplayer'
+NDX_SET_PLAYER     = 'x-set-player'
 
 NDX_LINK           = 'x-link'
 NDX_FILE           = 'x-file'
@@ -33,6 +33,7 @@ ND_LOOP_TIMES      = 'loop-times'
 
 ND_REWRITE         = 'rewrite'
 ND_MATCH           = 'match'
+ND_SET_BOARD        = 'set-board'
 
 
 NKEY_TYPE          = 'type'
@@ -48,19 +49,18 @@ NKEY_PID           = 'pid'
 NKEY_TIMES         = 'times'
 NKEY_WHAT          = 'what'
 NKEY_WITH          = 'with'
+NKEY_FILE          = 'file'
 NKEY_TARGET        = 'target'
 
 
 FKEY_NAME          = 'name'
-FKEY_START         = 'start'
 FKEY_TREE          = 'tree'
 
 
 
 class Game:
-    def __init__(self, name, starts, tree):
+    def __init__(self, name, tree):
         self.name = name
-        self.starts = starts
         self.tree = tree
 
 
@@ -114,7 +114,7 @@ def node_reshape_tiles(node):
         node[NKEY_LHS] = string_to_pattern(node[NKEY_LHS])
         node[NKEY_RHS] = string_to_pattern(node[NKEY_RHS])
 
-    if node[NKEY_TYPE] == ND_MATCH:
+    if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD]:
         node[NKEY_PATTERN] = string_to_pattern(node[NKEY_PATTERN])
 
     if NKEY_CHILDREN in node.keys():
@@ -129,7 +129,7 @@ def node_max_tile_width(node):
         tile_len = max(tile_len, pattern_max_tile_width(node[NKEY_LHS]))
         tile_len = max(tile_len, pattern_max_tile_width(node[NKEY_RHS]))
 
-    if node[NKEY_TYPE] == ND_MATCH:
+    if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD]:
         tile_len = max(tile_len, pattern_max_tile_width(node[NKEY_PATTERN]))
 
     if NKEY_CHILDREN in node.keys():
@@ -296,11 +296,11 @@ def node_apply_xforms(node, xforms, nid_to_node):
         if nid_target in nid_to_node:
             ret_nodes += node_apply_xforms(nid_to_node[nid_target], xforms, nid_to_node)
 
-    elif ntype == NDX_NEWPLAYER:
+    elif ntype == NDX_SET_PLAYER:
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_apply_xforms(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
-    elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
+    elif ntype in [ND_SEQ, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -326,12 +326,15 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
     ntype = node[NKEY_TYPE]
     nlabel = '<'
 
-    if ntype in [ND_REWRITE, ND_MATCH]:
+    nlabel += ntype
+
+    if ntype in [ND_REWRITE, ND_MATCH, ND_SET_BOARD]:
         if ntype == ND_REWRITE:
             nshape = 'box'
 
             lhs, rhs = pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
 
+            nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             for ii, (ll, rr) in enumerate(zip(lhs, rhs)):
                 nlabel += ' '.join(ll)
@@ -344,14 +347,18 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
                     nlabel += GVNEWLINE
             nlabel += GVTILEEND
         else:
-            nshape = 'note'
+            if ntype == ND_MATCH:
+                nshape = 'tab'
+            else:
+                nshape = 'note'
 
+            nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += pattern_to_string(node[NKEY_PATTERN], ' ', GVNEWLINE)
             nlabel += GVTILEEND
 
     else:
-        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_NEWPLAYER]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_SET_PLAYER]:
             nshape = 'hexagon'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
@@ -366,16 +373,14 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
         else:
             raise RuntimeError(f'unrecognized node type {ntype}')
 
-        nlabel += ntype
-
-        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE, NDX_NEWPLAYER]:
+        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE, NDX_SET_PLAYER]:
             nlabel += ':' + str(node[NKEY_PID])
         elif ntype in [ND_LOOP_TIMES]:
             nlabel += ':' + str(node[NKEY_TIMES])
         elif ntype in [NDX_FILE]:
-            nlabel += ':' + node[NKEY_TARGET]
+            nlabel += ':' + node[NKEY_FILE] + '@' + node[NKEY_TARGET]
         elif ntype in [NDX_LINK]:
-            nlabel += ':' + node[NKEY_TARGET]
+            nlabel += ':@' + node[NKEY_TARGET]
         elif ntype == NDX_SWAPONLY:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
@@ -438,9 +443,6 @@ def game_print_gv(game):
     print('digraph G {')
     print(f'  graph [ordering="out"];')
     print(f'  _NAME [shape="component", label=<{game.name}>];')
-    for ii, start in enumerate(game.starts):
-        label = pattern_to_string(start, ' ', GVNEWLINE)
-        print(f'  _START{ii} [shape="tab", label=<start:{GVNEWLINE}{GVTILEBGN}{label}{GVTILEEND}>];')
     node_print_gv(game.tree, nid_to_node, pid_to_nid)
     print('}')
 
@@ -453,10 +455,21 @@ def resolve_file_links(folder, node):
         new_children = []
         for child in node[NKEY_CHILDREN]:
             if child[NKEY_TYPE] == NDX_FILE:
+                filename = child[NKEY_FILE]
                 target = child[NKEY_TARGET]
-                filename = f'{folder}/{target}.yaml'
+
+                filename = f'{folder}/{filename}.yaml'
                 data = yamlload(filename)
-                child[NKEY_CHILDREN] = [data[FKEY_TREE]]
+
+                fileroot = data[FKEY_TREE]
+                nid_to_node, pid_to_nid = {}, {}
+                node_find_nids(fileroot, nid_to_node, pid_to_nid)
+
+                if target not in nid_to_node:
+                    raise RuntimeError(f'missing target node {target} in file {filename}')
+
+                child[NKEY_CHILDREN] = [nid_to_node[target]]
+
             new_children.append(resolve_file_links(folder, child))
         node[NKEY_CHILDREN] = new_children
     return node
@@ -477,6 +490,4 @@ def yaml2bt(filename, xform):
         node_find_nids(root, nid_to_node, pid_to_nid)
         root = node_apply_xforms(root, [xform_identity], nid_to_node)[0]
 
-    starts = [string_to_pattern(start) for start in data[FKEY_START]]
-
-    return Game(name, starts, root)
+    return Game(name, root)

@@ -1,56 +1,62 @@
 ---
 name: rush hour
-start:
-- XX XX XX XX XX XX XX XX;
-  XX __ __ __ __ T1 __ XX;
-  XX __ __ __ __ T1 __ XX;
-  XX CR CR __ __ T1 __ OO;
-  XX __ __ __ __ __ __ XX;
-  XX __ __ __ __ __ __ XX;
-  XX __ __ __ __ __ __ XX;
-  XX XX XX XX XX XX XX XX;
-- XX XX XX XX XX XX XX XX;
-  XX __ __ __ __ T1 __ XX;
-  XX __ __ __ __ T1 __ XX;
-  XX CR CR __ __ T1 __ OO;
-  XX __ __ __ __ C1 C1 XX;
-  XX __ __ __ T2 T2 T2 XX;
-  XX __ __ __ __ __ __ XX;
-  XX XX XX XX XX XX XX XX;
 tree:
-  type: loop-until-all
+  type: sequence
   children:
-  - type: player
-    pid: 1
+  - type: random-try
     children:
-    - type: x-ident
-      nid: move
+    - type: set-board
+      pattern: XX XX XX XX XX XX XX XX;
+               XX __ __ __ __ T1 __ XX;
+               XX __ __ __ __ T1 __ XX;
+               XX CR CR __ __ T1 __ OO;
+               XX __ __ __ __ __ __ XX;
+               XX __ __ __ __ __ __ XX;
+               XX __ __ __ __ __ __ XX;
+               XX XX XX XX XX XX XX XX;
+    - type: set-board
+      pattern: XX XX XX XX XX XX XX XX;
+               XX __ __ __ __ T1 __ XX;
+               XX __ __ __ __ T1 __ XX;
+               XX CR CR __ __ T1 __ OO;
+               XX __ __ __ __ C1 C1 XX;
+               XX __ __ __ T2 T2 T2 XX;
+               XX __ __ __ __ __ __ XX;
+               XX XX XX XX XX XX XX XX;
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: player
+      pid: 1
       children:
-      - type: x-mirror
-        comment: red car moves side to side
+      - type: x-ident
+        nid: move
         children:
-        - type: rewrite
-          lhs: CR CR __
-          rhs: __ CR CR
-      - type: x-replaceonly
-        comment: cars and trucks move
-        what: a
-        with:
-        - 1
-        - 2
-        - 3
-        children:
-        - type: x-rotate
+        - type: x-mirror
+          comment: red car moves side to side
           children:
           - type: rewrite
-            lhs: Ca Ca __
-            rhs: __ Ca Ca
-          - type: rewrite
-            lhs: Ta Ta Ta __
-            rhs: __ Ta Ta Ta
-  - type: win
-    comment: win if red car at exit
-    pid: 1
-    children:
-    - type: match
-      pattern: CR CR OO
+            lhs: CR CR __
+            rhs: __ CR CR
+        - type: x-replaceonly
+          comment: cars and trucks move
+          what: a
+          with:
+          - 1
+          - 2
+          - 3
+          children:
+          - type: x-rotate
+            children:
+            - type: rewrite
+              lhs: Ca Ca __
+              rhs: __ Ca Ca
+            - type: rewrite
+              lhs: Ta Ta Ta __
+              rhs: __ Ta Ta Ta
+    - type: win
+      comment: win if red car at exit
+      pid: 1
+      children:
+      - type: match
+        pattern: CR CR OO
