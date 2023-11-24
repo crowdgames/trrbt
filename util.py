@@ -33,7 +33,7 @@ ND_LOOP_TIMES      = 'loop-times'
 
 ND_REWRITE         = 'rewrite'
 ND_MATCH           = 'match'
-ND_SET_BOARD        = 'set-board'
+ND_SET_BOARD       = 'set-board'
 
 
 NKEY_TYPE          = 'type'
@@ -121,6 +121,39 @@ def node_reshape_tiles(node):
         node[NKEY_CHILDREN] = [node_reshape_tiles(child) for child in node[NKEY_CHILDREN]]
 
     return node
+
+def node_check(node, files_resolved, xformed):
+    ntype = node[NKEY_TYPE]
+
+    if xformed:
+        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_SEQ, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_SET_BOARD]:
+            raise RuntimeError(f'node type {ntype} must not be in xformed tree')
+
+    if ntype == ND_PLAYER:
+        if NKEY_CHILDREN not in node.keys():
+            raise RuntimeError(f'node type {ntype} must have {NKEY_CHILDREN}')
+
+        for child in node[NKEY_CHILDREN]:
+            if xformed:
+                if child[NKEY_TYPE] != ND_REWRITE:
+                    raise RuntimeError(f'node type {ntype} children must have type {ND_REWRITE}')
+    elif ntype == NDX_FILE:
+        if files_resolved:
+            if NKEY_CHILDREN not in node.keys():
+                raise RuntimeError(f'node type {ntype} must have {NKEY_CHILDREN}')
+        else:
+            if NKEY_CHILDREN in node.keys():
+                raise RuntimeError(f'node type {ntype} must not have {NKEY_CHILDREN}')
+    elif ntype in [NDX_LINK, NDX_FILE, ND_REWRITE, ND_MATCH, ND_SET_BOARD]:
+        if NKEY_CHILDREN in node.keys():
+            raise RuntimeError(f'node type {ntype} must not have {NKEY_CHILDREN}')
+    else:
+        if NKEY_CHILDREN not in node.keys():
+            raise RuntimeError(f'node type {ntype} must have {NKEY_CHILDREN}')
+
+    if NKEY_CHILDREN in node.keys():
+        for child in node[NKEY_CHILDREN]:
+            node_check(child, files_resolved, xformed)
 
 def node_max_tile_width(node):
     tile_len = 0
@@ -502,13 +535,25 @@ def yaml2bt(filename, xform):
 
     root = data[FKEY_TREE]
 
+    node_check(root, False, False)
+
     root = resolve_file_links(os.path.dirname(filename), root)
+
+    node_check(root, True, False)
 
     root = node_reshape_tiles(root)
 
     if xform:
         nid_to_node, pid_to_nid = {}, {}
         node_find_nids(root, nid_to_node, pid_to_nid)
-        root = node_apply_xforms(root, [xform_identity], nid_to_node)[0]
+        root = node_apply_xforms(root, [xform_identity], nid_to_node)
+
+        if len(root) == 0:
+            raise RuntimeError('xformed tree has no root')
+        if len(root) > 1:
+            raise RuntimeError('xformed tree has multiple roots')
+        root = root[0]
+
+        node_check(root, True, True)
 
     return Game(name, root)
