@@ -9,10 +9,17 @@ END_WIN  = 'win'
 END_LOSE = 'lose'
 END_DRAW = 'draw'
 
+DEFAULT_DISPLAY_DELAY = 0.5
+
 def cls():
     sys.stdout.flush()
     sys.stderr.flush()
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def delay(seconds):
+    sys.stdout.flush()
+    sys.stderr.flush()
+    time.sleep(seconds)
 
 class GameOverException(Exception):
     def __init__(self, result, player):
@@ -20,7 +27,7 @@ class GameOverException(Exception):
         self.player = player
 
 class GameProcessor:
-    def __init__(self, filename, random_players, clear_screen):
+    def __init__(self, filename, choice_order, random_players, clear_screen):
         bt = util.yaml2bt(filename, True)
 
         self.name = bt.name
@@ -32,6 +39,7 @@ class GameProcessor:
         self.max_tile_width = util.node_max_tile_width(self.tree)
         self.previous_moves = {}
 
+        self.choice_order = choice_order
         self.random_players = random_players
         self.clear_screen = clear_screen
 
@@ -146,43 +154,54 @@ class GameProcessor:
 
         if len(valid_moves) == 0:
             print(f"Player {player_id} doesn't have a valid move!")
+
+            if self.clear_screen is not None:
+                delay(self.clear_screen)
+
             return False
 
         this_turn_choices = {}
         this_turn_info = {}
 
-        for choice in valid_moves:
+        for ii, choice in enumerate(valid_moves):
             node, row, col = choice
 
             lhs, rhs = util.pad_tiles_multiple([node[util.NKEY_LHS], node[util.NKEY_RHS]])
             lhs = util.pattern_to_string(lhs, ' ', '; ')
             rhs = util.pattern_to_string(rhs, ' ', '; ')
 
-            idx = None
+            if self.choice_order:
+                idx = ii + 1
 
-            choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
-            for choice_key in choice_keys:
-                if choice_key in self.previous_moves:
-                    idx = self.previous_moves[choice_key]
-                    break
+            else:
+                idx = None
 
-            if idx is None:
-                idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
+                choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
+                for choice_key in choice_keys:
+                    if choice_key in self.previous_moves:
+                        idx = self.previous_moves[choice_key]
+                        break
 
-            while idx in this_turn_choices:
-                idx += 1
+                if idx is None:
+                    idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
+
+                while idx in this_turn_choices:
+                    idx += 1
+
+                for choice_key in choice_keys:
+                    self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
             this_turn_info[idx] = (lhs, rhs, row, col)
-
-            for choice_key in choice_keys:
-                self.previous_moves[choice_key] = idx
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
             print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
+
+            if self.clear_screen is not None:
+                delay(self.clear_screen)
 
         else:
             print(f"Choices for player {player_id} are:")
@@ -341,7 +360,7 @@ class GameProcessor:
         return False
 
     def display_board(self):
-        if self.clear_screen:
+        if self.clear_screen is not None:
             cls()
         else:
             print()
@@ -355,12 +374,13 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
     parser.add_argument('--random', type=int, help='Random seed.')
-    parser.add_argument('--cls', action='store_true', help='Clear screen before moves.')
+    parser.add_argument('--choice-order', action='store_true', help='Keep move choices in order.')
+    parser.add_argument('--cls', type=float, nargs='?', const=DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
     print(f'Using random seed {random_seed}')
     random.seed(random_seed)
 
-    game = GameProcessor(args.filename, args.player_random, args.cls)
+    game = GameProcessor(args.filename, args.choice_order, args.player_random, args.cls)
     game.game_play()
