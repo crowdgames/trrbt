@@ -1,14 +1,5 @@
 ---
 name: rush hour-randomize
-start:
-- XX XX XX XX XX XX XX XX;
-  XX __ __ __ __ __ __ XX;
-  XX __ __ __ __ __ __ XX;
-  XX __ __ __ __ CR CR OO;
-  XX __ __ __ __ __ __ XX;
-  XX __ __ __ __ __ __ XX;
-  XX __ __ __ __ __ __ XX;
-  XX XX XX XX XX XX XX XX;
 tree:
   type: sequence
   children:
@@ -18,28 +9,16 @@ tree:
       children:
       - type: sequence
         children:
-        - type: loop-until-all
-          comment: erase any previous cars and trucks
-          children:
-          - type: x-replaceonly
-            what: a
-            with:
-            - 1
-            - 2
-            - 3
-            children:
-            - type: rewrite
-              lhs: Ca
-              rhs: __
-            - type: rewrite
-              lhs: Ta
-              rhs: __
-        - type: loop-until-all
-          comment: move red car to exit
-          children:
-          - type: rewrite
-            lhs: CR CR __
-            rhs: __ CR CR
+        - type: set-board
+          comment: reset board
+          pattern: XX XX XX XX XX XX XX XX;
+                   XX __ __ __ __ __ __ XX;
+                   XX __ __ __ __ __ __ XX;
+                   XX __ __ __ __ CR CR OO;
+                   XX __ __ __ __ __ __ XX;
+                   XX __ __ __ __ __ __ XX;
+                   XX __ __ __ __ __ __ XX;
+                   XX XX XX XX XX XX XX XX;
         - type: sequence
           comment: place cars and trucks randomly
           children:
