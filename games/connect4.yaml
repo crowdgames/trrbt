@@ -40,7 +40,7 @@ tree:
     - type: x-set-player
       pid: Y
       children:
-      - type: x-swaponly
+      - type: x-swap-only
         what: R
         with: Y
         children:

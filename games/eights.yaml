@@ -20,7 +20,7 @@ tree:
     - type: player
       pid: 1
       children:
-      - type: x-replaceonly
+      - type: x-replace-only
         what: a
         nid: move
         with:

@@ -16,13 +16,13 @@ tree:
              =  =  =  =  =  =  =  = ;
   - type: x-mirror
     children:
-    - type: x-replaceonly
+    - type: x-replace-only
       what: a
       with:
       - K
       - P
       children:
-      - type: x-replaceonly
+      - type: x-replace-only
         what: b
         with:
         - K
@@ -103,9 +103,9 @@ tree:
           - type: x-set-player
             pid: B
             children:
-            - type: x-fliponly
+            - type: x-flip-only
               children:
-              - type: x-swaponly
+              - type: x-swap-only
                 what: R
                 with: B
                 children:

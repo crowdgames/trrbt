@@ -11,9 +11,9 @@ NDX_MIRROR         = 'x-mirror'
 NDX_SKEW           = 'x-skew'
 NDX_ROTATE         = 'x-rotate'
 NDX_SPIN           = 'x-spin'
-NDX_FLIPONLY       = 'x-fliponly'
-NDX_SWAPONLY       = 'x-swaponly'
-NDX_REPLACEONLY    = 'x-replaceonly'
+NDX_FLIP_ONLY      = 'x-flip-only'
+NDX_SWAP_ONLY      = 'x-swap-only'
+NDX_REPLACE_ONLY   = 'x-replace-only'
 NDX_SET_PLAYER     = 'x-set-player'
 
 NDX_LINK           = 'x-link'
@@ -300,7 +300,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
 
     ntype = node[NKEY_TYPE]
 
-    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_SPIN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY]:
+    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_SPIN, NDX_MIRROR, NDX_SKEW, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY]:
         fn = None
         if ntype in [NDX_FILE, NDX_IDENT]:
             fn = xform_identity
@@ -314,11 +314,11 @@ def node_apply_xforms(node, xforms, nid_to_node):
             fn = xform_rule_mirror
         elif ntype == NDX_SKEW:
             fn = xform_rule_skew
-        elif ntype == NDX_FLIPONLY:
+        elif ntype == NDX_FLIP_ONLY:
             fn = xform_rule_fliponly
-        elif ntype == NDX_SWAPONLY:
+        elif ntype == NDX_SWAP_ONLY:
             fn = xform_rule_swaponly_fn(node[NKEY_WHAT], node[NKEY_WITH])
-        elif ntype == NDX_REPLACEONLY:
+        elif ntype == NDX_REPLACE_ONLY:
             fn = xform_rule_replaceonly_fn(node[NKEY_WHAT], node[NKEY_WITH])
 
         for child in node[NKEY_CHILDREN]:
@@ -410,7 +410,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
         nlabel += '</TABLE>'
 
     else:
-        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_SET_PLAYER]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, NDX_SET_PLAYER]:
             nshape = 'hexagon'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
@@ -435,7 +435,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += ':' + node[NKEY_FILE] + '@' + node[NKEY_TARGET]
         elif ntype in [NDX_LINK]:
             nlabel += ':@' + node[NKEY_TARGET]
-        elif ntype == NDX_SWAPONLY:
+        elif ntype == NDX_SWAP_ONLY:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WHAT]
@@ -444,7 +444,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WITH]
             nlabel += GVTILEEND
-        elif ntype in [NDX_REPLACEONLY]:
+        elif ntype in [NDX_REPLACE_ONLY]:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += node[NKEY_WHAT]
