@@ -11,17 +11,15 @@ tree:
     nid: gameloop
     children:
     - type: x-ident
-      nid: move
+      nid: ply
       children:
       - type: player
-        comment: player moves
         pid: X
         children:
         - type: rewrite
           lhs: _
           rhs: X
       - type: win
-        comment: check for player win
         pid: X
         children:
         - type: x-turn
@@ -31,7 +29,6 @@ tree:
             - type: match
               pattern: X X X
       - type: draw
-        comment: check for draw
         children:
         - type: none
           children:
@@ -45,4 +42,4 @@ tree:
         with: O
         children:
         - type: x-link
-          target: move
+          target: ply

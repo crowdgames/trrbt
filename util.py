@@ -70,9 +70,9 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 GVNEWLINE = '<BR/>'
 GVTILEBGN = '<FONT FACE="Courier New">'
 GVTILEEND = '</FONT>'
-GVCOMMBGN = '<FONT POINT-SIZE="6"><I>'
+GVCOMMBGN = '<FONT POINT-SIZE="9"><I>'
 GVCOMMEND = '</I></FONT>'
-GVNIDBGN  = '<FONT POINT-SIZE="6"><B>'
+GVNIDBGN  = '<FONT POINT-SIZE="9"><B>'
 GVNIDEND  = '</B></FONT>'
 
 
