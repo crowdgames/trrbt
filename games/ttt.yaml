@@ -22,7 +22,7 @@ tree:
       - type: win
         pid: X
         children:
-        - type: x-turn
+        - type: x-rotate
           children:
           - type: x-skew
             children:

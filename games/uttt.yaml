@@ -31,7 +31,7 @@ tree:
           rhs: X
       - type: loop-until-all
         children:
-        - type: x-turn
+        - type: x-rotate
           children:
           - type: rewrite
             lhs: = = = = =;
@@ -80,7 +80,7 @@ tree:
       - type: win
         pid: X
         children:
-        - type: x-turn
+        - type: x-rotate
           children:
           - type: x-skew
             children:

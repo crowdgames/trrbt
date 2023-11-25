@@ -33,7 +33,7 @@ tree:
         - 7
         - 8
         children:
-        - type: x-rotate
+        - type: x-spin
           children:
           - type: rewrite
             lhs: _ a
