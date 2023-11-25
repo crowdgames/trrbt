@@ -46,7 +46,7 @@ tree:
           - 2
           - 3
           children:
-          - type: x-rotate
+          - type: x-spin
             children:
             - type: rewrite
               lhs: Ca Ca __

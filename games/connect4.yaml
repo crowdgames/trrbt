@@ -31,7 +31,7 @@ tree:
       - type: win
         pid: R
         children:
-        - type: x-turn
+        - type: x-rotate
           children:
           - type: x-skew
             children:

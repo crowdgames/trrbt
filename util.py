@@ -10,7 +10,7 @@ NDX_PRUNE          = 'x-prune'
 NDX_MIRROR         = 'x-mirror'
 NDX_SKEW           = 'x-skew'
 NDX_ROTATE         = 'x-rotate'
-NDX_TURN           = 'x-turn'
+NDX_SPIN           = 'x-spin'
 NDX_FLIPONLY       = 'x-fliponly'
 NDX_SWAPONLY       = 'x-swaponly'
 NDX_REPLACEONLY    = 'x-replaceonly'
@@ -232,13 +232,13 @@ def xform_rule_fliponly(node):
 
 def xform_rule_rotate(node):
     ret = [node]
-    while len(ret) < 4:
-        ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
+    ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
     return unique(ret)
 
-def xform_rule_turn(node):
+def xform_rule_spin(node):
     ret = [node]
-    ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
+    while len(ret) < 4:
+        ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
     return unique(ret)
 
 def xform_rule_swaponly_fn(wht, wth):
@@ -300,7 +300,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
 
     ntype = node[NKEY_TYPE]
 
-    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_TURN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY]:
+    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_SPIN, NDX_MIRROR, NDX_SKEW, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY]:
         fn = None
         if ntype in [NDX_FILE, NDX_IDENT]:
             fn = xform_identity
@@ -308,8 +308,8 @@ def node_apply_xforms(node, xforms, nid_to_node):
             fn = xform_prune
         elif ntype == NDX_ROTATE:
             fn = xform_rule_rotate
-        elif ntype == NDX_TURN:
-            fn = xform_rule_turn
+        elif ntype == NDX_SPIN:
+            fn = xform_rule_spin
         elif ntype == NDX_MIRROR:
             fn = xform_rule_mirror
         elif ntype == NDX_SKEW:
@@ -410,7 +410,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
         nlabel += '</TABLE>'
 
     else:
-        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_TURN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_SET_PLAYER]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIPONLY, NDX_SWAPONLY, NDX_REPLACEONLY, NDX_SET_PLAYER]:
             nshape = 'hexagon'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'

@@ -14,7 +14,7 @@ tree:
   - type: random-try
     comment: add guard near key
     children:
-    - type: x-rotate
+    - type: x-spin
       children:
       - type: rewrite
         lhs: + +
@@ -38,7 +38,7 @@ tree:
       - type: loop-until-all
         comment: guards chase player, tagged
         children:
-        - type: x-rotate
+        - type: x-spin
           children:
           - type: rewrite
             lhs: G  _  Pi
