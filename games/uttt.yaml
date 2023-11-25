@@ -89,11 +89,11 @@ tree:
     - type: x-set-player
       pid: O
       children:
-      - type: x-swaponly
+      - type: x-swap-only
         what: X
         with: O
         children:
-        - type: x-swaponly
+        - type: x-swap-only
           what: x
           with: o
           children:
