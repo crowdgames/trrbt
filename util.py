@@ -355,7 +355,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
 
     return ret_nodes
 
-def node_print_gv(node, nid_to_node, pid_to_nid):
+def node_print_gv(node, depth, nid_to_node, pid_to_nid):
     ntype = node[NKEY_TYPE]
     nlabel = '<'
     nmisc = ''
@@ -471,24 +471,42 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
 
     nid = pid_to_nid[id(node)]
 
-    print(f'  {nid} [shape="{nshape}", label={nlabel}{nmisc}];')
+    indent = '  ' * (depth + 1)
+
+    print(f'{indent}{nid} [shape="{nshape}", label={nlabel}{nmisc}];')
 
     if NKEY_CHILDREN in node.keys():
         children = node[NKEY_CHILDREN]
         for child in children:
-            node_print_gv(child, nid_to_node, pid_to_nid)
             child_id = pid_to_nid[id(child)]
-            print(f'  {nid} -> {child_id};')
+            print(f'{indent}{nid} -> {child_id};')
+
+    if ntype == NDX_FILE:
+        print(f'{indent}subgraph cluster_{node[NKEY_FILE]} {{')
+        depth += 1;
+        indent = '  ' * (depth + 1)
+        print(f'{indent}label="{node[NKEY_FILE]}@{node[NKEY_TARGET]}";')
+        print(f'{indent}graph [style="dashed"];')
+        #print(f'{indent}style="filled";')
+        #print(f'{indent}color="lightgrey";')
+
+    if NKEY_CHILDREN in node.keys():
+        children = node[NKEY_CHILDREN]
+        for child in children:
+            node_print_gv(child, depth, nid_to_node, pid_to_nid)
 
     if ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
             target_id = pid_to_nid[id(nid_to_node[nid_target])]
-            print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
+            print(f'{indent}{nid} -> {target_id} [style="dotted", constraint="false"];')
         else:
             target_id = nid + '_TARGET_MISSING'
-            print(f'  {target_id} [shape="house", label=<<i>MISSING</i>>];')
-            print(f'  {nid} -> {target_id} [style="dotted"];')
+            print(f'{indent}{target_id} [shape="house", label=<<i>MISSING</i>>];')
+            print(f'{indent}{nid} -> {target_id} [style="dotted"];')
+
+    if ntype == NDX_FILE:
+        print(f'{indent}}}')
 
 def game_print_gv(game):
     nid_to_node, pid_to_nid = {}, {}
@@ -497,7 +515,7 @@ def game_print_gv(game):
     print('digraph G {')
     print(f'  graph [ordering="out"];')
     print(f'  _NAME [shape="component", label=<{game.name}>];')
-    node_print_gv(game.tree, nid_to_node, pid_to_nid)
+    node_print_gv(game.tree, 0, nid_to_node, pid_to_nid)
     print('}')
 
 def yamlload(filename):
