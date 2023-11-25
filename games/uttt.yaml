@@ -21,7 +21,7 @@ tree:
     nid: gameloop
     children:
     - type: x-ident
-      nid: xturn
+      nid: ply
       children:
       - type: player
         pid: X
@@ -98,4 +98,4 @@ tree:
           with: o
           children:
           - type: x-link
-            target: xturn
+            target: ply

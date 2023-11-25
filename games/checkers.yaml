@@ -31,7 +31,7 @@ tree:
         - type: loop-until-all
           children:
           - type: x-ident
-            nid: move
+            nid: ply
             children:
             - type: none
               comment: player loses if no move
@@ -110,4 +110,4 @@ tree:
                 with: B
                 children:
                 - type: x-link
-                  target: move
+                  target: ply

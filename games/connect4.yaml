@@ -15,7 +15,7 @@ tree:
     nid: gameloop
     children:
     - type: x-ident
-      nid: redturn
+      nid: ply
       children:
       - type: player
         pid: R
@@ -45,4 +45,4 @@ tree:
         with: Y
         children:
         - type: x-link
-          target: redturn
+          target: ply
