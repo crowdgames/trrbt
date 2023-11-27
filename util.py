@@ -355,14 +355,14 @@ def node_apply_xforms(node, xforms, nid_to_node):
 
     return ret_nodes
 
-def node_print_gv(node, nid_to_node, pid_to_nid):
+def node_print_gv(node, depth, nid_to_node, pid_to_nid):
     ntype = node[NKEY_TYPE]
-    nlabel = '<'
-    nmisc = ''
+    nlabel = ''
+    nstyle = 'filled'
 
     if ntype in [ND_REWRITE, ND_MATCH, ND_SET_BOARD]:
         nshape = 'box'
-        nmisc += ', style="rounded"'
+        nstyle += ',rounded'
 
         nlabel += '<TABLE BORDER="0">'
         nlabel += '<TR><TD COLSPAN="3">'
@@ -373,13 +373,13 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             lhs, rhs = pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
 
             nlabel += '<TR>'
-            nlabel += '<TD BORDER="1" COLOR="gray">'
+            nlabel += '<TD BORDER="1" COLOR="#888888">'
             nlabel += GVTILEBGN
             nlabel += pattern_to_string(lhs, ' ', GVNEWLINE)
             nlabel += GVTILEEND
             nlabel += '</TD>'
             nlabel += '<TD>→</TD>'
-            nlabel += '<TD BORDER="1" COLOR="gray">'
+            nlabel += '<TD BORDER="1" COLOR="#888888">'
             nlabel += GVTILEBGN
             nlabel += pattern_to_string(rhs, ' ', GVNEWLINE)
             nlabel += GVTILEEND
@@ -387,7 +387,7 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += '</TR>'
 
         else:
-            nlabel += '<TR><TD></TD><TD BORDER="1" COLOR="gray">'
+            nlabel += '<TR><TD></TD><TD BORDER="1" COLOR="#888888">'
             nlabel += GVTILEBGN
             nlabel += pattern_to_string(node[NKEY_PATTERN], ' ', GVNEWLINE)
             nlabel += GVTILEEND
@@ -467,16 +467,22 @@ def node_print_gv(node, nid_to_node, pid_to_nid):
             nlabel += node[NKEY_COMMENT]
             nlabel += GVCOMMEND
 
-    nlabel += '>'
-
     nid = pid_to_nid[id(node)]
 
-    print(f'  {nid} [shape="{nshape}", label={nlabel}{nmisc}];')
+    if depth == 0:
+        nfill = '#eeeeee'
+    else:
+        nfill = '#cccccc'
+
+    print(f'  {nid} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
+
+    if ntype == NDX_FILE:
+        depth += 1
 
     if NKEY_CHILDREN in node.keys():
         children = node[NKEY_CHILDREN]
         for child in children:
-            node_print_gv(child, nid_to_node, pid_to_nid)
+            node_print_gv(child, depth, nid_to_node, pid_to_nid)
             child_id = pid_to_nid[id(child)]
             print(f'  {nid} -> {child_id};')
 
@@ -496,8 +502,8 @@ def game_print_gv(game):
 
     print('digraph G {')
     print(f'  graph [ordering="out"];')
-    print(f'  _NAME [shape="component", label=<{game.name}>];')
-    node_print_gv(game.tree, nid_to_node, pid_to_nid)
+    print(f'  _NAME [shape="component", label=<{game.name}>, style="filled", fillcolor="#aaaaaa"];')
+    node_print_gv(game.tree, 0, nid_to_node, pid_to_nid)
     print('}')
 
 def yamlload(filename):
