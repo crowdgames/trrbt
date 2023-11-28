@@ -14,21 +14,21 @@ tree:
              _  BP _  BP _  BP _  BP;
              BP _  BP _  BP _  BP _ ;
              =  =  =  =  =  =  =  = ;
-  - type: x-mirror
+  - type: loop-until-all
     children:
-    - type: x-replace-only
-      what: a
-      with:
-      - K
-      - P
+    - type: x-mirror
       children:
       - type: x-replace-only
-        what: b
+        what: a
         with:
         - K
         - P
         children:
-        - type: loop-until-all
+        - type: x-replace-only
+          what: b
+          with:
+          - K
+          - P
           children:
           - type: x-ident
             nid: ply
@@ -41,6 +41,47 @@ tree:
                 children:
                 - type: none
                   children:
+                  - type: sequence
+                    children:
+                    - type: player
+                      pid: B
+                      children:
+                      - type: rewrite
+                        lhs: .   .   _  ;
+                             .   Rb  .  ;
+                             Ba  .   .  ;
+                        rhs: .   .   Ba';
+                             .   _   .  ;
+                             _   .   .  ;
+                      - type: rewrite
+                        lhs: BK  .   .  ;
+                             .   Rb  .  ;
+                             .   .   _  ;
+                        rhs: _   .   .  ;
+                             .   _   .  ;
+                             .   .   BK';
+                    - type: loop-until-all
+                      children:
+                      - type: player
+                        pid: B
+                        children:
+                        - type: rewrite
+                          lhs: .   .   _  ;
+                               .   Rb  .  ;
+                               Ba' .   .  ;
+                          rhs: .   .   Ba';
+                               .   _   .  ;
+                               _   .   .  ;
+                        - type: rewrite
+                          lhs: BK'  .  .  ;
+                               .   Rb  .  ;
+                               .   .   _  ;
+                          rhs: _   .   .  ;
+                               .   _   .  ;
+                               .   .   BK';
+                    - type: rewrite
+                      lhs: Ba'
+                      rhs: Ba
                   - type: player
                     pid: B
                     children:
@@ -54,42 +95,6 @@ tree:
                            .  _ ;
                       rhs: _  . ;
                            .  BK;
-                    - type: rewrite
-                      lhs: .   .   _  ;
-                           .   Rb  .  ;
-                           Ba  .   .  ;
-                      rhs: .   .   Ba';
-                           .   _   .  ;
-                           _   .   .  ;
-                    - type: rewrite
-                      lhs: BK  .   .  ;
-                           .   Rb  .  ;
-                           .   .   _  ;
-                      rhs: _   .   .  ;
-                           .   _   .  ;
-                           .   .   BK';
-            - type: loop-until-all
-              children:
-              - type: player
-                pid: B
-                children:
-                - type: rewrite
-                  lhs: .   .   _  ;
-                       .   Rb  .  ;
-                       Ba' .   .  ;
-                  rhs: .   .   Ba';
-                       .   _   .  ;
-                       _   .   .  ;
-                - type: rewrite
-                  lhs: BK'  .  .  ;
-                       .   Rb  .  ;
-                       .   .   _  ;
-                  rhs: _   .   .  ;
-                       .   _   .  ;
-                       .   .   BK';
-            - type: rewrite
-              lhs: Ba'
-              rhs: Ba
             - type: rewrite
               lhs: =  ; BP
               rhs: =  ; BK
@@ -103,11 +108,11 @@ tree:
           - type: x-set-player
             pid: R
             children:
-            - type: x-flip-only
+            - type: x-swap-only
+              what: B
+              with: R
               children:
-              - type: x-swap-only
-                what: B
-                with: R
+              - type: x-flip-only
                 children:
                 - type: x-link
                   target: ply
