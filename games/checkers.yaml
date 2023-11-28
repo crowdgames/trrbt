@@ -5,14 +5,14 @@ tree:
   children:
   - type: set-board
     pattern: =  =  =  =  =  =  =  = ;
-             _  BP _  BP _  BP _  BP;
-             BP _  BP _  BP _  BP _ ;
-             _  BP _  BP _  BP _  BP;
-             _  _  _  _  _  _  _  _ ;
-             _  _  _  _  _  _  _  _ ;
-             RP _  RP _  RP _  RP _ ;
              _  RP _  RP _  RP _  RP;
              RP _  RP _  RP _  RP _ ;
+             _  RP _  RP _  RP _  RP;
+             _  _  _  _  _  _  _  _ ;
+             _  _  _  _  _  _  _  _ ;
+             BP _  BP _  BP _  BP _ ;
+             _  BP _  BP _  BP _  BP;
+             BP _  BP _  BP _  BP _ ;
              =  =  =  =  =  =  =  = ;
   - type: x-mirror
     children:
@@ -42,72 +42,72 @@ tree:
                 - type: none
                   children:
                   - type: player
-                    pid: R
+                    pid: B
                     children:
                     - type: rewrite
                       lhs: .   _ ;
-                           Ra  . ;
-                      rhs: .   Ra;
+                           Ba  . ;
+                      rhs: .   Ba;
                            _   . ;
                     - type: rewrite
-                      lhs: RK . ;
+                      lhs: BK . ;
                            .  _ ;
                       rhs: _  . ;
-                           .  RK;
+                           .  BK;
                     - type: rewrite
                       lhs: .   .   _  ;
-                           .   Bb  .  ;
-                           Ra  .   .  ;
-                      rhs: .   .   Ra';
+                           .   Rb  .  ;
+                           Ba  .   .  ;
+                      rhs: .   .   Ba';
                            .   _   .  ;
                            _   .   .  ;
                     - type: rewrite
-                      lhs: RK  .   .  ;
-                           .   Bb  .  ;
+                      lhs: BK  .   .  ;
+                           .   Rb  .  ;
                            .   .   _  ;
                       rhs: _   .   .  ;
                            .   _   .  ;
-                           .   .   RK';
+                           .   .   BK';
             - type: loop-until-all
               children:
               - type: player
-                pid: R
+                pid: B
                 children:
                 - type: rewrite
                   lhs: .   .   _  ;
-                       .   Bb  .  ;
-                       Ra' .   .  ;
-                  rhs: .   .   Ra';
+                       .   Rb  .  ;
+                       Ba' .   .  ;
+                  rhs: .   .   Ba';
                        .   _   .  ;
                        _   .   .  ;
                 - type: rewrite
-                  lhs: RK'  .  .  ;
-                       .   Bb  .  ;
+                  lhs: BK'  .  .  ;
+                       .   Rb  .  ;
                        .   .   _  ;
                   rhs: _   .   .  ;
                        .   _   .  ;
-                       .   .   RK';
+                       .   .   BK';
             - type: rewrite
-              lhs: Ra'
-              rhs: Ra
+              lhs: Ba'
+              rhs: Ba
             - type: rewrite
-              lhs: =  ; RP
-              rhs: =  ; RK
+              lhs: =  ; BP
+              rhs: =  ; BK
             - type: win
-              pid: R
+              pid: B
               children:
                - type: none
                  children:
                  - type: match
-                   pattern: Ba
+                   pattern: Ra
           - type: x-set-player
-            pid: B
+            pid: R
             children:
             - type: x-flip-only
               children:
               - type: x-swap-only
-                what: R
-                with: B
+                what: B
+                with: R
                 children:
                 - type: x-link
                   target: ply
