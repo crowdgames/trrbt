@@ -37,7 +37,7 @@ tree:
               comment: player loses if no move
               children:
               - type: lose
-                pid: X
+                pid: B
                 children:
                 - type: none
                   children:
