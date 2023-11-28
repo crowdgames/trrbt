@@ -1,3 +1,4 @@
+import copy
 import io
 import os
 import sys
@@ -327,7 +328,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
     elif ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
-            ret_nodes += node_apply_xforms(nid_to_node[nid_target], xforms, nid_to_node)
+            ret_nodes += node_apply_xforms(copy.deepcopy(nid_to_node[nid_target]), xforms, nid_to_node)
 
     elif ntype == NDX_SET_PLAYER:
         for child in node[NKEY_CHILDREN]:
