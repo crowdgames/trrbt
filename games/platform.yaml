@@ -1,7 +1,7 @@
 ---
 name: platformer
 tree:
-  type: sequence
+  type: order
   children:
   - type: set-board
     pattern: _   _   _   _   _   _   _   _   _   _   _   _;

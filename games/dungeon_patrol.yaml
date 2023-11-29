@@ -1,7 +1,7 @@
 ---
 name: dungeon patrol
 tree:
-  type: sequence
+  type: order
   children:
   - type: set-board
     pattern: X  X  X  X  X  X  X  X  X  X;

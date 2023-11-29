@@ -1,7 +1,7 @@
 ---
 name: eights-randomize
 tree:
-  type: sequence
+  type: order
   children:
   - type: set-board
     pattern: 1 2 3;

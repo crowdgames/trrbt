@@ -1,7 +1,7 @@
 ---
 name: checkers
 tree:
-  type: sequence
+  type: order
   children:
   - type: set-board
     pattern: =  =  =  =  =  =  =  = ;
@@ -41,7 +41,7 @@ tree:
                 children:
                 - type: none
                   children:
-                  - type: sequence
+                  - type: order
                     children:
                     - type: player
                       pid: B

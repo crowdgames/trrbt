@@ -45,7 +45,7 @@ class GameProcessor:
 
         self.node_func_map = {
             util.ND_SET_BOARD: self.execute_setboard_node,
-            util.ND_SEQ: self.execute_sequence_node,
+            util.ND_ORDER: self.execute_order_node,
             util.ND_LOOP_UNTIL_ALL: self.execute_loop_until_all_node,
             util.ND_WIN: self.execute_win_node,
             util.ND_LOSE: self.execute_lose_node,
@@ -94,7 +94,7 @@ class GameProcessor:
         self.n = len(self.board[0])
         return True
 
-    def execute_sequence_node(self, node):
+    def execute_order_node(self, node):
         """
         Executes children in order (regardless of their success or failure)
         :return: If any child succeeds, returns success, otherwise returns failure.

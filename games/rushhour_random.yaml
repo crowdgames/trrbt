@@ -1,13 +1,13 @@
 ---
 name: rush hour-randomize
 tree:
-  type: sequence
+  type: order
   children:
   - type: loop-until-all
     children:
     - type: none
       children:
-      - type: sequence
+      - type: order
         children:
         - type: set-board
           comment: reset board
@@ -19,7 +19,7 @@ tree:
                    XX __ __ __ __ __ __ XX;
                    XX __ __ __ __ __ __ XX;
                    XX XX XX XX XX XX XX XX;
-        - type: sequence
+        - type: order
           comment: place cars and trucks randomly
           children:
           - type: rewrite

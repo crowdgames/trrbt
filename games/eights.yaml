@@ -2,7 +2,7 @@
 name: eights
 start:
 tree:
-  type: sequence
+  type: order
   children:
   - type: random-try
     children:

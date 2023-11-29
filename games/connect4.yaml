@@ -1,7 +1,7 @@
 ---
 name: connect four
 tree:
-  type: sequence
+  type: order
   children:
   - type: set-board
     pattern: = = = = = = =;
