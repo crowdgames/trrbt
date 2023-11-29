@@ -12,7 +12,7 @@ endif
 
 GAMES=$(basename $(notdir $(wildcard games/*.yaml)))
 
-all: $(addprefix out/, $(addsuffix -base.pdf, $(GAMES))) \
+all: $(addprefix out/, $(addsuffix -unxform.pdf, $(GAMES))) \
      $(addprefix out/, $(addsuffix -xform.pdf, $(GAMES)))
 
 out:
@@ -21,7 +21,7 @@ out:
 out/%.pdf: out/%.gv | out
 	dot $< -Tpdf -o $@
 
-out/%-base.gv: games/%.yaml yaml2bt.py util.py | out
+out/%-unxform.gv: games/%.yaml yaml2bt.py util.py | out
 	python yaml2bt.py $< > $@
 
 out/%-xform.gv: games/%.yaml yaml2bt.py util.py | out
