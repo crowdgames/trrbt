@@ -50,7 +50,7 @@ class GameProcessor:
             util.ND_WIN: self.execute_win_node,
             util.ND_LOSE: self.execute_lose_node,
             util.ND_DRAW: self.execute_draw_node,
-            util.ND_REWRITE: self.execute_rewite_node,
+            util.ND_REWRITE: self.execute_rewrite_node,
             util.ND_LOOP_TIMES: self.execute_loop_times_node,
             util.ND_RND_TRY: self.execute_random_try_node,
             util.ND_PLAYER: self.execute_player_node,
@@ -119,7 +119,7 @@ class GameProcessor:
                     flag = True
         return flag
 
-    def execute_rewite_node(self, node):
+    def execute_rewrite_node(self, node):
         """
         If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
         :return: If any rewrite rule is applied successfully, return true, otherwise return false.
