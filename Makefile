@@ -19,7 +19,7 @@ out:
 	mkdir -p out
 
 out/%.pdf: out/%.gv | out
-	dot $< -Tpdf -o $@
+	dot $< -Tpdf -Gmargin=0 -o $@
 
 out/%-unxform.gv: games/%.yaml yaml2bt.py util.py | out
 	python yaml2bt.py $< > $@
