@@ -298,6 +298,8 @@ def node_apply_xforms(node, xforms, nid_to_node):
     node = node.copy()
     if NKEY_COMMENT in node:
         del node[NKEY_COMMENT]
+    if NKEY_NID in node:
+        del node[NKEY_NID]
 
     ntype = node[NKEY_TYPE]
 
