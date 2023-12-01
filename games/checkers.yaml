@@ -15,6 +15,7 @@ tree:
              BP _  BP _  BP _  BP _ ;
              =  =  =  =  =  =  =  = ;
   - type: loop-until-all
+    nid: gameloop
     children:
     - type: x-mirror
       children:
