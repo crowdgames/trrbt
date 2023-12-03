@@ -44,7 +44,10 @@ class GameProcessor:
         self.clear_screen = clear_screen
 
         self.node_func_map = {
+            util.ND_DISPLAY_BOARD: self.execute_displayboard_node,
             util.ND_SET_BOARD: self.execute_setboard_node,
+            util.ND_APPEND_ROWS: self.execute_appendrows_node,
+            util.ND_APPEND_COLS: self.execute_appendcols_node,
             util.ND_ORDER: self.execute_order_node,
             util.ND_LOOP_UNTIL_ALL: self.execute_loop_until_all_node,
             util.ND_WIN: self.execute_win_node,
@@ -84,12 +87,70 @@ class GameProcessor:
             print()
             print("Game over, stalemate - root node exited but game has not ended")
 
+    def execute_displayboard_node(self, node):
+        """
+        Display current board.
+        :return: Success.
+        """
+        self.display_board()
+        print()
+
+        if self.clear_screen is not None:
+            delay(self.clear_screen)
+
+        return True
+
     def execute_setboard_node(self, node):
         """
         Sets current board to given pattern.
         :return: Success.
         """
         self.board = util.listify(node[util.NKEY_PATTERN])
+        self.m = len(self.board)
+        self.n = len(self.board[0])
+        return True
+
+    def execute_appendrows_node(self, node):
+        """
+        Append new rows to the board by repeating the given pattern until as wide as the board.
+        :return: Success.
+        """
+        pattern = node[util.NKEY_PATTERN]
+
+        if self.n == 0:
+            self.board = util.listify(pattern)
+        else:
+            new_rows = util.listify(pattern)
+            while len(new_rows[0]) < self.n:
+                for rr in range(len(pattern)):
+                    new_rows[rr] += pattern[rr]
+            for rr in range(len(pattern)):
+                new_rows[rr] = new_rows[rr][:self.n]
+
+            self.board += new_rows
+
+        self.m = len(self.board)
+        self.n = len(self.board[0])
+        return True
+
+    def execute_appendcols_node(self, node):
+        """
+        Append new columns to the board by repeating the given pattern until as tall as the board.
+        :return: Success.
+        """
+        pattern = node[util.NKEY_PATTERN]
+
+        if self.m == 0:
+            self.board = util.listify(pattern)
+        else:
+            new_cols = util.listify(pattern)
+            while len(new_cols) < self.m:
+                new_cols += pattern
+            new_cols = new_cols[:self.m]
+
+            for rr in range(len(pattern)):
+                self.board[rr] += new_cols[rr]
+
         self.m = len(self.board)
         self.n = len(self.board[0])
         return True
