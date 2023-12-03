@@ -1,0 +1,62 @@
+---
+name: cellular automaton
+tree:
+  type: order
+  children:
+  - type: loop-times
+    times: 20
+    children:
+    - type: append-columns
+      pattern: _
+  - type: append-columns
+    pattern: X
+  - type: loop-times
+    times: 20
+    children:
+    - type: append-columns
+      pattern: _
+  - type: display-board
+  - type: loop-times
+    times: 20
+    children:
+    - type: append-rows
+      pattern: "-"
+    - type: loop-until-all
+      children:
+      - type: loop-times
+        times: 2
+        children:
+        - type: random-try
+          children:
+          - type: rewrite
+            lhs: X X X; . - .
+            rhs: X X X; . _ .
+          - type: rewrite
+            lhs: X X _; . - .
+            rhs: X X _; . X .
+          - type: rewrite
+            lhs: X _ X; . - .
+            rhs: X _ X; . X .
+          - type: rewrite
+            lhs: X _ _; . - .
+            rhs: X _ _; . X .
+          - type: rewrite
+            lhs: _ X X; . - .
+            rhs: _ X X; . X .
+          - type: rewrite
+            lhs: _ X _; . - .
+            rhs: _ X _; . X .
+          - type: rewrite
+            lhs: _ _ X; . - .
+            rhs: _ _ X; . X .
+          - type: rewrite
+            lhs: _ _ _; . - .
+            rhs: _ _ _; . _ .
+      - type: none
+        children:
+        - type: display-board
+    - type: loop-until-all
+      children:
+      - type: rewrite
+        lhs: _; -
+        rhs: _; _
