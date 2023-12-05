@@ -501,7 +501,7 @@ def node_print_gv(node, depth, nid_to_node, pid_to_nid):
             print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
         else:
             target_id = nid + '_TARGET_MISSING'
-            print(f'  {target_id} [shape="house", label=<<i>MISSING</i>>];')
+            print(f'  {target_id} [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="{nfill}"];')
             print(f'  {nid} -> {target_id} [style="dotted"];')
 
 def game_print_gv(game):
