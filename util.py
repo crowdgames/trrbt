@@ -492,39 +492,45 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += node[NKEY_COMMENT]
             nlabel += GVCOMMEND
 
-    nid = pid_to_nid[id(node)]
+    def gvid(_node_id):
+        return _node_id if _node_id.startswith('_') else '__' + _node_id
 
-    ind = '  ' * (depth + 1)
+    def indent(_depth):
+        return '  ' * (_depth + 1)
 
-    node_lines.append(f'{ind}{nid} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
+    nid_gv = gvid(pid_to_nid[id(node)])
+
+    ind = indent(depth)
+
+    node_lines.append(f'{ind}{nid_gv} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
 
     if ntype == NDX_FILE:
+        node_lines.append(f'{ind}subgraph cluster_{nid_gv} {{')
         depth += 1
-        node_lines.append(f'{ind}subgraph cluster_{nid} {{')
-        ind = '  ' * (depth + 1)
+        ind = indent(depth)
         node_lines.append(f'{ind}graph [margin="8", bgcolor="#f4f4f4"];')
 
     if NKEY_CHILDREN in node.keys():
         children = node[NKEY_CHILDREN]
         for child in children:
             node_print_gv(node_lines, edge_lines, child, depth, nid_to_node, pid_to_nid)
-            child_id = pid_to_nid[id(child)]
-            edge_lines.append(f'  {nid} -> {child_id};')
+            child_nid_gv = gvid(pid_to_nid[id(child)])
+            edge_lines.append(f'  {nid_gv} -> {child_nid_gv};')
 
     if ntype == NDX_FILE:
         depth -= 1
-        ind = '  ' * (depth + 1)
+        ind = indent(depth)
         node_lines.append(f'{ind}}}')
 
     if ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
             target_id = pid_to_nid[id(nid_to_node[nid_target])]
-            edge_lines.append(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
+            edge_lines.append(f'  {nid_gv} -> __{target_id} [style="dotted", constraint="false"];')
         else:
-            target_id = nid + '_TARGET_MISSING'
+            target_id = f'_TARGET_MISSING_{nid_gv}'
             node_lines.append(f'{ind}{target_id} [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="#aaaaaa"];')
-            edge_lines.append(f'  {nid} -> {target_id} [style="dotted"];')
+            edge_lines.append(f'  {nid_gv} -> {target_id} [style="dotted"];')
 
 def game_print_gv(game):
     nid_to_node, pid_to_nid = {}, {}
