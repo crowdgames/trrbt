@@ -360,19 +360,30 @@ def node_apply_xforms(node, xforms, nid_to_node):
 
     return ret_nodes
 
-def node_print_gv(node, depth, nid_to_node, pid_to_nid):
+def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
     ntype = node[NKEY_TYPE]
     nlabel = ''
     nstyle = 'filled'
 
+    lt = 'e0'
+    dk = 'd0'
+
     if ntype in [ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
         nshape = 'box'
+
         nstyle += ',rounded'
 
         nlabel += '<TABLE BORDER="0">'
         nlabel += '<TR><TD COLSPAN="3">'
         nlabel += ntype
         nlabel += '</TD></TR>'
+
+        if ntype in [ND_REWRITE, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
+            nfill = f'#{dk}{lt}{dk}'
+        elif ntype in [ND_MATCH]:
+            nfill = f'#{dk}{lt}{lt}'
+        elif ntype in [ND_DISPLAY_BOARD]:
+            nfill = f'#{dk}{dk}{dk}'
 
         if ntype == ND_DISPLAY_BOARD:
             pass
@@ -420,16 +431,22 @@ def node_print_gv(node, depth, nid_to_node, pid_to_nid):
     else:
         if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, NDX_SET_PLAYER]:
             nshape = 'hexagon'
+            nfill = f'#{lt}{dk}{lt}'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
+            nfill = f'#{lt}{lt}{dk}'
         elif ntype in [NDX_FILE]:
             nshape = 'folder'
+            nfill = f'#{lt}{lt}{dk}'
         elif ntype in [ND_PLAYER]:
             nshape = 'diamond'
+            nfill = f'#{dk}{dk}{lt}'
         elif ntype in [ND_WIN, ND_LOSE, ND_DRAW]:
             nshape = 'octagon'
+            nfill = f'#{lt}{dk}{dk}'
         elif ntype in [ND_ORDER, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
             nshape = 'oval'
+            nfill = f'#{lt}{lt}{lt}'
         else:
             raise RuntimeError(f'unrecognized node type {ntype}')
 
@@ -475,43 +492,60 @@ def node_print_gv(node, depth, nid_to_node, pid_to_nid):
             nlabel += node[NKEY_COMMENT]
             nlabel += GVCOMMEND
 
-    nid = pid_to_nid[id(node)]
+    def gvid(_node_id):
+        return _node_id if _node_id.startswith('_') else '__' + _node_id
 
-    if depth == 0:
-        nfill = '#eeeeee'
-    else:
-        nfill = '#cccccc'
+    def indent(_depth):
+        return '  ' * (_depth + 1)
 
-    print(f'  {nid} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
+    nid_gv = gvid(pid_to_nid[id(node)])
+
+    ind = indent(depth)
+
+    node_lines.append(f'{ind}{nid_gv} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
 
     if ntype == NDX_FILE:
+        node_lines.append(f'{ind}subgraph cluster_{nid_gv} {{')
         depth += 1
+        ind = indent(depth)
+        node_lines.append(f'{ind}graph [margin="8", bgcolor="#f4f4f4"];')
 
     if NKEY_CHILDREN in node.keys():
         children = node[NKEY_CHILDREN]
         for child in children:
-            node_print_gv(child, depth, nid_to_node, pid_to_nid)
-            child_id = pid_to_nid[id(child)]
-            print(f'  {nid} -> {child_id};')
+            node_print_gv(node_lines, edge_lines, child, depth, nid_to_node, pid_to_nid)
+            child_nid_gv = gvid(pid_to_nid[id(child)])
+            edge_lines.append(f'  {nid_gv} -> {child_nid_gv};')
+
+    if ntype == NDX_FILE:
+        depth -= 1
+        ind = indent(depth)
+        node_lines.append(f'{ind}}}')
 
     if ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
             target_id = pid_to_nid[id(nid_to_node[nid_target])]
-            print(f'  {nid} -> {target_id} [style="dotted", constraint="false"];')
+            edge_lines.append(f'  {nid_gv} -> __{target_id} [style="dotted", constraint="false"];')
         else:
-            target_id = nid + '_TARGET_MISSING'
-            print(f'  {target_id} [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="{nfill}"];')
-            print(f'  {nid} -> {target_id} [style="dotted"];')
+            target_id = f'_TARGET_MISSING_{nid_gv}'
+            node_lines.append(f'{ind}{target_id} [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="#aaaaaa"];')
+            edge_lines.append(f'  {nid_gv} -> {target_id} [style="dotted"];')
 
 def game_print_gv(game):
     nid_to_node, pid_to_nid = {}, {}
     node_find_nids(game.tree, nid_to_node, pid_to_nid)
 
+    node_lines, edge_lines = [], []
+    node_print_gv(node_lines, edge_lines, game.tree, 0, nid_to_node, pid_to_nid)
+
     print('digraph G {')
-    print(f'  graph [ordering="out"];')
-    print(f'  _NAME [shape="component", label=<{game.name}>, style="filled", fillcolor="#aaaaaa"];')
-    node_print_gv(game.tree, 0, nid_to_node, pid_to_nid)
+    print(f'  graph [ordering="out", margin="0"];')
+    print(f'  _NAME [shape="component", label=<{game.name}>, style="filled", fillcolor="#cccccc"];')
+    for line in node_lines:
+        print(line)
+    for line in edge_lines:
+        print(line)
     print('}')
 
 def yamlload(filename):
