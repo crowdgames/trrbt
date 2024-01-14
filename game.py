@@ -228,8 +228,8 @@ class GameProcessor:
             node, row, col = choice
 
             lhs, rhs = util.pad_tiles_multiple([node[util.NKEY_LHS], node[util.NKEY_RHS]])
-            lhs = util.pattern_to_string(lhs, ' ', '; ')
-            rhs = util.pattern_to_string(rhs, ' ', '; ')
+            lhs = util.tuplify(lhs)
+            rhs = util.tuplify(rhs)
 
             if self.choice_order:
                 idx = ii + 1
@@ -259,30 +259,37 @@ class GameProcessor:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
+            lhs = util.pattern_to_string(lhs, ' ', '; ')
+            rhs = util.pattern_to_string(rhs, ' ', '; ')
             print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
             if self.clear_screen is not None:
                 delay(self.clear_screen)
 
         else:
-            print(f"Choices for player {player_id} are:")
-            for idx in sorted(this_turn_choices.keys()):
-                lhs, rhs, row, col = this_turn_info[idx]
-                print(f'{idx}: {lhs} → {rhs} at {row},{col}')
-
-            while True:
-                try:
-                    user_input = int(input(f"Please enter the number of your choice: "))
-                    if user_input not in this_turn_choices:
-                        print("Your number is out of range!")
-                        continue
-                    break
-                except ValueError:
-                    print("Error: Please enter a valid number.")
+            user_input = self.get_player_choice_input(player_id, this_turn_info)
 
         choice = this_turn_choices[user_input]
         self.make_move(choice)
         return True
+
+    def get_player_choice_input(self, player_id, this_turn_info):
+        print(f"Choices for player {player_id} are:")
+        for idx in sorted(this_turn_info.keys()):
+            lhs, rhs, row, col = this_turn_info[idx]
+            lhs = util.pattern_to_string(lhs, ' ', '; ')
+            rhs = util.pattern_to_string(rhs, ' ', '; ')
+            print(f'{idx}: {lhs} → {rhs} at {row},{col}')
+
+        while True:
+            try:
+                user_input = int(input(f"Please enter the number of your choice: "))
+                if user_input not in this_turn_info:
+                    print("Your number is out of range!")
+                    continue
+                return user_input
+            except ValueError:
+                print("Error: Please enter a valid number.")
 
     def execute_random_try_node(self, node):
         """
