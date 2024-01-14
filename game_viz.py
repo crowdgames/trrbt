@@ -27,7 +27,7 @@ class ThreadedGameProcessor(game.GameProcessor):
 
     def get_player_choice_input(self, player_id, this_turn_info):
         with self._thread_mtx:
-            self._thread_choices = this_turn_info
+            self._thread_choices = (player_id, this_turn_info)
             self._thread_choice = None
 
             print('player choice waiting...')
@@ -68,6 +68,8 @@ class GameFrame(tkinter.Frame):
         self._cvs.bind('<Motion>', self.on_mouse_motion)
         self._cvs.bind('<Leave>', self.on_mouse_leave)
         self._cvs.bind('<ButtonPress-1>', self.on_mouse_button)
+
+        self._player_id_colors = {}
 
         self._game_proc = game_proc
         self._game_thread = game_thread
@@ -163,8 +165,23 @@ class GameFrame(tkinter.Frame):
                 self._text_widgets.append(self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
                                                                 text=text, fill='#000000', font=font, anchor=tkinter.CENTER))
 
-    def update_choices(self, choices):
+    def update_choices(self, player_id, choices):
         self._choices = choices
+
+        if player_id not in self._player_id_colors:
+            color_num = len(self._player_id_colors) % 5
+            if color_num == 0:
+                color1, color2 = '#0000ff', '#0000cc'
+            elif color_num == 1:
+                color1, color2 = '#00ff00', '#00cc00'
+            elif color_num == 2:
+                color1, color2 = '#ffff00', '#cccc00'
+            elif color_num == 3:
+                color1, color2 = '#ff00ff', '#cc00cc'
+            else:
+                color1, color2 = '#00ffff', '#00cccc'
+            self._player_id_colors[player_id] = color1, color2
+        color1, color2 = self._player_id_colors[player_id]
 
         self._choice_widgets[None] = []
 
@@ -179,23 +196,27 @@ class GameFrame(tkinter.Frame):
                     if text == '.':
                         continue
                     font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
-                    self._choice_widgets[idx].append(self._cvs.create_rectangle(self.tocvsx(col + cc), self.tocvsy(row + rr),
-                                                                                self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
-                                                                                fill='#eeeeee', outline=''))
+                    #self._choice_widgets[idx].append(self._cvs.create_rectangle(self.tocvsx(col + cc), self.tocvsy(row + rr),
+                    #                                                            self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
+                    #                                                            fill='#eeeeee', outline=''))
+                    self._choice_widgets[idx].append(self.create_rrect(self.tocvsx(col), self.tocvsy(row),
+                                                                       self.tocvsx(col + cols), self.tocvsy(row + rows),
+                                                                       self._cell_size / 4,
+                                                                       '#eeeeee', ''))
                     self._choice_widgets[idx].append(self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
                                                                            text=text, fill='#777777', font=font, anchor=tkinter.CENTER))
 
             self._choice_widgets[idx].append(self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                self._cell_size / 4,
-                                                               '', 'blue'))
+                                                               '', color1))
             for choice_widget in self._choice_widgets[idx]:
                 self._cvs.itemconfigure(choice_widget, state='hidden')
 
             self._choice_widgets[None].append(self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                 self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                 self._cell_size / 4,
-                                                                '', 'lightblue'))
+                                                                '', color2))
 
     def make_choice(self, choice):
         print('making choice', choice)
@@ -221,7 +242,7 @@ class GameFrame(tkinter.Frame):
                 game_proc._thread_new_board = None
 
             if game_proc._thread_choices is not None:
-                self.update_choices(game_proc._thread_choices)
+                self.update_choices(game_proc._thread_choices[0], game_proc._thread_choices[1])
                 game_proc._thread_choices = None
 
         self.after(1, self.check_thread)
@@ -234,7 +255,7 @@ def run_game_input_viz(game_proc, game_thread):
     root = tkinter.Tk()
     root.title('game')
 
-    GameFrame(root, 120, game_proc, game_thread)
+    GameFrame(root, 100, game_proc, game_thread)
 
     root.mainloop()
 
