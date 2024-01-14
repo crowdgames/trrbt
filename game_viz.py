@@ -60,6 +60,7 @@ class GameFrame(tkinter.Frame):
         self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#dddddd')
         self._cvs.grid(column=0, row=0)
 
+        self._choices = None
         self._mouse_choice = None
         self._game_over = None
 
