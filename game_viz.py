@@ -120,9 +120,14 @@ class GameFrame(tkinter.Frame):
                     colmid = col + cols / 2.0
                     if row <= mr and mr <= row + rows and col <= mc and mc <= col + cols:
                         dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2
-                        if best_choice is None or dist_sqr <= best_choice:
-                            choice = idx
+                        if choice is None or dist_sqr < best_choice - 0.01:
+                            choice = [idx]
                             best_choice = dist_sqr
+                        elif dist_sqr < best_choice + 0.01:
+                            choice.append(idx)
+
+                if choice is not None:
+                    choice = choice[(int(mr * 2) + int(mc * 2)) % len(choice)]
 
             self.update_mouse_choice(choice)
 
