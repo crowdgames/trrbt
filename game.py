@@ -5,9 +5,10 @@ import sys
 import time
 import util
 
-END_WIN  = 'win'
-END_LOSE = 'lose'
-END_DRAW = 'draw'
+END_WIN   = 'win'
+END_LOSE  = 'lose'
+END_DRAW  = 'draw'
+END_STALE = 'stale'
 
 DEFAULT_DISPLAY_DELAY = 0.5
 
@@ -21,10 +22,14 @@ def delay(seconds):
     sys.stderr.flush()
     time.sleep(seconds)
 
-class GameOverException(Exception):
+class GameOver:
     def __init__(self, result, player):
         self.result = result
         self.player = player
+
+class GameOverException(Exception):
+    def __init__(self, result, player):
+        self.game_over = GameOver(result, player)
 
 class GameProcessor:
     def __init__(self, filename, choice_order, random_players, clear_screen):
@@ -38,6 +43,8 @@ class GameProcessor:
         self.tree = bt.tree
         self.max_tile_width = util.node_max_tile_width(self.tree)
         self.previous_moves = {}
+
+        self.game_over = None
 
         self.choice_order = choice_order
         self.random_players = random_players
@@ -74,17 +81,22 @@ class GameProcessor:
         except GameOverException as e:
             self.display_board()
             print()
-            if e.result == END_WIN:
-                print("Game over, player", e.player, "wins")
-            elif e.result == END_LOSE:
-                print("Game over, player", e.player, "loses")
-            elif e.result == END_DRAW:
+            go = e.game_over
+            if go.result == END_WIN:
+                self.game_over = go
+                print("Game over, player", go.player, "wins")
+            elif go.result == END_LOSE:
+                self.game_over = go
+                print("Game over, player", go.player, "loses")
+            elif go.result == END_DRAW:
+                self.game_over = go
                 print("Game over, draw")
             else:
                 print("Game over, unrecognized game result:", e.result)
         else:
             self.display_board()
             print()
+            self.game_over = GameOver(END_STALE, None)
             print("Game over, stalemate - root node exited but game has not ended")
 
     def execute_displayboard_node(self, node):

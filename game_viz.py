@@ -59,6 +59,7 @@ class GameFrame(tkinter.Frame):
         self._cvs.grid(column=0, row=0)
 
         self._mouse_choice = None
+        self._game_over = None
 
         self._text_widgets = []
         self._choice_widgets = {}
@@ -196,9 +197,6 @@ class GameFrame(tkinter.Frame):
                     if text == '.':
                         continue
                     font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
-                    #self._choice_widgets[idx].append(self._cvs.create_rectangle(self.tocvsx(col + cc), self.tocvsy(row + rr),
-                    #                                                            self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
-                    #                                                            fill='#eeeeee', outline=''))
                     self._choice_widgets[idx].append(self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                        self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                        self._cell_size / 4,
@@ -232,9 +230,33 @@ class GameFrame(tkinter.Frame):
             game_proc._thread_choice = choice
 
     def check_thread(self):
-        #if not self._game_thread.is_alive():
-        #    self.winfo_toplevel().destroy()
-        #    return
+        if not self._game_thread.is_alive():
+            if self._game_over is None:
+                self._game_over = 10
+            elif self._game_over > 0:
+                self._game_over -= 1
+            elif self._game_over == 0:
+                self._game_over -= 1
+
+                go = self._game_proc.game_over
+                msg = None
+
+                if go is None:
+                    msg = 'Error in game over.'
+                elif go.result == game.END_WIN:
+                    msg = f'Game over, player {go.player} wins!'
+                elif go.result == game.END_LOSE:
+                    msg = f'Game over, player {go.player} loses!'
+                elif go.result == game.END_DRAW:
+                    msg = f'Game over, draw!'
+                elif go.result == game.END_STALE:
+                    msg = f'Game over, stalemate!'
+                else:
+                    msg = 'Error in game over.'
+                tkinter.messagebox.showinfo(message=msg)
+
+                #self.winfo_toplevel().destroy()
+                #return
 
         with self._game_proc._thread_mtx:
             if self._game_proc._thread_new_board is not None:
