@@ -197,10 +197,10 @@ class GameFrame(tkinter.Frame):
                     if text == '.':
                         continue
                     font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
-                    self._choice_widgets[idx].append(self.create_rrect(self.tocvsx(col), self.tocvsy(row),
-                                                                       self.tocvsx(col + cols), self.tocvsy(row + rows),
+                    self._choice_widgets[idx].append(self.create_rrect(self.tocvsx(col + cc), self.tocvsy(row + rr),
+                                                                       self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
                                                                        self._cell_size / 4,
-                                                                       '#eeeeee', ''))
+                                                                       '#dddddd', ''))
                     self._choice_widgets[idx].append(self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
                                                                            text=text, fill='#777777', font=font, anchor=tkinter.CENTER))
 
