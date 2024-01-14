@@ -9,6 +9,8 @@ import tkinter, tkinter.messagebox
 import util
 
 
+CELL_SIZE_DEF   = 100
+
 
 class ThreadedGameProcessor(game.GameProcessor):
     def __init__(self, filename, random_players, mtx):
@@ -278,11 +280,11 @@ def run_game(game_proc):
     game_proc.game_play()
     sys.stdout.flush()
 
-def run_game_input_viz(game_proc, game_thread):
+def run_game_input_viz(game_proc, game_thread, cell_size):
     root = tkinter.Tk()
     root.title('game')
 
-    GameFrame(root, 100, game_proc, game_thread)
+    GameFrame(root, cell_size, game_proc, game_thread)
 
     root.mainloop()
 
@@ -309,6 +311,7 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
     parser.add_argument('--random', type=int, help='Random seed.')
+    parser.add_argument('--cell-size', type=int, help='Size of cells.', default=CELL_SIZE_DEF)
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
@@ -319,4 +322,4 @@ if __name__ == '__main__':
     game_proc = ThreadedGameProcessor(args.filename, args.player_random, mtx)
     game_thread = threading.Thread(target=run_game, args=(game_proc,), daemon=True)
 
-    run_game_input_viz(game_proc, game_thread)
+    run_game_input_viz(game_proc, game_thread, args.cell_size)
