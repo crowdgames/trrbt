@@ -13,8 +13,8 @@ CELL_SIZE_DEF   = 100
 
 
 class ThreadedGameProcessor(game.GameProcessor):
-    def __init__(self, filename, random_players, mtx):
-        super().__init__(filename, True, random_players, None)
+    def __init__(self, filename, random_players, clear_screen, mtx):
+        super().__init__(filename, True, random_players, clear_screen)
 
         self._thread_mtx = mtx
 
@@ -230,7 +230,7 @@ class GameFrame(tkinter.Frame):
                                                                             '#dddddd', ''),
                                                           False))
                         self._choice_widgets[idx].append((self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
-                                                                                text=text, fill='#888888', font=font, anchor=tkinter.CENTER),
+                                                                                text=text, fill='#999999', font=font, anchor=tkinter.CENTER),
                                                           False))
                 self._choice_widgets[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                     self.tocvsx(col + cols), self.tocvsy(row + rows),
@@ -364,6 +364,7 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
     parser.add_argument('--random', type=int, help='Random seed.')
+    parser.add_argument('--cls', type=float, nargs='?', const=game.DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
     parser.add_argument('--cell-size', type=int, help='Size of cells.', default=CELL_SIZE_DEF)
     args = parser.parse_args()
 
@@ -372,7 +373,7 @@ if __name__ == '__main__':
     random.seed(random_seed)
 
     mtx = threading.Lock()
-    game_proc = ThreadedGameProcessor(args.filename, args.player_random, mtx)
+    game_proc = ThreadedGameProcessor(args.filename, args.player_random, args.cls, mtx)
     game_thread = threading.Thread(target=run_game, args=(game_proc,), daemon=True)
 
     run_game_input_viz(game_proc, game_thread, args.cell_size)
