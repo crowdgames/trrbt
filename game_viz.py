@@ -147,18 +147,16 @@ class GameFrame(tkinter.Frame):
             self.make_choice(choice)
 
     def on_mouse_button_alt_down(self, event):
-        if self._mouse_choice is not None:
-            for choice_idx, choice_widgets in self._choice_widgets.items():
-                for choice_widget, is_alt in choice_widgets:
-                    if choice_idx == self._mouse_choice and not is_alt:
-                        self._cvs.itemconfigure(choice_widget, state='hidden')
+        for choice_idx, choice_widgets in self._choice_widgets.items():
+            for choice_widget, is_alt in choice_widgets:
+                if choice_idx == self._mouse_choice and not is_alt:
+                    self._cvs.itemconfigure(choice_widget, state='hidden')
 
     def on_mouse_button_alt_up(self, event):
-        if self._mouse_choice is not None:
-            for choice_idx, choice_widgets in self._choice_widgets.items():
-                for choice_widget, is_alt in choice_widgets:
-                    if choice_idx == self._mouse_choice and not is_alt:
-                        self._cvs.itemconfigure(choice_widget, state='normal')
+        for choice_idx, choice_widgets in self._choice_widgets.items():
+            for choice_widget, is_alt in choice_widgets:
+                if choice_idx == self._mouse_choice and not is_alt:
+                    self._cvs.itemconfigure(choice_widget, state='normal')
 
     def update_mouse_choice(self, new_choice):
         if self._mouse_choice != new_choice:
@@ -241,7 +239,7 @@ class GameFrame(tkinter.Frame):
                                                                  self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                  self._cell_size / 4,
                                                                  '', color2),
-                                               True))
+                                               False))
 
     def make_choice(self, choice):
         print('making choice', choice)
