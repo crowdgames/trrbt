@@ -32,9 +32,6 @@ class ThreadedGameProcessor(game.GameProcessor):
             self._thread_choices = (player_id, this_turn_info)
             self._thread_choice = None
 
-            print('player choice waiting...')
-            sys.stdout.flush()
-
         while True:
             time.sleep(0.01)
             with self._thread_mtx:
@@ -44,8 +41,6 @@ class ThreadedGameProcessor(game.GameProcessor):
                     self._thread_choices = None
                     self._thread_choice = None
 
-                    print('player choice done.')
-                    sys.stdout.flush()
                     return ret
 
 class GameFrame(tkinter.Frame):
@@ -277,9 +272,6 @@ class GameFrame(tkinter.Frame):
                     self._cvs.itemconfigure(choice_widget, state='hidden')
 
     def make_choice(self, choice):
-        print('making choice', choice)
-        sys.stdout.flush()
-
         with self._game_proc._thread_mtx:
             for choice_widgets in self._choice_widgets.values():
                 for choice_widget, is_alt in choice_widgets:
