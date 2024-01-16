@@ -55,7 +55,8 @@ class GameFrame(tkinter.Frame):
         self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#dddddd')
         self._cvs.grid(column=0, row=0)
 
-        self._choices = None
+        self._choices_by_idx = None
+        self._choices_by_rect = None
         self._mouse_choice = None
         self._game_over = None
 
@@ -112,8 +113,8 @@ class GameFrame(tkinter.Frame):
             choice = None
             best_choice = None
 
-            if self._choices is not None:
-                for (row, col, rows, cols), choices in self._choices.items():
+            if self._choices_by_rect is not None:
+                for (row, col, rows, cols), choices in self._choices_by_rect.items():
                     if row <= mr and mr <= row + rows and col <= mc and mc <= col + cols:
                         rowmid = row + rows / 2.0
                         colmid = col + cols / 2.0
@@ -178,16 +179,19 @@ class GameFrame(tkinter.Frame):
                                                                 text=text, fill='#000000', font=font, anchor=tkinter.CENTER))
 
     def update_choices(self, player_id, choices):
-        self._choices = {}
+        self._choices_by_idx = {}
+        self._choices_by_rect = {}
         for idx, (lhs, rhs, row, col) in choices.items():
             rows = len(lhs)
             cols = len(lhs[0])
 
-            rect = (row, col, rows, cols)
-            if rect not in self._choices:
-                self._choices[rect] = []
+            self._choices_by_idx[idx] = (lhs, rhs, row, col)
 
-            self._choices[rect].append((idx, lhs, rhs))
+            rect = (row, col, rows, cols)
+            if rect not in self._choices_by_rect:
+                self._choices_by_rect[rect] = []
+
+            self._choices_by_rect[rect].append((idx, lhs, rhs))
 
         corner = self._cell_size / 4
         corner_box = corner * 1.5
@@ -209,7 +213,7 @@ class GameFrame(tkinter.Frame):
 
         self._choice_widgets[None] = []
 
-        for (row, col, rows, cols), choices in self._choices.items():
+        for (row, col, rows, cols), choices in self._choices_by_rect.items():
             for ii, (idx, lhs, rhs) in enumerate(choices):
                 self._choice_widgets[idx] = []
 
@@ -277,7 +281,17 @@ class GameFrame(tkinter.Frame):
                     self._cvs.delete(choice_widget)
             self._choice_widgets = {}
 
-            self._choices = None
+            lhs, rhs, row, col = self._choices_by_idx[choice]
+
+            tmp_board = util.listify(game_proc.board)
+            for rr in range(len(rhs)):
+                for cc in range(len(rhs[rr])):
+                    if rhs[rr][cc] != '.':
+                        tmp_board[row + rr][col + cc] = rhs[rr][cc]
+            self.update_board(tmp_board)
+
+            self._choices_by_idx = None
+            self._choices_by_rect = None
             game_proc._thread_choice = choice
 
     def check_thread(self):
