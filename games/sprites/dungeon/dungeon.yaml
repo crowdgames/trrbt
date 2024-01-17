@@ -1,0 +1,19 @@
+---
+sprites:
+  PN: player
+  PK: player-key
+  K: key
+  X: wall
+  D: door
+  O: exit
+  W: win
+  G: guard
+  L: patrol-left
+  R: patrol-right
+  _: blank
+  B0: back0
+  B1: back1
+back: B0 B0 B0 B0;
+      B0 B0 B1 B0;
+      B0 B0 B0 B0;
+      B0 B0 B0 B1;
