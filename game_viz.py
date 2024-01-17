@@ -1,12 +1,14 @@
 import argparse
 import game
 import os
+import PIL.Image, PIL.ImageDraw, PIL.ImageTk
 import random
 import sys
 import threading
 import time
 import tkinter, tkinter.messagebox
 import util
+import yaml
 
 
 CELL_SIZE_DEF   = 100
@@ -44,7 +46,7 @@ class ThreadedGameProcessor(game.GameProcessor):
                     return ret
 
 class GameFrame(tkinter.Frame):
-    def __init__(self, root, cell_size, game_proc, game_thread):
+    def __init__(self, root, cell_size, sprites, game_proc, game_thread):
         super().__init__(root)
 
         self._padding = 5
@@ -55,12 +57,25 @@ class GameFrame(tkinter.Frame):
         self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#dddddd')
         self._cvs.grid(column=0, row=0)
 
+        self._sprites = {}
+        if sprites is not None:
+            sprite_info = util.yamlload(sprites)
+            for k, v in sprite_info['sprites'].items():
+                img = PIL.Image.open(os.path.join(os.path.dirname(sprites), v + '.png')).resize((self._cell_size, self._cell_size), PIL.Image.Resampling.NEAREST)
+                imgx = img.convert('RGBA')
+                datax = imgx.getdata()
+                newdatax = []
+                for item in datax:
+                    newdatax.append((item[0], item[1], item[2], item[3] // 2))
+                imgx.putdata(newdatax)
+                self._sprites[k] = (PIL.ImageTk.PhotoImage(img), PIL.ImageTk.PhotoImage(imgx), img, imgx)
+
         self._choices_by_idx = None
         self._choices_by_rect = None
         self._mouse_choice = None
         self._game_over = None
 
-        self._text_widgets = []
+        self._fg_widgets = {}
         self._choice_widgets = {}
 
         self.pack()
@@ -162,21 +177,34 @@ class GameFrame(tkinter.Frame):
     def update_board(self, new_board):
         new_rows = len(new_board)
         new_cols = 0 if new_rows == 0 else len(new_board[0])
+
         if new_rows != self._rows or new_cols != self._cols:
+            for rr in range(self._rows):
+                for cc in range(seld._cols):
+                    if rr >= new_rows or cc >= new_cols:
+                        key = (rr, cc)
+                        if key in self._fg_widgets:
+                            self._cvs.delete(self._fg_widgets[key][1])
+
             self._rows = new_rows
             self._cols = new_cols
             self._cvs.config(width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding)
 
-        for text_widget in self._text_widgets:
-            self._cvs.delete(text_widget)
-        self._text_widgets = []
-
-        for rr in range(new_rows):
-            for cc in range(new_cols):
+        for rr in range(self._rows):
+            for cc in range(self._cols):
                 text = new_board[rr][cc].strip()
-                font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
-                self._text_widgets.append(self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
-                                                                text=text, fill='#000000', font=font, anchor=tkinter.CENTER))
+                key = (rr, cc)
+                if key not in self._fg_widgets or text != self._fg_widgets[key][0]:
+                    if key in self._fg_widgets:
+                        self._cvs.delete(self._fg_widgets[key][1])
+                    font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
+
+                    if text in self._sprites:
+                        widget = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[text][0])
+                    else:
+                        widget = self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
+                                                       text=text, fill='#000000', font=font, anchor=tkinter.CENTER)
+                    self._fg_widgets[key] = (text, widget)
 
     def update_choices(self, player_id, choices):
         self._choices_by_idx = {}
@@ -227,9 +255,12 @@ class GameFrame(tkinter.Frame):
                                                                                      self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
                                                                                      fill='#dddddd', outline=''),
                                                           False))
-                        self._choice_widgets[idx].append((self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
-                                                                                text=text, fill='#999999', font=font, anchor=tkinter.CENTER),
-                                                          False))
+                        if text in self._sprites:
+                            widget = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[text][1])
+                        else:
+                            widget = self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
+                                                           text=text, fill='#999999', font=font, anchor=tkinter.CENTER)
+                        self._choice_widgets[idx].append((widget, False))
                 self._choice_widgets[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                     self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                     corner,
@@ -286,8 +317,9 @@ class GameFrame(tkinter.Frame):
             tmp_board = util.listify(game_proc.board)
             for rr in range(len(rhs)):
                 for cc in range(len(rhs[rr])):
-                    if rhs[rr][cc] != '.':
-                        tmp_board[row + rr][col + cc] = rhs[rr][cc]
+                    text = rhs[rr][cc].strip()
+                    if text != '.':
+                        tmp_board[row + rr][col + cc] = text
             self.update_board(tmp_board)
 
             self._choices_by_idx = None
@@ -338,11 +370,11 @@ def run_game(game_proc):
     game_proc.game_play()
     sys.stdout.flush()
 
-def run_game_input_viz(game_proc, game_thread, cell_size):
+def run_game_input_viz(game_proc, game_thread, cell_size, sprites):
     root = tkinter.Tk()
     root.title('game')
 
-    GameFrame(root, cell_size, game_proc, game_thread)
+    GameFrame(root, cell_size, sprites, game_proc, game_thread)
 
     root.mainloop()
 
@@ -371,6 +403,7 @@ if __name__ == '__main__':
     parser.add_argument('--random', type=int, help='Random seed.')
     parser.add_argument('--cls', type=float, nargs='?', const=game.DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
     parser.add_argument('--cell-size', type=int, help='Size of cells.', default=CELL_SIZE_DEF)
+    parser.add_argument('--sprites', type=str, help='Sprite file.')
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
@@ -381,4 +414,4 @@ if __name__ == '__main__':
     game_proc = ThreadedGameProcessor(args.filename, args.player_random, args.cls, mtx)
     game_thread = threading.Thread(target=run_game, args=(game_proc,), daemon=True)
 
-    run_game_input_viz(game_proc, game_thread, args.cell_size)
+    run_game_input_viz(game_proc, game_thread, args.cell_size, args.sprites)
