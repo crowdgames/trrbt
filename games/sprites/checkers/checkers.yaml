@@ -1,0 +1,16 @@
+---
+sprites:
+  RP: red-pawn
+  RP': red-pawn
+  RK: red-king
+  RK': red-king
+  BP: black-pawn
+  BP': black-pawn
+  BK: black-king
+  BK': black-king
+  _: blank
+  =: end
+  B0: back0
+  B1: back1
+back: B0 B1;
+      B1 B0;
