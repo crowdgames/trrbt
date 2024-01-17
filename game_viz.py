@@ -75,8 +75,8 @@ class GameFrame(tkinter.Frame):
         self._mouse_choice = None
         self._game_over = None
 
-        self._fg_widgets = {}
-        self._choice_widgets = {}
+        self._fg_ids = {}
+        self._choice_ids = {}
 
         self.pack()
 
@@ -152,27 +152,27 @@ class GameFrame(tkinter.Frame):
             self.make_choice(choice)
 
     def on_mouse_button_alt_down(self, event):
-        for choice_idx, choice_widgets in self._choice_widgets.items():
-            for choice_widget, is_alt in choice_widgets:
+        for choice_idx, choice_ids in self._choice_ids.items():
+            for choice_id, is_alt in choice_ids:
                 if choice_idx == self._mouse_choice and not is_alt:
-                    self._cvs.itemconfigure(choice_widget, state='hidden')
+                    self._cvs.itemconfigure(choice_id, state='hidden')
 
     def on_mouse_button_alt_up(self, event):
-        for choice_idx, choice_widgets in self._choice_widgets.items():
-            for choice_widget, is_alt in choice_widgets:
+        for choice_idx, choice_ids in self._choice_ids.items():
+            for choice_id, is_alt in choice_ids:
                 if choice_idx == self._mouse_choice and not is_alt:
-                    self._cvs.itemconfigure(choice_widget, state='normal')
+                    self._cvs.itemconfigure(choice_id, state='normal')
 
     def update_mouse_choice(self, new_choice):
         if self._mouse_choice != new_choice:
             self._mouse_choice = new_choice
 
-            for choice_idx, choice_widgets in self._choice_widgets.items():
-                for choice_widget, is_alt in choice_widgets:
+            for choice_idx, choice_ids in self._choice_ids.items():
+                for choice_id, is_alt in choice_ids:
                     if choice_idx == self._mouse_choice:
-                        self._cvs.itemconfigure(choice_widget, state='normal')
+                        self._cvs.itemconfigure(choice_id, state='normal')
                     else:
-                        self._cvs.itemconfigure(choice_widget, state='hidden')
+                        self._cvs.itemconfigure(choice_id, state='hidden')
 
     def update_board(self, new_board):
         new_rows = len(new_board)
@@ -183,8 +183,8 @@ class GameFrame(tkinter.Frame):
                 for cc in range(seld._cols):
                     if rr >= new_rows or cc >= new_cols:
                         key = (rr, cc)
-                        if key in self._fg_widgets:
-                            self._cvs.delete(self._fg_widgets[key][1])
+                        if key in self._fg_ids:
+                            self._cvs.delete(self._fg_ids[key][1])
 
             self._rows = new_rows
             self._cols = new_cols
@@ -194,9 +194,9 @@ class GameFrame(tkinter.Frame):
             for cc in range(self._cols):
                 text = new_board[rr][cc].strip()
                 key = (rr, cc)
-                if key not in self._fg_widgets or text != self._fg_widgets[key][0]:
-                    if key in self._fg_widgets:
-                        self._cvs.delete(self._fg_widgets[key][1])
+                if key not in self._fg_ids or text != self._fg_ids[key][0]:
+                    if key in self._fg_ids:
+                        self._cvs.delete(self._fg_ids[key][1])
                     font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
 
                     if text in self._sprites:
@@ -204,7 +204,7 @@ class GameFrame(tkinter.Frame):
                     else:
                         widget = self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
                                                        text=text, fill='#000000', font=font, anchor=tkinter.CENTER)
-                    self._fg_widgets[key] = (text, widget)
+                    self._fg_ids[key] = (text, widget)
 
     def update_choices(self, player_id, choices):
         self._choices_by_idx = {}
@@ -239,11 +239,11 @@ class GameFrame(tkinter.Frame):
             self._player_id_colors[player_id] = color1, color2
         color1, color2 = self._player_id_colors[player_id]
 
-        self._choice_widgets[None] = []
+        self._choice_ids[None] = []
 
         for (row, col, rows, cols), choices in self._choices_by_rect.items():
             for ii, (idx, lhs, rhs) in enumerate(choices):
-                self._choice_widgets[idx] = []
+                self._choice_ids[idx] = []
 
                 for rr in range(rows):
                     for cc in range(cols):
@@ -251,66 +251,66 @@ class GameFrame(tkinter.Frame):
                         if text == '.':
                             continue
                         font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
-                        self._choice_widgets[idx].append((self._cvs.create_rectangle(self.tocvsx(col + cc), self.tocvsy(row + rr),
-                                                                                     self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
-                                                                                     fill='#dddddd', outline=''),
-                                                          False))
+                        self._choice_ids[idx].append((self._cvs.create_rectangle(self.tocvsx(col + cc), self.tocvsy(row + rr),
+                                                                                 self.tocvsx(col + cc + 1), self.tocvsy(row + rr + 1),
+                                                                                 fill='#dddddd', outline=''),
+                                                      False))
                         if text in self._sprites:
                             widget = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[text][1])
                         else:
                             widget = self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
                                                            text=text, fill='#999999', font=font, anchor=tkinter.CENTER)
-                        self._choice_widgets[idx].append((widget, False))
-                self._choice_widgets[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
-                                                                    self.tocvsx(col + cols), self.tocvsy(row + rows),
-                                                                    corner,
-                                                                    '', color1),
-                                                  True))
+                        self._choice_ids[idx].append((widget, False))
+                self._choice_ids[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
+                                                                self.tocvsx(col + cols), self.tocvsy(row + rows),
+                                                                corner,
+                                                                '', color1),
+                                              True))
                 if len(choices) > 1:
-                    self._choice_widgets[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
-                                                                        self.tocvsx(col) + corner_box, self.tocvsy(row) + corner_box,
-                                                                        corner,
-                                                                        color1, ''),
-                                                      True))
+                    self._choice_ids[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
+                                                                    self.tocvsx(col) + corner_box, self.tocvsy(row) + corner_box,
+                                                                    corner,
+                                                                    color1, ''),
+                                                  True))
                     text = ii + 1
                     font = ('Courier', str(int(corner)))
-                    self._choice_widgets[idx].append((self._cvs.create_text(self.tocvsx(col) + corner_box / 2, self.tocvsy(row) + corner_box / 2,
-                                                                            text=text, fill='#dddddd', font=font, anchor=tkinter.CENTER),
-                                                      True))
+                    self._choice_ids[idx].append((self._cvs.create_text(self.tocvsx(col) + corner_box / 2, self.tocvsy(row) + corner_box / 2,
+                                                                        text=text, fill='#dddddd', font=font, anchor=tkinter.CENTER),
+                                                  True))
 
-            self._choice_widgets[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
-                                                                 self.tocvsx(col + cols), self.tocvsy(row + rows),
-                                                                 corner,
-                                                                 '', color2),
-                                               False))
-            self._choice_widgets[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
-                                                                 self.tocvsx(col + cols), self.tocvsy(row + rows),
-                                                                 corner,
-                                                                 '', color2),
-                                               False))
+            self._choice_ids[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
+                                                             self.tocvsx(col + cols), self.tocvsy(row + rows),
+                                                             corner,
+                                                             '', color2),
+                                           False))
+            self._choice_ids[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
+                                                             self.tocvsx(col + cols), self.tocvsy(row + rows),
+                                                             corner,
+                                                             '', color2),
+                                           False))
             if len(choices) > 1:
-                self._choice_widgets[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
-                                                                     self.tocvsx(col) + corner_box, self.tocvsy(row) + corner_box,
-                                                                     corner,
-                                                                     color2, ''),
-                                                   False))
+                self._choice_ids[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
+                                                                 self.tocvsx(col) + corner_box, self.tocvsy(row) + corner_box,
+                                                                 corner,
+                                                                 color2, ''),
+                                               False))
                 text = len(choices)
                 font = ('Courier', str(int(corner)))
-                self._choice_widgets[None].append((self._cvs.create_text(self.tocvsx(col) + corner_box / 2, self.tocvsy(row) + corner_box / 2,
-                                                                         text=text, fill='#dddddd', font=font, anchor=tkinter.CENTER),
-                                                  False))
+                self._choice_ids[None].append((self._cvs.create_text(self.tocvsx(col) + corner_box / 2, self.tocvsy(row) + corner_box / 2,
+                                                                     text=text, fill='#dddddd', font=font, anchor=tkinter.CENTER),
+                                               False))
 
-        for idx in self._choice_widgets:
+        for idx in self._choice_ids:
             if idx is not None:
-                for choice_widget, is_alt in self._choice_widgets[idx]:
-                    self._cvs.itemconfigure(choice_widget, state='hidden')
+                for choice_id, is_alt in self._choice_ids[idx]:
+                    self._cvs.itemconfigure(choice_id, state='hidden')
 
     def make_choice(self, choice):
         with self._game_proc._thread_mtx:
-            for choice_widgets in self._choice_widgets.values():
-                for choice_widget, is_alt in choice_widgets:
-                    self._cvs.delete(choice_widget)
-            self._choice_widgets = {}
+            for choice_ids in self._choice_ids.values():
+                for choice_id, is_alt in choice_ids:
+                    self._cvs.delete(choice_id)
+            self._choice_ids = {}
 
             lhs, rhs, row, col = self._choices_by_idx[choice]
 
