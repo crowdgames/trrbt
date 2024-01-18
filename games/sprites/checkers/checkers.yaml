@@ -14,3 +14,6 @@ sprites:
   B1: back1
 back: B0 B1;
       B1 B0;
+players:
+  R: aa0000;550000
+  B: 666666;333333
