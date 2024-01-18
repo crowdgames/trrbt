@@ -57,6 +57,8 @@ class GameFrame(tkinter.Frame):
         self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#dddddd')
         self._cvs.grid(column=0, row=0)
 
+        self._player_id_colors = {}
+
         self._sprites = {}
         self._back_board = None
         if sprites is not None:
@@ -72,6 +74,9 @@ class GameFrame(tkinter.Frame):
                 self._sprites[k] = (PIL.ImageTk.PhotoImage(img), PIL.ImageTk.PhotoImage(imgx), img, imgx)
             if 'back' in sprite_info:
                 self._back_board = util.string_to_pattern(sprite_info['back'])
+            if 'players' in sprite_info:
+                for k, v in sprite_info['players'].items():
+                    self._player_id_colors[k] = tuple(['#' + clr.strip() for clr in v.split(';')])
 
         self._choices_by_idx = None
         self._choices_by_rect = None
@@ -89,8 +94,6 @@ class GameFrame(tkinter.Frame):
         self._cvs.bind('<ButtonPress-1>', self.on_mouse_button)
         self._cvs.bind('<ButtonPress-2>', self.on_mouse_button_alt_down)
         self._cvs.bind('<ButtonRelease-2>', self.on_mouse_button_alt_up)
-
-        self._player_id_colors = {}
 
         self._game_proc = game_proc
         self._game_thread = game_thread
