@@ -1,5 +1,6 @@
 import copy
 import io
+import json
 import os
 import sys
 import yaml
@@ -547,6 +548,9 @@ def game_print_gv(game):
     for line in edge_lines:
         print(line)
     print('}')
+
+def game_print_json(game):
+    print(json.dumps({'name':game.name, 'tree':game.tree}))
 
 def yamlload(filename):
     with open(filename, 'rt') as f:
