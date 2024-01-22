@@ -1,4 +1,6 @@
+rm -rf games
 mkdir -p games
+
 python yaml2json.py ../games/ttt.yaml games/ttt-text
 python yaml2json.py ../games/connect4.yaml games/connect4-text
 python yaml2json.py ../games/checkers.yaml games/checkers --sprites ../games/sprites/checkers/checkers.yaml
