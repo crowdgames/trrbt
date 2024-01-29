@@ -332,7 +332,7 @@ async function runGameTree(tree) {
     let fnMap = {
         'display-board': runNodeDisplayBoard,
         'set-board': runNodeSetBoard,
-	'append-rows': runNodeAppendRows,
+        'append-rows': runNodeAppendRows,
         'order': runNodeOrder,
         'loop-until-all': runNodeLoopUntilAll,
         'loop-times': runNodeLoopTimes,
@@ -402,19 +402,19 @@ async function runNodeSetBoard(node, fnMap) {
 
 async function runNodeAppendRows(node, fnMap) {
     if (g_rows == 0 || g_cols === 0) {
-	g_board = node.pattern.slice();
+        g_board = node.pattern.slice();
     } else {
-	for (let patternRow of node.pattern) {
-	    let newRow = []
-	    while (newRow.length < g_cols) {
-		for (let tile of patternRow) {
-		    if (newRow.length < g_cols) {
-			newRow.push(tile);
-		    }
-		}
-	    }
-	    g_board.push(newRow);
-	}
+        for (let patternRow of node.pattern) {
+            let newRow = []
+            while (newRow.length < g_cols) {
+                for (let tile of patternRow) {
+                    if (newRow.length < g_cols) {
+                        newRow.push(tile);
+                    }
+                }
+            }
+            g_board.push(newRow);
+        }
     }
 
     let newRows = g_board.length;
