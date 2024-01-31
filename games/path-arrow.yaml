@@ -1,0 +1,215 @@
+---
+name: path
+tree:
+  type: order
+  children:
+  - type: random-try
+    children:
+    - type: set-board
+      pattern: _  _  _  _  _  _  _;
+               _  P  _  _  _  _  _;
+               _  _  _  _  _  _  _;
+               _  _  _  _  _  _  _;
+               _  _  _  _  X  F  X;
+               _  _  _  _  F  _  _;
+               _  _  _  _  X  _  E;
+    - type: set-board
+      pattern: _  P  _  _  _  _;
+               X  X  D  X  _  _;
+               F  X  _  X  _  _;
+               _  X  _  X  X  X;
+               F  X  _  _  _  X;
+               _  X  X  X  _  X;
+               _  X  _  _  _  X;
+               _  X  _  X  X  X;
+               _  _  _  X  _  _;
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: x-replace-only
+      what: a
+      with:
+      - _
+      - E
+      - F
+      children:
+      - type: x-replace-only
+        what: b
+        with:
+        - _
+        - E
+        - F
+        children:
+        - type: x-replace-only
+          what: d
+          with:
+          - '<'
+          - '>'
+          - ^
+          - v
+          children:
+          - type: x-spin
+            children:
+            - type: player
+              pid: 1
+              children:
+              - type: rewrite
+                lhs: P
+                rhs: P
+              - type: rewrite
+                lhs: P  _
+                rhs: _  P
+              - type: rewrite
+                lhs: P  D
+                rhs: P  _
+          - type: loop-until-all
+            children:
+            - type: rewrite
+              lhs: P  a
+              rhs: P  a:<
+            - type: rewrite
+              lhs: a    P
+              rhs: a:>  P
+            - type: rewrite
+              lhs: P;  a
+              rhs: P;  a:^
+            - type: rewrite
+              lhs: a  ; P
+              rhs: a:v; P
+          - type: loop-until-all
+            children:
+
+            - type: x-ident
+              nid: arrow-equal
+              children:
+              - type: loop-until-all
+                children:
+                - type: x-spin
+                  children:
+                  - type: rewrite
+                    lhs: a:< b
+                    rhs: a:< b:=
+                  - type: rewrite
+                    lhs: a:> b
+                    rhs: a:> b:=
+                  - type: rewrite
+                    lhs: a:^ b
+                    rhs: a:^ b:=
+                  - type: rewrite
+                    lhs: a:v b
+                    rhs: a:v b:=
+
+            - type: x-ident
+              nid: arrow-left-right
+              children:
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: a:< b:=
+                  rhs: a:< b:<
+                - type: rewrite
+                  lhs: a:^ b:=
+                  rhs: a:^ b:<
+                - type: rewrite
+                  lhs: a:v b:=
+                  rhs: a:v b:<
+
+                - type: rewrite
+                  lhs: a:= b:>
+                  rhs: a:> b:>
+                - type: rewrite
+                  lhs: a:= b:^
+                  rhs: a:> b:^
+                - type: rewrite
+                  lhs: a:= b:v
+                  rhs: a:> b:v
+
+            - type: x-ident
+              nid: arrow-up-down
+              children:
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: a:<; b:=
+                  rhs: a:<; b:^
+                - type: rewrite
+                  lhs: a:>; b:=
+                  rhs: a:>; b:^
+                - type: rewrite
+                  lhs: a:^; b:=
+                  rhs: a:^; b:^
+
+                - type: rewrite
+                  lhs: a:=; b:<
+                  rhs: a:v; b:<
+                - type: rewrite
+                  lhs: a:=; b:>
+                  rhs: a:v; b:>
+                - type: rewrite
+                  lhs: a:=; b:v
+                  rhs: a:v; b:v
+            - type: x-link
+              target: arrow-equal
+            - type: x-link
+              target: arrow-up-down
+            - type: x-link
+              target: arrow-left-right
+          - type: order
+            children:
+            - type: rewrite
+              lhs: P  E:<
+              rhs: E' _:<
+            - type: rewrite
+              lhs: E:> P
+              rhs: _:> E'
+            - type: rewrite
+              lhs: P ; E:^
+              rhs: E'; _:^
+            - type: rewrite
+              lhs: E:v; P
+              rhs: _:v; E'
+          - type: loop-until-all
+            children:
+            - type: rewrite
+              lhs: _:d E:<
+              rhs: E'  _:<
+            - type: rewrite
+              lhs: E:> _:d
+              rhs: _:> E'
+            - type: rewrite
+              lhs: _:d; E:^
+              rhs: E' ; _:^
+            - type: rewrite
+              lhs: E:v; _:d
+              rhs: _:v; E'
+          - type: loop-until-all
+            children:
+            - type: rewrite
+              lhs: E'
+              rhs: E
+            - type: rewrite
+              lhs: a:d
+              rhs: a
+          - type: loop-until-all
+            children:
+            - type: rewrite
+              lhs: F
+              rhs: E'
+            - type: rewrite
+              lhs: E
+              rhs: F'
+          - type: loop-until-all
+            children:
+            - type: rewrite
+              lhs: E'
+              rhs: E
+            - type: rewrite
+              lhs: F'
+              rhs: F
+          - type: lose
+            pid: 1
+            children:
+            - type: none
+              children:
+              - type: match
+                pattern: P
