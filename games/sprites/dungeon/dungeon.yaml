@@ -6,7 +6,7 @@ sprites:
   X: wall
   D: door
   O: exit
-  W: win
+  W: win-exit
   G: guard
   L: patrol-left
   R: patrol-right
