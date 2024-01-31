@@ -245,7 +245,7 @@ def xform_rule_spin(node):
         ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
     return unique(ret)
 
-def xform_rule_swaponly_fn(wht, wth):
+def xform_rule_swap_only_fn(wht, wth):
     def rule_swap_side(hs):
         ret_hs = ()
         for row in hs:
@@ -267,7 +267,7 @@ def xform_rule_swaponly_fn(wht, wth):
 
     return rule_swaponly
 
-def xform_rule_replaceonly_fn(wht, wth):
+def xform_rule_replace_only_fn(wht, wth):
     if type(wth) != list:
         raise RuntimeError(f'replace with must be list')
 
@@ -323,9 +323,9 @@ def node_apply_xforms(node, xforms, nid_to_node):
         elif ntype == NDX_FLIP_ONLY:
             fn = xform_rule_fliponly
         elif ntype == NDX_SWAP_ONLY:
-            fn = xform_rule_swaponly_fn(node[NKEY_WHAT], node[NKEY_WITH])
+            fn = xform_rule_swap_only_fn(node[NKEY_WHAT], node[NKEY_WITH])
         elif ntype == NDX_REPLACE_ONLY:
-            fn = xform_rule_replaceonly_fn(node[NKEY_WHAT], node[NKEY_WITH])
+            fn = xform_rule_replace_only_fn(node[NKEY_WHAT], node[NKEY_WITH])
 
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
