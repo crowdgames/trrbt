@@ -1,6 +1,7 @@
 ---
 sprites:
   P: player
+  W: win
   X: wall
   D: door
   E: guard

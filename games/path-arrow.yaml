@@ -62,6 +62,12 @@ tree:
               - type: rewrite
                 lhs: P  D
                 rhs: P  _
+              - type: rewrite
+                lhs: P  E
+                rhs: P  _
+              - type: rewrite
+                lhs: P  F
+                rhs: P  _
           - type: loop-until-all
             children:
             - type: rewrite
@@ -213,3 +219,17 @@ tree:
               children:
               - type: match
                 pattern: P
+          - type: none
+            children:
+            - type: order
+              children:
+              - type: match
+                pattern: E
+              - type: match
+                pattern: F
+            - type: win
+              pid: 1
+              children:
+              - type: rewrite
+                lhs: P
+                rhs: W
