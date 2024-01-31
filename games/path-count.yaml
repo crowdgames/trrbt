@@ -1,0 +1,310 @@
+---
+name: path
+tree:
+  type: order
+  children:
+  - type: random-try
+    children:
+    - type: set-board
+      pattern: _  _  _  _  _  _;
+               _  _  P  _  _  _;
+               _  X  X  X  _  _;
+               _  X  E  X  X  _;
+               _  X  _  _  _  _;
+               _  _  _  _  _  E;
+    - type: set-board
+      pattern: _  _  _  _  _  _;
+               _  P  _  _  _  _;
+               _  _  _  _  _  _;
+               _  _  _  X  _  _;
+               _  _  _  _  E  E;
+               _  _  _  _  E  _;
+    - type: set-board
+      pattern: _  P  _  _  _  _;
+               X  X  D  X  _  _;
+               E  X  _  X  _  _;
+               _  X  _  X  _  _;
+               _  X  _  X  _  _;
+               _  _  _  X  _  _;
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: x-replace-only
+      what: a
+      with:
+      - _
+      - E
+      children:
+      - type: x-replace-only
+        what: b
+        with:
+        - _
+        - E
+        children:
+        - type: x-spin
+          children:
+          - type: player
+            pid: 1
+            children:
+            - type: rewrite
+              lhs: P
+              rhs: P
+            - type: rewrite
+              lhs: P  _
+              rhs: _  P
+            - type: rewrite
+              lhs: P  D
+              rhs: P  _
+          - type: order
+            children:
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: P  b
+                rhs: P  b01
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a01 b
+                rhs: a01 b02
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a02 b
+                rhs: a02 b03
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a03 b
+                rhs: a03 b04
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a04 b
+                rhs: a04 b05
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a05 b
+                rhs: a05 b06
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a06 b
+                rhs: a06 b07
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a07 b
+                rhs: a07 b08
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a08 b
+                rhs: a08 b09
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a09 b
+                rhs: a09 b10
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a10 b
+                rhs: a10 b11
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a11 b
+                rhs: a11 b12
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a12 b
+                rhs: a12 b13
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a13 b
+                rhs: a13 b14
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a14 b
+                rhs: a14 b15
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a15 b
+                rhs: a15 b16
+          - type: order
+            children:
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E01 P
+                rhs: _01 E
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E02 _01
+                rhs: _02 E01
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E03 _02
+                rhs: _03 E02
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E04 _03
+                rhs: _04 E03
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E05 _04
+                rhs: _05 E04
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E06 _05
+                rhs: _06 E05
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E07 _06
+                rhs: _07 E06
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E08 _07
+                rhs: _08 E07
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E09 _08
+                rhs: _09 E08
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E10 _09
+                rhs: _10 E09
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E11 _10
+                rhs: _11 E10
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E12 _11
+                rhs: _12 E11
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E13 _12
+                rhs: _13 E12
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E14 _13
+                rhs: _14 E13
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E15 _14
+                rhs: _15 E14
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E16 _15
+                rhs: _16 E15
+          - type: order
+            children:
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a01
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a02
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a03
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a04
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a05
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a06
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a07
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a08
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a09
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a10
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a11
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a12
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a13
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a14
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a15
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: a16
+                rhs: a
+          - type: lose
+            pid: 1
+            children:
+            - type: none
+              children:
+              - type: match
+                pattern: P
