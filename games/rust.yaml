@@ -98,9 +98,6 @@ tree:
                 pid: 1
                 children:
                 - type: rewrite
-                  lhs: p
-                  rhs: p
-                - type: rewrite
                   lhs: P  _
                   rhs: R  P
                 - type: rewrite
