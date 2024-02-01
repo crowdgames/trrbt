@@ -1,6 +1,7 @@
 ---
 sprites:
   P: player
+  R: blank
   W: win-exit
   O: exit
   X: wall
