@@ -203,30 +203,33 @@ class GameFrame(tkinter.Frame):
 
             for rr in range(self._rows):
                 for cc in range(self._cols):
-                    key = (rr, cc)
-                    if self._back_board and key not in self._bg_cids:
-                        back_rows = len(self._back_board)
-                        back_cols = len(self._back_board[0])
-                        back_text = self._back_board[rr % back_rows][cc % back_cols]
-                        cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[back_text][0])
-                        self._cvs.tag_lower(cid)
-                        self._bg_cids[key] = cid
+                    text = new_board[rr][cc]
+                    if text != '.':
+                        key = (rr, cc)
+                        if self._back_board and key not in self._bg_cids:
+                            back_rows = len(self._back_board)
+                            back_cols = len(self._back_board[0])
+                            back_text = self._back_board[rr % back_rows][cc % back_cols]
+                            cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[back_text][0])
+                            self._cvs.tag_lower(cid)
+                            self._bg_cids[key] = cid
 
         for rr in range(self._rows):
             for cc in range(self._cols):
                 text = new_board[rr][cc].strip()
-                key = (rr, cc)
-                if key not in self._fg_cids or text != self._fg_cids[key][0]:
-                    if key in self._fg_cids:
-                        self._cvs.delete(self._fg_cids[key][1])
-                    font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
+                if text != '.':
+                    key = (rr, cc)
+                    if key not in self._fg_cids or text != self._fg_cids[key][0]:
+                        if key in self._fg_cids:
+                            self._cvs.delete(self._fg_cids[key][1])
+                        font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
 
-                    if text in self._sprites:
-                        cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[text][0])
-                    else:
-                        cid = self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
-                                                    text=text, fill='#000000', font=font, anchor=tkinter.CENTER)
-                    self._fg_cids[key] = (text, cid)
+                        if text in self._sprites:
+                            cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[text][0])
+                        else:
+                            cid = self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
+                                                        text=text, fill='#000000', font=font, anchor=tkinter.CENTER)
+                        self._fg_cids[key] = (text, cid)
 
     def update_choices(self, player_id, choices):
         self._choices_by_idx = {}

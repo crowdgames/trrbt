@@ -82,11 +82,14 @@ function draw() {
 
         for (let rr = 0; rr < g_rows; rr += 1) {
             for (let cc = 0; cc < g_cols; cc += 1) {
-                let tile = g_back[rr % brows][cc % bcols];
-                if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
-                    tint(255, 255, 255, 255);
-                    let img = g_spriteImages.get(g_spriteTiles.get(tile));
-                    image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
+                let tile = g_board[rr][cc];
+                if (tile != '.') {
+                    let back_tile = g_back[rr % brows][cc % bcols];
+                    if (g_spriteTiles !== null && g_spriteTiles.has(back_tile)) {
+                        tint(255, 255, 255, 255);
+                        let img = g_spriteImages.get(g_spriteTiles.get(back_tile));
+                        image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
+                    }
                 }
             }
         }
@@ -110,22 +113,24 @@ function draw() {
             } else {
                 tile = g_board[rr][cc];
             }
-            if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
-                if (overwrite) {
-                    tint(255, 255, 255, 128);
+            if (tile != '.') {
+                if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
+                    if (overwrite) {
+                        tint(255, 255, 255, 128);
+                    } else {
+                        tint(255, 255, 255, 255);
+                    }
+                    let img = g_spriteImages.get(g_spriteTiles.get(tile));
+                    image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                 } else {
-                    tint(255, 255, 255, 255);
+                    if (overwrite) {
+                        fill(0, 0, 0, 128);
+                    } else {
+                        fill(0, 0, 0, 255);
+                    }
+                    textSize(g_cell_size / tile.length);
+                    text(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                 }
-                let img = g_spriteImages.get(g_spriteTiles.get(tile));
-                image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
-            } else {
-                if (overwrite) {
-                    fill(0, 0, 0, 128);
-                } else {
-                    fill(0, 0, 0, 255);
-                }
-                textSize(g_cell_size / tile.length);
-                text(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
             }
         }
     }
