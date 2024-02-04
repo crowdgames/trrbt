@@ -55,7 +55,7 @@ class GameFrame(tkinter.Frame):
 
         self._rows = 0
         self._cols = 0
-        self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#dddddd')
+        self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#ffffff')
         self._cvs.grid(column=0, row=0)
 
         self._player_id_colors = {}
@@ -215,8 +215,12 @@ class GameFrame(tkinter.Frame):
                             back_cols = len(self._back_board[0])
                             back_text = self._back_board[rr % back_rows][cc % back_cols]
                             cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[back_text][0])
-                            self._cvs.tag_lower(cid)
-                            self._bg_cids[key] = cid
+                        else:
+                            cid = self._cvs.create_rectangle(self.tocvsx(cc), self.tocvsy(rr),
+                                                             self.tocvsx(cc + 1), self.tocvsy(rr + 1),
+                                                             fill='#dddddd', outline='')
+                        self._cvs.tag_lower(cid)
+                        self._bg_cids[key] = cid
 
         for rr in range(self._rows):
             for cc in range(self._cols):
@@ -231,10 +235,12 @@ class GameFrame(tkinter.Frame):
                             self._cvs.delete(cid)
                     new_cids = []
                     for tile in tiles:
-                        font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
+                        if tile == '.':
+                            continue
                         if tile in self._sprites:
                             new_cids.append(self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[tile][0]))
                         else:
+                            font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
                             new_cids.append(self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
                                                                   text=tile, fill='#000000', font=font, anchor=tkinter.CENTER))
                     self._fg_cids[key] = (tiles, new_cids)

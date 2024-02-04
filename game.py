@@ -191,10 +191,10 @@ class GameProcessor:
         If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
         :return: If any rewrite rule is applied successfully, return true, otherwise return false.
         """
-        res = self.find_layer_pattern(child[util.NKEY_LHS])
+        res = self.find_layer_pattern(node[util.NKEY_LHS])
         if len(res) > 0:
-            res = random.choice(res)
-            self.make_move(res)
+            row, col = random.choice(res)
+            self.make_move(node[util.NKEY_RHS], row, col)
             return True
         return False
 
@@ -263,8 +263,8 @@ class GameProcessor:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
-            lhs = util.layer_pattern_to_string(lhs, None, '*', '*:', '&', '', '', ' ', '; ')
-            rhs = util.layer_pattern_to_string(rhs, None, '*', '*:', '&', '', '', ' ', '; ')
+            lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
             print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
             if self.clear_screen is not None:
@@ -281,8 +281,8 @@ class GameProcessor:
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
             lhs, rhs, row, col = this_turn_info[idx]
-            lhs = util.layer_pattern_to_string(lhs, None, '*', '*:', '&', '', '', ' ', '; ')
-            rhs = util.layer_pattern_to_string(rhs, None, '*', '*:', '&', '', '', ' ', '; ')
+            lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
             print(f'{idx}: {lhs} → {rhs} at {row},{col}')
 
         while True:
@@ -427,7 +427,7 @@ class GameProcessor:
             print()
 
         print("Current board is:")
-        print(util.layer_pattern_to_string(self.board, None, '*', '*\n', '\n', '', '', ' ', '\n', self.max_tile_width))
+        print(util.layer_pattern_to_string(self.board, None, '-', '-\n', '\n', '', '', ' ', '\n', self.max_tile_width))
         print()
 
 
