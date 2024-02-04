@@ -32,7 +32,7 @@ class ThreadedGameProcessor(game.GameProcessor):
 
     def get_player_choice_input(self, player_id, this_turn_info):
         with self._thread_mtx:
-            self._thread_choices = (player_id, this_turn_info)
+            self._thread_choices = (player_id, this_turn_info, copy.deepcopy(self.board))
             self._thread_choice = None
 
         while True:
@@ -239,7 +239,7 @@ class GameFrame(tkinter.Frame):
                                                                   text=tile, fill='#000000', font=font, anchor=tkinter.CENTER))
                     self._fg_cids[key] = (tiles, new_cids)
 
-    def update_choices(self, player_id, choices):
+    def update_choices(self, player_id, choices, choice_board):
         self._choices_by_idx = {}
         self._choices_by_rect = {}
         for idx, (lhs, rhs, row, col) in choices.items():
@@ -281,8 +281,8 @@ class GameFrame(tkinter.Frame):
                     for cc in range(cols):
                         tiles = ()
                         all_invis = True
-                        for layer in reversed(self._game_proc.board.keys()):
-                            tile = rhs[layer][rr][cc].strip() if layer in rhs else self._game_proc.board[layer][row + rr][col + cc].strip()
+                        for layer in reversed(choice_board.keys()):
+                            tile = rhs[layer][rr][cc].strip() if layer in rhs else choice_board[layer][row + rr][col + cc].strip()
                             tiles = tiles + (tile,)
                             all_invis = all_invis and tile == '.'
 
@@ -414,7 +414,7 @@ class GameFrame(tkinter.Frame):
                 game_proc._thread_new_board = None
 
             if game_proc._thread_choices is not None:
-                self.update_choices(game_proc._thread_choices[0], game_proc._thread_choices[1])
+                self.update_choices(game_proc._thread_choices[0], game_proc._thread_choices[1], game_proc._thread_choices[2])
                 game_proc._thread_choices = None
 
         self.after(1, self.check_thread)
