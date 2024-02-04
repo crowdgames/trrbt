@@ -65,14 +65,17 @@ class GameFrame(tkinter.Frame):
         if sprites is not None:
             sprite_info = util.yamlload(sprites)
             for k, v in sprite_info['sprites'].items():
-                img = PIL.Image.open(os.path.join(os.path.dirname(sprites), v + '.png')).resize((self._cell_size, self._cell_size), PIL.Image.Resampling.NEAREST)
-                imgx = img.convert('RGBA')
-                datax = imgx.getdata()
-                newdatax = []
-                for item in datax:
-                    newdatax.append((item[0], item[1], item[2], item[3] // 2))
-                imgx.putdata(newdatax)
-                self._sprites[k] = (PIL.ImageTk.PhotoImage(img), PIL.ImageTk.PhotoImage(imgx), img, imgx)
+                if v != '.':
+                    img = PIL.Image.open(os.path.join(os.path.dirname(sprites), v + '.png')).resize((self._cell_size, self._cell_size), PIL.Image.Resampling.NEAREST)
+                    imgx = img.convert('RGBA')
+                    datax = imgx.getdata()
+                    newdatax = []
+                    for item in datax:
+                        newdatax.append((item[0], item[1], item[2], item[3] // 2))
+                    imgx.putdata(newdatax)
+                    self._sprites[k] = (PIL.ImageTk.PhotoImage(img), PIL.ImageTk.PhotoImage(imgx), img, imgx)
+                else:
+                    self._sprites[k] = None
             if 'back' in sprite_info:
                 self._back_board = util.string_to_pattern(sprite_info['back'])
             if 'players' in sprite_info:
@@ -238,7 +241,8 @@ class GameFrame(tkinter.Frame):
                         if tile == '.':
                             continue
                         if tile in self._sprites:
-                            new_cids.append(self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[tile][0]))
+                            if self._sprites[tile] is not None:
+                                new_cids.append(self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[tile][0]))
                         else:
                             font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
                             new_cids.append(self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
@@ -309,13 +313,16 @@ class GameFrame(tkinter.Frame):
                         for tile in tiles:
                             if tile == '.':
                                 continue
+                            cid = None
                             if tile in self._sprites:
-                                cid = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[tile][1])
+                                if self._sprites[tile] is not None:
+                                    cid = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[tile][1])
                             else:
                                 font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
                                 cid = self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
                                                             text=tile, fill='#999999', font=font, anchor=tkinter.CENTER)
-                            self._choice_cids[idx].append((cid, False))
+                            if cid is not None:
+                                self._choice_cids[idx].append((cid, False))
                 self._choice_cids[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                  self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                  corner,
