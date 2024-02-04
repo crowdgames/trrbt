@@ -1,4 +1,5 @@
 import argparse
+import copy
 import os
 import random
 import sys
@@ -53,6 +54,7 @@ class GameProcessor:
         self.node_func_map = {
             util.ND_DISPLAY_BOARD: self.execute_displayboard_node,
             util.ND_SET_BOARD: self.execute_setboard_node,
+            util.ND_LAYER_COPY: self.execute_layercopy_node,
             util.ND_APPEND_ROWS: self.execute_appendrows_node,
             util.ND_APPEND_COLS: self.execute_appendcols_node,
             util.ND_ORDER: self.execute_order_node,
@@ -116,6 +118,14 @@ class GameProcessor:
         """
         self.board = { layer: util.listify(patt) for layer, patt in node[util.NKEY_PATTERN].items() }
         self.m, self.n = util.layer_pattern_size(self.board)
+        return True
+
+    def execute_layercopy_node(self, node):
+        """
+        Copies layer.
+        :return: Success.
+        """
+        self.board[node[util.NKEY_WHAT]] = copy.deepcopy(self.board[node[util.NKEY_WITH]])
         return True
 
     def execute_appendrows_node(self, node):
