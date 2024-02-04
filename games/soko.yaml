@@ -9,7 +9,7 @@ tree:
             _ P @ _;
             _ _ _ _;
             X _ @ _;
-      targ: _ _ _ _;
+      trgt: _ _ _ _;
             _ _ _ _;
             _ _ O _;
             _ _ O _;
@@ -35,4 +35,4 @@ tree:
         - type: match
           pattern:
             main: '@'
-            targ: _
+            trgt: _
