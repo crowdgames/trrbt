@@ -82,8 +82,13 @@ function draw() {
 
         for (let rr = 0; rr < g_rows; rr += 1) {
             for (let cc = 0; cc < g_cols; cc += 1) {
-                let tile = g_board[rr][cc];
-                if (tile != '.') {
+                let all_invis = true;
+                for (const [layer, pattern] of Object.entries(g_board)) {
+                    if (pattern[rr][cc] !== '.') {
+                        all_invis = false;
+                    }
+                }
+                if (!all_invis) {
                     let back_tile = g_back[rr % brows][cc % bcols];
                     if (g_spriteTiles !== null && g_spriteTiles.has(back_tile)) {
                         tint(255, 255, 255, 255);
@@ -102,34 +107,44 @@ function draw() {
 
     for (let rr = 0; rr < g_rows; rr += 1) {
         for (let cc = 0; cc < g_cols; cc += 1) {
-            let tile = null;
+            let tiles = [];
             let overwrite = false;
             if (choiceOverwrite !== null &&
                 choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
-                choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols &&
-                choiceOverwrite.rhs[rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col] !== '.') {
-                tile = choiceOverwrite.rhs[rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
+                for (const [layer, pattern] of Object.entries(g_board)) {
+                    if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
+                        tiles.push(choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col]);
+                    } else {
+                        tiles.push(pattern[rr][cc]);
+                    }
+                }
                 overwrite = true;
             } else {
-                tile = g_board[rr][cc];
+                for (const [layer, pattern] of Object.entries(g_board)) {
+                    tiles.push(pattern[rr][cc]);
+                }
             }
-            if (tile != '.') {
-                if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
-                    if (overwrite) {
-                        tint(255, 255, 255, 128);
+            tiles = tiles.reverse();
+            for (let tile of tiles) {
+                if (tile !== '.') {
+                    if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
+                        if (overwrite) {
+                            tint(255, 255, 255, 128);
+                        } else {
+                            tint(255, 255, 255, 255);
+                        }
+                        let img = g_spriteImages.get(g_spriteTiles.get(tile));
+                        image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                     } else {
-                        tint(255, 255, 255, 255);
+                        if (overwrite) {
+                            fill(0, 0, 0, 128);
+                        } else {
+                            fill(0, 0, 0, 255);
+                        }
+                        textSize(g_cell_size / tile.length);
+                        text(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                     }
-                    let img = g_spriteImages.get(g_spriteTiles.get(tile));
-                    image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
-                } else {
-                    if (overwrite) {
-                        fill(0, 0, 0, 128);
-                    } else {
-                        fill(0, 0, 0, 255);
-                    }
-                    textSize(g_cell_size / tile.length);
-                    text(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                 }
             }
         }
@@ -210,7 +225,7 @@ function mousePressed() {
         if (g_mouseChoice !== null) {
             if (g_choiceWait === true) {
                 g_choiceWait = g_choicesByRct.get(JSON.stringify(g_mouseChoice.rct)).choices[g_mouseChoice.idx];
-                rewritePattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
+                rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
                 g_mouseChoice = null;
                 g_choicesByRct = null;
                 g_choicePlayer = null;
@@ -288,44 +303,53 @@ function resizeImage(img, ww, hh) {
     return newimg;
 }
 
-function matchPattern(pattern, row, col) {
-    const prows = pattern.length;
-    const pcols = pattern[0].length;
+function layerPatternSize(lpattern) {
+    for (const [layer, pattern] of Object.entries(lpattern)) {
+        return [pattern.length, pattern[0].length];
+    }
+    return [0, 0];
+}
+
+function matchLayerPattern(lpattern, row, col) {
+    const [prows, pcols] = layerPatternSize(lpattern);
+
     for (let rr = 0; rr < prows; rr += 1) {
         for (let cc = 0; cc < pcols; cc += 1) {
-            if (pattern[rr][cc] === '.') {
-                continue;
-            }
-            if (g_board[row + rr][col + cc] !== pattern[rr][cc]) {
-                return false;
+            for (let layer in lpattern) {
+                if (lpattern[layer][rr][cc] === '.') {
+                    continue;
+                }
+                if (g_board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
+                    return false;
+                }
             }
         }
     }
     return true;
 }
 
-function rewritePattern(pattern, row, col) {
-    const prows = pattern.length;
-    const pcols = pattern[0].length;
+function rewriteLayerPattern(lpattern, row, col) {
+    const [prows, pcols] = layerPatternSize(lpattern);
 
     for (let rr = 0; rr < prows; rr += 1) {
         for (let cc = 0; cc < pcols; cc += 1) {
-            if (pattern[rr][cc] === '.') {
-                continue;
+            for (let layer in lpattern) {
+                if (lpattern[layer][rr][cc] === '.') {
+                    continue;
+                }
+                g_board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
             }
-            g_board[row + rr][col + cc] = pattern[rr][cc];
         }
     }
 }
 
-function findPattern(pattern) {
-    const prows = pattern.length;
-    const pcols = pattern[0].length;
+function findLayerPattern(lpattern) {
+    const [prows, pcols] = layerPatternSize(lpattern);
 
     let ret = []
     for (let rr = 0; rr < g_rows - prows + 1; rr += 1) {
         for (let cc = 0; cc < g_cols - pcols + 1; cc += 1) {
-            if (matchPattern(pattern, rr, cc)) {
+            if (matchLayerPattern(lpattern, rr, cc)) {
                 ret.push({row:rr, col:cc});
             }
         }
@@ -353,11 +377,11 @@ async function runGameTree(tree) {
     try {
         await runNode(tree, fnMap);
     } catch(ex) {
-        if (ex.result == 'win') {
+        if (ex.result === 'win') {
             setTimeout(() => { alert('Game over, player ' + ex.player + ' wins!'); }, 10);
-        } else if (ex.result == 'lose') {
+        } else if (ex.result === 'lose') {
             setTimeout(() => { alert('Game over, player ' + ex.player + ' loses!'); }, 10);
-        } else if (ex.result == 'draw') {
+        } else if (ex.result === 'draw') {
             setTimeout(() => { alert('Game over, draw!'); }, 10);
         } else {
             throw ex;
@@ -391,13 +415,12 @@ async function runNodeDisplayBoard(node, fnMap) {
 }
 
 async function runNodeSetBoard(node, fnMap) {
-    g_board = node.pattern.slice();
+    g_board = JSON.parse(JSON.stringify(node.pattern));
 
-    let newRows = g_board.length;
-    let newCols = g_board[0].length;
-    if (newRows !== g_rows || newCols != g_cols) {
-        g_rows = g_board.length;
-        g_cols = g_board[0].length;
+    const [newRows, newCols] = layerPatternSize(g_board);
+    if (newRows !== g_rows || newCols !== g_cols) {
+        g_rows = newRows;
+        g_cols = newCols;
 
         g_canvas = resizeCanvas(tocvsx(g_cols) + g_padding, tocvsy(g_rows) + g_padding);
     }
@@ -406,7 +429,7 @@ async function runNodeSetBoard(node, fnMap) {
 }
 
 async function runNodeAppendRows(node, fnMap) {
-    if (g_rows == 0 || g_cols === 0) {
+    if (g_rows === 0 || g_cols === 0) {
         g_board = node.pattern.slice();
     } else {
         for (let patternRow of node.pattern) {
@@ -424,7 +447,7 @@ async function runNodeAppendRows(node, fnMap) {
 
     let newRows = g_board.length;
     let newCols = g_board[0].length;
-    if (newRows !== g_rows || newCols != g_cols) {
+    if (newRows !== g_rows || newCols !== g_cols) {
         g_rows = g_board.length;
         g_cols = g_board[0].length;
 
@@ -511,7 +534,7 @@ async function runNodeDraw(node, fnMap) {
 }
 
 async function runNodeMatch(node, fnMap) {
-    if (findPattern(node.pattern).length > 0) {
+    if (findLayerPattern(node.pattern).length > 0) {
         return true;
     } else {
         return false;
@@ -519,10 +542,10 @@ async function runNodeMatch(node, fnMap) {
 }
 
 async function runNodeRewrite(node, fnMap) {
-    let matches = findPattern(node.lhs);
+    let matches = findLayerPattern(node.lhs);
     if (matches.length > 0) {
         let match = matches[Math.floor(Math.random()*matches.length)];
-        rewritePattern(node.rhs, match.row, match.col);
+        rewriteLayerPattern(node.rhs, match.row, match.col);
         return true;
     } else {
         return false;
@@ -533,7 +556,7 @@ async function runNodePlayer(node, fnMap) {
     let choices = []
     for (let child of node.children) {
         if (child.type === 'rewrite') {
-            let matches = findPattern(child.lhs);
+            let matches = findLayerPattern(child.lhs);
             for (let match of matches) {
                 choices.push({rhs:child.rhs, row:match.row, col:match.col});
             }
@@ -546,7 +569,8 @@ async function runNodePlayer(node, fnMap) {
         g_choicesByRct = new Map();
 
         for (let choice of choices) {
-            let rct = {row:choice.row, col:choice.col, rows:choice.rhs.length, cols:choice.rhs[0].length };
+            let [rowsChoice, colsChoice] = layerPatternSize(choice.rhs);
+            let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
             let rctk = JSON.stringify(rct);
 
             let mapChoices = []
@@ -563,7 +587,7 @@ async function runNodePlayer(node, fnMap) {
         let choiceInfo = g_choiceWait;
         g_choiceWait = false;
 
-        rewritePattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
+        rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
         return true;
     } else {
         return false;
