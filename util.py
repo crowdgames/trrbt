@@ -7,6 +7,8 @@ import yaml
 
 
 
+DEFAULT_LAYER      = 'main'
+
 NDX_IDENT          = 'x-ident'
 NDX_PRUNE          = 'x-prune'
 NDX_MIRROR         = 'x-mirror'
@@ -91,6 +93,29 @@ def pattern_max_tile_width(patt):
             tile_len = max(tile_len, len(tile))
     return tile_len
 
+def layer_pattern_max_tile_width(lpatt):
+    tile_len = 0
+    for layer, patt in lpatt.items():
+        for row in patt:
+            for tile in row:
+                tile_len = max(tile_len, len(tile))
+    return tile_len
+
+def layer_pattern_size(lpatt):
+    patt = next(iter(lpatt.values()))
+    return len(patt), len(patt[0]) if len(patt) > 0 else 0
+
+def layer_pad_tiles_multiple(lpatts, tile_len=None):
+    if tile_len is None:
+        tile_len = 0
+        for lpatt in lpatts:
+            tile_len = max(tile_len, layer_pattern_max_tile_width(lpatt))
+
+    return [{ layer: [[(tile + (' ' * (tile_len - len(tile)))) for tile in row] for row in patt] for layer, patt in lpatt.items() } for lpatt in lpatts]
+
+def layer_pad_tiles_single(lpatt, tile_len=None):
+    return layer_pad_tiles_multiple([lpatt], tile_len)[0]
+
 def pad_tiles_multiple(patts, tile_len=None):
     if tile_len is None:
         tile_len = 0
@@ -105,6 +130,14 @@ def pad_tiles_single(patt, tile_len=None):
 def pattern_to_string(patt, colsep, rowsep, tile_len=None):
     return rowsep.join([colsep.join(row) for row in pad_tiles_single(patt, tile_len)])
 
+def layer_pattern_to_string(lpatt, colsep, rowsep, tile_len=None):
+    ret = ''
+    for layer, patt in lpatt.items():
+        if len(lpatt) > 1 or layer != DEFAULT_LAYER:
+            ret += ('*' + layer + '*' + colsep)
+        ret += rowsep.join([colsep.join(row) for row in pad_tiles_single(patt, tile_len)])
+    return ret
+
 def pattern_filter(patt, filt):
     return [[filt(elem) for elem in row] for row in patt]
 
@@ -117,15 +150,23 @@ def tuplify(patt):
 def string_to_pattern(s):
     return tuplify([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != ''])
 
+def entry_to_layer_pattern(e):
+    if type(e) == dict:
+        return { layer: string_to_pattern(s) for layer, s in e.items() }
+    elif type(e) == str:
+        return { DEFAULT_LAYER: string_to_pattern(e) }
+    else:
+        raise RuntimeError(f'unrecognized pattern type {type(e)}')
+
 def node_reshape_tiles(node):
     node = node.copy()
 
     if node[NKEY_TYPE] == ND_REWRITE:
-        node[NKEY_LHS] = string_to_pattern(node[NKEY_LHS])
-        node[NKEY_RHS] = string_to_pattern(node[NKEY_RHS])
+        node[NKEY_LHS] = entry_to_layer_pattern(node[NKEY_LHS])
+        node[NKEY_RHS] = entry_to_layer_pattern(node[NKEY_RHS])
 
     if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
-        node[NKEY_PATTERN] = string_to_pattern(node[NKEY_PATTERN])
+        node[NKEY_PATTERN] = entry_to_layer_pattern(node[NKEY_PATTERN])
 
     if NKEY_CHILDREN in node.keys():
         node[NKEY_CHILDREN] = [node_reshape_tiles(child) for child in node[NKEY_CHILDREN]]
@@ -169,11 +210,11 @@ def node_max_tile_width(node):
     tile_len = 0
 
     if node[NKEY_TYPE] == ND_REWRITE:
-        tile_len = max(tile_len, pattern_max_tile_width(node[NKEY_LHS]))
-        tile_len = max(tile_len, pattern_max_tile_width(node[NKEY_RHS]))
+        tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_LHS]))
+        tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_RHS]))
 
     if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
-        tile_len = max(tile_len, pattern_max_tile_width(node[NKEY_PATTERN]))
+        tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_PATTERN]))
 
     if NKEY_CHILDREN in node.keys():
         for child in node[NKEY_CHILDREN]:
@@ -214,7 +255,7 @@ def unique(nodes):
 def rule_apply(node, app):
     for key in [NKEY_LHS, NKEY_RHS, NKEY_PATTERN]:
         if key in node.keys():
-            node[key] = app(node[key])
+            node[key] = { layer: app(patt) for layer, patt in node[key].items() }
     return node
 
 def xform_identity(node):
@@ -396,27 +437,41 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             pass
 
         elif ntype == ND_REWRITE:
-            lhs, rhs = pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
+            lhs, rhs = layer_pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
 
             nlabel += '<TR>'
             nlabel += '<TD BORDER="1" COLOR="#888888">'
-            nlabel += GVTILEBGN
-            nlabel += pattern_to_string(pattern_filter(lhs, gv_filter_string), ' ', GVNEWLINE)
-            nlabel += GVTILEEND
+            lpatt = lhs
+            for layer, patt in lpatt.items():
+                if len(lpatt) > 1 or layer != DEFAULT_LAYER:
+                    nlabel += ('<I>' + gv_filter_string(layer) + '</I>' + GVNEWLINE)
+                nlabel += GVTILEBGN
+                nlabel += pattern_to_string(pattern_filter(patt, gv_filter_string), ' ', GVNEWLINE)
+                nlabel += GVTILEEND
             nlabel += '</TD>'
             nlabel += '<TD>→</TD>'
             nlabel += '<TD BORDER="1" COLOR="#888888">'
-            nlabel += GVTILEBGN
-            nlabel += pattern_to_string(pattern_filter(rhs, gv_filter_string), ' ', GVNEWLINE)
-            nlabel += GVTILEEND
+            lpatt = rhs
+            for layer, patt in lpatt.items():
+                if len(lpatt) > 1 or layer != DEFAULT_LAYER:
+                    nlabel += ('<I>' + gv_filter_string(layer) + '</I>' + GVNEWLINE)
+                nlabel += GVTILEBGN
+                nlabel += pattern_to_string(pattern_filter(patt, gv_filter_string), ' ', GVNEWLINE)
+                nlabel += GVTILEEND
             nlabel += '</TD>'
             nlabel += '</TR>'
 
         else:
             nlabel += '<TR><TD></TD><TD BORDER="1" COLOR="#888888">'
-            nlabel += GVTILEBGN
-            nlabel += pattern_to_string(pattern_filter(node[NKEY_PATTERN], gv_filter_string), ' ', GVNEWLINE)
-            nlabel += GVTILEEND
+            lpatt = node[NKEY_PATTERN]
+            for li, (layer, patt) in enumerate(lpatt.items()):
+                if len(lpatt) > 1 or layer != DEFAULT_LAYER:
+                    if li > 0:
+                        nlabel += GVNEWLINE
+                    nlabel += ('<I>' + gv_filter_string(layer) + '</I>' + GVNEWLINE)
+                nlabel += GVTILEBGN
+                nlabel += pattern_to_string(pattern_filter(patt, gv_filter_string), ' ', GVNEWLINE)
+                nlabel += GVTILEEND
             nlabel += '</TD><TD></TD></TR>'
 
         if NKEY_NID in node.keys():

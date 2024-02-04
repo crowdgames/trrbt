@@ -37,7 +37,7 @@ class GameProcessor:
 
         self.name = bt.name
         self.filename = filename
-        self.board = []
+        self.board = {}
         self.m = 0
         self.n = 0
         self.tree = bt.tree
@@ -114,9 +114,8 @@ class GameProcessor:
         Sets current board to given pattern.
         :return: Success.
         """
-        self.board = util.listify(node[util.NKEY_PATTERN])
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.board = { layer: util.listify(patt) for layer, patt in node[util.NKEY_PATTERN].items() }
+        self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
     def execute_appendrows_node(self, node):
@@ -126,7 +125,7 @@ class GameProcessor:
         """
         pattern = node[util.NKEY_PATTERN]
 
-        if self.n == 0:
+        if self.m == 0 or self.n == 0:
             self.board = util.listify(pattern)
         else:
             new_rows = util.listify(pattern)
@@ -138,8 +137,7 @@ class GameProcessor:
 
             self.board += new_rows
 
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
     def execute_appendcols_node(self, node):
@@ -149,7 +147,7 @@ class GameProcessor:
         """
         pattern = node[util.NKEY_PATTERN]
 
-        if self.m == 0:
+        if self.m == 0 or self.n == 0:
             self.board = util.listify(pattern)
         else:
             new_cols = util.listify(pattern)
@@ -160,8 +158,7 @@ class GameProcessor:
             for rr in range(len(pattern)):
                 self.board[rr] += new_cols[rr]
 
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
     def execute_order_node(self, node):
@@ -194,9 +191,9 @@ class GameProcessor:
         If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
         :return: If any rewrite rule is applied successfully, return true, otherwise return false.
         """
-        res = self.find_pattern(node)
-        if res:
-            res = random.choice(res[1])
+        res = self.find_layer_pattern(child[util.NKEY_LHS])
+        if len(res) > 0:
+            res = random.choice(res)
             self.make_move(res)
             return True
         return False
@@ -214,10 +211,9 @@ class GameProcessor:
 
         for child in node[util.NKEY_CHILDREN]:
             if child[util.NKEY_TYPE] == util.ND_REWRITE:
-                res = self.find_pattern(child)
-                if res:
-                    res = res[1]
-                    valid_moves.extend(res)
+                res = self.find_layer_pattern(child[util.NKEY_LHS])
+                if len(res) > 0:
+                    valid_moves += [(row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
             else:
                 raise RuntimeError('All children of player nodes must be rewrite')
 
@@ -233,11 +229,11 @@ class GameProcessor:
         this_turn_info = {}
 
         for ii, choice in enumerate(valid_moves):
-            node, row, col = choice
+            row, col, lhs, rhs = choice
 
-            lhs, rhs = util.pad_tiles_multiple([node[util.NKEY_LHS], node[util.NKEY_RHS]])
-            lhs = util.tuplify(lhs)
-            rhs = util.tuplify(rhs)
+            lhs, rhs = util.layer_pad_tiles_multiple([lhs, rhs])
+            lhs = { layer: util.tuplify(patt) for layer, patt in lhs.items() }
+            rhs = { layer: util.tuplify(patt) for layer, patt in rhs.items() }
 
             if self.choice_order:
                 idx = ii + 1
@@ -245,7 +241,7 @@ class GameProcessor:
             else:
                 idx = None
 
-                choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
+                choice_keys = [(str(lhs), row, col, str(rhs)), (str(lhs), row, col), (str(lhs))]
                 for choice_key in choice_keys:
                     if choice_key in self.previous_moves:
                         idx = self.previous_moves[choice_key]
@@ -267,8 +263,8 @@ class GameProcessor:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
-            lhs = util.pattern_to_string(lhs, ' ', '; ')
-            rhs = util.pattern_to_string(rhs, ' ', '; ')
+            lhs = util.layer_pattern_to_string(lhs, ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, ' ', '; ')
             print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
             if self.clear_screen is not None:
@@ -277,16 +273,16 @@ class GameProcessor:
         else:
             user_input = self.get_player_choice_input(player_id, this_turn_info)
 
-        choice = this_turn_choices[user_input]
-        self.make_move(choice)
+        row, col, lhs, rhs = this_turn_choices[user_input]
+        self.make_move(rhs, row, col)
         return True
 
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
             lhs, rhs, row, col = this_turn_info[idx]
-            lhs = util.pattern_to_string(lhs, ' ', '; ')
-            rhs = util.pattern_to_string(rhs, ' ', '; ')
+            lhs = util.layer_pattern_to_string(lhs, ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, ' ', '; ')
             print(f'{idx}: {lhs} → {rhs} at {row},{col}')
 
         while True:
@@ -333,7 +329,7 @@ class GameProcessor:
         :return: Returns success if pattern matches current board, otherwise returns failure.
         """
         pattern = node[util.NKEY_PATTERN]
-        if self.match_pattern(pattern):
+        if self.match_layer_pattern(pattern):
             #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
@@ -384,56 +380,45 @@ class GameProcessor:
                 raise GameOverException(END_DRAW, None)
         return False
 
-    def make_move(self, choice):
-        if len(choice) != 3:
-            raise RuntimeError('Choice wrong size.')
+    def make_move(self, lpatt, row, col):
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(pr):
+            for cc in range(pc):
+                for layer, patt in lpatt.items():
+                    tile = patt[rr][cc]
+                    if tile == '.':
+                        continue
+                    self.board[layer][row + rr][col + cc] = tile
 
-        node, x, y = choice[0], choice[1], choice[2]
-        lhs, rhs = node[util.NKEY_LHS], node[util.NKEY_RHS]
-        for i in range(len(lhs)):
-            for j in range(len(lhs[i])):
-                if rhs[i][j] != '.':
-                    self.board[x + i][y + j] = rhs[i][j]
-
-    def find_pattern(self, child):
+    def find_layer_pattern(self, lpatt):
         ret = []
-        for i in range(self.m):
-            for j in range(self.n):
-                if self.is_match(child[util.NKEY_LHS], i, j):
-                    ret.append([child, i, j])
-        if len(ret) == 0:
-            return False
-        return True, ret
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(self.m - pr + 1):
+            for cc in range(self.n - pc + 1):
+                if self.is_match(lpatt, rr, cc):
+                    ret.append([rr, cc])
+        return ret
 
-    def is_match(self, lhs, x, y):
-        for i in range(len(lhs)):
-            for j in range(len(lhs[i])):
-                if lhs[i][j] != '.':
-                    if x + i >= self.m or y + j >= self.n or self.board[x + i][y + j] != lhs[i][j]:
-                        return False
-        return True, x, y
-
-    def match_pattern(self, pattern):
-        pattern_rows = len(pattern)
-        pattern_cols = len(pattern[0])
-
-        if self.m < pattern_rows or self.n < pattern_cols:
-            return False
-
-        for i in range(self.m - pattern_rows + 1):
-            for j in range(self.n - pattern_cols + 1):
-                match = True
-                for r in range(pattern_rows):
-                    for c in range(pattern_cols):
-                        if pattern[r][c] != ".":
-                            if self.board[i + r][j + c] != pattern[r][c]:
-                                match = False
-                                break
-                    if not match:
-                        break
-                if match:
+    def match_layer_pattern(self, lpatt):
+        ret = []
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(self.m - pr + 1):
+            for cc in range(self.n - pc + 1):
+                if self.is_match(lpatt, rr, cc):
                     return True
         return False
+
+    def is_match(self, lpatt, row, col):
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(pr):
+            for cc in range(pc):
+                for layer, patt in lpatt.items():
+                    tile = patt[rr][cc]
+                    if tile == '.':
+                        continue
+                    if self.board[layer][row + rr][col + cc] != tile:
+                        return False
+        return True
 
     def display_board(self):
         if self.clear_screen is not None:
@@ -442,8 +427,11 @@ class GameProcessor:
             print()
 
         print("Current board is:")
-        print(util.pattern_to_string(self.board, ' ', '\n', self.max_tile_width))
-        print()
+        for layer, patt in self.board.items():
+            if len(self.board) > 1 or layer != util.DEFAULT_LAYER:
+                print('*' + layer + '*')
+            print(util.pattern_to_string(patt, ' ', '\n', self.max_tile_width))
+            print()
 
 
 
