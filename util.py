@@ -79,6 +79,9 @@ GVCOMMEND = '</I></FONT>'
 GVNIDBGN  = '<FONT POINT-SIZE="9"><B>'
 GVNIDEND  = '</B></FONT>'
 
+def gv_filter_string(s):
+    return s.replace('<', '&lt;').replace('>', '&gt;')
+
 
 
 def pattern_max_tile_width(patt):
@@ -101,6 +104,9 @@ def pad_tiles_single(patt, tile_len=None):
 
 def pattern_to_string(patt, colsep, rowsep, tile_len=None):
     return rowsep.join([colsep.join(row) for row in pad_tiles_single(patt, tile_len)])
+
+def pattern_filter(patt, filt):
+    return [[filt(elem) for elem in row] for row in patt]
 
 def listify(patt):
     return list([list(row) for row in patt])
@@ -395,13 +401,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += '<TR>'
             nlabel += '<TD BORDER="1" COLOR="#888888">'
             nlabel += GVTILEBGN
-            nlabel += pattern_to_string(lhs, ' ', GVNEWLINE)
+            nlabel += pattern_to_string(pattern_filter(lhs, gv_filter_string), ' ', GVNEWLINE)
             nlabel += GVTILEEND
             nlabel += '</TD>'
             nlabel += '<TD>→</TD>'
             nlabel += '<TD BORDER="1" COLOR="#888888">'
             nlabel += GVTILEBGN
-            nlabel += pattern_to_string(rhs, ' ', GVNEWLINE)
+            nlabel += pattern_to_string(pattern_filter(rhs, gv_filter_string), ' ', GVNEWLINE)
             nlabel += GVTILEEND
             nlabel += '</TD>'
             nlabel += '</TR>'
@@ -409,7 +415,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         else:
             nlabel += '<TR><TD></TD><TD BORDER="1" COLOR="#888888">'
             nlabel += GVTILEBGN
-            nlabel += pattern_to_string(node[NKEY_PATTERN], ' ', GVNEWLINE)
+            nlabel += pattern_to_string(pattern_filter(node[NKEY_PATTERN], gv_filter_string), ' ', GVNEWLINE)
             nlabel += GVTILEEND
             nlabel += '</TD><TD></TD></TR>'
 
@@ -464,20 +470,20 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         elif ntype == NDX_SWAP_ONLY:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
-            nlabel += node[NKEY_WHAT]
+            nlabel += gv_filter_string(node[NKEY_WHAT])
             nlabel += GVTILEEND
             nlabel += ' with '
             nlabel += GVTILEBGN
-            nlabel += node[NKEY_WITH]
+            nlabel += gv_filter_string(node[NKEY_WITH])
             nlabel += GVTILEEND
         elif ntype in [NDX_REPLACE_ONLY]:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
-            nlabel += node[NKEY_WHAT]
+            nlabel += gv_filter_string(node[NKEY_WHAT])
             nlabel += GVTILEEND
             nlabel += ' with '
             nlabel += GVTILEBGN
-            nlabel += (GVTILEEND + ', ' + GVTILEBGN).join([str(ee) for ee in node[NKEY_WITH]])
+            nlabel += (GVTILEEND + ', ' + GVTILEBGN).join([gv_filter_string(str(ee)) for ee in node[NKEY_WITH]])
             nlabel += GVTILEEND
 
         if NKEY_NID in node.keys():
@@ -490,7 +496,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         if NKEY_COMMENT in node.keys():
             nlabel += GVNEWLINE
             nlabel += GVCOMMBGN
-            nlabel += node[NKEY_COMMENT]
+            nlabel += gv_filter_string(node[NKEY_COMMENT])
             nlabel += GVCOMMEND
 
     def gvid(_node_id):
@@ -503,7 +509,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
 
     ind = indent(depth)
 
-    node_lines.append(f'{ind}{nid_gv} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
+    node_lines.append(f'{ind}"{nid_gv}" [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
 
     if ntype == NDX_FILE:
         node_lines.append(f'{ind}subgraph cluster_{nid_gv} {{')
@@ -516,7 +522,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         for child in children:
             node_print_gv(node_lines, edge_lines, child, depth, nid_to_node, pid_to_nid)
             child_nid_gv = gvid(pid_to_nid[id(child)])
-            edge_lines.append(f'  {nid_gv} -> {child_nid_gv};')
+            edge_lines.append(f'  "{nid_gv}" -> "{child_nid_gv}";')
 
     if ntype == NDX_FILE:
         depth -= 1
@@ -527,11 +533,11 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
             target_id = pid_to_nid[id(nid_to_node[nid_target])]
-            edge_lines.append(f'  {nid_gv} -> __{target_id} [style="dotted", constraint="false"];')
+            edge_lines.append(f'  "{nid_gv}" -> "__{target_id}" [style="dotted", constraint="false"];')
         else:
             target_id = f'_TARGET_MISSING_{nid_gv}'
-            node_lines.append(f'{ind}{target_id} [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="#aaaaaa"];')
-            edge_lines.append(f'  {nid_gv} -> {target_id} [style="dotted"];')
+            node_lines.append(f'{ind}"{target_id}" [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="#aaaaaa"];')
+            edge_lines.append(f'  "{nid_gv}" -> "{target_id}" [style="dotted"];')
 
 def game_print_gv(game):
     nid_to_node, pid_to_nid = {}, {}
