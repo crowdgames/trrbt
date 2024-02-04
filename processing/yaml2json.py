@@ -14,13 +14,13 @@ def get_sprite_data(sprites):
     sprite_map = {}
     sprite_cache = {}
     for tile, filename in sprite_info['sprites'].items():
-        if filename not in sprite_cache:
-            if filename == '.':
-                sprite_cache[filename] = None
-            else:
+        if filename == '.':
+            sprite_map[tile] = None
+        else:
+            if filename not in sprite_cache:
                 with open(os.path.join(os.path.dirname(sprites), filename + '.png'), 'rb') as f:
                     sprite_cache[filename] = base64.b64encode(f.read()).decode('utf-8')
-        sprite_map[tile] = filename
+            sprite_map[tile] = filename
 
     sprite_data['images'] = sprite_cache
     sprite_data['tiles'] = sprite_map

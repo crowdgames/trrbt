@@ -134,8 +134,11 @@ function draw() {
                         } else {
                             tint(255, 255, 255, 255);
                         }
-                        let img = g_spriteImages.get(g_spriteTiles.get(tile));
-                        image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
+                        const imgName = g_spriteTiles.get(tile);
+                        if (imgName !== null) {
+                            const img = g_spriteImages.get(imgName);
+                            image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
+                        }
                     } else {
                         if (overwrite) {
                             fill(0, 0, 0, 128);
@@ -361,6 +364,7 @@ async function runGameTree(tree) {
     let fnMap = {
         'display-board': runNodeDisplayBoard,
         'set-board': runNodeSetBoard,
+        'layer-copy': runNodeLayerCopy,
         'append-rows': runNodeAppendRows,
         'order': runNodeOrder,
         'loop-until-all': runNodeLoopUntilAll,
@@ -424,6 +428,12 @@ async function runNodeSetBoard(node, fnMap) {
 
         g_canvas = resizeCanvas(tocvsx(g_cols) + g_padding, tocvsy(g_rows) + g_padding);
     }
+
+    return true;
+}
+
+async function runNodeLayerCopy(node, fnMap) {
+    g_board[node.what] = JSON.parse(JSON.stringify(g_board[node.with]))
 
     return true;
 }
