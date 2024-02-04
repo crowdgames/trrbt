@@ -127,19 +127,20 @@ def pad_tiles_multiple(patts, tile_len=None):
 def pad_tiles_single(patt, tile_len=None):
     return pad_tiles_multiple([patt], tile_len)[0]
 
-def pattern_to_string(patt, colsep, rowsep, tile_len=None):
-    return rowsep.join([colsep.join(row) for row in pad_tiles_single(patt, tile_len)])
+def pattern_to_string(patt, filt, colsep, rowsep, tile_len=None):
+    return rowsep.join([colsep.join([filt(elem) if filt is not None else elem for elem in row]) for row in pad_tiles_single(patt, tile_len)])
 
-def layer_pattern_to_string(lpatt, colsep, rowsep, tile_len=None):
+def layer_pattern_to_string(lpatt, filt, lpre, lpost, lsep, ppre, ppost, colsep, rowsep, tile_len=None):
     ret = ''
-    for layer, patt in lpatt.items():
+    for li, (layer, patt) in enumerate(lpatt.items()):
+        if li > 0:
+            ret += lsep
         if len(lpatt) > 1 or layer != DEFAULT_LAYER:
-            ret += ('*' + layer + '*' + colsep)
-        ret += rowsep.join([colsep.join(row) for row in pad_tiles_single(patt, tile_len)])
+            ret += (lpre + layer + lpost)
+        ret += ppre
+        ret += pattern_to_string(patt, filt, colsep, rowsep, tile_len)
+        ret += ppost
     return ret
-
-def pattern_filter(patt, filt):
-    return [[filt(elem) for elem in row] for row in patt]
 
 def listify(patt):
     return list([list(row) for row in patt])
@@ -439,40 +440,54 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         elif ntype == ND_REWRITE:
             lhs, rhs = layer_pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
 
-            nlabel += '<TR>'
-            nlabel += '<TD BORDER="1" COLOR="#888888">'
-            lpatt = lhs
-            for layer, patt in lpatt.items():
-                if len(lpatt) > 1 or layer != DEFAULT_LAYER:
-                    nlabel += ('<I>' + gv_filter_string(layer) + '</I>' + GVNEWLINE)
-                nlabel += GVTILEBGN
-                nlabel += pattern_to_string(pattern_filter(patt, gv_filter_string), ' ', GVNEWLINE)
-                nlabel += GVTILEEND
-            nlabel += '</TD>'
-            nlabel += '<TD>→</TD>'
-            nlabel += '<TD BORDER="1" COLOR="#888888">'
-            lpatt = rhs
-            for layer, patt in lpatt.items():
-                if len(lpatt) > 1 or layer != DEFAULT_LAYER:
-                    nlabel += ('<I>' + gv_filter_string(layer) + '</I>' + GVNEWLINE)
-                nlabel += GVTILEBGN
-                nlabel += pattern_to_string(pattern_filter(patt, gv_filter_string), ' ', GVNEWLINE)
-                nlabel += GVTILEEND
-            nlabel += '</TD>'
-            nlabel += '</TR>'
+            lhs_layers = list(lhs.keys())
+            rhs_layers = list(rhs.keys())
+            max_layers = max(len(lhs_layers), len(rhs_layers))
+
+            for li in range(max_layers):
+                if li < len(lhs_layers) and lhs_layers[li] == DEFAULT_LAYER and li < len(rhs_layers) and rhs_layers[li] == DEFAULT_LAYER:
+                    pass
+                else:
+                    nlabel += '<TR>'
+                    if li < len(lhs_layers):
+                        nlabel += '<TD><I>' + lhs_layers[li] + '</I></TD>'
+                    else:
+                        nlabel += '<TD></TD>'
+                    nlabel += '<TD></TD>'
+                    if li < len(rhs_layers):
+                        nlabel += '<TD><I>' + rhs_layers[li] + '</I></TD>'
+                    else:
+                        nlabel += '<TD></TD>'
+                    nlabel += '</TR>'
+
+                nlabel += '<TR>'
+                if li < len(lhs_layers):
+                    nlabel += '<TD BORDER="1" COLOR="#888888">'
+                    nlabel += GVTILEBGN
+                    nlabel += pattern_to_string(lhs[lhs_layers[li]], gv_filter_string, ' ', GVNEWLINE)
+                    nlabel += GVTILEEND
+                    nlabel += '</TD>'
+                else:
+                    nlabel += '<TD></TD>'
+                nlabel += '<TD>→</TD>'
+                if li < len(rhs_layers):
+                    nlabel += '<TD BORDER="1" COLOR="#888888">'
+                    nlabel += GVTILEBGN
+                    nlabel += pattern_to_string(rhs[rhs_layers[li]], gv_filter_string, ' ', GVNEWLINE)
+                    nlabel += GVTILEEND
+                    nlabel += '</TD>'
+                else:
+                    nlabel += '<TD></TD>'
+                nlabel += '</TR>'
 
         else:
-            nlabel += '<TR><TD></TD><TD BORDER="1" COLOR="#888888">'
-            lpatt = node[NKEY_PATTERN]
-            for li, (layer, patt) in enumerate(lpatt.items()):
-                if len(lpatt) > 1 or layer != DEFAULT_LAYER:
-                    if li > 0:
-                        nlabel += GVNEWLINE
-                    nlabel += ('<I>' + gv_filter_string(layer) + '</I>' + GVNEWLINE)
-                nlabel += GVTILEBGN
-                nlabel += pattern_to_string(pattern_filter(patt, gv_filter_string), ' ', GVNEWLINE)
-                nlabel += GVTILEEND
-            nlabel += '</TD><TD></TD></TR>'
+            nlabel += layer_pattern_to_string(node[NKEY_PATTERN], gv_filter_string,
+                                              '<TR><TD COLSPAN="3"><I>',
+                                              '</I></TD></TR>',
+                                              '',
+                                              '<TR><TD></TD><TD BORDER="1" COLOR="#888888">' + GVTILEBGN,
+                                              GVTILEEND + '</TD><TD></TD></TR>',
+                                              ' ', GVNEWLINE)
 
         if NKEY_NID in node.keys():
             nlabel += '<TR><TD COLSPAN="3">'

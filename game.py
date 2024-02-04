@@ -263,8 +263,8 @@ class GameProcessor:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
-            lhs = util.layer_pattern_to_string(lhs, ' ', '; ')
-            rhs = util.layer_pattern_to_string(rhs, ' ', '; ')
+            lhs = util.layer_pattern_to_string(lhs, None, '*', '*:', '&', '', '', ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, None, '*', '*:', '&', '', '', ' ', '; ')
             print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
             if self.clear_screen is not None:
@@ -281,8 +281,8 @@ class GameProcessor:
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
             lhs, rhs, row, col = this_turn_info[idx]
-            lhs = util.layer_pattern_to_string(lhs, ' ', '; ')
-            rhs = util.layer_pattern_to_string(rhs, ' ', '; ')
+            lhs = util.layer_pattern_to_string(lhs, None, '*', '*:', '&', '', '', ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, None, '*', '*:', '&', '', '', ' ', '; ')
             print(f'{idx}: {lhs} → {rhs} at {row},{col}')
 
         while True:
@@ -427,11 +427,8 @@ class GameProcessor:
             print()
 
         print("Current board is:")
-        for layer, patt in self.board.items():
-            if len(self.board) > 1 or layer != util.DEFAULT_LAYER:
-                print('*' + layer + '*')
-            print(util.pattern_to_string(patt, ' ', '\n', self.max_tile_width))
-            print()
+        print(util.layer_pattern_to_string(self.board, None, '*', '*\n', '\n', '', '', ' ', '\n', self.max_tile_width))
+        print()
 
 
 
