@@ -434,7 +434,7 @@ tree:
                 main: P
                 swch: Sn
               rhs:
-                swch: _
+                swch: S
             - type: none
               children:
               - type: match
@@ -443,8 +443,11 @@ tree:
               - type: loop-until-all
                 children:
                 - type: rewrite
-                  lhs: D1
-                  rhs: _
+                  lhs:
+                    main: D1
+                  rhs:
+                    main: _
+                    swch: D
                 - type: rewrite
                   lhs:
                     swch: A1
@@ -459,8 +462,11 @@ tree:
               - type: loop-until-all
                 children:
                 - type: rewrite
-                  lhs: D2
-                  rhs: _
+                  lhs:
+                    main: D2
+                  rhs:
+                    main: _
+                    swch: D
                 - type: rewrite
                   lhs:
                     swch: A2
@@ -475,8 +481,11 @@ tree:
               - type: loop-until-all
                 children:
                 - type: rewrite
-                  lhs: D3
-                  rhs: _
+                  lhs:
+                    main: D3
+                  rhs:
+                    main: _
+                    swch: D
                 - type: rewrite
                   lhs:
                     swch: A3
