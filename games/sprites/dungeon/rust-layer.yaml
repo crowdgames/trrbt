@@ -12,9 +12,11 @@ sprites:
   S1: switch
   S2: switch
   S3: switch
+  S: switch-pressed
   D1: door
   D2: door
   D3: door
+  D: door-open
   A1: .
   A2: .
   A3: .

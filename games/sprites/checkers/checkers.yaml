@@ -8,7 +8,7 @@ sprites:
   BP': black-pawn
   BK: black-king
   BK': black-king
-  _: blank
+  _: .
   =: end
   B0: back0
   B1: back1
