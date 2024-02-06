@@ -61,6 +61,14 @@ tree:
                    X  _  _  _  A2 _  _  _  _  .  .  .  _  _  _  X;
                    X  _  _  _  _  _  _  S3 X  .  .  .  X  X  X  X;
                    X  X  X  X  X  X  X  X  X  .  .  .  .  .  .  .;
+        - type: set-board
+          pattern: X   X   X   X   X   X   .   X   X   X   X   X   X;
+                   X   _   _   _   _   .   .   .   _   _   _   _   X;
+                   X   _   _   WS1 _   .   .   .   _   WD1 _   _   X;
+                   X   P   _   _   _   .   .   .   _   _   F   O   X;
+                   X   _   _   WD2 _   .   .   .   _   WS2 _   _   X;
+                   X   _   _   _   _   .   .   .   _   _   _   _   X;
+                   X   X   X   X   X   X   .   X   X   X   X   X   X;
       - type: layer-copy
         what: path
         with: main
@@ -80,6 +88,8 @@ tree:
           - An
           - Tn
           - Nn
+          - WSn
+          - WDn
           children:
           - type: rewrite
             layer: path
@@ -112,6 +122,8 @@ tree:
           - An
           - Tn
           - Nn
+          - WSn
+          - WDn
           children:
           - type: rewrite
             lhs: t
@@ -515,6 +527,64 @@ tree:
                   rhs:
                     swch: _
                     main: F
+
+          - type: order
+            comment: warp
+            children:
+            - type: order
+              children:
+              - type: rewrite
+                lhs:
+                  main: P
+                  swch: WS1
+                rhs:
+                  main: _
+                  swch: WT1
+              - type: none
+                children:
+                - type: match
+                  layer: swch
+                  pattern: WS1
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs:
+                      main: .
+                      swch: WD1
+                    rhs:
+                      main: P
+                  - type: rewrite
+                    lhs:
+                      swch: WT1
+                    rhs:
+                      swch: WS1
+            - type: order
+              children:
+              - type: rewrite
+                lhs:
+                  main: P
+                  swch: WS2
+                rhs:
+                  main: _
+                  swch: WT2
+              - type: none
+                children:
+                - type: match
+                  layer: swch
+                  pattern: WS2
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs:
+                      main: .
+                      swch: WD2
+                    rhs:
+                      main: P
+                  - type: rewrite
+                    lhs:
+                      swch: WT2
+                    rhs:
+                      swch: WS2
 
           - type: order
             comment: end conditions
