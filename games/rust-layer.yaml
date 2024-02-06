@@ -16,51 +16,51 @@ tree:
       - type: random-try
         children:
         - type: set-board
-          pattern: .  .  .  .  X  X  X  X  X;
-                   .  .  .  .  X  _  _  _  X;
-                   .  .  .  .  X  _  P  _  X;
-                   .  .  .  .  X  _  _  _  X;
-                   .  .  .  .  .  .  _  .  .;
-                   .  .  .  .  B  _  _  .  .;
-                   .  .  .  .  _  .  .  .  .;
-                   X  _  _  _  _  _  _  _  X;
-                   X  _  _  _  _  _  _  _  X;
-                   X  _  _  X  X  X  _  _  X;
-                   X  _  _  _  F  _  _  _  X;
-                   X  _  _  _  _  _  _  _  X;
-                   .  .  .  .  B  .  .  .  .;
-                   X  _  _  _  _  _  _  _  X;
-                   X  _  _  _  X  _  _  _  X;
-                   X  _  F  _  X  _  F  _  X;
-                   X  _  _  _  X  _  _  _  X;
-                   X  _  _  _  _  _  _  _  X;
-                   .  .  .  .  _  .  .  .  .;
-                   .  .  .  .  B  _  B  .  .;
-                   .  .  .  .  .  .  _  .  .;
-                   .  .  .  .  X  _  _  _  X;
-                   .  .  .  .  X  _  O  _  X;
-                   .  .  .  .  X  _  _  _  X;
-                   .  .  .  .  X  X  X  X  X;
+          pattern: .   .   .   .   X   X   X   X   X;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   X   _   P   _   X;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   .   .   _   .   .;
+                   .   .   .   .   B   _   _   .   .;
+                   .   .   .   .   _   .   .   .   .;
+                   X   _   _   _   _   _   _   _   X;
+                   X   _   _   _   _   _   _   _   X;
+                   X   _   _   X   X   X   _   _   X;
+                   X   _   _   _   F   _   _   _   X;
+                   X   _   _   _   _   _   _   _   X;
+                   .   .   .   .   B   .   .   .   .;
+                   X   _   _   _   _   _   _   _   X;
+                   X   _   _   _   X   _   _   _   X;
+                   X   _   F   _   X   _   F   _   X;
+                   X   _   _   _   X   _   _   _   X;
+                   X   _   _   _   _   _   _   _   X;
+                   .   .   .   .   _   .   .   .   .;
+                   .   .   .   .   B   _   B   .   .;
+                   .   .   .   .   .   .   _   .   .;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   X   _   O   _   X;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   X   X   X   X   X;
         - type: set-board
-          pattern: .  X  X  X  X  X  X  X  .  .  .  .  .  .  .  .;
-                   .  X  X  X  P  X  X  X  .  .  .  .  .  .  .  .;
-                   .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-                   .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-                   .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-                   .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-                   X  X  X  .  F  .  X  X  X  .  .  .  .  .  .  .;
-                   X  _  _  _  _  _  _  _  X  .  .  .  .  .  .  .;
-                   X  B  _  _  _  _  _  B  X  .  .  .  .  .  .  .;
-                   X  B  _  _  A1 _  _  S1 X  .  .  .  .  .  .  .;
-                   X  B  _  _  _  _  _  B  X  .  .  .  .  .  .  .;
-                   X  _  _  _  _  _  _  _  X  .  .  .  .  .  .  .;
-                   X  X  X  X  D1 X  X  X  X  .  .  .  .  .  .  .;
-                   X  S2 _  _  T1 _  _  _  X  .  .  .  X  X  X  X;
-                   X  _  _  _  _  _  _  _  _  .  .  .  _  _  _  X;
-                   X  N1 _  _  _  _  _  N1 _  D2 A3 D3 _  O  _  X;
-                   X  _  _  _  A2 _  _  _  _  .  .  .  _  _  _  X;
-                   X  _  _  _  _  _  _  S3 X  .  .  .  X  X  X  X;
-                   X  X  X  X  X  X  X  X  X  .  .  .  .  .  .  .;
+          pattern: .   X   X   X   X   X   X   X   .   .   .   .   .   .   .   . ;
+                   .   X   X   X   P   X   X   X   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   X   X   X   .   F   .   X   X   X   .   .   .   .   .   .   . ;
+                   X   _   _   _   _   _   _   _   X   .   .   .   .   .   .   . ;
+                   X   B   _   _   _   _   _   B   X   .   .   .   .   .   .   . ;
+                   X   B   _   _   SS1 _   _   S1  X   .   .   .   .   .   .   . ;
+                   X   B   _   _   _   _   _   B   X   .   .   .   .   .   .   . ;
+                   X   _   _   _   _   _   _   _   X   .   .   .   .   .   .   . ;
+                   X   X   X   X   SD1 X   X   X   X   .   .   .   .   .   .   . ;
+                   X   S2  _   _   T1  _   _   _   X   .   .   .   X   X   X   X ;
+                   X   _   _   _   _   _   _   _   _   .   .   .   _   _   _   X ;
+                   X   TS1 _   _   _   _   _   TS1 _   SD2 SS3 SD3 _   O   _   X ;
+                   X   _   _   _   SS2 _   _   _   _   .   .   .   _   _   _   X ;
+                   X   _   _   _   _   _   _   S3  X   .   .   .   X   X   X   X ;
+                   X   X   X   X   X   X   X   X   X   .   .   .   .   .   .   .;
         - type: set-board
           pattern: X   X   X   X   X   X   .   X   X   X   X   X   X;
                    X   _   _   _   _   .   .   .   _   _   _   _   X;
@@ -84,10 +84,10 @@ tree:
           - X
           - B
           - Sn
-          - Dn
-          - An
+          - SDn
+          - SSn
           - Tn
-          - Nn
+          - TSn
           - WSn
           - WDn
           children:
@@ -109,7 +109,7 @@ tree:
           - F
           - X
           - B
-          - Dn
+          - SDn
           children:
           - type: rewrite
             layer: swch
@@ -119,9 +119,9 @@ tree:
           what: t
           with:
           - Sn
-          - An
+          - SSn
           - Tn
-          - Nn
+          - TSn
           - WSn
           - WDn
           children:
@@ -137,7 +137,7 @@ tree:
         with:
         - X
         - B
-        - Dn
+        - SDn
         children:
         - type: x-replace-only
           what: d
@@ -456,13 +456,13 @@ tree:
                 children:
                 - type: rewrite
                   lhs:
-                    main: D1
+                    main: SD1
                   rhs:
                     main: _
-                    swch: D
+                    swch: SD
                 - type: rewrite
                   lhs:
-                    swch: A1
+                    swch: SS1
                   rhs:
                     swch: _
                     main: E
@@ -475,13 +475,13 @@ tree:
                 children:
                 - type: rewrite
                   lhs:
-                    main: D2
+                    main: SD2
                   rhs:
                     main: _
-                    swch: D
+                    swch: SD
                 - type: rewrite
                   lhs:
-                    swch: A2
+                    swch: SS2
                   rhs:
                     swch: _
                     main: E
@@ -494,13 +494,13 @@ tree:
                 children:
                 - type: rewrite
                   lhs:
-                    main: D3
+                    main: SD3
                   rhs:
                     main: _
-                    swch: D
+                    swch: SD
                 - type: rewrite
                   lhs:
-                    swch: A3
+                    swch: SS3
                   rhs:
                     swch: _
                     main: E
@@ -523,7 +523,7 @@ tree:
                 children:
                 - type: rewrite
                   lhs:
-                    swch: N1
+                    swch: TS1
                   rhs:
                     swch: _
                     main: F
