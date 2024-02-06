@@ -13,15 +13,19 @@ sprites:
   S2: switch
   S3: switch
   S: switch-pressed
-  D1: door
-  D2: door
-  D3: door
-  D: door-open
-  A1: .
-  A2: .
-  A3: .
+  SD1: door
+  SD2: door
+  SD3: door
+  SD: door-open
+  SS1: .
+  SS2: .
+  SS3: .
   T1: .
-  N1: .
+  T2: .
+  T3: .
+  TS1: .
+  TS2: .
+  TS3: .
   WS1: warp-src
   WS2: warp-src
   WS3: warp-src
