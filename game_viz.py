@@ -234,7 +234,7 @@ class GameFrame(tkinter.Frame):
     def update_choices(self, player_id, choices):
         self._choices_by_idx = {}
         self._choices_by_rect = {}
-        for idx, (lhs, rhs, row, col) in choices.items():
+        for idx, (name, lhs, rhs, row, col) in choices.items():
             rows = len(lhs)
             cols = len(lhs[0])
 
