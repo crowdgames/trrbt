@@ -438,8 +438,9 @@ tree:
                 lhs: F*
                 rhs: F
 
-          - type: order
+          - type: x-unroll-replace
             comment: switch activates door / spawn
+            what: n
             children:
             - type: rewrite
               lhs:
@@ -451,62 +452,25 @@ tree:
               children:
               - type: match
                 layer: swch
-                pattern: S1
+                pattern: Sn
               - type: loop-until-all
                 children:
                 - type: rewrite
                   lhs:
-                    main: SD1
+                    main: SDn
                   rhs:
                     main: _
                     swch: SD
                 - type: rewrite
                   lhs:
-                    swch: SS1
-                  rhs:
-                    swch: _
-                    main: E
-            - type: none
-              children:
-              - type: match
-                layer: swch
-                pattern: S2
-              - type: loop-until-all
-                children:
-                - type: rewrite
-                  lhs:
-                    main: SD2
-                  rhs:
-                    main: _
-                    swch: SD
-                - type: rewrite
-                  lhs:
-                    swch: SS2
-                  rhs:
-                    swch: _
-                    main: E
-            - type: none
-              children:
-              - type: match
-                layer: swch
-                pattern: S3
-              - type: loop-until-all
-                children:
-                - type: rewrite
-                  lhs:
-                    main: SD3
-                  rhs:
-                    main: _
-                    swch: SD
-                - type: rewrite
-                  lhs:
-                    swch: SS3
+                    swch: SSn
                   rhs:
                     swch: _
                     main: E
 
-          - type: order
+          - type: x-unroll-replace
             comment: trap activates spawn
+            what: n
             children:
             - type: rewrite
               lhs:
@@ -518,73 +482,45 @@ tree:
               children:
               - type: match
                 layer: swch
-                pattern: T1
+                pattern: Tn
               - type: loop-until-all
                 children:
                 - type: rewrite
                   lhs:
-                    swch: TS1
+                    swch: TSn
                   rhs:
                     swch: _
                     main: F
 
-          - type: order
+          - type: x-unroll-replace
             comment: warp
+            what: n
             children:
-            - type: order
+            - type: rewrite
+              lhs:
+                main: P
+                swch: WSn
+              rhs:
+                main: _
+                swch: WTn
+            - type: none
               children:
-              - type: rewrite
-                lhs:
-                  main: P
-                  swch: WS1
-                rhs:
-                  main: _
-                  swch: WT1
-              - type: none
+              - type: match
+                layer: swch
+                pattern: WSn
+              - type: order
                 children:
-                - type: match
-                  layer: swch
-                  pattern: WS1
-                - type: order
-                  children:
-                  - type: rewrite
-                    lhs:
-                      main: .
-                      swch: WD1
-                    rhs:
-                      main: P
-                  - type: rewrite
-                    lhs:
-                      swch: WT1
-                    rhs:
-                      swch: WS1
-            - type: order
-              children:
-              - type: rewrite
-                lhs:
-                  main: P
-                  swch: WS2
-                rhs:
-                  main: _
-                  swch: WT2
-              - type: none
-                children:
-                - type: match
-                  layer: swch
-                  pattern: WS2
-                - type: order
-                  children:
-                  - type: rewrite
-                    lhs:
-                      main: .
-                      swch: WD2
-                    rhs:
-                      main: P
-                  - type: rewrite
-                    lhs:
-                      swch: WT2
-                    rhs:
-                      swch: WS2
+                - type: rewrite
+                  lhs:
+                    main: .
+                    swch: WDn
+                  rhs:
+                    main: P
+                - type: rewrite
+                  lhs:
+                    swch: WTn
+                  rhs:
+                    swch: WSn
 
           - type: order
             comment: end conditions

@@ -20,6 +20,7 @@ NDX_SWAP_ONLY      = 'x-swap-only'
 NDX_REPLACE_ONLY   = 'x-replace-only'
 NDX_SET_PLAYER     = 'x-set-player'
 
+NDX_UNROLL_REPLACE = 'x-unroll-replace'
 NDX_LINK           = 'x-link'
 NDX_FILE           = 'x-file'
 
@@ -332,7 +333,13 @@ def xform_rule_replace_only_fn(wht, wth):
         return ret_hs
 
     def rule_replace(node):
-        return unique([rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi))) for wthi in wth])
+        if node[NKEY_TYPE] == NDX_UNROLL_REPLACE:
+            if node[NKEY_WHAT] == wht:
+                return [{NKEY_TYPE:ND_ORDER, NKEY_CHILDREN:[{NKEY_TYPE:NDX_REPLACE_ONLY, NKEY_WHAT:node[NKEY_WHAT], NKEY_WITH:[wthi], NKEY_CHILDREN:copy.deepcopy(node[NKEY_CHILDREN])} for wthi in wth]}]
+            else:
+                return [node]
+        else:
+            return unique([rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi))) for wthi in wth])
 
     return rule_replace
 
@@ -389,7 +396,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_apply_xforms(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
-    elif ntype in [ND_ORDER, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_COPY, ND_DISPLAY_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
+    elif ntype in [NDX_UNROLL_REPLACE, ND_ORDER, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_COPY, ND_DISPLAY_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -512,6 +519,9 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, NDX_SET_PLAYER]:
             nshape = 'hexagon'
             nfill = f'#{lt}{dk}{lt}'
+        elif ntype in [NDX_UNROLL_REPLACE]:
+            nshape = 'egg'
+            nfill = f'#{lt}{lt}{dk}'
         elif ntype in [NDX_LINK]:
             nshape = 'invhouse'
             nfill = f'#{lt}{lt}{dk}'
@@ -536,6 +546,9 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += ':' + str(node[NKEY_PID])
         elif ntype in [ND_LOOP_TIMES]:
             nlabel += ':' + str(node[NKEY_TIMES])
+        elif ntype in [NDX_UNROLL_REPLACE]:
+            nlabel += GVNEWLINE
+            nlabel += gv_filter_string(node[NKEY_WHAT])
         elif ntype in [NDX_FILE]:
             nlabel += ':' + node[NKEY_FILE] + '@' + node[NKEY_TARGET]
         elif ntype in [NDX_LINK]:
