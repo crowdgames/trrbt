@@ -5,31 +5,36 @@ import sys
 import time
 import util
 
-END_WIN   = 'win'
-END_LOSE  = 'lose'
-END_DRAW  = 'draw'
-END_STALE = 'stale'
+END_WIN = "win"
+END_LOSE = "lose"
+END_DRAW = "draw"
+END_STALE = "stale"
 
 DEFAULT_DISPLAY_DELAY = 0.5
+
 
 def cls():
     sys.stdout.flush()
     sys.stderr.flush()
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
+
 
 def delay(seconds):
     sys.stdout.flush()
     sys.stderr.flush()
     time.sleep(seconds)
 
+
 class GameOver:
     def __init__(self, result, player):
         self.result = result
         self.player = player
 
+
 class GameOverException(Exception):
     def __init__(self, result, player):
         self.game_over = GameOver(result, player)
+
 
 class GameProcessor:
     def __init__(self, filename, choice_order, random_players, clear_screen):
@@ -56,6 +61,8 @@ class GameProcessor:
             util.ND_APPEND_ROWS: self.execute_appendrows_node,
             util.ND_APPEND_COLS: self.execute_appendcols_node,
             util.ND_ORDER: self.execute_order_node,
+            util.ND_ORDER_UNTIL_FAIL: self.execute_order_until_fail_node,
+            util.ND_NEXT_LOOP: self.execute_try_next_loop_node,
             util.ND_LOOP_UNTIL_ALL: self.execute_loop_until_all_node,
             util.ND_WIN: self.execute_win_node,
             util.ND_LOSE: self.execute_lose_node,
@@ -134,7 +141,7 @@ class GameProcessor:
                 for rr in range(len(pattern)):
                     new_rows[rr] += pattern[rr]
             for rr in range(len(pattern)):
-                new_rows[rr] = new_rows[rr][:self.n]
+                new_rows[rr] = new_rows[rr][: self.n]
 
             self.board += new_rows
 
@@ -155,7 +162,7 @@ class GameProcessor:
             new_cols = util.listify(pattern)
             while len(new_cols) < self.m:
                 new_cols += pattern
-            new_cols = new_cols[:self.m]
+            new_cols = new_cols[: self.m]
 
             for rr in range(len(pattern)):
                 self.board[rr] += new_cols[rr]
@@ -174,6 +181,40 @@ class GameProcessor:
             if self.execute_node(child):
                 flag = True
         return flag
+
+    def execute_order_until_fail_node(self, node):
+        """
+        Executes children in order until one fails or all children have been executed
+        :return: If any child succeeds, returns success, otherwise returns failure.
+        """
+        flag = False
+        for child in node[util.NKEY_CHILDREN]:
+            if self.execute_node(child):
+                flag = True
+            else:
+                return flag
+        return flag
+
+    def execute_try_next_loop_node(self, node):
+        """
+        Loops around the children, starting with the next one in the sequence, until either a child succeeds or all children have been tried.
+        :return: If any child succeeds, returns success, otherwise returns failure.
+        """
+        if node[util.NKEY_CHILD_IDX] == None:
+            node[util.NKEY_CHILD_IDX] == 0
+        child_idx = node[util.NKEY_CHILD_IDX]
+        i = child_idx
+        first_loop = True
+        while i != child_idx or first_loop:
+            first_loop = False
+            child = node[util.NKEY_CHILDREN][i]
+            i = i + 1
+            if i >= len(node[util.NKEY_CHILDREN]):
+                i = 0
+            if self.execute_node(child):
+                node[util.NKEY_CHILD_IDX] = i
+                return True
+        return False
 
     def execute_loop_times_node(self, node):
         """
@@ -219,7 +260,7 @@ class GameProcessor:
                     res = res[1]
                     valid_moves.extend(res)
             else:
-                raise RuntimeError('All children of player nodes must be rewrite')
+                raise RuntimeError("All children of player nodes must be rewrite")
 
         if len(valid_moves) == 0:
             print(f"Player {player_id} doesn't have a valid move!")
@@ -235,9 +276,14 @@ class GameProcessor:
         for ii, choice in enumerate(valid_moves):
             node, row, col = choice
 
-            lhs, rhs = util.pad_tiles_multiple([node[util.NKEY_LHS], node[util.NKEY_RHS]])
+            lhs, rhs = util.pad_tiles_multiple(
+                [node[util.NKEY_LHS], node[util.NKEY_RHS]]
+            )
             lhs = util.tuplify(lhs)
             rhs = util.tuplify(rhs)
+            nid = ""
+            if util.NKEY_NID in node:
+                nid = node[util.NKEY_NID]
 
             if self.choice_order:
                 idx = ii + 1
@@ -252,7 +298,11 @@ class GameProcessor:
                         break
 
                 if idx is None:
-                    idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
+                    idx = 1 + (
+                        max(self.previous_moves.values())
+                        if len(self.previous_moves) > 0
+                        else 0
+                    )
 
                 while idx in this_turn_choices:
                     idx += 1
@@ -261,15 +311,15 @@ class GameProcessor:
                     self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
-            this_turn_info[idx] = (lhs, rhs, row, col)
+            this_turn_info[idx] = (nid, lhs, rhs, row, col)
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
 
             lhs, rhs, row, col = this_turn_info[user_input]
-            lhs = util.pattern_to_string(lhs, ' ', '; ')
-            rhs = util.pattern_to_string(rhs, ' ', '; ')
-            print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
+            lhs = util.pattern_to_string(lhs, " ", "; ")
+            rhs = util.pattern_to_string(rhs, " ", "; ")
+            print(f"Player {player_id} choice: {lhs} → {rhs} at {row},{col}")
 
             if self.clear_screen is not None:
                 delay(self.clear_screen)
@@ -284,10 +334,13 @@ class GameProcessor:
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
-            lhs, rhs, row, col = this_turn_info[idx]
-            lhs = util.pattern_to_string(lhs, ' ', '; ')
-            rhs = util.pattern_to_string(rhs, ' ', '; ')
-            print(f'{idx}: {lhs} → {rhs} at {row},{col}')
+            nid, lhs, rhs, row, col = this_turn_info[idx]
+            lhs = util.pattern_to_string(lhs, " ", "; ")
+            rhs = util.pattern_to_string(rhs, " ", "; ")
+            choiceName = f"{idx}"
+            if nid != "":
+                choiceName += f" ({nid})"
+            print(f"{choiceName}: {lhs} → {rhs} at {row},{col}")
 
         while True:
             try:
@@ -334,7 +387,7 @@ class GameProcessor:
         """
         pattern = node[util.NKEY_PATTERN]
         if self.match_pattern(pattern):
-            #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
+            # print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
 
@@ -386,13 +439,13 @@ class GameProcessor:
 
     def make_move(self, choice):
         if len(choice) != 3:
-            raise RuntimeError('Choice wrong size.')
+            raise RuntimeError("Choice wrong size.")
 
         node, x, y = choice[0], choice[1], choice[2]
         lhs, rhs = node[util.NKEY_LHS], node[util.NKEY_RHS]
         for i in range(len(lhs)):
             for j in range(len(lhs[i])):
-                if rhs[i][j] != '.':
+                if rhs[i][j] != ".":
                     self.board[x + i][y + j] = rhs[i][j]
 
     def find_pattern(self, child):
@@ -408,8 +461,12 @@ class GameProcessor:
     def is_match(self, lhs, x, y):
         for i in range(len(lhs)):
             for j in range(len(lhs[i])):
-                if lhs[i][j] != '.':
-                    if x + i >= self.m or y + j >= self.n or self.board[x + i][y + j] != lhs[i][j]:
+                if lhs[i][j] != ".":
+                    if (
+                        x + i >= self.m
+                        or y + j >= self.n
+                        or self.board[x + i][y + j] != lhs[i][j]
+                    ):
                         return False
         return True, x, y
 
@@ -442,22 +499,36 @@ class GameProcessor:
             print()
 
         print("Current board is:")
-        print(util.pattern_to_string(self.board, ' ', '\n', self.max_tile_width))
+        print(util.pattern_to_string(self.board, " ", "\n", self.max_tile_width))
         print()
 
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Play game YAML.')
-    parser.add_argument('filename', type=str, help='Filename to process.')
-    parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
-    parser.add_argument('--random', type=int, help='Random seed.')
-    parser.add_argument('--choice-order', action='store_true', help='Keep move choices in order.')
-    parser.add_argument('--cls', type=float, nargs='?', const=DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Play game YAML.")
+    parser.add_argument("filename", type=str, help="Filename to process.")
+    parser.add_argument(
+        "--player-random",
+        type=str,
+        nargs="+",
+        help="Player IDs to play randomly.",
+        default=[],
+    )
+    parser.add_argument("--random", type=int, help="Random seed.")
+    parser.add_argument(
+        "--choice-order", action="store_true", help="Keep move choices in order."
+    )
+    parser.add_argument(
+        "--cls",
+        type=float,
+        nargs="?",
+        const=DEFAULT_DISPLAY_DELAY,
+        default=None,
+        help="Clear screen before moves, optionally providing move delay.",
+    )
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
-    print(f'Using random seed {random_seed}')
+    print(f"Using random seed {random_seed}")
     random.seed(random_seed)
 
     game = GameProcessor(args.filename, args.choice_order, args.player_random, args.cls)

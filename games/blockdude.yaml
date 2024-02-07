@@ -1,0 +1,198 @@
+---
+name: blockdude
+tree:
+  type: order
+  children:
+  # - type: set-board
+    # comment: test basic movement
+    # pattern:  W W W W W W W W W W W W W ;
+    #           B _ W B _ _ _ _ _ _ _ B _ ;
+    #           B P _ _ _ _ _ B _ W _ _ B ;
+    #           W W W W B B B W B _ B B _ ;
+    #           W W W W B _ B W _ _ _ _ _ ;
+    # comment: test block handling
+    # pattern:  W W W W W W W ;
+    #           _ _ _ _ _ _ _ ;
+    #           _ _ _ B _ B _ ;
+    #           P _ B _ _ _ D ;
+    #           W W W W B B _ ;
+    # comment: test falling
+    # pattern:  W W W W W W W W W ;
+    #           _ _ _ _ _ _ _ _ _ ;
+    #           _ _ _ _ B _ _ _ _ ;
+    #           _ _ _ B B _ _ B _ ;
+    #           P _ B _ B _ W W D ;
+    #           W W W W B B _ W _ ;  
+  - type: order
+    comment: set up and play
+    nid: handle_board
+    children:
+    - type: loop-until-all
+      comment: mark floating blocks
+      children:
+      - type: rewrite
+        lhs: B;_
+        rhs: Bf;_
+    - type: loop-until-all
+      nid: gameloop
+      children:
+      - type: x-replace-only
+        comment: solid tiles
+        what: S
+        with:
+        - B
+        - Bf
+        - W
+        children:
+        - type: x-replace-only
+          comment: not holding a block
+          what: X
+          with:
+          - W
+          - _
+          - Bf
+          children:
+          - type: player
+            pid: 1
+            children:
+            - type: x-spin
+              comment: regardless of block
+              children:
+              - type: rewrite
+                comment: stay still
+                nid: wait
+                lhs: P
+                rhs: P
+              - type: rewrite
+                comment: walk through door
+                nid: door
+                lhs: P D ;
+                rhs: _ D ;
+            - type: x-mirror
+              comment: movement without a block
+              children:
+                - type: rewrite
+                  comment: walk
+                  nid: walk
+                  lhs:  X . ;
+                        P _ ;
+                  rhs:  X . ;
+                        _ P ;
+                - type: rewrite
+                  comment: jump
+                  nid: jump
+                  lhs:  _ _ ;
+                        P S ;
+                  rhs:  _ P ;
+                        _ S ;
+            - type: x-mirror
+              comment: block handling
+              children:
+              - type: x-replace-only
+                comment: block-agnostic
+                what: B
+                with:
+                - B
+                - Bf
+                children:
+                - type: x-mirror
+                  comment: blocks adjacent to player
+                  children:
+                  - type: rewrite
+                    comment: take from next to
+                    nid: take
+                    lhs:  _ _ ;
+                          P B ;
+                    rhs:  B' _ ;
+                          P  _ ;
+                  - type: rewrite
+                    comment: drop next to
+                    nid: drop
+                    lhs:  B _ ;
+                          P _ ;
+                    rhs:  _ _ ;
+                          P B ;  
+                - type: x-mirror
+                  comment: blocks one up from player
+                  children:
+                  - type: rewrite
+                    comment: take from tower
+                    nid: take_above
+                    lhs:  . X ;
+                          _ B ;
+                          P . ;
+                    rhs:  .  X ;
+                          B' _ ;
+                          P  . ; 
+                  - type: rewrite
+                    comment: drop onto tower
+                    nid: drop_onto
+                    lhs:  B _ ;
+                          P S ;
+                    rhs:  _ B ;
+                          P S ; 
+              - type: x-mirror
+                comment: move with block
+                children:
+                - type: rewrite
+                  comment: walk with block
+                  nid: walk_block
+                  lhs:  B _ ;
+                        P _ ;
+                        S . ;
+                  rhs:  _ B ;
+                        _ P ;
+                        S . ;
+                - type: rewrite
+                  comment: jump with block
+                  nid: jump_block
+                  lhs:  _ _ ;
+                        B _ ;
+                        P S ;
+                  rhs:  _ B ;
+                        _ P ;
+                        _ S ;
+      - type: loop-until-all
+        comment: unmark taken blocks
+        children:
+        - type: rewrite
+          comment: unmark taken blocks
+          lhs: B'
+          rhs: B
+        - type: rewrite
+          comment: unmark taken blocks (Bfs become normal blocks)
+          lhs: Bf'
+          rhs: B
+      - type: loop-until-all
+        comment: falling
+        children:
+        - type: x-replace-only
+          comment: falling tiles
+          what: F
+          with:
+          - B
+          - P
+          children:
+          - type: rewrite
+            comment: falling 
+            lhs: F;_
+            rhs: _;F
+          - type: rewrite
+            comment: fall into door
+            lhs: F;D
+            rhs: _;D
+      - type: order-until-fail
+        children:
+        - type: none
+          children:
+          - type: match
+            pattern: P
+        - type: x-link
+          target: plugin
+        - type: win
+          pid: 1
+          children:
+            - type: none
+              children:
+              - type: match
+                pattern: P
