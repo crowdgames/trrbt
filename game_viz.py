@@ -142,7 +142,7 @@ class GameFrame(tkinter.Frame):
                         colmid = col + cols / 2.0
                         dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2
                         if choice is None or dist_sqr < best_choice:
-                            idx, lhs, rhs = choices[max(0, min(len(choices) - 1, int(len(choices) * ((mc - col) / cols))))]
+                            idx, desc, lhs, rhs = choices[max(0, min(len(choices) - 1, int(len(choices) * ((mc - col) / cols))))]
                             choice = idx
                             best_choice = dist_sqr
 
@@ -234,17 +234,17 @@ class GameFrame(tkinter.Frame):
     def update_choices(self, player_id, choices):
         self._choices_by_idx = {}
         self._choices_by_rect = {}
-        for idx, (name, lhs, rhs, row, col) in choices.items():
+        for idx, (desc, lhs, rhs, row, col) in choices.items():
             rows = len(lhs)
             cols = len(lhs[0])
 
-            self._choices_by_idx[idx] = (lhs, rhs, row, col)
+            self._choices_by_idx[idx] = (desc, lhs, rhs, row, col)
 
             rect = (row, col, rows, cols)
             if rect not in self._choices_by_rect:
                 self._choices_by_rect[rect] = []
 
-            self._choices_by_rect[rect].append((idx, lhs, rhs))
+            self._choices_by_rect[rect].append((idx, desc, lhs, rhs))
 
         corner = self._cell_size / 4
         corner_box = corner * 1.5
@@ -267,7 +267,7 @@ class GameFrame(tkinter.Frame):
         self._choice_cids[None] = []
 
         for (row, col, rows, cols), choices in self._choices_by_rect.items():
-            for ii, (idx, lhs, rhs) in enumerate(choices):
+            for ii, (idx, desc, lhs, rhs) in enumerate(choices):
                 self._choice_cids[idx] = []
 
                 for rr in range(rows):
@@ -311,6 +311,12 @@ class GameFrame(tkinter.Frame):
                                                                          text=text, fill='#dddddd', font=font, anchor=tkinter.CENTER),
                                                    True))
 
+                text = desc
+                font = ('Courier', str(int(corner)))
+                self._choice_cids[idx].append((self._cvs.create_text(self.tocvsx(col + 0.5 * cols), self.tocvsy(row + rows) - corner_box / 2,
+                                                                     text=text, fill='#444444', font=font, anchor=tkinter.CENTER),
+                                               True))
+
             self._choice_cids[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                               self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                               corner,
@@ -345,7 +351,7 @@ class GameFrame(tkinter.Frame):
                     self._cvs.delete(choice_cid)
             self._choice_cids = {}
 
-            lhs, rhs, row, col = self._choices_by_idx[choice]
+            desc, lhs, rhs, row, col = self._choices_by_idx[choice]
 
             tmp_board = util.listify(game_proc.board)
             for rr in range(len(rhs)):
