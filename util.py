@@ -28,6 +28,7 @@ ND_DRAW = "draw"
 
 ND_ORDER = "order"
 ND_ORDER_UNTIL_FAIL = "order-until-fail"
+ND_ALL = "all"
 ND_NONE = "none"
 ND_RND_TRY = "random-try"
 ND_LOOP_UNTIL_ALL = "loop-until-all"
@@ -92,6 +93,11 @@ def pattern_max_tile_width(patt):
     return tile_len
 
 
+def pad_pattern(patt):
+    max_row_len = max([len(row) for row in patt])
+    return [row + (['.'] * (max_row_len - len(row))) for row in patt]
+
+
 def pad_tiles_multiple(patts, tile_len=None):
     if tile_len is None:
         tile_len = 0
@@ -125,11 +131,11 @@ def tuplify(patt):
 
 
 def string_to_pattern(s):
-    return tuplify([
+    return tuplify(pad_pattern([
         [tile.strip() for tile in row.split()]
         for row in s.split(";")
         if row.strip() != ""
-    ])
+    ]))
 
 
 def node_reshape_tiles(node):
@@ -162,6 +168,7 @@ def node_check(node, files_resolved, xformed):
             ND_ORDER,
             ND_ORDER_UNTIL_FAIL,
             ND_NEXT_LOOP,
+            ND_ALL,
             ND_NONE,
             ND_RND_TRY,
             ND_LOOP_UNTIL_ALL,
@@ -432,6 +439,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
         ND_ORDER,
         ND_ORDER_UNTIL_FAIL,
         ND_NEXT_LOOP,
+        ND_ALL,
         ND_NONE,
         ND_RND_TRY,
         ND_PLAYER,
@@ -577,7 +585,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         elif ntype in [ND_WIN, ND_LOSE, ND_DRAW]:
             nshape = "octagon"
             nfill = f"#{lt}{dk}{dk}"
-        elif ntype in [ND_ORDER, ND_ORDER_UNTIL_FAIL, ND_NEXT_LOOP, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
+        elif ntype in [ND_ORDER, ND_ORDER_UNTIL_FAIL, ND_NEXT_LOOP, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
             nshape = "oval"
             nfill = f"#{lt}{lt}{lt}"
         else:

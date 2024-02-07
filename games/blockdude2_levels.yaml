@@ -1,0 +1,261 @@
+---
+name: blockdude levels
+tree:
+  type: order
+  children:
+  - type: set-board
+    comment: level initializer
+    pattern: LVX
+  - type: loop-until-all
+    children:
+    - type: order
+      comment: next level
+      children:
+      - type: none
+        comment: game levels
+        children:
+        - type: all
+          children:
+          - type: match
+            pattern: LVX
+          - type: set-board
+            comment: level 0
+            pattern:  LV0;
+                      W W W W ;
+                      W D P W ;
+                      W W W W ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV0
+          - type: set-board
+            comment: level 1
+            pattern:  LV1;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ W _ _ _ _ _ _ _ W _ _ _ _ _ _ W ;
+                      W D _ _ W _ _ _ W _ B _ W _ B _ P _ _ W ;
+                      W W W W W W W W W W W W W W W W W W W W ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV1
+          - type: set-board
+            comment: level 2
+            pattern:  LV2;
+                      _ W _ _ _ _ W W _ _ _ _ _ _ _ _ W W _ _ _ _ ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W _ _ _ ;
+                      W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W _ _ ;
+                      W D _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W _ ;
+                      W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ W _ _ B _ _ _ _ W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ W B _ B B P _ _ W ;
+                      _ W W W W W _ _ _ W W W W W W W W W W W W W ;
+                      _ _ _ _ _ W _ _ B W _ _ _ _ _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ _ W W W W W _ _ _ _ _ _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV2
+          - type: set-board
+            comment: level 3
+            pattern:  LV3;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ;
+                      _ W _ _ _ W W W W W W W W W W W W W _ ;
+                      W _ W _ W _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+                      W _ W W W _ _ _ _ P _ _ _ W B _ W W _ ;
+                      W _ W _ W _ _ _ _ W _ _ W W W W W _ _ ;
+                      W _ W _ W B B _ W W _ _ W _ _ _ _ _ _ ;
+                      W D W _ W W W W W W _ W W _ _ _ _ _ _ ;
+                      W W W _ W W _ _ _ W W W _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV3
+          - type: set-board
+            comment: level 4
+            pattern:  LV4;
+                      _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W _ _ _ _ _ ;
+                      _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W _ W _ _ _ _ ;
+                      _ _ _ _ _ _ _ W _ _ _ _ _ _ _ _ W _ _ _ W _ _ _ ;
+                      _ _ _ _ _ _ W _ W _ _ _ _ _ _ W _ _ _ _ _ W _ _ ;
+                      _ _ _ W W W _ _ _ W _ _ _ _ W _ _ _ _ _ _ _ W _ ;
+                      _ _ W _ _ _ _ _ _ _ W _ _ W _ _ _ _ _ _ _ _ _ W ;
+                      _ W _ _ _ _ _ _ _ _ _ W W _ _ _ _ _ _ _ _ _ _ W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ P _ _ _ W W W ;
+                      W W _ _ _ _ W _ _ _ _ _ _ _ _ _ _ W _ _ _ W _ _ ;
+                      W D _ _ _ _ W _ B _ _ _ _ _ _ _ _ W W W W W _ _ ;
+                      W W W W W _ W _ B _ _ _ B _ _ W W W _ _ _ _ _ _ ;
+                      _ _ _ _ W _ W _ B _ W _ W B _ W _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ W _ W W W W W W W W W W _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV4
+          - type: set-board
+            comment: level 5
+            pattern:  LV5;
+                      _ _ _ _ _ W W W _ _ _ _ W W W W W W W W W _ ;
+                      _ W W W W _ _ _ W W W W _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ _ W B B B B _ _ _ _ _ _ _ _ _ _ W ;
+                      W D _ _ _ W W W W W W W P _ _ _ _ _ _ _ _ W ;
+                      W W _ W W W _ _ _ _ _ W W _ W _ _ _ _ _ B W ;
+                      _ W _ W _ _ _ _ _ _ _ _ W _ W W _ _ _ B B W ;
+                      _ W _ W _ _ _ _ _ _ _ _ W _ W W _ _ B B B W ;
+                      _ W W W _ _ _ _ _ _ _ _ W _ W W W W W W W W ;
+                      _ _ _ _ _ _ _ _ _ _ _ _ W W W _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV5
+          - type: set-board
+            comment: level 6
+            pattern:  LV6;
+                      _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ W W W W ;
+                      _ W _ _ W W W W W W W W W W W W W _ _ _ W ;
+                      W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W D _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+                      _ W B B _ _ _ _ _ _ _ _ W _ _ B _ _ W W W ;
+                      _ W B B B _ _ _ _ _ _ _ W P B B B _ W _ _ ;
+                      _ W B B B B _ _ _ _ _ _ W W W W W _ W _ _ ;
+                      _ W W W W W _ _ _ _ W W W _ _ _ W W W _ _ ;
+                      _ _ _ _ _ W _ _ _ B W _ _ _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ _ W W _ W W W _ _ _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV6
+          - type: set-board
+            comment: level 7
+            pattern:  LV7;
+                      _ _ W _ _ _ W W W W W _ _ _ W W _ _ _ W W W _ _ ;
+                      _ W _ W _ W _ _ _ _ _ W _ W _ _ W _ W _ _ _ W _ ;
+                      _ W _ _ W W _ _ _ _ _ _ W W _ _ _ W W _ _ _ _ W ;
+                      _ W _ _ _ W _ _ _ _ _ _ _ W _ _ _ _ W _ _ _ _ W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B W ;
+                      W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+                      W D _ _ _ B _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W W W ;
+                      W W _ _ _ W _ B _ _ _ _ _ W _ _ _ _ W W _ W _ _ ;
+                      _ W _ _ _ W _ B _ _ _ _ W W _ B _ P W W W W _ _ ;
+                      _ W W _ _ W _ B B B _ _ W W _ B B B W _ _ _ _ _ ;
+                      _ _ W _ _ W W W W W W _ W W W W W W W _ _ _ _ _ ;
+                      _ _ W W _ W _ _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ ;
+                      _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV7
+          - type: set-board
+            comment: level 8
+            pattern:  LV8;
+                      _ W W W _ _ _ _ _ _ _ W W W W _ _ _ W W W W W W W _ _ ;
+                      W _ _ _ W _ _ _ _ _ W _ _ _ _ W _ W _ _ _ _ _ _ _ W _ ;
+                      W _ _ _ _ W _ _ _ W _ _ _ _ _ W W _ _ _ _ _ _ _ _ _ W ;
+                      W B _ _ _ _ W W W _ _ _ _ W _ W _ _ _ _ _ W W W _ _ W ;
+                      W B B _ _ _ _ _ _ _ _ _ W W _ _ _ _ _ _ W W _ W _ _ W ;
+                      W W W W _ _ _ _ _ _ _ W W _ _ _ _ _ _ _ _ _ _ W D _ W ;
+                      _ _ _ W W _ _ _ _ _ _ _ _ _ _ _ _ W W _ _ _ _ W W _ W ;
+                      _ _ W _ _ _ _ B _ W _ _ _ _ _ _ W _ _ W _ _ _ _ _ _ W ;
+                      _ _ W _ _ _ _ B W _ W _ _ _ _ W _ _ _ W _ _ _ _ _ _ W ;
+                      _ W _ _ _ W W W _ _ _ W _ _ _ _ W _ _ W _ _ _ _ _ B W ;
+                      _ W _ _ _ _ _ _ W _ W _ _ _ _ _ _ W W _ _ _ _ _ B B W ;
+                      W _ _ _ _ _ _ _ _ W _ _ _ _ _ _ _ _ _ _ _ W W W W W W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ B _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W _ _ _ _ B _ _ _ _ _ _ W W W _ _ _ _ _ _ _ _ _ _ B W ;
+                      W _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+                      W _ _ _ _ _ _ _ _ B _ _ _ _ _ _ _ B _ _ P _ _ B B B W ;
+                      W W W W W W W W W W W W W W W W W W W W W W W W W W W ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV8
+          - type: set-board
+            comment: level 9
+            pattern:  LV9;
+                      _ _ _ _ _ _ _ _ W W W _ _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ _ _ _ W _ _ _ W _ _ _ _ _ _ _ _ ;
+                      _ _ _ _ _ _ W _ _ _ _ _ W _ _ W W W W W ;
+                      _ _ _ _ _ W _ _ _ _ _ _ _ W W _ _ _ _ W ;
+                      _ _ _ _ W _ _ _ _ _ B _ _ _ _ _ _ _ _ W ;
+                      _ _ _ W _ _ _ _ _ _ B B _ _ _ _ _ _ B W ;
+                      _ _ W _ _ _ _ _ _ _ W W W _ _ _ _ B B W ;
+                      _ W _ _ _ _ _ _ _ _ _ _ _ _ P _ W W W W ;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ B _ _ _ _ W ;
+                      W D _ _ _ _ _ _ _ _ _ _ _ W W W _ _ _ W ;
+                      W W _ _ _ _ W W _ _ _ W _ _ _ _ _ _ B W ;
+                      _ W _ _ _ _ W W B _ _ W W _ _ _ W W W W ;
+                      _ W _ _ _ _ W W W W W W W _ _ W W _ _ _ ;
+                      _ W W W _ _ W _ _ _ _ _ W _ W W _ _ _ _ ;
+                      _ _ _ W _ W W _ _ _ _ _ W W W _ _ _ _ _ ;
+                      _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV9
+          - type: set-board
+            comment: level 10
+            pattern:  LV10;
+                      _ _ _ W W W W W W W W W W W W W W W W W W W W W _ _ _ ;
+                      _ W W _ _ _ _ _ _ _ _ _ _ _ W _ _ _ _ _ _ _ _ _ W _ _ ;
+                      W W W W B _ _ _ _ _ _ _ B B W B _ _ _ B B B _ B W W _ ;
+                      W _ _ W W _ _ W _ _ _ W W W W W _ _ B W W W _ W W _ W ;
+                      W _ _ _ W _ _ W W _ _ _ _ _ _ _ _ W W W _ W W W _ _ W ;
+                      W _ _ _ W W _ _ W W B B B B _ _ _ _ _ _ _ _ _ _ _ _ W ;
+                      W D _ _ _ _ _ _ _ W W W W W W W _ _ _ _ _ _ _ _ _ _ W ;
+                      W W _ _ _ _ _ _ _ _ W _ _ _ W W W _ _ _ _ _ _ _ _ W W ;
+                      _ W _ _ _ _ _ B _ _ _ W _ W _ _ W W _ _ _ _ _ _ _ _ W ;
+                      _ W _ _ _ _ _ W _ _ _ _ W _ _ _ _ W W _ _ _ _ _ _ _ W ;
+                      _ W W W W _ _ W W _ _ _ _ _ _ _ _ _ _ _ _ _ W W W W W ;
+                      _ _ _ W W W W W _ _ _ _ _ _ P _ _ _ _ _ _ _ _ _ _ _ W ;
+                      _ _ _ W _ _ _ _ _ _ _ _ _ _ W _ _ _ _ _ _ _ _ _ _ _ W ;
+                      _ _ _ W _ _ _ _ _ _ _ _ _ W W _ _ _ _ W W W W W W W W ;
+                      _ _ _ W _ _ _ _ _ _ _ _ W W _ _ _ _ _ _ _ _ _ _ _ W _ ;
+                      _ _ _ W _ _ _ _ _ _ _ _ _ _ B _ _ _ _ _ _ _ _ _ B W _ ;
+                      _ _ _ W B _ _ _ _ W W W W W W W W W W W _ _ _ B B W _ ;
+                      _ _ _ W B B _ _ W W _ _ _ _ _ _ _ _ _ W W _ B B B W _ ;
+                      _ _ _ W W W W W W _ _ _ _ _ _ _ _ _ _ _ W W W W W W _ ;
+        - type: all
+          children:
+          - type: match
+            pattern: LV10
+          - type: set-board
+            comment: level 11
+            pattern:  LV11;
+                      W W W W W W W W W W W W W W W W W W W W W W W W W W W W W; 
+                      W _ _ W _ _ _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W;
+                      W _ _ _ _ _ B W B B _ _ _ _ _ _ _ _ _ _ _ _ W W W W W _ W;
+                      W B _ _ _ W W W _ B W W _ _ _ _ _ B _ _ W W _ _ D _ W _ W;
+                      W B B _ _ _ _ W W W _ _ _ P _ _ B _ _ _ _ _ _ _ W _ W _ W;
+                      W W W _ _ B B W _ _ _ _ _ W _ B _ _ _ _ _ _ _ _ _ _ W _ W;
+                      W _ _ _ W W W W _ _ _ _ _ _ W _ _ W W W _ _ _ W W W _ _ W;
+                      W B _ _ _ _ _ _ _ _ _ _ _ _ W _ W _ _ _ _ _ _ W _ _ B _ W;
+                      W B B _ _ _ _ _ _ _ W W W _ W _ W B _ _ _ _ W _ _ W W W W;
+                      W W W W _ B _ _ _ W W W _ _ W _ W W B _ _ W _ B _ W _ _ W;
+                      W _ _ _ _ _ _ _ _ _ _ _ B _ W W W _ _ B W _ _ _ W _ _ _ W;
+                      W _ _ _ B _ _ _ _ _ B B _ W _ _ _ W W W W _ _ _ _ _ _ _ W;
+                      W _ _ _ _ W W W W W W W W W _ _ _ _ _ _ _ _ W W W W W _ W;
+                      W _ _ _ _ _ _ _ _ _ _ _ _ _ _ B _ _ _ B W W _ _ _ _ W _ W;
+                      W W W W _ _ _ _ _ _ _ _ _ _ _ B _ _ _ W _ _ _ _ B B W _ W;
+                      W B W W _ _ _ W _ _ _ _ W _ _ _ _ _ _ _ _ _ _ W W W W _ W;
+                      W W B W W W _ W _ _ _ _ W _ _ _ B B B _ B _ _ _ _ _ _ _ W;
+                      W B W B W B W W _ _ _ _ W _ _ _ _ _ _ _ _ B B B _ _ _ _ W;
+                      W W W W W W W W W W W W W W W W W W W W W W W W W W W W W;
+    - type: x-file
+      file: blockdude2
+      target: gameroot

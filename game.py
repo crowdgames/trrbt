@@ -72,6 +72,7 @@ class GameProcessor:
             util.ND_RND_TRY: self.execute_random_try_node,
             util.ND_PLAYER: self.execute_player_node,
             util.ND_MATCH: self.execute_match_node,
+            util.ND_ALL: self.execute_all_node,
             util.ND_NONE: self.execute_none_node,
         }
 
@@ -390,6 +391,17 @@ class GameProcessor:
             # print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
+
+    def execute_all_node(self, node):
+        """
+        Executes children in order, until any child fils.
+        :return: If any child fails, returns failure, otherwise returns success.
+        """
+        children = node[util.NKEY_CHILDREN]
+        for child in children:
+            if not self.execute_node(child):
+                return False
+        return True
 
     def execute_none_node(self, node):
         """
