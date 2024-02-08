@@ -67,6 +67,7 @@ class GameProcessor:
             util.ND_RND_TRY: self.execute_random_try_node,
             util.ND_PLAYER: self.execute_player_node,
             util.ND_MATCH: self.execute_match_node,
+            util.ND_ALL: self.execute_all_node,
             util.ND_NONE: self.execute_none_node,
         }
 
@@ -223,7 +224,8 @@ class GameProcessor:
             if child[util.NKEY_TYPE] == util.ND_REWRITE:
                 res = self.find_layer_pattern(child[util.NKEY_LHS])
                 if len(res) > 0:
-                    valid_moves += [(row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
+                    child_desc = child[util.NKEY_DESC] if util.NKEY_DESC in child else None
+                    valid_moves += [(child_desc, row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
             else:
                 raise RuntimeError('All children of player nodes must be rewrite')
 
@@ -239,7 +241,7 @@ class GameProcessor:
         this_turn_info = {}
 
         for ii, choice in enumerate(valid_moves):
-            row, col, lhs, rhs = choice
+            desc, row, col, lhs, rhs = choice
 
             lhs, rhs = util.layer_pad_tiles_multiple([lhs, rhs])
             lhs = { layer: util.tuplify(patt) for layer, patt in lhs.items() }
@@ -267,7 +269,7 @@ class GameProcessor:
                     self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
-            this_turn_info[idx] = (lhs, rhs, row, col)
+            this_turn_info[idx] = (desc, lhs, rhs, row, col)
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
@@ -283,17 +285,18 @@ class GameProcessor:
         else:
             user_input = self.get_player_choice_input(player_id, this_turn_info)
 
-        row, col, lhs, rhs = this_turn_choices[user_input]
+        desc, row, col, lhs, rhs = this_turn_choices[user_input]
         self.make_move(rhs, row, col)
         return True
 
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
-            lhs, rhs, row, col = this_turn_info[idx]
+            desc, lhs, rhs, row, col = this_turn_info[idx]
             lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
             rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            print(f'{idx}: {lhs} → {rhs} at {row},{col}')
+            choice_desc = f'({desc}) ' if desc is not None else ''
+            print(f'{choice_desc}{idx}: {lhs} → {rhs} at {row},{col}')
 
         while True:
             try:
@@ -343,6 +346,17 @@ class GameProcessor:
             #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
+
+    def execute_all_node(self, node):
+        """
+        Executes children in order, until any child fails.
+        :return: If any child fails, returns failure, otherwise returns success.
+        """
+        children = node[util.NKEY_CHILDREN]
+        for child in children:
+            if not self.execute_node(child):
+                return False
+        return True
 
     def execute_none_node(self, node):
         """
