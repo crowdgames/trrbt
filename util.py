@@ -429,6 +429,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += GVNIDBGN
             nlabel += '@'
             nlabel += node[NKEY_NID]
+            nlabel += GVNIDEND
             nlabel += '</TD></TR>'
 
         if NKEY_COMMENT in node.keys():
