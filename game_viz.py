@@ -311,11 +311,12 @@ class GameFrame(tkinter.Frame):
                                                                          text=text, fill='#dddddd', font=font, anchor=tkinter.CENTER),
                                                    True))
 
-                text = desc
-                font = ('Courier', str(int(corner)))
-                self._choice_cids[idx].append((self._cvs.create_text(self.tocvsx(col + 0.5 * cols), self.tocvsy(row + rows) - corner_box / 2,
-                                                                     text=text, fill='#444444', font=font, anchor=tkinter.CENTER),
-                                               True))
+                if desc is not None:
+                    text = desc
+                    font = ('Courier', str(int(corner)))
+                    self._choice_cids[idx].append((self._cvs.create_text(self.tocvsx(col + 0.5 * cols), self.tocvsy(row + rows) - corner_box / 2,
+                                                                         text=text, fill=color1, font=font, anchor=tkinter.CENTER),
+                                                   True))
 
             self._choice_cids[None].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                               self.tocvsx(col + cols), self.tocvsy(row + rows),
