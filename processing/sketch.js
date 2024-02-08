@@ -108,25 +108,36 @@ function draw() {
     for (let rr = 0; rr < g_rows; rr += 1) {
         for (let cc = 0; cc < g_cols; cc += 1) {
             let tiles = [];
-            let overwrite = false;
+            let overwrites = [];
             if (choiceOverwrite !== null &&
                 choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                 choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
                 for (const [layer, pattern] of Object.entries(g_board)) {
                     if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
-                        tiles.push(choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col]);
+                        const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                        if (tileOverwrite !== '.') {
+                            tiles.push(tileOverwrite);
+                            overwrites.push(true);
+                        } else {
+                            tiles.push(pattern[rr][cc]);
+                            overwrites.push(false);
+                        }
                     } else {
                         tiles.push(pattern[rr][cc]);
+                        overwrites.push(false);
                     }
                 }
-                overwrite = true;
             } else {
                 for (const [layer, pattern] of Object.entries(g_board)) {
                     tiles.push(pattern[rr][cc]);
+                    overwrites.push(false);
                 }
             }
             tiles = tiles.reverse();
-            for (let tile of tiles) {
+            overwrites = overwrites.reverse();
+            for (let ii in tiles) {
+                const tile = tiles[ii];
+                const overwrite = overwrites[ii];
                 if (tile !== '.') {
                     if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
                         if (overwrite) {
