@@ -31,6 +31,7 @@ ND_LOSE            = 'lose'
 ND_DRAW            = 'draw'
 
 ND_ORDER           = 'order'
+ND_ALL             = 'all'
 ND_NONE            = 'none'
 ND_RND_TRY         = 'random-try'
 ND_LOOP_UNTIL_ALL  = 'loop-until-all'
@@ -60,6 +61,7 @@ NKEY_WHAT          = 'what'
 NKEY_WITH          = 'with'
 NKEY_FILE          = 'file'
 NKEY_TARGET        = 'target'
+NKEY_DESC          = 'desc'
 
 
 FKEY_NAME          = 'name'
@@ -83,6 +85,8 @@ GVCOMMBGN = '<FONT POINT-SIZE="9"><I>'
 GVCOMMEND = '</I></FONT>'
 GVNIDBGN  = '<FONT POINT-SIZE="9"><B>'
 GVNIDEND  = '</B></FONT>'
+GVDESCBGN  = '<FONT POINT-SIZE="9">('
+GVDESCEND  = ')</FONT>'
 
 def gv_filter_string(s):
     return s.replace('<', '&lt;').replace('>', '&gt;')
@@ -151,8 +155,12 @@ def listify(patt):
 def tuplify(patt):
     return tuple([tuple(row) for row in patt])
 
+def pad_pattern(patt):
+    max_row_len = max([len(row) for row in patt])
+    return [row + (['.'] * (max_row_len - len(row))) for row in patt]
+
 def string_to_pattern(s):
-    return tuplify([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != ''])
+    return tuplify(pad_pattern([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != '']))
 
 def entry_to_layer_pattern(e, default):
     if type(e) == dict:
@@ -181,7 +189,7 @@ def node_check(node, files_resolved, xformed):
     ntype = node[NKEY_TYPE]
 
     if xformed:
-        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_COPY, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_COPY, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
             raise RuntimeError(f'node type {ntype} must not be in xformed tree')
 
     if ntype == ND_PLAYER:
@@ -396,7 +404,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_apply_xforms(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
-    elif ntype in [NDX_UNROLL_REPLACE, ND_ORDER, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_COPY, ND_DISPLAY_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
+    elif ntype in [NDX_UNROLL_REPLACE, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_COPY, ND_DISPLAY_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
         for xform in xforms:
             new_xformed = []
@@ -448,6 +456,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
 
         elif ntype == ND_REWRITE:
             lhs, rhs = layer_pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
+
+            if NKEY_DESC in node:
+                nlabel += '<TR><TD COLSPAN="3">'
+                nlabel += GVDESCBGN
+                nlabel += node[NKEY_DESC]
+                nlabel += GVDESCEND
+                nlabel += '</TD></TR>'
 
             layer_to_sides = {}
 
@@ -504,6 +519,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += GVNIDBGN
             nlabel += '@'
             nlabel += node[NKEY_NID]
+            nlabel += GVNIDEND
             nlabel += '</TD></TR>'
 
         if NKEY_COMMENT in node.keys():
@@ -534,7 +550,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         elif ntype in [ND_WIN, ND_LOSE, ND_DRAW]:
             nshape = 'octagon'
             nfill = f'#{lt}{dk}{dk}'
-        elif ntype in [ND_ORDER, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
+        elif ntype in [ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
             nshape = 'oval'
             nfill = f'#{lt}{lt}{lt}'
         else:

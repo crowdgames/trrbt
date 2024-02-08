@@ -370,6 +370,7 @@ async function runGameTree(tree) {
         'loop-until-all': runNodeLoopUntilAll,
         'loop-times': runNodeLoopTimes,
         'random-try': runNodeRandomTry,
+        'all': runNodeAll,
         'none': runNodeNone,
         'win': runNodeWin,
         'lose': runNodeLose,
@@ -505,6 +506,15 @@ async function runNodeRandomTry(node, fnMap) {
         }
     }
     return false;
+}
+
+async function runNodeAll(node, fnMap) {
+    for (let child of node.children) {
+        if (!await runNode(child, fnMap)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 async function runNodeNone(node, fnMap) {
