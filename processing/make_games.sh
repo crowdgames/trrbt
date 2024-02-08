@@ -8,4 +8,4 @@ python yaml2json.py ../games/dungeon_patrol.yaml games/dungeon_patrol-text
 python yaml2json.py ../games/dungeon_patrol.yaml games/dungeon_patrol --sprites ../games/sprites/dungeon/dungeon.yaml
 python yaml2json.py ../games/dungeon_chase.yaml games/dungeon_chase --sprites ../games/sprites/dungeon/dungeon.yaml
 python yaml2json.py ../games/rust.yaml games/rust --sprites ../games/sprites/dungeon/rust.yaml
-python yaml2json.py ../games/blockdude_levels.yaml games/blockdude_levels --sprites ../games/sprites/blockdude/blockdude.yaml
+python yaml2json.py ../games/blockdude_levels.yaml games/blockdude_levels
