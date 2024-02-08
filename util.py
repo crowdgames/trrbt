@@ -56,6 +56,7 @@ NKEY_WHAT          = 'what'
 NKEY_WITH          = 'with'
 NKEY_FILE          = 'file'
 NKEY_TARGET        = 'target'
+NKEY_DESC          = 'desc'
 
 
 FKEY_NAME          = 'name'
@@ -79,6 +80,8 @@ GVCOMMBGN = '<FONT POINT-SIZE="9"><I>'
 GVCOMMEND = '</I></FONT>'
 GVNIDBGN  = '<FONT POINT-SIZE="9"><B>'
 GVNIDEND  = '</B></FONT>'
+GVDESCBGN  = '<FONT POINT-SIZE="9">('
+GVDESCEND  = ')</FONT>'
 
 def gv_filter_string(s):
     return s.replace('<', '&lt;').replace('>', '&gt;')
@@ -402,6 +405,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
 
         elif ntype == ND_REWRITE:
             lhs, rhs = pad_tiles_multiple([node[NKEY_LHS], node[NKEY_RHS]])
+
+            if NKEY_DESC in node:
+                nlabel += '<TR><TD COLSPAN="3">'
+                nlabel += GVDESCBGN
+                nlabel += node[NKEY_DESC]
+                nlabel += GVDESCEND
+                nlabel += '</TD></TR>'
 
             nlabel += '<TR>'
             nlabel += '<TD BORDER="1" COLOR="#888888">'

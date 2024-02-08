@@ -46,7 +46,7 @@ tree:
                   children:
                   - type: rewrite
                     comment: stay still
-                    nid: wait
+                    desc: wait
                     lhs: P
                     rhs: P
                   - type: x-mirror
@@ -54,12 +54,12 @@ tree:
                     children:
                     - type: rewrite
                       comment: walk through door
-                      nid: door
+                      desc: door
                       lhs: P D ;
                       rhs: _ D ;
                     - type: rewrite
                       comment: jump to door
-                      nid: jump_door
+                      desc: jump_door
                       lhs:  _ D ;
                             P . ;
                       rhs:  _ P ;
@@ -69,14 +69,14 @@ tree:
                   children:
                     - type: rewrite
                       comment: walk
-                      nid: walk
+                      desc: walk
                       lhs:  X . ;
                             P _ ;
                       rhs:  X . ;
                             _ P ;
                     - type: rewrite
                       comment: jump
-                      nid: jump
+                      desc: jump
                       lhs:  _ _ ;
                             P S ;
                       rhs:  _ P ;
@@ -96,43 +96,43 @@ tree:
                       children:
                       - type: rewrite
                         comment: take from next to
-                        nid: take
+                        desc: take
                         lhs:  _ _ ;
                               P B ;
                         rhs:  B' _ ;
                               P  _ ;
                       - type: rewrite
                         comment: drop next to
-                        nid: drop
+                        desc: drop
                         lhs:  B _ ;
                               P _ ;
                         rhs:  _ _ ;
-                              P B ;  
+                              P B ;
                     - type: x-mirror
                       comment: blocks one up from player
                       children:
                       - type: rewrite
                         comment: take from tower
-                        nid: take_above
+                        desc: take_above
                         lhs:  . X ;
                               _ B ;
                               P . ;
                         rhs:  .  X ;
                               B' _ ;
-                              P  . ; 
+                              P  . ;
                       - type: rewrite
                         comment: drop onto tower
-                        nid: drop_onto
+                        desc: drop_onto
                         lhs:  B _ ;
                               P S ;
                         rhs:  _ B ;
-                              P S ; 
+                              P S ;
                   - type: x-mirror
                     comment: move with block
                     children:
                     - type: rewrite
                       comment: walk with block
-                      nid: walk_block
+                      desc: walk_block
                       lhs:  B _ ;
                             P _ ;
                             S . ;
@@ -141,7 +141,7 @@ tree:
                             S . ;
                     - type: rewrite
                       comment: jump with block
-                      nid: jump_block
+                      desc: jump_block
                       lhs:  _ _ ;
                             B _ ;
                             P S ;
@@ -170,7 +170,7 @@ tree:
               - P
               children:
               - type: rewrite
-                comment: falling 
+                comment: falling
                 lhs: F;_
                 rhs: _;F
               - type: rewrite
