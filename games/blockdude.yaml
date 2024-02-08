@@ -63,11 +63,21 @@ tree:
                 nid: wait
                 lhs: P
                 rhs: P
-              - type: rewrite
-                comment: walk through door
-                nid: door
-                lhs: P D ;
-                rhs: _ D ;
+              - type: x-mirror
+                comment: door
+                children:
+                - type: rewrite
+                  comment: walk through door
+                  nid: door
+                  lhs: P D ;
+                  rhs: _ D ;
+                - type: rewrite
+                  comment: jump to door
+                  nid: jump_door
+                  lhs:  _ D ;
+                        P . ;
+                  rhs:  _ P ;
+                        _ . ;
             - type: x-mirror
               comment: movement without a block
               children:
