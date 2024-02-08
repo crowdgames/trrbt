@@ -179,14 +179,25 @@ function draw() {
 
             let rct = g_mouseChoice.rct;
             let idx = g_mouseChoice.idx;
+
+            let rct_choices = g_choicesByRct.get(JSON.stringify(rct)).choices;
+            let desc = rct_choices[idx].desc;
+
             noFill();
             rect(tocvsx(rct.col), tocvsy(rct.row), tocvsx(rct.col + rct.cols), tocvsy(rct.row + rct.rows), 3);
-            if (g_choicesByRct.get(JSON.stringify(rct)).choices.length > 1) {
+            if (rct_choices.length > 1) {
+                noStroke();
                 fill(player_color[0], player_color[1], player_color[2]);
                 rect(tocvsx(rct.col), tocvsy(rct.row), tocvsx(rct.col + 0.4), tocvsy(rct.row + 0.4), 3);
                 fill(220);
                 textSize(0.9 * 0.4 * g_cell_size);
                 text(idx + 1, tocvsx(rct.col + 0.2), tocvsy(rct.row + 0.2 + 0.025));
+            }
+            if (desc !== undefined) {
+                noStroke();
+                fill(player_color[0], player_color[1], player_color[2]);
+                textSize(0.9 * 0.4 * g_cell_size);
+                text(desc, tocvsx(rct.col + 0.5 * rct.cols), tocvsy(rct.row + rct.rows - 0.2));
             }
         } else {
             if (!g_mouseAlt) {
@@ -578,7 +589,7 @@ async function runNodePlayer(node, fnMap) {
         if (child.type === 'rewrite') {
             let matches = findLayerPattern(child.lhs);
             for (let match of matches) {
-                choices.push({rhs:child.rhs, row:match.row, col:match.col});
+                choices.push({desc:child.desc, rhs:child.rhs, row:match.row, col:match.col});
             }
         }
     }
