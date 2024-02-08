@@ -239,6 +239,7 @@ class GameProcessor:
             lhs, rhs = util.pad_tiles_multiple([node[util.NKEY_LHS], node[util.NKEY_RHS]])
             lhs = util.tuplify(lhs)
             rhs = util.tuplify(rhs)
+            desc = node[util.NKEY_DESC] if util.NKEY_DESC in node else None
 
             if self.choice_order:
                 idx = ii + 1
@@ -262,7 +263,7 @@ class GameProcessor:
                     self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
-            this_turn_info[idx] = (lhs, rhs, row, col)
+            this_turn_info[idx] = (desc, lhs, rhs, row, col)
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
@@ -285,10 +286,11 @@ class GameProcessor:
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
-            lhs, rhs, row, col = this_turn_info[idx]
+            desc, lhs, rhs, row, col = this_turn_info[idx]
             lhs = util.pattern_to_string(lhs, ' ', '; ')
             rhs = util.pattern_to_string(rhs, ' ', '; ')
-            print(f'{idx}: {lhs} → {rhs} at {row},{col}')
+            choice_desc = f'({desc}) ' if desc is not None else ''
+            print(f'{choice_desc}{idx}: {lhs} → {rhs} at {row},{col}')
 
         while True:
             try:
