@@ -61,9 +61,9 @@ tree:
                       comment: jump to door
                       desc: jump_door
                       lhs:  _ D ;
-                            P . ;
-                      rhs:  _ P ;
-                            _ . ;
+                            P S ;
+                      rhs:  _ D ;
+                            _ S ;
                 - type: x-mirror
                   comment: movement without a block
                   children:
