@@ -605,6 +605,17 @@ async function runNodePlayer(node, fnMap) {
         }
     }
 
+    let choicesUnique = []
+    let choicesSeen = new Set();
+    for (let choice of choices) {
+        const choicek = JSON.stringify(choice);
+        if (!choicesSeen.has(choicek)) {
+            choicesSeen.add(choicek);
+            choicesUnique.push(choice);
+        }
+    }
+    choices = choicesUnique;
+
     if (choices.length > 0) {
         g_choicePlayer = node.pid;
 
