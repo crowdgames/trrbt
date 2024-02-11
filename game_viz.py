@@ -135,21 +135,30 @@ class GameFrame(tkinter.Frame):
 
     def on_mouse_motion(self, event):
         with self._game_proc._thread_mtx:
-            mr, mc = self.fromcvsy(event.y), self.fromcvsx(event.x)
-
             choice = None
-            best_choice = None
 
             if self._choices_by_rect is not None:
-                for (row, col, rows, cols), choices in self._choices_by_rect.items():
-                    if row <= mr and mr <= row + rows and col <= mc and mc <= col + cols:
-                        rowmid = row + rows / 2.0
-                        colmid = col + cols / 2.0
-                        dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2
-                        if choice is None or dist_sqr < best_choice:
-                            idx, desc, rhs = choices[max(0, min(len(choices) - 1, int(len(choices) * ((mc - col) / cols))))]
-                            choice = idx
-                            best_choice = dist_sqr
+                mr, mc = self.fromcvsy(event.y), self.fromcvsx(event.x)
+
+                if 0 <= mr and mr < self._rows and 0 <= mc and mc < self._cols:
+                    best_choices = []
+                    best_dist_sqr = None
+
+                    for (row, col, rows, cols), choices in self._choices_by_rect.items():
+                        if row <= mr and mr < row + rows and col <= mc and mc < col + cols:
+                            rowmid = row + rows / 2.0
+                            colmid = col + cols / 2.0
+                            dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2
+                            if best_dist_sqr is None or dist_sqr < best_dist_sqr - 0.001:
+                                best_dist_sqr = dist_sqr
+                                best_choices = choices
+                            elif dist_sqr < best_dist_sqr + 0.001:
+                                best_choices = best_choices + choices
+
+                    if len(best_choices) != 0:
+                        choice_idx = max(0, min(len(best_choices) - 1, int(len(best_choices) * (mc - int(mc)))))
+                        idx, desc, rhs = best_choices[choice_idx]
+                        choice = idx
 
             self.update_mouse_choice(choice)
 

@@ -273,8 +273,8 @@ function mouseMoved() {
         const mr = fromcvsy(mouseY);
         const mc = fromcvsy(mouseX);
         if (0 <= mr && mr < g_rows && 0 <= mc && mc < g_cols) {
-            let choice = null;
-            let best_choice = null;
+            let best_choices = [];
+            let best_dist_sqr = null;
 
             for (const [rctk, rctChoices] of g_choicesByRct.entries()) {
                 let rct = rctChoices.rct;
@@ -283,12 +283,23 @@ function mouseMoved() {
                     let rowmid = rct.row + rct.rows / 2.0;
                     let colmid = rct.col + rct.cols / 2.0;
                     let dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2;
-                    if (best_choice === null || dist_sqr < best_choice) {
-                        best_choice = dist_sqr;
-                        let idx = Math.max(0, Math.min(choices.length - 1, Math.floor((mc - rct.col) / rct.cols * choices.length)));
-                        g_mouseChoice = {rct:rct, idx:idx};
+                    if (best_dist_sqr === null || dist_sqr < best_dist_sqr - 0.001) {
+                        best_dist_sqr = dist_sqr;
+                        best_choices = [];
+                        for (let ii = 0; ii < choices.length; ii += 1) {
+                            best_choices.push({rct:rct, idx:ii});
+                        }
+                    } else if (dist_sqr < best_dist_sqr + 0.001) {
+                        for (let ii = 0; ii < choices.length; ii += 1) {
+                            best_choices.push({rct:rct, idx:ii});
+                        }
                     }
                 }
+            }
+
+            if (best_choices.length > 0) {
+                const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
+                g_mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
             }
         }
     }
