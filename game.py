@@ -271,12 +271,13 @@ class GameProcessor:
                     self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
-            this_turn_info[idx] = (desc, rhs, row, col)
+            this_turn_info[idx] = (desc, lhs, rhs, row, col)
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
 
-            lhs, rhs, row, col = this_turn_info[user_input]
+            desc, lhs, rhs, row, col = this_turn_info[user_input]
+
             lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
             rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
             print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
@@ -294,7 +295,7 @@ class GameProcessor:
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
-            desc, rhs, row, col = this_turn_info[idx]
+            desc, lhs, rhs, row, col = this_turn_info[idx]
             lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
             rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
             choice_desc = f'({desc}) ' if desc is not None else ''

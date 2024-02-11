@@ -262,7 +262,7 @@ class GameFrame(tkinter.Frame):
 
         self._choices_by_idx = {}
         self._choices_by_rect = {}
-        for idx, (desc, rhs, row, col) in choices.items():
+        for idx, (desc, lhs, rhs, row, col) in choices.items():
             rows, cols = util.layer_pattern_size(rhs)
 
             self._choices_by_idx[idx] = (desc, rhs, row, col)
