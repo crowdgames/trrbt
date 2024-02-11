@@ -299,12 +299,17 @@ class GameFrame(tkinter.Frame):
 
                 for rr in range(rows):
                     for cc in range(cols):
-                        tiles = ()
+                        tiles = []
+                        overwrites = []
                         all_invis = True
                         for layer in reversed(choice_board.keys()):
-                            tile = rhs[layer][rr][cc].strip() if layer in rhs else choice_board[layer][row + rr][col + cc].strip()
-                            tiles = tiles + (tile,)
-                            all_invis = all_invis and tile == '.'
+                            if layer in rhs and rhs[layer][rr][cc].strip() != '.':
+                                tiles.append(rhs[layer][rr][cc].strip())
+                                overwrites.append(True)
+                            else:
+                                tiles.append(choice_board[layer][row + rr][col + cc].strip())
+                                overwrites.append(False)
+                            all_invis = all_invis and tiles[-1] == '.'
 
                         if all_invis:
                             continue
@@ -320,17 +325,17 @@ class GameFrame(tkinter.Frame):
                                                              fill='#dddddd', outline='')
                         self._choice_cids[idx].append((cid, False))
 
-                        for tile in tiles:
-                            if tile == '.':
-                                continue
+                        for tile, overwrite in zip(tiles, overwrites):
                             cid = None
                             if tile in self._sprites:
                                 if self._sprites[tile] is not None:
-                                    cid = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[tile][1])
+                                    ind = 1 if overwrite else 0
+                                    cid = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[tile][ind])
                             else:
+                                fill= '#999999' if overwrite else '#000000'
                                 font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
                                 cid = self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
-                                                            text=tile, fill='#999999', font=font, anchor=tkinter.CENTER)
+                                                            text=tile, fill=fill, font=font, anchor=tkinter.CENTER)
                             if cid is not None:
                                 self._choice_cids[idx].append((cid, False))
                 self._choice_cids[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
