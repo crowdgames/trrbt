@@ -386,7 +386,7 @@ async function runGameTree(tree) {
     let fnMap = {
         'display-board': runNodeDisplayBoard,
         'set-board': runNodeSetBoard,
-        'layer-copy': runNodeLayerCopy,
+        'layer-template': runNodeLayerTemplate,
         'append-rows': runNodeAppendRows,
         'order': runNodeOrder,
         'loop-until-all': runNodeLoopUntilAll,
@@ -455,8 +455,21 @@ async function runNodeSetBoard(node, fnMap) {
     return true;
 }
 
-async function runNodeLayerCopy(node, fnMap) {
-    g_board[node.what] = JSON.parse(JSON.stringify(g_board[node.with]))
+async function runNodeLayerTemplate(node, fnMap) {
+    let newLayer = [];
+    for (let row of g_board['main']) {
+        let newRow = [];
+        for (let tile of row) {
+            if (tile === '.') {
+                newRow.push('.');
+            } else {
+                newRow.push(node.with);
+            }
+        }
+        newLayer.push(newRow);
+    }
+
+    g_board[node.what] = newLayer;
 
     return true;
 }

@@ -54,7 +54,7 @@ class GameProcessor:
         self.node_func_map = {
             util.ND_DISPLAY_BOARD: self.execute_displayboard_node,
             util.ND_SET_BOARD: self.execute_setboard_node,
-            util.ND_LAYER_COPY: self.execute_layercopy_node,
+            util.ND_LAYER_TEMPLATE: self.execute_layertemplate_node,
             util.ND_APPEND_ROWS: self.execute_appendrows_node,
             util.ND_APPEND_COLS: self.execute_appendcols_node,
             util.ND_ORDER: self.execute_order_node,
@@ -121,12 +121,14 @@ class GameProcessor:
         self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
-    def execute_layercopy_node(self, node):
+    def execute_layertemplate_node(self, node):
         """
         Copies layer.
         :return: Success.
         """
-        self.board[node[util.NKEY_WHAT]] = copy.deepcopy(self.board[node[util.NKEY_WITH]])
+        old_layer = self.board[util.DEFAULT_LAYER]
+        new_layer = [[('.' if tile == '.' else node[util.NKEY_WITH]) for tile in row] for row in old_layer]
+        self.board[node[util.NKEY_WHAT]] = new_layer
         return True
 
     def execute_appendrows_node(self, node):
