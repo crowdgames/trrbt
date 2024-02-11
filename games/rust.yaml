@@ -1,88 +1,159 @@
 ---
-name: rust
+name: rust-layer
 tree:
-  type: order
+  type: x-replace-only
+  what: n
+  with:
+  - 1
+  - 2
+  - 3
   children:
-  - type: random-try
+  - type: order
     children:
-    - type: set-board
-      pattern: .  .  .  .  X  X  X  X  X;
-               .  .  .  .  X  _  _  _  X;
-               .  .  .  .  X  _  P  _  X;
-               .  .  .  .  X  _  _  _  X;
-               .  .  .  .  .  .  _  .  .;
-               .  .  .  .  B  _  _  .  .;
-               .  .  .  .  _  .  .  .  .;
-               X  _  _  _  _  _  _  _  X;
-               X  _  _  _  _  _  _  _  X;
-               X  _  _  X  X  X  _  _  X;
-               X  _  _  _  F  _  _  _  X;
-               X  _  _  _  _  _  _  _  X;
-               .  .  .  .  B  .  .  .  .;
-               X  _  _  _  _  _  _  _  X;
-               X  _  _  _  X  _  _  _  X;
-               X  _  F  _  X  _  F  _  X;
-               X  _  _  _  X  _  _  _  X;
-               X  _  _  _  _  _  _  _  X;
-               .  .  .  .  _  .  .  .  .;
-               .  .  .  .  B  _  B  .  .;
-               .  .  .  .  .  .  _  .  .;
-               .  .  .  .  X  _  _  _  X;
-               .  .  .  .  X  _  O  _  X;
-               .  .  .  .  X  _  _  _  X;
-               .  .  .  .  X  X  X  X  X;
-    - type: set-board
-      pattern: .  X  X  X  X  X  X  X  .  .  .  .  .  .  .  .;
-               .  X  X  X  P  X  X  X  .  .  .  .  .  .  .  .;
-               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
-               X  X  X  .  F  .  X  X  X  .  .  .  .  .  .  .;
-               X  _  _  _  _  _  _  _  X  .  .  .  .  .  .  .;
-               X  B  _  _  _  _  _  B  X  .  .  .  .  .  .  .;
-               X  B  _  _  A1 _  _  S1 X  .  .  .  .  .  .  .;
-               X  B  _  _  _  _  _  B  X  .  .  .  .  .  .  .;
-               X  _  _  _  _  _  _  _  X  .  .  .  .  .  .  .;
-               X  X  X  X  D1 X  X  X  X  .  .  .  .  .  .  .;
-               X  S2 _  _  T1 _  _  _  X  .  .  .  X  X  X  X;
-               X  _  _  _  _  _  _  _  _  .  .  .  _  _  _  X;
-               X  N1 _  _  _  _  _  N1 _  D2 A3 D3 _  O  _  X;
-               X  _  _  _  A2 _  _  _  _  .  .  .  _  _  _  X;
-               X  _  _  _  _  _  _  S3 X  .  .  .  X  X  X  X;
-               X  X  X  X  X  X  X  X  X  .  .  .  .  .  .  .;
-  - type: loop-until-all
-    nid: gameloop
-    children:
-    - type: x-replace-only
-      what: p
-      with:
-      - P
-      - P:A1
-      - P:A2
-      - P:A3
+    - type: order
+      comment: setup board and layers
       children:
-      - type: x-replace-only
-        what: a
-        with:
-        - _
-        - A1
-        - A2
-        - A3
-        - T1
-        - E
-        - F
+      - type: random-try
+        children:
+        - type: set-board
+          pattern: .   .   .   .   X   X   X   X   X;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   X   _   P   _   X;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   .   .   _   .   .;
+                   .   .   .   .   B   _   _   .   .;
+                   .   .   .   .   _   .   .   .   .;
+                   X   _   _   _   _   _   _   _   X;
+                   X   _   _   _   _   _   _   _   X;
+                   X   _   _   X   X   X   _   _   X;
+                   X   _   _   _   F   _   _   _   X;
+                   X   _   _   _   _   _   _   _   X;
+                   .   .   .   .   B   .   .   .   .;
+                   X   _   _   _   _   _   _   _   X;
+                   X   _   _   _   X   _   _   _   X;
+                   X   _   F   _   X   _   F   _   X;
+                   X   _   _   _   X   _   _   _   X;
+                   X   _   _   _   _   _   _   _   X;
+                   .   .   .   .   _   .   .   .   .;
+                   .   .   .   .   B   _   B   .   .;
+                   .   .   .   .   .   .   _   .   .;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   X   _   O   _   X;
+                   .   .   .   .   X   _   _   _   X;
+                   .   .   .   .   X   X   X   X   X;
+        - type: set-board
+          pattern: .   X   X   X   X   X   X   X   .   .   .   .   .   .   .   . ;
+                   .   X   X   X   P   X   X   X   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   .   .   .   .   _   .   .   .   .   .   .   .   .   .   .   . ;
+                   X   X   X   .   F   .   X   X   X   .   .   .   .   .   .   . ;
+                   X   _   _   _   _   _   _   _   X   .   .   .   .   .   .   . ;
+                   X   B   _   _   _   _   _   B   X   .   .   .   .   .   .   . ;
+                   X   B   _   _   SS1 _   _   S1  X   .   .   .   .   .   .   . ;
+                   X   B   _   _   _   _   _   B   X   .   .   .   .   .   .   . ;
+                   X   _   _   _   _   _   _   _   X   .   .   .   .   .   .   . ;
+                   X   X   X   X   SD1 X   X   X   X   .   .   .   .   .   .   . ;
+                   X   S2  _   _   T1  _   _   _   X   .   .   .   X   X   X   X ;
+                   X   _   _   _   _   _   _   _   _   .   .   .   _   _   _   X ;
+                   X   TS1 _   _   _   _   _   TS1 _   SD2 SS3 SD3 _   O   _   X ;
+                   X   _   _   _   SS2 _   _   _   _   .   .   .   _   _   _   X ;
+                   X   _   _   _   _   _   _   S3  X   .   .   .   X   X   X   X ;
+                   X   X   X   X   X   X   X   X   X   .   .   .   .   .   .   .;
+        - type: set-board
+          pattern: .   .   .   X   X   X   .   .  .;
+                   .   .   .   X   P   X   .   .  .;
+                   .   .   .   .   _   .   .   .  .;
+                   .   .   .   .   _   .   .   .  .;
+                   X   _   _   _   _   _   _   _  X;
+                   X   I1  I1  I1  I1  I1  I1  I1 X;
+                   X   _   _   _   _   _   _   _  X;
+                   .   B   .   .   .   .   .   B  .;
+                   .   _   .   .   .   .   .   _  .;
+                   .   I1  _   _   _   _   _   I1 .;
+                   .   .   .   .   _   .   .   .  .;
+                   .   .   .   .   _   .   .   .  .;
+                   X   X   X   X   _   X   X   X  X;
+                   .   B   _   _   B   _   _   B  .;
+                   .   B   _   _   _   _   _   B  .;
+                   .   B   _   _   _   _   _   B  .;
+                   .   B   _   _   X   _   _   B  .;
+                   .   B   _   _   G   _   _   B  .;
+                   .   B   _   _   _   _   _   B  .;
+                   .   B   _   _   _   _   _   B  .;
+                   X   X   X   X   _   X   X   X  X;
+                   .   .   .   .   I2  .   .   .  .;
+                   .   .   .   .   I3  .   .   .  .;
+                   .   .   .   .   I1  .   .   .  .;
+                   X   X   X   X   _   X   X   X  X;
+                   .   .   TS1 _   T1  _   TS1 .  .;
+                   .   .   _   _   _   _   _   .  .;
+                   .   .   _   _   _   _   _   .  .;
+                   S1  _   I1  I1  I1  I1  I1  _  S1;
+                   .   .   _   _   _   _   _   .  .;
+                   .   .   _   _   _   _   _   .  .;
+                   .   .   TS1 _   _   _   TS1 .  .;
+                   X   X   X   X   SD1 X   X   X  X;
+                   .   .   .   .   I2  .   .   .  .;
+                   .   .   .   .   I3  .   .   .  .;
+                   .   .   .   .   I1  .   .   .  .;
+                   .   .   X   _   _   _   X   .  .;
+                   .   .   X   _   O   _   X   .  .;
+                   .   .   X   _   _   _   X   .  .;
+                   .   .   X   X   X   X   X   .  .;
+        - type: set-board
+          pattern: X   X   X   X   X   X   .   X   X   X   X   X   X;
+                   X   _   _   _   _   .   .   .   _   _   _   _   X;
+                   X   _   _   WS1 _   .   .   .   _   WD1 _   _   X;
+                   X   P   _   _   _   .   .   .   _   _   F   O   X;
+                   X   _   _   WD2 _   .   .   .   _   WS2 _   _   X;
+                   X   _   _   _   _   .   .   .   _   _   _   _   X;
+                   X   X   X   X   X   X   .   X   X   X   X   X   X;
+      - type: layer-template
+        what: path
+        with: _
+      - type: layer-template
+        what: swch
+        with: _
+      - type: loop-until-all
         children:
         - type: x-replace-only
-          what: b
+          what: t
           with:
-          - _
-          - A1
-          - A2
-          - A3
-          - T1
+          - Sn
+          - SSn
+          - Tn
+          - TSn
+          - WSn
+          - WDn
+          - I1
+          - I2
+          - I3
+          children:
+          - type: rewrite
+            lhs:
+              main: t
+              swch: _
+            rhs:
+              main: _
+              swch: t
+
+    - type: loop-until-all
+      nid: gameloop
+      children:
+      - type: x-replace-only
+        what: s
+        with:
+        - X
+        - B
+        - SDn
+        children:
+        - type: x-replace-only
+          what: e
+          with:
           - E
-          - F
+          - G
           children:
           - type: x-replace-only
             what: d
@@ -101,89 +172,93 @@ tree:
                   lhs: P  _
                   rhs: R  P
                 - type: rewrite
-                  lhs: P  A1
-                  rhs: R  P:A1
-                - type: rewrite
-                  lhs: P:A1 _
-                  rhs: A1   P
-                - type: rewrite
-                  lhs: P  A2
-                  rhs: R  P:A2
-                - type: rewrite
-                  lhs: P:A2 _
-                  rhs: A2   P
-                - type: rewrite
-                  lhs: P  A3
-                  rhs: R  P:A3
-                - type: rewrite
-                  lhs: P:A3 _
-                  rhs: A3   P
-                - type: rewrite
-                  lhs: P  S1
-                  rhs: R  P
-                - type: rewrite
-                  lhs: P  S2
-                  rhs: R  P
-                - type: rewrite
-                  lhs: P  S3
-                  rhs: R  P
-                - type: rewrite
-                  lhs: P  T1
-                  rhs: R  P
-                - type: rewrite
                   lhs: P  O
                   rhs: _  W
                 - type: rewrite
                   lhs: P  B
                   rhs: P  _
                 - type: rewrite
-                  lhs: p  E
-                  rhs: p  _
+                  lhs: P  e
+                  rhs: P  _
                 - type: rewrite
-                  lhs: p  F
-                  rhs: p  _
+                  lhs: P  F
+                  rhs: P  _
             - type: loop-until-all
               children:
               - type: rewrite
-                lhs: p  a
-                rhs: p  a:<
+                lhs:
+                  main: P
+                  path: _
+                rhs:
+                  path: P
               - type: rewrite
-                lhs: a    p
-                rhs: a:>  p
+                lhs:
+                  main: R
+                  path: _
+                rhs:
+                  main: _
+                  path: R
               - type: rewrite
-                lhs: p;  a
-                rhs: p;  a:^
-              - type: rewrite
-                lhs: a  ; p
-                rhs: a:v; p
+                lhs:
+                  main: s
+                  path: _
+                rhs:
+                  path: '#'
+
             - type: loop-until-all
               children:
               - type: rewrite
-                lhs: R  a
-                rhs: R  a:<
+                layer: path
+                lhs: 'P _'
+                rhs: 'P <'
               - type: rewrite
-                lhs: a    R
-                rhs: a:>  R
+                layer: path
+                lhs: '_ P'
+                rhs: '> P'
               - type: rewrite
-                lhs: R;  a
-                rhs: R;  a:^
+                layer: path
+                lhs: 'P; _'
+                rhs: 'P; ^'
               - type: rewrite
-                lhs: a  ; R
-                rhs: a:v; R
+                layer: path
+                lhs: '_; P'
+                rhs: 'v; P'
             - type: loop-until-all
               children:
               - type: rewrite
-                lhs: p  R
-                rhs: p  _:<
+                layer: path
+                lhs: 'R _'
+                rhs: 'R <'
               - type: rewrite
-                lhs: R    p
-                rhs: _:>  p
+                layer: path
+                lhs: '_ R'
+                rhs: '> R'
               - type: rewrite
-                lhs: p;  R
-                rhs: p;  _:^
+                layer: path
+                lhs: 'R; _'
+                rhs: 'R; ^'
               - type: rewrite
-                lhs: R  ; p
-                rhs: _:v; p
+                layer: path
+                lhs: '_; R'
+                rhs: 'v; R'
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                layer: path
+                lhs: 'P R'
+                rhs: 'P <'
+              - type: rewrite
+                layer: path
+                lhs: 'R P'
+                rhs: '> P'
+              - type: rewrite
+                layer: path
+                lhs: 'P; R'
+                rhs: 'P; ^'
+              - type: rewrite
+                layer: path
+                lhs: 'R; P'
+                rhs: 'v; P'
             - type: loop-until-all
               children:
 
@@ -195,17 +270,21 @@ tree:
                   - type: x-spin
                     children:
                     - type: rewrite
-                      lhs: a:< b
-                      rhs: a:< b:=
+                      layer: path
+                      lhs: '< _'
+                      rhs: '< ='
                     - type: rewrite
-                      lhs: a:> b
-                      rhs: a:> b:=
+                      layer: path
+                      lhs: '> _'
+                      rhs: '> ='
                     - type: rewrite
-                      lhs: a:^ b
-                      rhs: a:^ b:=
+                      layer: path
+                      lhs: '^ _'
+                      rhs: '^ ='
                     - type: rewrite
-                      lhs: a:v b
-                      rhs: a:v b:=
+                      layer: path
+                      lhs: 'v _'
+                      rhs: 'v ='
 
               - type: x-ident
                 nid: arrow-left-right
@@ -213,24 +292,30 @@ tree:
                 - type: loop-until-all
                   children:
                   - type: rewrite
-                    lhs: a:< b:=
-                    rhs: a:< b:<
+                    layer: path
+                    lhs: '< ='
+                    rhs: '< <'
                   - type: rewrite
-                    lhs: a:^ b:=
-                    rhs: a:^ b:<
+                    layer: path
+                    lhs: '^ ='
+                    rhs: '^ <'
                   - type: rewrite
-                    lhs: a:v b:=
-                    rhs: a:v b:<
+                    layer: path
+                    lhs: 'v ='
+                    rhs: 'v <'
 
                   - type: rewrite
-                    lhs: a:= b:>
-                    rhs: a:> b:>
+                    layer: path
+                    lhs: '= >'
+                    rhs: '> >'
                   - type: rewrite
-                    lhs: a:= b:^
-                    rhs: a:> b:^
+                    layer: path
+                    lhs: '= ^'
+                    rhs: '> ^'
                   - type: rewrite
-                    lhs: a:= b:v
-                    rhs: a:> b:v
+                    layer: path
+                    lhs: '= v'
+                    rhs: '> v'
 
               - type: x-ident
                 nid: arrow-up-down
@@ -238,136 +323,267 @@ tree:
                 - type: loop-until-all
                   children:
                   - type: rewrite
-                    lhs: a:<; b:=
-                    rhs: a:<; b:^
+                    layer: path
+                    lhs: '<; ='
+                    rhs: '<; ^'
                   - type: rewrite
-                    lhs: a:>; b:=
-                    rhs: a:>; b:^
+                    layer: path
+                    lhs: '>; ='
+                    rhs: '>; ^'
                   - type: rewrite
-                    lhs: a:^; b:=
-                    rhs: a:^; b:^
+                    layer: path
+                    lhs: '^; ='
+                    rhs: '^; ^'
 
                   - type: rewrite
-                    lhs: a:=; b:<
-                    rhs: a:v; b:<
+                    layer: path
+                    lhs: '=; <'
+                    rhs: 'v; <'
                   - type: rewrite
-                    lhs: a:=; b:>
-                    rhs: a:v; b:>
+                    layer: path
+                    lhs: '=; >'
+                    rhs: 'v; >'
                   - type: rewrite
-                    lhs: a:=; b:v
-                    rhs: a:v; b:v
+                    layer: path
+                    lhs: '=; v'
+                    rhs: 'v; v'
+
               - type: x-link
                 target: arrow-equal
               - type: x-link
                 target: arrow-up-down
               - type: x-link
                 target: arrow-left-right
+
             - type: order
+              comment: move enemies
               children:
-              - type: rewrite
-                lhs: p  E:<
-                rhs: E' _:<
-              - type: rewrite
-                lhs: E:> p
-                rhs: _:> E'
-              - type: rewrite
-                lhs: p ; E:^
-                rhs: E'; _:^
-              - type: rewrite
-                lhs: E:v; p
-                rhs: _:v; E'
-            - type: loop-until-all
-              children:
-              - type: rewrite
-                lhs: _:d E:<
-                rhs: E'  _:<
-              - type: rewrite
-                lhs: E:> _:d
-                rhs: _:> E'
-              - type: rewrite
-                lhs: _:d; E:^
-                rhs: E' ; _:^
-              - type: rewrite
-                lhs: E:v; _:d
-                rhs: _:v; E'
-            - type: loop-until-all
-              children:
-              - type: rewrite
-                lhs: E'
-                rhs: E
-              - type: rewrite
-                lhs: a:d
-                rhs: a
-            - type: loop-until-all
-              children:
-              - type: rewrite
-                lhs: F
-                rhs: E'
-              - type: rewrite
-                lhs: E
-                rhs: F'
-            - type: loop-until-all
-              children:
-              - type: rewrite
-                lhs: E'
-                rhs: E
-              - type: rewrite
-                lhs: F'
-                rhs: F
-            - type: none
-              children:
-              - type: match
-                pattern: S1
               - type: loop-until-all
                 children:
                 - type: rewrite
-                  lhs: D1
-                  rhs: _
+                  lhs:
+                    main: 'P  e'
+                    path: '.  <'
+                  rhs:
+                    main: 'e* _'
                 - type: rewrite
-                  lhs: A1
+                  lhs:
+                    main: 'e  P'
+                    path: '>  .'
+                  rhs:
+                    main: '_ e*'
+                - type: rewrite
+                  lhs:
+                    main: 'P ; e'
+                    path: '. ; ^'
+                  rhs:
+                    main: 'e*; _'
+                - type: rewrite
+                  lhs:
+                    main: 'e ; P'
+                    path: 'v ; .'
+                  rhs:
+                    main: '_ ; e*'
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs:
+                    main: '_  e'
+                    path: '.  <'
+                  rhs:
+                    main: 'e* _'
+                - type: rewrite
+                  lhs:
+                    main: 'e  _'
+                    path: '>  .'
+                  rhs:
+                    main: '_ e*'
+                - type: rewrite
+                  lhs:
+                    main: '_ ; e'
+                    path: '. ; ^'
+                  rhs:
+                    main: 'e*; _'
+                - type: rewrite
+                  lhs:
+                    main: 'e ; _'
+                    path: 'v ; .'
+                  rhs:
+                    main: '_ ; e*'
+
+            - type: loop-until-all
+              comment: clear enemy movement
+              children:
+              - type: rewrite
+                lhs: e*
+                rhs: e
+
+            - type: loop-until-all
+              comment: clear path
+              children:
+              - type: rewrite
+                layer: path
+                lhs: P
+                rhs: _
+              - type: rewrite
+                layer: path
+                lhs: '#'
+                rhs: _
+              - type: rewrite
+                layer: path
+                lhs: d
+                rhs: _
+
+            - type: order
+              comment: cycle enemies
+              children:
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: F
+                  rhs: E*
+                - type: rewrite
+                  lhs: E
+                  rhs: F*
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: E*
                   rhs: E
-            - type: none
-              children:
-              - type: match
-                pattern: S2
-              - type: loop-until-all
-                children:
                 - type: rewrite
-                  lhs: D2
-                  rhs: _
-                - type: rewrite
-                  lhs: A2
-                  rhs: E
-            - type: none
-              children:
-              - type: match
-                pattern: S3
-              - type: loop-until-all
-                children:
-                - type: rewrite
-                  lhs: D3
-                  rhs: _
-                - type: rewrite
-                  lhs: A3
-                  rhs: E
-            - type: none
-              children:
-              - type: match
-                pattern: T1
-              - type: loop-until-all
-                children:
-                - type: rewrite
-                  lhs: N1
+                  lhs: F*
                   rhs: F
-            - type: win
-              pid: 1
+
+            - type: order
+              comment: cycle spikes
               children:
-              - type: match
-                pattern: W
-            - type: lose
-              pid: 1
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  layer: swch
+                  lhs: I3
+                  rhs: I2*
+                - type: rewrite
+                  layer: swch
+                  lhs: I2
+                  rhs: I1*
+                - type: rewrite
+                  layer: swch
+                  lhs: I1
+                  rhs: I3*
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  layer: swch
+                  lhs: I3*
+                  rhs: I3
+                - type: rewrite
+                  layer: swch
+                  lhs: I2*
+                  rhs: I2
+                - type: rewrite
+                  lhs:
+                    swch: I1*
+                  rhs:
+                    main: _
+                    swch: I1
+
+            - type: x-unroll-replace
+              comment: switch activates door / spawn
+              what: n
               children:
+              - type: rewrite
+                lhs:
+                  main: P
+                  swch: Sn
+                rhs:
+                  swch: S
               - type: none
                 children:
                 - type: match
-                  pattern: p
+                  layer: swch
+                  pattern: Sn
+                - type: loop-until-all
+                  children:
+                  - type: rewrite
+                    lhs:
+                      main: SDn
+                    rhs:
+                      main: _
+                      swch: SD
+                  - type: rewrite
+                    lhs:
+                      swch: SSn
+                    rhs:
+                      swch: _
+                      main: E
+
+            - type: x-unroll-replace
+              comment: trap activates spawn
+              what: n
+              children:
+              - type: rewrite
+                lhs:
+                  main: P
+                  swch: Tn
+                rhs:
+                  swch: _
+              - type: none
+                children:
+                - type: match
+                  layer: swch
+                  pattern: Tn
+                - type: loop-until-all
+                  children:
+                  - type: rewrite
+                    lhs:
+                      swch: TSn
+                    rhs:
+                      swch: _
+                      main: F
+
+            - type: x-unroll-replace
+              comment: warp
+              what: n
+              children:
+              - type: rewrite
+                lhs:
+                  main: P
+                  swch: WSn
+                rhs:
+                  main: _
+                  swch: WTn
+              - type: none
+                children:
+                - type: match
+                  layer: swch
+                  pattern: WSn
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs:
+                      main: .
+                      swch: WDn
+                    rhs:
+                      main: P
+                  - type: rewrite
+                    lhs:
+                      swch: WTn
+                    rhs:
+                      swch: WSn
+
+            - type: order
+              comment: end conditions
+              children:
+              - type: win
+                pid: 1
+                children:
+                - type: match
+                  pattern: W
+              - type: lose
+                pid: 1
+                children:
+                - type: none
+                  children:
+                  - type: match
+                    pattern: P

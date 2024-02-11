@@ -1,0 +1,300 @@
+---
+name: turn
+tree:
+  type: order
+  children:
+  - type: order
+    comment: setup board and layers
+    children:
+    - type: random-try
+      children:
+      - type: set-board
+        pattern: _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  T  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  X  _  _  _  _  _  _  _  _  X  =  X  X  X  X  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  X  _  _  _  _  _  _  _  _  _  =  _  _  X  X  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  X  _  _  PR _  _  _  _  X  X  X  X  X  X  X  _  _  X  _  _  VL _  _  X  _  O  _  _;
+                 X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X;
+    - type: layer-template
+      what: stmv
+      with: _
+    - type: layer-template
+      what: stld
+      with: _
+    - type: layer-template
+      what: ladd
+      with: _
+    - type: loop-until-all
+      children:
+      - type: rewrite
+        lhs:
+          main: '='
+          ladd: '_'
+        rhs:
+          main: '_'
+          ladd: '='
+  - type: x-replace-only
+    what: d
+    with:
+    - L
+    - R
+    children:
+    - type: x-replace-only
+      what: a
+      with:
+      - J
+      - C
+      - ''
+      children:
+      - type: x-replace-only
+        what: b
+        with:
+        - R
+        - J
+        - C
+        - ''
+        children:
+        - type: x-replace-only
+          what: s
+          with:
+          - '->'
+          - '<-'
+          children:
+          - type: loop-until-all
+            children:
+            - type: none
+              children:
+              - type: none
+                children:
+                - type: rewrite
+                  lhs: PdR
+                  rhs: Pd
+                - type: rewrite
+                  lhs:
+                    main: Pd; _
+                    stld: . ; _
+                    ladd: . ; _
+                  rhs:
+                    main: _ ; Pd
+                - type: rewrite
+                  lhs:
+                    main: Pd; T
+                    stld: . ; _
+                    ladd: . ; _
+                  rhs:
+                    main: _ ; Pd
+                - type: rewrite
+                  lhs:
+                    main: Pd; O
+                    stld: . ; _
+                    ladd: . ; _
+                  rhs:
+                    main: _ ; W
+
+                - type: player
+                  pid: 1
+                  children:
+                  - type: rewrite
+                    lhs: _  ; Pd
+                    rhs: PdJ; _
+
+                  - type: rewrite
+                    lhs: Pd ; _
+                    rhs: _  ; Pd
+                  - type: rewrite
+                    lhs: PdJ; _
+                    rhs: _  ; Pd
+
+                  - type: rewrite
+                    lhs: _   ; PdC
+                    rhs: Pd  ; _
+                  - type: rewrite
+                    lhs: PdC ; _
+                    rhs: _   ; Pd
+                  - type: rewrite
+                    lhs: T   ; PdC
+                    rhs: Pd  ; _
+                  - type: rewrite
+                    lhs: PdC ; T
+                    rhs: _   ; Pd
+                  - type: rewrite
+                    lhs: O   ; PdC
+                    rhs: W   ; _
+                  - type: rewrite
+                    lhs: PdC ; O
+                    rhs: _   ; W
+
+                  - type: rewrite
+                    lhs: Pda _
+                    rhs: _   PR
+                  - type: rewrite
+                    lhs: _   Pda
+                    rhs: PL  _
+                  - type: rewrite
+                    lhs: Pda T
+                    rhs: _   PR
+                  - type: rewrite
+                    lhs: T   Pda
+                    rhs: PL  _
+                  - type: rewrite
+                    lhs: Pda O
+                    rhs: _   W
+                  - type: rewrite
+                    lhs: O   Pda
+                    rhs: W   _
+
+                  - type: rewrite
+                    lhs: PLa
+                    rhs:
+                      main: 'PLR'
+                      stmv: '<<'
+                  - type: rewrite
+                    lhs: PRa
+                    rhs:
+                      main: 'PRR'
+                      stmv: '>>'
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs:
+                  main: '.  X'
+                  stmv: '>> .'
+                rhs:
+                  stmv: '_ .'
+                  stld: '-> .'
+              - type: rewrite
+                lhs:
+                  main: 'X .'
+                  stmv: '. <<'
+                rhs:
+                  stmv: '. _'
+                  stld: '. <-'
+              - type: rewrite
+                layer: stmv
+                lhs: '>>  _'
+                rhs: '_   >>*'
+              - type: rewrite
+                layer: stmv
+                lhs: '_   <<'
+                rhs: '<<* _'
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                layer: stmv
+                lhs: '>>'
+                rhs: '_'
+              - type: rewrite
+                layer: stmv
+                lhs: '<<'
+                rhs: '_'
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                layer: stmv
+                lhs: '>>*'
+                rhs: '>>'
+              - type: rewrite
+                layer: stmv
+                lhs: '<<*'
+                rhs: '<<'
+
+            - type: loop-until-all
+              nid: steak-collide
+              children:
+              - type: rewrite
+                lhs:
+                  main: Vd
+                  stmv: '>>'
+                rhs:
+                  main: _
+                  stmv: _
+              - type: rewrite
+                lhs:
+                  main: Vd
+                  stmv: '<<'
+                rhs:
+                  main: _
+                  stmv: _
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: VR _
+                rhs: _ VR*
+              - type: rewrite
+                lhs: VR Pdb
+                rhs: _ VR*
+              - type: rewrite
+                lhs: _   VL
+                rhs: VL* _
+              - type: rewrite
+                lhs: Pdb VL
+                rhs: VL* _
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: VR
+                rhs: VL*
+              - type: rewrite
+                lhs: VL
+                rhs: VR*
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: VR*
+                rhs: VR
+              - type: rewrite
+                lhs: VL*
+                rhs: VL
+
+            - type: x-link
+              target: steak-collide
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs:
+                  main: Pd
+                  stld: s
+                rhs:
+                  main: PdC
+              - type: rewrite
+                lhs:
+                  main: PdJ
+                  stld: s
+                rhs:
+                  main: PdC
+              - type: rewrite
+                lhs:
+                  main: Pd
+                  ladd: '='
+                rhs:
+                  main: PdC
+              - type: rewrite
+                lhs:
+                  main: PdJ
+                  ladd: '='
+                rhs:
+                  main: PdC
+
+            - type: order
+              comment: end conditions
+              children:
+              - type: win
+                pid: 1
+                children:
+                - type: match
+                  pattern: W
+              - type: lose
+                pid: 1
+                children:
+                - type: none
+                  children:
+                  - type: match
+                    pattern: Pdb
