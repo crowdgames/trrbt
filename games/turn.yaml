@@ -97,68 +97,80 @@ tree:
                     rhs:
                       main: _ ; W
 
-                - type: player
-                  pid: 1
+                - type: order
                   children:
                   - type: rewrite
-                    lhs: _  ; Pd
-                    rhs: PdJ; _
+                    lhs: PdJ ; _
+                    rhs: PdJ*; .
+                  - type: rewrite
+                    lhs: PdJ
+                    rhs: Pd
+                  - type: rewrite
+                    lhs: PdJ*
+                    rhs: PdJ
 
-                  - type: rewrite
-                    lhs: Pd ; _
-                    rhs: _  ; Pd
-                  - type: rewrite
-                    lhs: PdJ; _
-                    rhs: _  ; Pd
+                  - type: player
+                    pid: 1
+                    children:
+                    - type: rewrite
+                      lhs: _  ; Pd
+                      rhs: PdJ; _
 
-                  - type: rewrite
-                    lhs: _   ; PdC
-                    rhs: Pd  ; _
-                  - type: rewrite
-                    lhs: PdC ; _
-                    rhs: _   ; Pd
-                  - type: rewrite
-                    lhs: T   ; PdC
-                    rhs: Pd  ; _
-                  - type: rewrite
-                    lhs: PdC ; T
-                    rhs: _   ; Pd
-                  - type: rewrite
-                    lhs: O   ; PdC
-                    rhs: W   ; _
-                  - type: rewrite
-                    lhs: PdC ; O
-                    rhs: _   ; W
+                    - type: rewrite
+                      lhs: Pd ; _
+                      rhs: _  ; Pd
+                    - type: rewrite
+                      lhs: PdJ; _
+                      rhs: _  ; Pd
 
-                  - type: rewrite
-                    lhs: Pda _
-                    rhs: _   PR
-                  - type: rewrite
-                    lhs: _   Pda
-                    rhs: PL  _
-                  - type: rewrite
-                    lhs: Pda T
-                    rhs: _   PR
-                  - type: rewrite
-                    lhs: T   Pda
-                    rhs: PL  _
-                  - type: rewrite
-                    lhs: Pda O
-                    rhs: _   W
-                  - type: rewrite
-                    lhs: O   Pda
-                    rhs: W   _
+                    - type: rewrite
+                      lhs: _   ; PdC
+                      rhs: Pd  ; _
+                    - type: rewrite
+                      lhs: PdC ; _
+                      rhs: _   ; Pd
+                    - type: rewrite
+                      lhs: T   ; PdC
+                      rhs: Pd  ; _
+                    - type: rewrite
+                      lhs: PdC ; T
+                      rhs: _   ; Pd
+                    - type: rewrite
+                      lhs: O   ; PdC
+                      rhs: W   ; _
+                    - type: rewrite
+                      lhs: PdC ; O
+                      rhs: _   ; W
 
-                  - type: rewrite
-                    lhs: PLa
-                    rhs:
-                      main: 'PLR'
-                      stmv: '<<'
-                  - type: rewrite
-                    lhs: PRa
-                    rhs:
-                      main: 'PRR'
-                      stmv: '>>'
+                    - type: rewrite
+                      lhs: Pda _
+                      rhs: _   PR
+                    - type: rewrite
+                      lhs: _   Pda
+                      rhs: PL  _
+                    - type: rewrite
+                      lhs: Pda T
+                      rhs: _   PR
+                    - type: rewrite
+                      lhs: T   Pda
+                      rhs: PL  _
+                    - type: rewrite
+                      lhs: Pda O
+                      rhs: _   W
+                    - type: rewrite
+                      lhs: O   Pda
+                      rhs: W   _
+
+                    - type: rewrite
+                      lhs: PLa
+                      rhs:
+                        main: 'PLR'
+                        stmv: '<<'
+                    - type: rewrite
+                      lhs: PRa
+                      rhs:
+                        main: 'PRR'
+                        stmv: '>>'
 
             - type: loop-until-all
               children:
