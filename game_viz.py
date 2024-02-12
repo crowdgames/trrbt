@@ -27,9 +27,11 @@ class ThreadedGameProcessor(game.GameProcessor):
 
         self._thread_new_board = None
 
-    def display_board(self):
+    def display_board(self, delay):
         with self._thread_mtx:
             self._thread_new_board = self.board
+        if delay != 0:
+            time.sleep(delay / 1000)
 
     def get_player_choice_input(self, player_id, this_turn_info):
         with self._thread_mtx:

@@ -449,6 +449,13 @@ async function runNodeOrder(node, fnMap) {
 }
 
 async function runNodeDisplayBoard(node, fnMap) {
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    if (node.delay !== undefined) {
+        await sleep(node.delay);
+    }
     return true;
 }
 
