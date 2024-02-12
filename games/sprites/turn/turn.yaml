@@ -1,0 +1,27 @@
+---
+sprites:
+  PL:  player-left
+  PLJ: player-left-jump
+  PLC: player-left-climb
+  PLR: player-left-climb
+  PR:  player-right
+  PRJ: player-right-jump
+  PRC: player-right-climb
+  PRR: player-right-climb
+  '<<': stake-left
+  '<-': stake-left-climb
+  '>>': stake-right
+  '->': stake-right-climb
+  VL: vampire-left
+  VR: vampire-right
+  T: treasure
+  X: dirt
+  '=': ladder
+  O: exit
+  W: exit
+  _: .
+  B0: background_0000
+  B1: background_0001
+  B2: background_0002
+  B3: background_0001b
+back: B0; B0; B0; B0; B1; B2; B2; B2; B2; B3
