@@ -17,7 +17,7 @@ tree:
                  _  _  T  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
                  _  _  X  _  _  _  _  _  _  _  _  X  =  X  X  X  X  _  _  _  _  _  _  _  _  _  _  _  _  _;
                  _  _  X  _  _  _  _  _  _  _  _  _  =  _  _  X  X  _  _  _  _  _  _  _  _  _  _  _  _  _;
-                 _  _  X  _  _  PR _  _  _  _  X  X  X  X  X  X  X  _  _  X  _  _  VL _  _  X  _  O  _  _;
+                 _  _  X  _  _  PRS _ _  _  _  X  X  X  X  X  X  X  _  _  X  _  _  VL _  _  X  _  O  _  _;
                  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X;
     - type: layer-template
       what: stmv
@@ -48,7 +48,7 @@ tree:
       with:
       - J
       - C
-      - ''
+      - S
       children:
       - type: x-replace-only
         what: b
@@ -56,7 +56,7 @@ tree:
         - R
         - J
         - C
-        - ''
+        - S
         children:
         - type: x-replace-only
           what: s
@@ -74,28 +74,28 @@ tree:
                   children:
                   - type: rewrite
                     lhs: PdR
-                    rhs: Pd
+                    rhs: PdS
                   - type: rewrite
                     lhs:
-                      main: Pd; _
-                      stld: . ; _
-                      ladd: . ; _
+                      main: PdS; _
+                      stld: .  ; _
+                      ladd: .  ; _
                     rhs:
-                      main: _ ; Pd
+                      main: _ ; PdS
                   - type: rewrite
                     lhs:
-                      main: Pd; T
-                      stld: . ; _
-                      ladd: . ; _
+                      main: PdS; T
+                      stld: .  ; _
+                      ladd: .  ; _
                     rhs:
-                      main: _ ; Pd
+                      main: _ ; PdS
                   - type: rewrite
                     lhs:
-                      main: Pd; O
-                      stld: . ; _
-                      ladd: . ; _
+                      main: PdS; O
+                      stld: .  ; _
+                      ladd: .  ; _
                     rhs:
-                      main: _ ; W
+                      main: _  ; W
 
                 - type: order
                   children:
@@ -104,7 +104,7 @@ tree:
                     rhs: PdJ*; .
                   - type: rewrite
                     lhs: PdJ
-                    rhs: Pd
+                    rhs: PdS
                   - type: rewrite
                     lhs: PdJ*
                     rhs: PdJ
@@ -113,28 +113,28 @@ tree:
                     pid: 1
                     children:
                     - type: rewrite
-                      lhs: _  ; Pd
+                      lhs: _  ; PdS
                       rhs: PdJ; _
 
                     - type: rewrite
-                      lhs: Pd ; _
-                      rhs: _  ; Pd
+                      lhs: PdS; _
+                      rhs: _  ; PdS
                     - type: rewrite
                       lhs: PdJ; _
-                      rhs: _  ; Pd
+                      rhs: _  ; PdS
 
                     - type: rewrite
                       lhs: _   ; PdC
-                      rhs: Pd  ; _
+                      rhs: PdS ; _
                     - type: rewrite
                       lhs: PdC ; _
-                      rhs: _   ; Pd
+                      rhs: _   ; PdS
                     - type: rewrite
                       lhs: T   ; PdC
-                      rhs: Pd  ; _
+                      rhs: PdS ; _
                     - type: rewrite
                       lhs: PdC ; T
-                      rhs: _   ; Pd
+                      rhs: _   ; PdS
                     - type: rewrite
                       lhs: O   ; PdC
                       rhs: W   ; _
@@ -144,16 +144,16 @@ tree:
 
                     - type: rewrite
                       lhs: Pda _
-                      rhs: _   PR
+                      rhs: _   PRS
                     - type: rewrite
                       lhs: _   Pda
-                      rhs: PL  _
+                      rhs: PLS _
                     - type: rewrite
                       lhs: Pda T
-                      rhs: _   PR
+                      rhs: _   PRS
                     - type: rewrite
                       lhs: T   Pda
-                      rhs: PL  _
+                      rhs: PLS _
                     - type: rewrite
                       lhs: Pda O
                       rhs: _   W
@@ -274,7 +274,7 @@ tree:
               children:
               - type: rewrite
                 lhs:
-                  main: Pd
+                  main: PdS
                   stld: s
                 rhs:
                   main: PdC
@@ -286,7 +286,7 @@ tree:
                   main: PdC
               - type: rewrite
                 lhs:
-                  main: Pd
+                  main: PdS
                   ladd: '='
                 rhs:
                   main: PdC

@@ -1,10 +1,10 @@
 ---
 sprites:
-  PL:  player-left
+  PLS: player-left
   PLJ: player-left-jump
   PLC: player-left-climb
   PLR: player-left-recoil
-  PR:  player-right
+  PRS: player-right
   PRJ: player-right-jump
   PRC: player-right-climb
   PRR: player-right-recoil
