@@ -24,4 +24,4 @@ sprites:
   B1: background_0001
   B2: background_0002
   B3: background_0001b
-back: B0; B0; B0; B0; B1; B2; B2; B2; B2; B3
+back: B2; B3; B0; B0; B0; B0; B0; B0; B0; B0; B0; B1
