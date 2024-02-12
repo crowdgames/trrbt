@@ -62,6 +62,7 @@ NKEY_WITH          = 'with'
 NKEY_FILE          = 'file'
 NKEY_TARGET        = 'target'
 NKEY_DESC          = 'desc'
+NKEY_DELAY         = 'delay'
 
 
 FKEY_NAME          = 'name'

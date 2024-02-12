@@ -82,7 +82,7 @@ class GameProcessor:
         try:
             self.execute_node(self.tree)
         except GameOverException as e:
-            self.display_board()
+            self.display_board(0)
             go = e.game_over
             if go.result == END_WIN:
                 self.game_over = go
@@ -96,7 +96,7 @@ class GameProcessor:
             else:
                 print("Game over, unrecognized game result:", e.result)
         else:
-            self.display_board()
+            self.display_board(0)
             self.game_over = GameOver(END_STALE, None)
             print("Game over, stalemate - root node exited but game has not ended")
 
@@ -105,7 +105,7 @@ class GameProcessor:
         Display current board.
         :return: Success.
         """
-        self.display_board()
+        self.display_board(node.get(util.NKEY_DELAY, 0))
 
         if self.clear_screen is not None:
             delay(self.clear_screen)
@@ -220,7 +220,7 @@ class GameProcessor:
         valid_moves = []
         player_id = str(node[util.NKEY_PID])
 
-        self.display_board()
+        self.display_board(0)
 
         for child in node[util.NKEY_CHILDREN]:
             if child[util.NKEY_TYPE] == util.ND_REWRITE:
@@ -447,7 +447,7 @@ class GameProcessor:
                         return False
         return True
 
-    def display_board(self):
+    def display_board(self, delay):
         if self.clear_screen is not None:
             cls()
         else:
