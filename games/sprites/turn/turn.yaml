@@ -3,11 +3,11 @@ sprites:
   PL:  player-left
   PLJ: player-left-jump
   PLC: player-left-climb
-  PLR: player-left
+  PLR: player-left-recoil
   PR:  player-right
   PRJ: player-right-jump
   PRC: player-right-climb
-  PRR: player-right
+  PRR: player-right-recoil
   '<<': stake-left
   '<-': stake-left-climb
   '>>': stake-right
