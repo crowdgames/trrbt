@@ -73,6 +73,18 @@ tree:
                 - type: order
                   children:
                   - type: rewrite
+                    lhs:
+                      main: PdR
+                      stld: s
+                    rhs:
+                      main: PdC
+                  - type: rewrite
+                    lhs:
+                      main: PdR
+                      stld: '='
+                    rhs:
+                      main: PdC
+                  - type: rewrite
                     lhs: PdR
                     rhs: PdS
                   - type: rewrite
