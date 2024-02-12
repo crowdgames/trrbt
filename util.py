@@ -79,13 +79,15 @@ class Game:
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
-GVNEWLINE = '<BR/>'
-GVTILEBGN = '<FONT FACE="Courier New">'
-GVTILEEND = '</FONT>'
-GVCOMMBGN = '<FONT POINT-SIZE="9"><I>'
-GVCOMMEND = '</I></FONT>'
-GVNIDBGN  = '<FONT POINT-SIZE="9"><B>'
-GVNIDEND  = '</B></FONT>'
+GVNEWLINE  = '<BR/>'
+GVTILEBGN  = '<FONT FACE="Courier New">'
+GVTILEEND  = '</FONT>'
+GVCOMMBGN  = '<FONT POINT-SIZE="9"><I>'
+GVCOMMEND  = '</I></FONT>'
+GVNIDBGN   = '<FONT POINT-SIZE="9"><B>'
+GVNIDEND   = '</B></FONT>'
+GVLAYERBGN = '<FONT POINT-SIZE="9"><I>-'
+GVLAYEREND = '-</I></FONT>'
 GVDESCBGN  = '<FONT POINT-SIZE="9">('
 GVDESCEND  = ')</FONT>'
 
@@ -480,7 +482,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
                     pass
                 else:
                     nlabel += '<TR>'
-                    nlabel += '<TD COLSPAN="3">-' + GVCOMMBGN + layer + GVCOMMEND + '-</TD>'
+                    nlabel += '<TD COLSPAN="3">' + GVLAYERBGN + layer + GVLAYEREND + '</TD>'
                     nlabel += '</TR>'
 
                 nlabel += '<TR>'
@@ -504,7 +506,15 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
                 nlabel += '</TR>'
 
         elif ntype == ND_LAYER_TEMPLATE:
-            pass
+            nlabel += '<TR><TD COLSPAN="3">'
+            nlabel += GVLAYERBGN
+            nlabel += gv_filter_string(node[NKEY_WHAT])
+            nlabel += GVLAYEREND
+            nlabel += ' with '
+            nlabel += GVTILEBGN
+            nlabel += gv_filter_string(node[NKEY_WITH])
+            nlabel += GVTILEEND
+            nlabel += '</TD></TR>'
 
         else:
             nlabel += layer_pattern_to_string(node[NKEY_PATTERN], gv_filter_string,
