@@ -70,30 +70,32 @@ tree:
               children:
               - type: none
                 children:
-                - type: rewrite
-                  lhs: PdR
-                  rhs: Pd
-                - type: rewrite
-                  lhs:
-                    main: Pd; _
-                    stld: . ; _
-                    ladd: . ; _
-                  rhs:
-                    main: _ ; Pd
-                - type: rewrite
-                  lhs:
-                    main: Pd; T
-                    stld: . ; _
-                    ladd: . ; _
-                  rhs:
-                    main: _ ; Pd
-                - type: rewrite
-                  lhs:
-                    main: Pd; O
-                    stld: . ; _
-                    ladd: . ; _
-                  rhs:
-                    main: _ ; W
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs: PdR
+                    rhs: Pd
+                  - type: rewrite
+                    lhs:
+                      main: Pd; _
+                      stld: . ; _
+                      ladd: . ; _
+                    rhs:
+                      main: _ ; Pd
+                  - type: rewrite
+                    lhs:
+                      main: Pd; T
+                      stld: . ; _
+                      ladd: . ; _
+                    rhs:
+                      main: _ ; Pd
+                  - type: rewrite
+                    lhs:
+                      main: Pd; O
+                      stld: . ; _
+                      ladd: . ; _
+                    rhs:
+                      main: _ ; W
 
                 - type: player
                   pid: 1
