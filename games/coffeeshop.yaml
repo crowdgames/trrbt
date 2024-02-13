@@ -1,0 +1,48 @@
+---
+name: coffeeshop
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern: 
+             P _ W _ P N H _ _ N ;
+
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: player
+      pid: 1
+      children:
+      - type: rewrite
+        comment: No-Op
+        lhs: P . . . P N . . . N
+
+        rhs: P . . . P N . . . N
+
+      - type: rewrite
+        comment: Player Wants coffee, Asks for it, and then Expects to get coffee.
+        lhs: P . W . P N H . . N
+
+        rhs: P . E A P N H . . N
+
+      - type: rewrite
+        comment: Player is Expecting coffee, Asked for Coffee, and then Has it after NPC Gives it
+        lhs: P . E . P N H . G N
+
+        rhs: P H _ . P N _ . _ N
+    - type: loop-until-all
+      comment: "NPC behavior"
+      children:
+        - type: rewrite
+          comment: "NPC receives Ask from player for coffee"
+          lhs: P . . A P N . . . N
+
+          rhs: P . . _ P N . . A N
+
+        - type: rewrite
+          comment: "If NPC Has coffee and has Ask for coffee, Give to Player"
+          lhs: P . . . P N H . A N
+
+          rhs: P . . . P N H . G N
+
+
