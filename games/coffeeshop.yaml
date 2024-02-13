@@ -53,7 +53,7 @@ tree:
           rhs: . . . . . N . . R N
 
         - type: rewrite
-          comment: "NPC Receives Ask from player for coffee"
+          comment: "NPC Receives Ask from player for coffee after having Ignored the player"
           lhs: P . . A P N . . I N
 
           rhs: . . . . . N . . R N
@@ -73,7 +73,7 @@ tree:
             rhs: . . . . . N . . I N
 
         - type: rewrite
-          comment: "If NPC Has coffee and has Ask for coffee, Give to Player"
+          comment: "If NPC Has coffee and is Giving to Player, no longer Have or Give"
           lhs: P . . . P N _ . G N
 
           rhs: . . . . . N _ . _ N
