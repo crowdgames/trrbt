@@ -23,26 +23,52 @@ tree:
         comment: Player Wants coffee, Asks for it, and then Expects to get coffee.
         lhs: P . W . P N H . . N
 
-        rhs: P . E A P N H . . N
+        rhs: P . E A P . H . . .
 
       - type: rewrite
         comment: Player is Expecting coffee, Asked for Coffee, and then Has it after NPC Gives it
-        lhs: P . E . P N H . G N
+        lhs: P . E A P N H . G N
 
-        rhs: P H _ . P N _ . _ N
-    - type: loop-until-all
+        rhs: P H _ _ P . _ . . .
+
+      - type: rewrite
+        comment: Player is Expecting coffee, Asked for Coffee, but NPC is Ignoring Them
+        lhs: P . E A P N H . I N
+
+        rhs: P . W . P . . . . .
+    - type: order
       comment: "NPC behavior"
       children:
         - type: rewrite
-          comment: "NPC receives Ask from player for coffee"
-          lhs: P . . A P N . . . N
+          comment: "NPC Receives Ask from player for coffee"
+          lhs: P . . A P N . . _ N
 
-          rhs: P . . _ P N . . A N
+          rhs: . . . . . N . . R N
+
+        - type: rewrite
+          comment: "NPC Receives Ask from player for coffee"
+          lhs: P . . A P N . . I N
+
+          rhs: . . . . . N . . R N
+
+        - type: random-try
+          children:
+          - type: rewrite
+            comment: "If NPC Has coffee and Received ask for coffee, Give to Player"
+            lhs: P . . . P N H . R N
+
+            rhs: . . . . . N . . G N
+            
+          - type: rewrite
+            comment: "If NPC Has coffee and Received ask for coffee, Ignore"
+            lhs: P . . . P N . . R N
+
+            rhs: . . . . . N . . I N
 
         - type: rewrite
           comment: "If NPC Has coffee and has Ask for coffee, Give to Player"
-          lhs: P . . . P N H . A N
+          lhs: P . . . P N _ . G N
 
-          rhs: P . . . P N H . G N
+          rhs: . . . . . N _ . _ N
 
 
