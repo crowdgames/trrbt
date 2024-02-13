@@ -125,60 +125,77 @@ tree:
                     pid: 1
                     children:
                     - type: rewrite
+                      button: up
                       lhs: _  ; PdS
                       rhs: PdJ; _
 
                     - type: rewrite
+                      button: down
                       lhs: PdS; _
                       rhs: _  ; PdS
                     - type: rewrite
+                      button: down
                       lhs: PdJ; _
                       rhs: _  ; PdS
 
                     - type: rewrite
+                      button: up
                       lhs: _   ; PdC
                       rhs: PdS ; _
                     - type: rewrite
+                      button: down
                       lhs: PdC ; _
                       rhs: _   ; PdS
                     - type: rewrite
+                      button: up
                       lhs: T   ; PdC
                       rhs: PdS ; _
                     - type: rewrite
+                      button: down
                       lhs: PdC ; T
                       rhs: _   ; PdS
                     - type: rewrite
+                      button: up
                       lhs: O   ; PdC
                       rhs: W   ; _
                     - type: rewrite
+                      button: down
                       lhs: PdC ; O
                       rhs: _   ; W
 
                     - type: rewrite
+                      button: right
                       lhs: Pda _
                       rhs: _   PRS
                     - type: rewrite
+                      button: left
                       lhs: _   Pda
                       rhs: PLS _
                     - type: rewrite
+                      button: right
                       lhs: Pda T
                       rhs: _   PRS
                     - type: rewrite
+                      button: left
                       lhs: T   Pda
                       rhs: PLS _
                     - type: rewrite
+                      button: right
                       lhs: Pda O
                       rhs: _   W
                     - type: rewrite
+                      button: left
                       lhs: O   Pda
                       rhs: W   _
 
                     - type: rewrite
+                      button: z
                       lhs: PLa
                       rhs:
                         main: 'PLR'
                         stmv: '<<'
                     - type: rewrite
+                      button: z
                       lhs: PRa
                       rhs:
                         main: 'PRR'
@@ -326,4 +343,4 @@ tree:
                     pattern: Pdb
 
             - type: display-board
-              delay: 250
+              delay: 200

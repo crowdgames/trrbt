@@ -226,8 +226,7 @@ class GameProcessor:
             if child[util.NKEY_TYPE] == util.ND_REWRITE:
                 res = self.find_layer_pattern(child[util.NKEY_LHS])
                 if len(res) > 0:
-                    child_desc = child[util.NKEY_DESC] if util.NKEY_DESC in child else None
-                    valid_moves += [(child_desc, row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
+                    valid_moves += [(child.get(util.NKEY_DESC, None), child.get(util.NKEY_BUTTON, None), row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
             else:
                 raise RuntimeError('All children of player nodes must be rewrite')
 
@@ -243,7 +242,7 @@ class GameProcessor:
         this_turn_info = {}
 
         for ii, choice in enumerate(valid_moves):
-            desc, row, col, lhs, rhs = choice
+            desc, button, row, col, lhs, rhs = choice
 
             lhs, rhs = util.layer_pad_tiles_multiple([lhs, rhs])
             lhs = { layer: util.tuplify(patt) for layer, patt in lhs.items() }
@@ -271,12 +270,12 @@ class GameProcessor:
                     self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
-            this_turn_info[idx] = (desc, lhs, rhs, row, col)
+            this_turn_info[idx] = (desc, button, lhs, rhs, row, col)
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
 
-            desc, lhs, rhs, row, col = this_turn_info[user_input]
+            desc, button, lhs, rhs, row, col = this_turn_info[user_input]
 
             lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
             rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
@@ -288,14 +287,14 @@ class GameProcessor:
         else:
             user_input = self.get_player_choice_input(player_id, this_turn_info)
 
-        desc, row, col, lhs, rhs = this_turn_choices[user_input]
+        desc, button, row, col, lhs, rhs = this_turn_choices[user_input]
         self.make_move(rhs, row, col)
         return True
 
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
-            desc, lhs, rhs, row, col = this_turn_info[idx]
+            desc, button, lhs, rhs, row, col = this_turn_info[idx]
             lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
             rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
             choice_desc = f'({desc}) ' if desc is not None else ''

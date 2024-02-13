@@ -63,6 +63,7 @@ NKEY_FILE          = 'file'
 NKEY_TARGET        = 'target'
 NKEY_DESC          = 'desc'
 NKEY_DELAY         = 'delay'
+NKEY_BUTTON        = 'button'
 
 
 FKEY_NAME          = 'name'
@@ -79,17 +80,19 @@ class Game:
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf8')
 
-GVNEWLINE  = '<BR/>'
-GVTILEBGN  = '<FONT FACE="Courier New">'
-GVTILEEND  = '</FONT>'
-GVCOMMBGN  = '<FONT POINT-SIZE="9"><I>'
-GVCOMMEND  = '</I></FONT>'
-GVNIDBGN   = '<FONT POINT-SIZE="9"><B>'
-GVNIDEND   = '</B></FONT>'
-GVLAYERBGN = '<FONT POINT-SIZE="9"><I>-'
-GVLAYEREND = '-</I></FONT>'
-GVDESCBGN  = '<FONT POINT-SIZE="9">('
-GVDESCEND  = ')</FONT>'
+GVNEWLINE   = '<BR/>'
+GVTILEBGN   = '<FONT FACE="Courier New">'
+GVTILEEND   = '</FONT>'
+GVCOMMBGN   = '<FONT POINT-SIZE="9"><I>'
+GVCOMMEND   = '</I></FONT>'
+GVNIDBGN    = '<FONT POINT-SIZE="9"><B>'
+GVNIDEND    = '</B></FONT>'
+GVLAYERBGN  = '<FONT POINT-SIZE="9"><I>-'
+GVLAYEREND  = '-</I></FONT>'
+GVBUTTONBGN = '<FONT POINT-SIZE="9"><I>['
+GVBUTTONEND = ']</I></FONT>'
+GVDESCBGN   = '<FONT POINT-SIZE="9">('
+GVDESCEND   = ')</FONT>'
 
 def gv_filter_string(s):
     return s.replace('<', '&lt;').replace('>', '&gt;')
@@ -267,10 +270,16 @@ def unique(nodes):
 
     return ret
 
-def rule_apply(node, app):
-    for key in [NKEY_LHS, NKEY_RHS, NKEY_PATTERN]:
-        if key in node.keys():
-            node[key] = { layer: app(patt) for layer, patt in node[key].items() }
+def rule_apply(node, pattern_func, button_dict):
+    if pattern_func is not None:
+        for key in [NKEY_LHS, NKEY_RHS, NKEY_PATTERN]:
+            if key in node.keys():
+                node[key] = { layer: pattern_func(patt) for layer, patt in node[key].items() }
+
+    if button_dict is not None:
+        if NKEY_BUTTON in node:
+            node[NKEY_BUTTON] = button_dict.get(node[NKEY_BUTTON], node[NKEY_BUTTON])
+
     return node
 
 def xform_identity(node):
@@ -280,7 +289,9 @@ def xform_prune(node):
     return []
 
 def xform_rule_mirror(node):
-    return unique([node, rule_apply(node.copy(), lambda x: tuplify([row[::-1] for row in x]))])
+    pattern_func = lambda x: tuplify([row[::-1] for row in x])
+    button_dict = {'left':'right', 'right':'left'}
+    return unique([node, rule_apply(node.copy(), pattern_func, button_dict)])
 
 def xform_rule_skew(node):
     def rule_skew(hs):
@@ -291,20 +302,26 @@ def xform_rule_skew(node):
             for col in range(cols):
                 ret[row + col][col] = hs[row][col]
         return tuplify(ret)
-    return unique([node, rule_apply(node.copy(), rule_skew)])
+    return unique([node, rule_apply(node.copy(), rule_skew, None)])
 
 def xform_rule_fliponly(node):
-    return unique([rule_apply(node.copy(), lambda x: tuplify(x[::-1]))])
+    pattern_func = lambda x: tuplify(x[::-1])
+    button_dict = {'up':'down', 'down':'up'}
+    return unique([rule_apply(node.copy(), pattern_func, button_dict)])
 
 def xform_rule_rotate(node):
+    pattern_func = lambda x: tuplify(zip(*x[::-1]))
+    button_dict = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
     ret = [node]
-    ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
+    ret.append(rule_apply(ret[-1].copy(), pattern_func, button_dict))
     return unique(ret)
 
 def xform_rule_spin(node):
+    pattern_func = lambda x: tuplify(zip(*x[::-1]))
+    button_dict = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
     ret = [node]
     while len(ret) < 4:
-        ret.append(rule_apply(ret[-1].copy(), lambda x: tuplify(zip(*x[::-1]))))
+        ret.append(rule_apply(ret[-1].copy(), pattern_func, button_dict))
     return unique(ret)
 
 def xform_rule_swap_only_fn(wht, wth):
@@ -325,7 +342,7 @@ def xform_rule_swap_only_fn(wht, wth):
         return ret_hs
 
     def rule_swaponly(node):
-        return unique([rule_apply(node.copy(), lambda x: rule_swap_side(x))])
+        return unique([rule_apply(node.copy(), lambda x: rule_swap_side(x), None)])
 
     return rule_swaponly
 
@@ -350,7 +367,7 @@ def xform_rule_replace_only_fn(wht, wth):
             else:
                 return [node]
         else:
-            return unique([rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi))) for wthi in wth])
+            return unique([rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi)), None) for wthi in wth])
 
     return rule_replace
 
@@ -467,6 +484,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
                 nlabel += GVDESCEND
                 nlabel += '</TD></TR>'
 
+            if NKEY_BUTTON in node:
+                nlabel += '<TR><TD COLSPAN="3">'
+                nlabel += GVBUTTONBGN
+                nlabel += node[NKEY_BUTTON]
+                nlabel += GVBUTTONEND
+                nlabel += '</TD></TR>'
+
             layer_to_sides = {}
 
             for layer, patt in lhs.items():
@@ -518,8 +542,8 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
 
         else:
             nlabel += layer_pattern_to_string(node[NKEY_PATTERN], gv_filter_string,
-                                              '<TR><TD COLSPAN="3"><I>',
-                                              '</I></TD></TR>',
+                                              '<TR><TD COLSPAN="3">' + GVLAYERBGN,
+                                              GVLAYEREND + '</TD></TR>',
                                               '',
                                               '<TR><TD></TD><TD BORDER="1" COLOR="#888888">' + GVTILEBGN,
                                               GVTILEEND + '</TD><TD></TD></TR>',

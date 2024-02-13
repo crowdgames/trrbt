@@ -22,9 +22,11 @@ tree:
       - type: x-spin
         children:
         - type: rewrite
+          button: right
           lhs: P _
           rhs: _ P
         - type: rewrite
+          button: right
           lhs: P @ _
           rhs: _ P @
     - type: win
