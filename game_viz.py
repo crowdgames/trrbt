@@ -102,6 +102,12 @@ class GameFrame(tkinter.Frame):
         self._cvs.bind('<ButtonPress-2>', self.on_mouse_button_alt_down)
         self._cvs.bind('<ButtonRelease-2>', self.on_mouse_button_alt_up)
 
+        self.bind_all('<Left>',  lambda evt: self.on_button(evt, 'left'))
+        self.bind_all('<Right>', lambda evt: self.on_button(evt, 'right'))
+        self.bind_all('<Up>',    lambda evt: self.on_button(evt, 'up'))
+        self.bind_all('<Down>',  lambda evt: self.on_button(evt, 'down'))
+        self.bind_all('<KeyPress-z>',  lambda evt: self.on_button(evt, 'z'))
+
         self._game_proc = game_proc
         self._game_thread = game_thread
 
@@ -134,6 +140,17 @@ class GameFrame(tkinter.Frame):
                                         x0, y0+cn, x0, y0+cn,
                                         x0, y0,
                                         fill=fill, outline=outline, joinstyle=tkinter.ROUND, smooth=1, width=5)
+
+    def on_button(self, event, evt_button):
+        if self._choices_by_idx is not None:
+            button_idx = None
+            for idx, (desc, button, rhs, row, col) in self._choices_by_idx.items():
+                if button == evt_button:
+                    button_idx = idx
+                    break
+
+            if button_idx is not None:
+                self.make_choice(button_idx)
 
     def on_mouse_motion(self, event):
         with self._game_proc._thread_mtx:
@@ -273,10 +290,10 @@ class GameFrame(tkinter.Frame):
 
         self._choices_by_idx = {}
         self._choices_by_rect = {}
-        for idx, (desc, lhs, rhs, row, col) in choices.items():
+        for idx, (desc, button, lhs, rhs, row, col) in choices.items():
             rows, cols = util.layer_pattern_size(rhs)
 
-            self._choices_by_idx[idx] = (desc, rhs, row, col)
+            self._choices_by_idx[idx] = (desc, button, rhs, row, col)
 
             rect = (row, col, rows, cols)
             if rect not in self._choices_by_rect:
@@ -407,7 +424,7 @@ class GameFrame(tkinter.Frame):
                     self._cvs.delete(choice_cid)
             self._choice_cids = {}
 
-            desc, rhs, row, col = self._choices_by_idx[choice]
+            desc, button, rhs, row, col = self._choices_by_idx[choice]
 
             tmp_board = copy.deepcopy(game_proc.board)
             lpatt = rhs

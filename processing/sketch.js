@@ -16,6 +16,7 @@ let g_mouseChoice = null;
 let g_mouseAlt = false;
 
 let g_choicesByRct = null;
+let g_choicesByBtn = null;
 let g_choicePlayer = null;
 let g_choiceWait = false;
 
@@ -245,6 +246,32 @@ const waitForChoice = () => new Promise(resolve => {
     checkChoiceMade(resolve);
 });
 
+function keyPressed() {
+    if (g_choiceWait === true) {
+        let keyp = null;
+        if (keyCode === LEFT_ARROW) {
+            keyp = 'left';
+        } else if (keyCode === RIGHT_ARROW) {
+            keyp = 'right';
+        } else if (keyCode === UP_ARROW) {
+            keyp = 'up';
+        } else if (keyCode === DOWN_ARROW) {
+            keyp = 'down';
+        } else if (key === 'z') {
+            keyp = 'z';
+        }
+        if (keyp !== null && g_choicesByBtn.has(keyp)) {
+            g_choiceWait = g_choicesByBtn.get(keyp);
+            rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
+            g_mouseChoice = null;
+            g_choicesByRct = null;
+            g_choicesByBtn = null;
+            g_choicePlayer = null;
+        }
+    }
+    return false;
+}
+
 function mousePressed() {
     if (mouseButton === LEFT) {
         if (g_mouseChoice !== null) {
@@ -253,6 +280,7 @@ function mousePressed() {
                 rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
                 g_mouseChoice = null;
                 g_choicesByRct = null;
+                g_choicesByBtn = null;
                 g_choicePlayer = null;
             }
         }
@@ -631,7 +659,7 @@ async function runNodePlayer(node, fnMap) {
         if (child.type === 'rewrite') {
             let matches = findLayerPattern(child.lhs);
             for (let match of matches) {
-                choices.push({desc:child.desc, rhs:child.rhs, row:match.row, col:match.col});
+                choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
             }
         }
     }
@@ -651,6 +679,7 @@ async function runNodePlayer(node, fnMap) {
         g_choicePlayer = node.pid;
 
         g_choicesByRct = new Map();
+        g_choicesByBtn = new Map();
 
         for (let choice of choices) {
             let [rowsChoice, colsChoice] = layerPatternSize(choice.rhs);
@@ -664,6 +693,10 @@ async function runNodePlayer(node, fnMap) {
 
             mapChoices.push(choice);
             g_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
+
+            if (choice.button !== undefined) {
+                g_choicesByBtn.set(choice.button, choice);
+            }
         }
 
         await waitForChoice();

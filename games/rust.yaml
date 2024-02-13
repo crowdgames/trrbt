@@ -169,18 +169,23 @@ tree:
                 pid: 1
                 children:
                 - type: rewrite
+                  button: right
                   lhs: P  _
                   rhs: R  P
                 - type: rewrite
+                  button: right
                   lhs: P  O
                   rhs: _  W
                 - type: rewrite
+                  button: right
                   lhs: P  B
                   rhs: P  _
                 - type: rewrite
+                  button: right
                   lhs: P  e
                   rhs: P  _
                 - type: rewrite
+                  button: right
                   lhs: P  F
                   rhs: P  _
             - type: loop-until-all
