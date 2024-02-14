@@ -1,0 +1,252 @@
+---
+name: lost and found
+tree: 
+  type: order
+  children:
+  - type: set-board
+    pattern:  STATE = = = = = = = = ;
+              = = = = = = = = = ;
+              ROOM ITEM SHOE = = = = = = ;
+              ROOM ITEM COAT = = = = = = ;
+              COAT ITEM CARD = = = = = = ;
+              INV ITEM ID = = = = = = ;
+              = = = = = = = = = ;
+              GAME = = = = = = = = ;
+              = = = = = = = = = ;
+              R ACT LOOK LOST_AND_FOUND _ _ _ _ _ ;
+              R ACT LOOK INV _ _ _ _ _ ;
+              R T _ _ _ _ _ _ _ ;
+              R _ _ _ _ _ _ _ _ ;
+              R _ _ _ _ _ _ _ _ ;
+              R _ _ _ _ _ _ _ _ ;
+              R _ _ _ _ _ _ _ _ ;
+              R _ _ _ _ _ _ _ _ ;
+              R _ _ _ _ _ _ _ _ ;
+              NOW _ _ _ _ _ _ _ _ ;
+  - type: loop-until-all
+    children:
+    - type: all
+      children:
+      - type: player
+        pid: 1
+        children:
+        - type: rewrite
+          lhs: ACT .
+          rhs: DO .
+      - type: order
+        children:
+        - type: x-replace-only
+          what: ANY_THING
+          with:
+          - COAT
+          - SHOE
+          - CARD
+          - ID
+          - LOST_AND_FOUND
+          - INV
+          children:
+          - type: x-replace-only
+            what: ANY_ACTION
+            with:
+            - TAKE
+            - EX
+            - LOOK
+            children:
+            - type: x-replace-only
+              what: ANY_START
+              with: 
+              - DESC
+              - ACT
+              - LDESC
+              children:
+              - type: loop-until-all
+                comment: clear inactive actions and output
+                children:
+                - type: rewrite
+                  lhs: DESC .  
+                  rhs: _ _ 
+                - type: rewrite
+                  lhs: LDESC .  
+                  rhs: _ _ 
+                - type: rewrite
+                  lhs: ACT . . 
+                  rhs: _ _ _ 
+              - type: loop-until-all
+                comment: move active action to NOW
+                children:
+                - type: rewrite
+                  lhs: _ DO ANY_ACTION ANY_THING 
+                  rhs: DO ANY_ACTION ANY_THING _
+                - type: rewrite
+                  lhs:  R DO ANY_ACTION ANY_THING ; 
+                        R . . .    
+                  rhs:  R _ _ _ ; 
+                        R DO ANY_ACTION ANY_THING
+                - type: rewrite
+                  lhs:  R DO ANY_ACTION ANY_THING ; 
+                        NOW . . 
+                  rhs:  R _ _ _ ; 
+                        NOW ANY_ACTION ANY_THING
+              - type: loop-until-all
+                comment: reset output
+                children:
+                - type: rewrite
+                  lhs: R ANY_START . . . . . . . ;
+                  rhs: R _ _ _ _ _ _ _ _ ;
+                - type: rewrite
+                  lhs: = ; R _ 
+                  rhs: = ; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW LOOK LOST_AND_FOUND
+                - type: rewrite
+                  lhs:  R T _ ; 
+                        R _
+                  rhs:  R DESC LOST_AND_FOUND ; 
+                        R T
+                - type: loop-until-all
+                  children:
+                  - type: rewrite
+                    lhs: ROOM ITEM
+                    rhs: ROOM LIST
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW LOOK INV
+                - type: rewrite
+                  lhs: R T _ ; R _
+                  rhs: R DESC INV ; R T
+                - type: loop-until-all
+                  children:
+                  - type: rewrite
+                    lhs: INV ITEM
+                    rhs: INV LIST
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW EX SHOE
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ ; R _
+                  rhs: R DESC SHOE ACT TAKE SHOE; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW EX CARD
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ ; R _
+                  rhs: R DESC CARD ACT TAKE CARD; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW EX ID
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ ; R _
+                  rhs: R DESC ID ACT TAKE ID; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW EX COAT
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs: R T _ _ _ _ _ ; R _
+                    rhs: R DESC COAT ACT TAKE COAT ; R T
+                  - type: all
+                    children:
+                    - type: match
+                      pattern: COAT ITEM .
+                    - type: rewrite
+                      lhs: R T _ _ ; R _
+                      rhs: R DESC COAT_CONTENTS; R T
+                    - type: loop-until-all
+                      children:
+                      - type: rewrite
+                        lhs: COAT ITEM
+                        rhs: COAT LIST
+              - type: all
+                children:
+                - type: match
+                  pattern: LIST SHOE
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ _ _ ; R _
+                  rhs: R LDESC SHOE ACT EX SHOE ACT TAKE SHOE ; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: LIST COAT
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ _ _ ; R _
+                  rhs: R LDESC COAT ACT EX COAT ACT TAKE COAT ; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: LIST CARD 
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ _ _ ; R _
+                  rhs: R LDESC CARD ACT EX CARD ACT TAKE CARD ; R T
+              - type: all
+                children:
+                - type: match
+                  pattern: LIST ID 
+                - type: rewrite
+                  lhs: R T _ _ _ _ _ _ _ ; R _
+                  rhs: R LDESC ID ACT EX ID ACT TAKE ID ; R T
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: LIST
+                  rhs: ITEM
+              - type: all
+                children:
+                - type: match
+                  pattern: INV . SHOE
+                - type: rewrite
+                  lhs: ACT TAKE SHOE
+                  rhs: _ _ _ 
+              - type: all
+                children:
+                - type: match
+                  pattern: INV . COAT
+                - type: rewrite
+                  lhs: ACT TAKE COAT
+                  rhs: _ _ _ 
+              - type: all
+                children:
+                - type: match
+                  pattern: INV . CARD
+                - type: rewrite
+                  lhs: ACT TAKE CARD
+                  rhs: _ _ _ 
+              - type: all
+                children:
+                - type: match
+                  pattern: INV . ID
+                - type: rewrite
+                  lhs: ACT TAKE ID
+                  rhs: _ _ _ 
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW TAKE SHOE
+                - type: rewrite
+                  lhs: . ITEM SHOE
+                  rhs: INV ITEM SHOE
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW TAKE COAT
+                - type: rewrite
+                  lhs: . ITEM COAT
+                  rhs: INV ITEM COAT
+              - type: all
+                children:
+                - type: match
+                  pattern: NOW TAKE CARD
+                - type: rewrite
+                  lhs: . ITEM CARD
+                  rhs: INV ITEM CARD
+              - type: rewrite
+                comment: inv and look always available
+                lhs: R T _ _ ; R _ _ _; R _
+                rhs: R ACT LOOK LOST_AND_FOUND; R ACT LOOK INV; R T
