@@ -4,19 +4,24 @@ tree:
   type: order
   children:
   - type: set-board
-    comment: Items in STATE are listed line by line as LOCATION TYPE OBJECT_ID. Lines in GAME show the current results (R) of the previous action. Results can be descriptions (DESC OBJECT_ID; DESC OBJECT_ID CONTENTS), list descriptions (how an object would be presented in a list) (LIST_DESC OBJECT_ID), or actions (ACT ACTION OBJECT_ID), 
+    comment: Items in STATE are listed line by line as LOCATION TYPE OBJECT_ID. Lines in GAME show the current results (R) of the previous action. Results can be descriptions (DESC OBJECT_ID; DESC OBJECT_ID CONTENTS), list descriptions (how an object would be presented in a list) (LIST_DESC OBJECT_ID), or actions (ACT ACTION OBJECT_ID). The player P is in the room following them.
     pattern:  STATE = = = = = = = = ;
               = = = = = = = = = ;
               INV ITEM ID;
-              _ ROOM LOST_AND_FOUND ;
-              LOST_AND_FOUND ITEM SHOE = = = = = = ;
-              LOST_AND_FOUND ITEM COAT = = = = = = ;
-              COAT ITEM CARD = = = = = = ;
+              P ROOM LOST_AND_FOUND ;
+              LOST_AND_FOUND ITEM SHOE ;
+              LOST_AND_FOUND ITEM COAT ;
+              COAT ITEM CARD ;
+              LOST_AND_FOUND DIR NORTH HALLWAY ;
+              ;
+              _ ROOM HALLWAY ;
+              HALLWAY DIR SOUTH LOST_AND_FOUND ;
               = = = = = = = = = ;
               GAME = = = = = = = = ;
               = = = = = = = = = ;
               R ACT EX LOST_AND_FOUND _ _ _ _ _ ;
               R ACT EX INV _ _ _ _ _ ;
+              R ACT GO NORTH ;
               R T _ _ _ _ _ _ _ ;
               R _ _ _ _ _ _ _ _ ;
               R _ _ _ _ _ _ _ _ ;
@@ -43,6 +48,7 @@ tree:
           with:
           - TAKE
           - EX
+          - GO
           children:
           - type: x-replace-only
             what: ANY_THING
@@ -53,109 +59,195 @@ tree:
             - ID
             - LOST_AND_FOUND
             - INV
+            - NORTH
+            - SOUTH
+            - EAST
+            - WEST
             children:
-            - type: loop-until-all
-              comment: move active action to NOW
+            - type: x-replace-only
+              comment: DEVNOTE These nested x-replace-onlys are a PAIN
+              what: ANY_DIR
+              with:
+              - NORTH
+              - SOUTH
+              - EAST
+              - WEST
               children:
-              - type: rewrite
-                comment: Move action left until you hit the R DEVNOTE there's currently no way to say "anything EXCEPT R" so I accomplish this with the "." and the knowledge that the start of the row is R. So what we are actually doing is lhs "R .* DO ANY_ACTION ANY_THING .*" to rhs "R DO ANY_ACTION ANY_THING _*" (* being repeat-as-needed). For that matter, I don't care how many .s are between R and DO or how many are after ANY_THING. I just want to move it to the front of the line so I can then process it down to NOW for action processing. 
-                lhs: . . DO ANY_ACTION ANY_THING
-                rhs: . DO ANY_ACTION ANY_THING _
-              - type: rewrite
-                lhs:  R DO ANY_ACTION ANY_THING ; 
-                      R . . .    
-                rhs:  R _ _ _ ; 
-                      R DO ANY_ACTION ANY_THING
-              - type: rewrite
-                lhs:  R DO ANY_ACTION ANY_THING ; 
-                      NOW . . 
-                rhs:  R _ _ _ ; 
-                      NOW ANY_ACTION ANY_THING
-            - type: loop-until-all
-              comment: delete results
-              children:
-              - type: rewrite
-                comment: DEVNOTE Again, saying R .* to _* would be useful here. I don't actually care about the line length.
-                lhs: R . . . . . . . . 
-                rhs: R' _ _ _ _ _ _ _ _ 
-            - type: loop-until-all
-              comment: initialize output
-              children:
-              - type: rewrite
-                lhs: R'
-                rhs: R
-            - type: rewrite
-              comment: set next line of output
-              lhs: = ; R _ 
-              rhs: = ; R T
-            - type: x-unroll-replace
-              comment: actions on items
-              what: ANY_THING
-              children:
-              - type: all
-                comment: EX (examine) action reveals description (DESC) and the TAKE action (which is removed by a later rule if the item can't be taken) DEVNOTE "all" used as "if"
+              - type: x-replace-only
+                what: ANY_ROOM
+                with: 
+                - LOST_AND_FOUND
+                - HALLWAY
                 children:
-                - type: match
-                  pattern: NOW EX ANY_THING
+                - type: loop-until-all
+                  comment: move active action to NOW
+                  children:
+                  - type: rewrite
+                    comment: Move action left until you hit the R DEVNOTE there's currently no way to say "anything EXCEPT R" so I accomplish this with the "." and the knowledge that the start of the row is R. So what we are actually doing is lhs "R .* DO ANY_ACTION ANY_THING .*" to rhs "R DO ANY_ACTION ANY_THING _*" (* being repeat-as-needed). For that matter, I don't care how many .s are between R and DO or how many are after ANY_THING. I just want to move it to the front of the line so I can then process it down to NOW for action processing. 
+                    lhs: . . DO ANY_ACTION ANY_THING
+                    rhs: . DO ANY_ACTION ANY_THING _
+                  - type: rewrite
+                    lhs:  R DO ANY_ACTION ANY_THING ; 
+                          R . . .    
+                    rhs:  R _ _ _ ; 
+                          R DO ANY_ACTION ANY_THING
+                  - type: rewrite
+                    lhs:  R DO ANY_ACTION ANY_THING ; 
+                          NOW . . 
+                    rhs:  R _ _ _ ; 
+                          NOW ANY_ACTION ANY_THING
+                - type: loop-until-all
+                  comment: delete results
+                  children:
+                  - type: rewrite
+                    comment: DEVNOTE Again, saying R .* to _* would be useful here. I don't actually care about the line length.
+                    lhs: R . . . . . . . . 
+                    rhs: R' _ _ _ _ _ _ _ _ 
+                - type: loop-until-all
+                  comment: initialize output
+                  children:
+                  - type: rewrite
+                    lhs: R'
+                    rhs: R
                 - type: rewrite
-                  lhs: R T _ _ _ _ _ ; R _
-                  rhs: R DESC ANY_THING ACT TAKE ANY_THING; R T
-                - type: all
-                  comment: Flag the item's contents (for a room, container, inventory) to be listed DEVNOTE "all" used as "if"
+                  comment: set next line of output
+                  lhs: = ; R _ 
+                  rhs: = ; R T
+                - type: x-unroll-replace
+                  comment: actions on items
+                  what: ANY_THING
                   children:
-                  - type: match
-                    pattern: ANY_THING ITEM .
-                  - type: rewrite
-                    comment: In an actual game, this would be something like "You can see:" or "In the coat are:"
-                    lhs: R T _ _ ; R _
-                    rhs: R DESC ANY_THING CONTENTS; R T
-                  - type: loop-until-all
-                    comment: Flag all items with location in the item (first part of the item's listing) to be listed
-                    children:
-                    - type: rewrite
-                      lhs: ANY_THING ITEM
-                      rhs: ANY_THING LIST
-              - type: all
-                comment: TAKE action moves an item from its current location into the inventory (INV) DEVNOTE "all" used as "if"
-                children:
-                - type: match
-                  pattern: NOW TAKE ANY_THING
-                - type: rewrite
-                  lhs: . ITEM ANY_THING
-                  rhs: INV ITEM ANY_THING
-            - type: x-unroll-replace
-              comment: list items
-              what: ANY_THING
-              children:
-                - type: all
-                  comment: List flagged contents with LIST_DESC and options to examine (EX) or TAKE (removed later if unapplicable) DEVNOTE "all" used as "if"
-                  children:
-                  - type: match
-                    pattern: LIST ANY_THING
-                  - type: rewrite
-                    lhs: R T _ _ _ _ _ _ _ ; R _
-                    rhs: R LIST_DESC ANY_THING ACT EX ANY_THING ACT TAKE ANY_THING ; R T
-                  - type: rewrite
-                    comment: unset the LIST flag
-                    lhs: LIST ANY_THING
-                    rhs: ITEM ANY_THING
-                - type: all
-                  comment: disallow TAKE if the target is not an item or is already located in the inventory DEVNOTE "all" used as "if"
-                  children:
-                  - type: order
-                    comment: DEVNOTE "order" used as "or"
+                  - type: all
+                    comment: EX (examine) action reveals description (DESC) and the TAKE action (which is removed by a later rule if the item can't be taken) DEVNOTE "all" used as "if"
                     children:
                     - type: match
-                      pattern: INV . ANY_THING
-                    - type: none
-                      comment: DEVNOTE "none" used as "not"
+                      pattern: NOW EX ANY_THING
+                    - type: rewrite
+                      lhs: R T _ _ _ _ _ ; R _
+                      rhs: R DESC ANY_THING ACT TAKE ANY_THING; R T
+                    - type: all
+                      comment: Flag the item's contents (for a room, container, inventory) to be listed DEVNOTE "all" used as "if"
                       children:
                       - type: match
-                        pattern: ITEM ANY_THING
-                  - type: rewrite
-                    lhs: ACT TAKE ANY_THING
-                    rhs: _ _ _ 
-            - type: rewrite
-              comment: After printing other results, add the always-present EX room and EX inventory
-              lhs: R T _ _ ; R _ _ _; R _
-              rhs: R ACT EX LOST_AND_FOUND; R ACT EX INV; R T
+                        pattern: ANY_THING ITEM .
+                      - type: rewrite
+                        comment: In an actual game, this would be something like "You can see:" or "In the coat are:"
+                        lhs: R T _ _ ; R _
+                        rhs: R DESC ANY_THING CONTENTS; R T
+                      - type: loop-until-all
+                        comment: Flag all items with location in the item (first part of the item's listing) to be listed
+                        children:
+                        - type: rewrite
+                          lhs: ANY_THING ITEM
+                          rhs: ANY_THING LIST
+                  - type: all
+                    comment: TAKE action moves an item from its current location into the inventory (INV) DEVNOTE "all" used as "if"
+                    children:
+                    - type: match
+                      pattern: NOW TAKE ANY_THING
+                    - type: rewrite
+                      lhs: . ITEM ANY_THING
+                      rhs: INV ITEM ANY_THING
+                - type: x-unroll-replace
+                  comment: list items
+                  what: ANY_THING
+                  children:
+                    - type: all
+                      comment: List flagged contents with LIST_DESC and options to examine (EX) or TAKE (removed later if unapplicable) DEVNOTE "all" used as "if"
+                      children:
+                      - type: match
+                        pattern: LIST ANY_THING
+                      - type: rewrite
+                        lhs: R T _ _ _ _ _ _ _ ; R _
+                        rhs: R LIST_DESC ANY_THING ACT EX ANY_THING ACT TAKE ANY_THING ; R T
+                      - type: rewrite
+                        comment: unset the LIST flag
+                        lhs: LIST ANY_THING
+                        rhs: ITEM ANY_THING
+                    - type: all
+                      comment: disallow TAKE if the target is not an item or is already located in the inventory DEVNOTE "all" used as "if"
+                      children:
+                      - type: order
+                        comment: DEVNOTE "order" used as "or"
+                        children:
+                        - type: match
+                          pattern: INV . ANY_THING
+                        - type: none
+                          comment: DEVNOTE "none" used as "not"
+                          children:
+                          - type: match
+                            pattern: ITEM ANY_THING
+                      - type: rewrite
+                        lhs: ACT TAKE ANY_THING
+                        rhs: _ _ _ 
+                - type: x-unroll-replace
+                  comment: direction handling
+                  what: ANY_DIR
+                  children:
+                  - type: all
+                    comment: GO action moves the player P in the direction DEVNOTE "all" used as "if"
+                    children:
+                    - type: match
+                      pattern: NOW GO ANY_DIR
+                    - type: x-unroll-replace
+                      what: ANY_ROOM
+                      children:
+                      - type: all
+                        comment: find where the player is DEVNOTE "all" as "if"
+                        children:
+                        - type: match
+                          pattern: P ROOM ANY_ROOM
+                        - type: rewrite
+                          comment: flag the target room
+                          lhs: ANY_ROOM DIR ANY_DIR
+                          rhs: ANY_ROOM TARGET ANY_DIR
+                - type: x-unroll-replace
+                  comment: move player to new room
+                  what: ANY_ROOM
+                  children:
+                  - type: all
+                    comment: DEVNOTE "all" used as "if"
+                    children:
+                    - type: match
+                      pattern: TARGET . ANY_ROOM
+                    - type: rewrite
+                      comment: take P out of current room
+                      lhs: P
+                      rhs: _
+                    - type: rewrite
+                      comment: move P to target room
+                      lhs: . ROOM ANY_ROOM
+                      rhs: P ROOM ANY_ROOM
+                    - type: rewrite
+                      comment: unset target
+                      lhs: TARGET
+                      rhs: DIR
+                - type: x-unroll-replace
+                  what: ANY_ROOM
+                  comment: add direction and look actions
+                  children: 
+                  - type: all 
+                    comment: DEVNOTE "all" used as "if"
+                    children:
+                    - type: match
+                      pattern: P ROOM ANY_ROOM
+                    - type: rewrite
+                      comment: look action
+                      lhs: R T _ _ ; R _
+                      rhs: R ACT EX ANY_ROOM; R T
+                    - type: x-unroll-replace
+                      comment: list directions
+                      what: ANY_DIR
+                      children:
+                      - type: all
+                        comment: DEVNOTE "all" used as "if"
+                        children:
+                        - type: match
+                          pattern: ANY_ROOM DIR ANY_DIR
+                        - type: rewrite
+                          lhs: R T _ _ ; R _
+                          rhs: R ACT GO ANY_DIR ; R _
+                - type: rewrite
+                  comment: After printing other results, add the always-present EX inventory
+                  lhs: R T _ _ ; R _
+                  rhs: R ACT EX INV; R T
