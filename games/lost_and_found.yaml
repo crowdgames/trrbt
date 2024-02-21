@@ -51,27 +51,25 @@ tree:
           - GO
           children:
           - type: x-replace-only
-            what: ANY_THING
+            comment: DEVNOTE These nested x-replace-onlys are a PAIN
+            what: ANY_DIR
             with:
-            - COAT
-            - SHOE
-            - CARD
-            - ID
-            - LOST_AND_FOUND
-            - INV
             - NORTH
             - SOUTH
             - EAST
             - WEST
             children:
             - type: x-replace-only
-              comment: DEVNOTE These nested x-replace-onlys are a PAIN
-              what: ANY_DIR
+              comment: DEVNOTE I would like to be able to compose replace-only lists e.g. be able to say ANY_ACTIONABLE_THING is ANY_ROOM + ANY_ITEM + ANY_DIRECTION
+              what: ANY_THING
               with:
-              - NORTH
-              - SOUTH
-              - EAST
-              - WEST
+              - COAT
+              - SHOE
+              - CARD
+              - ID
+              - LOST_AND_FOUND
+              - INV
+              - ANY_DIR
               children:
               - type: x-replace-only
                 what: ANY_ROOM
