@@ -7,12 +7,11 @@ tree:
     comment: Items in STATE are listed line by line as LOCATION TYPE OBJECT_ID. Lines in GAME show the current results (R) of the previous action. Results can be descriptions (DESC OBJECT_ID; DESC OBJECT_ID CONTENTS), list descriptions (how an object would be presented in a list) (LIST_DESC OBJECT_ID), or actions (ACT ACTION OBJECT_ID), 
     pattern:  STATE = = = = = = = = ;
               = = = = = = = = = ;
+              INV ITEM ID;
               _ ROOM LOST_AND_FOUND ;
-              _ _ INV ;
               LOST_AND_FOUND ITEM SHOE = = = = = = ;
               LOST_AND_FOUND ITEM COAT = = = = = = ;
               COAT ITEM CARD = = = = = = ;
-              INV ITEM ID = = = = = = ;
               = = = = = = = = = ;
               GAME = = = = = = = = ;
               = = = = = = = = = ;
