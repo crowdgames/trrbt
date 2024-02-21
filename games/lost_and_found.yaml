@@ -60,22 +60,23 @@ tree:
             - WEST
             children:
             - type: x-replace-only
-              comment: DEVNOTE I would like to be able to compose replace-only lists e.g. be able to say ANY_ACTIONABLE_THING is ANY_ROOM + ANY_ITEM + ANY_DIRECTION
-              what: ANY_THING
-              with:
-              - COAT
-              - SHOE
-              - CARD
-              - ID
+              what: ANY_ROOM
+              with: 
               - LOST_AND_FOUND
-              - INV
-              - ANY_DIR
+              - HALLWAY
               children:
               - type: x-replace-only
-                what: ANY_ROOM
-                with: 
+                comment: DEVNOTE Why can I add ANY_DIR here and it works for the direction, but if I add ANY_ROOM it's a nogo? I want to be able to compose x-replace only lists
+                what: ANY_THING
+                with:
+                - COAT
+                - SHOE
+                - CARD
+                - ID
                 - LOST_AND_FOUND
                 - HALLWAY
+                - INV
+                - ANY_DIR
                 children:
                 - type: loop-until-all
                   comment: move active action to NOW
