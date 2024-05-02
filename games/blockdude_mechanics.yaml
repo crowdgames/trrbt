@@ -140,6 +140,15 @@ tree:
                             _ P ;
                             S . ;
                     - type: rewrite
+                      comment: walk under overhang with block
+                      desc: walk_block
+                      lhs:  B S ;
+                            P _ ;
+                            S . ;
+                      rhs:  _ S ;
+                            B P ;
+                            S . ;
+                    - type: rewrite
                       comment: jump with block
                       desc: jump_block
                       lhs:  _ _ ;

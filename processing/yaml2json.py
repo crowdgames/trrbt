@@ -4,7 +4,7 @@ import json
 import os
 import sys
 sys.path.append('..')
-import util
+import trrbt.util as util
 
 def get_sprite_data(sprites):
     sprite_data = {}
