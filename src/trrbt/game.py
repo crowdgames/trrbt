@@ -4,33 +4,38 @@ import os
 import random
 import sys
 import time
-import util
+import trrbt.util as util
 
-END_WIN   = 'win'
-END_LOSE  = 'lose'
-END_DRAW  = 'draw'
-END_STALE = 'stale'
+END_WIN = "win"
+END_LOSE = "lose"
+END_DRAW = "draw"
+END_STALE = "stale"
 
 DEFAULT_DISPLAY_DELAY = 0.5
+
 
 def cls():
     sys.stdout.flush()
     sys.stderr.flush()
-    os.system('cls' if os.name == 'nt' else 'clear')
+    os.system("cls" if os.name == "nt" else "clear")
+
 
 def delay(seconds):
     sys.stdout.flush()
     sys.stderr.flush()
     time.sleep(seconds)
 
+
 class GameOver:
     def __init__(self, result, player):
         self.result = result
         self.player = player
 
+
 class GameOverException(Exception):
     def __init__(self, result, player):
         self.game_over = GameOver(result, player)
+
 
 class GameProcessor:
     def __init__(self, filename, choice_order, random_players, clear_screen):
@@ -39,6 +44,7 @@ class GameProcessor:
         self.name = bt.name
         self.filename = filename
         self.board = {}
+        self.history = []
         self.m = 0
         self.n = 0
         self.tree = bt.tree
@@ -117,7 +123,9 @@ class GameProcessor:
         Sets current board to given pattern.
         :return: Success.
         """
-        self.board = { layer: util.listify(patt) for layer, patt in node[util.NKEY_PATTERN].items() }
+        self.board = {
+            layer: util.listify(patt) for layer, patt in node[util.NKEY_PATTERN].items()
+        }
         self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
@@ -127,7 +135,10 @@ class GameProcessor:
         :return: Success.
         """
         old_layer = self.board[util.DEFAULT_LAYER]
-        new_layer = [[('.' if tile == '.' else node[util.NKEY_WITH]) for tile in row] for row in old_layer]
+        new_layer = [
+            [("." if tile == "." else node[util.NKEY_WITH]) for tile in row]
+            for row in old_layer
+        ]
         self.board[node[util.NKEY_WHAT]] = new_layer
         return True
 
@@ -146,7 +157,7 @@ class GameProcessor:
                 for rr in range(len(pattern)):
                     new_rows[rr] += pattern[rr]
             for rr in range(len(pattern)):
-                new_rows[rr] = new_rows[rr][:self.n]
+                new_rows[rr] = new_rows[rr][: self.n]
 
             self.board += new_rows
 
@@ -166,7 +177,7 @@ class GameProcessor:
             new_cols = util.listify(pattern)
             while len(new_cols) < self.m:
                 new_cols += pattern
-            new_cols = new_cols[:self.m]
+            new_cols = new_cols[: self.m]
 
             for rr in range(len(pattern)):
                 self.board[rr] += new_cols[rr]
@@ -226,9 +237,19 @@ class GameProcessor:
             if child[util.NKEY_TYPE] == util.ND_REWRITE:
                 res = self.find_layer_pattern(child[util.NKEY_LHS])
                 if len(res) > 0:
-                    valid_moves += [(child.get(util.NKEY_DESC, None), child.get(util.NKEY_BUTTON, None), row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
+                    valid_moves += [
+                        (
+                            child.get(util.NKEY_DESC, None),
+                            child.get(util.NKEY_BUTTON, None),
+                            row,
+                            col,
+                            child[util.NKEY_LHS],
+                            child[util.NKEY_RHS],
+                        )
+                        for row, col in res
+                    ]
             else:
-                raise RuntimeError('All children of player nodes must be rewrite')
+                raise RuntimeError("All children of player nodes must be rewrite")
 
         if len(valid_moves) == 0:
             print(f"Player {player_id} doesn't have a valid move!")
@@ -245,8 +266,8 @@ class GameProcessor:
             desc, button, row, col, lhs, rhs = choice
 
             lhs, rhs = util.layer_pad_tiles_multiple([lhs, rhs])
-            lhs = { layer: util.tuplify(patt) for layer, patt in lhs.items() }
-            rhs = { layer: util.tuplify(patt) for layer, patt in rhs.items() }
+            lhs = {layer: util.tuplify(patt) for layer, patt in lhs.items()}
+            rhs = {layer: util.tuplify(patt) for layer, patt in rhs.items()}
 
             if self.choice_order:
                 idx = ii + 1
@@ -254,14 +275,22 @@ class GameProcessor:
             else:
                 idx = None
 
-                choice_keys = [(str(lhs), row, col, str(rhs)), (str(lhs), row, col), (str(lhs))]
+                choice_keys = [
+                    (str(lhs), row, col, str(rhs)),
+                    (str(lhs), row, col),
+                    (str(lhs)),
+                ]
                 for choice_key in choice_keys:
                     if choice_key in self.previous_moves:
                         idx = self.previous_moves[choice_key]
                         break
 
                 if idx is None:
-                    idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
+                    idx = 1 + (
+                        max(self.previous_moves.values())
+                        if len(self.previous_moves) > 0
+                        else 0
+                    )
 
                 while idx in this_turn_choices:
                     idx += 1
@@ -277,9 +306,13 @@ class GameProcessor:
 
             desc, button, lhs, rhs, row, col = this_turn_info[user_input]
 
-            lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
+            lhs = util.layer_pattern_to_string(
+                lhs, None, "-", "-:", "&", "", "", " ", "; "
+            )
+            rhs = util.layer_pattern_to_string(
+                rhs, None, "-", "-:", "&", "", "", " ", "; "
+            )
+            print(f"Player {player_id} choice: {lhs} → {rhs} at {row},{col}")
 
             if self.clear_screen is not None:
                 delay(self.clear_screen)
@@ -295,10 +328,14 @@ class GameProcessor:
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
             desc, button, lhs, rhs, row, col = this_turn_info[idx]
-            lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            choice_desc = f'({desc}) ' if desc is not None else ''
-            print(f'{choice_desc}{idx}: {lhs} → {rhs} at {row},{col}')
+            lhs = util.layer_pattern_to_string(
+                lhs, None, "-", "-:", "&", "", "", " ", "; "
+            )
+            rhs = util.layer_pattern_to_string(
+                rhs, None, "-", "-:", "&", "", "", " ", "; "
+            )
+            choice_desc = f"({desc}) " if desc is not None else ""
+            print(f"{choice_desc}{idx}: {lhs} → {rhs} at {row},{col}")
 
         while True:
             try:
@@ -345,7 +382,7 @@ class GameProcessor:
         """
         pattern = node[util.NKEY_PATTERN]
         if self.match_layer_pattern(pattern):
-            #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
+            # print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
 
@@ -412,9 +449,10 @@ class GameProcessor:
             for cc in range(pc):
                 for layer, patt in lpatt.items():
                     tile = patt[rr][cc]
-                    if tile == '.':
+                    if tile == ".":
                         continue
                     self.board[layer][row + rr][col + cc] = tile
+        self.history.append(copy.deepcopy(self.board["main"]))
 
     def find_layer_pattern(self, lpatt):
         ret = []
@@ -440,7 +478,7 @@ class GameProcessor:
             for cc in range(pc):
                 for layer, patt in lpatt.items():
                     tile = patt[rr][cc]
-                    if tile == '.':
+                    if tile == ".":
                         continue
                     if self.board[layer][row + rr][col + cc] != tile:
                         return False
@@ -453,22 +491,49 @@ class GameProcessor:
             print()
 
         print("Current board is:")
-        print(util.layer_pattern_to_string(self.board, None, '-', '-\n', '\n', '', '', ' ', '\n', self.max_tile_width))
+        print(
+            util.layer_pattern_to_string(
+                self.board,
+                None,
+                "-",
+                "-\n",
+                "\n",
+                "",
+                "",
+                " ",
+                "\n",
+                self.max_tile_width,
+            )
+        )
         print()
 
 
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Play game YAML.')
-    parser.add_argument('filename', type=str, help='Filename to process.')
-    parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
-    parser.add_argument('--random', type=int, help='Random seed.')
-    parser.add_argument('--choice-order', action='store_true', help='Keep move choices in order.')
-    parser.add_argument('--cls', type=float, nargs='?', const=DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Play game YAML.")
+    parser.add_argument("filename", type=str, help="Filename to process.")
+    parser.add_argument(
+        "--player-random",
+        type=str,
+        nargs="+",
+        help="Player IDs to play randomly.",
+        default=[],
+    )
+    parser.add_argument("--random", type=int, help="Random seed.")
+    parser.add_argument(
+        "--choice-order", action="store_true", help="Keep move choices in order."
+    )
+    parser.add_argument(
+        "--cls",
+        type=float,
+        nargs="?",
+        const=DEFAULT_DISPLAY_DELAY,
+        default=None,
+        help="Clear screen before moves, optionally providing move delay.",
+    )
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
-    print(f'Using random seed {random_seed}')
+    print(f"Using random seed {random_seed}")
     random.seed(random_seed)
 
     game = GameProcessor(args.filename, args.choice_order, args.player_random, args.cls)

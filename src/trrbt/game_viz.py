@@ -1,6 +1,6 @@
 import argparse
 import copy
-import game
+import trrbt.game as game
 import json
 import os
 import PIL.Image, PIL.ImageDraw, PIL.ImageTk
@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 import tkinter, tkinter.messagebox
-import util
+import trrbt.util as util
 import yaml
 
 
@@ -426,7 +426,7 @@ class GameFrame(tkinter.Frame):
 
             desc, button, rhs, row, col = self._choices_by_idx[choice]
 
-            tmp_board = copy.deepcopy(game_proc.board)
+            tmp_board = copy.deepcopy(self._game_proc.board)
             lpatt = rhs
             pr, pc = util.layer_pattern_size(lpatt)
             for rr in range(pr):
@@ -440,7 +440,7 @@ class GameFrame(tkinter.Frame):
 
             self._choices_by_idx = None
             self._choices_by_rect = None
-            game_proc._thread_choice = choice
+            self._game_proc._thread_choice = choice
 
     def check_thread(self):
         if not self._game_thread.is_alive():
@@ -467,18 +467,18 @@ class GameFrame(tkinter.Frame):
                 else:
                     msg = 'Error in game over.'
                 tkinter.messagebox.showinfo(message=msg)
-
+                
                 #self.winfo_toplevel().destroy()
                 #return
 
         with self._game_proc._thread_mtx:
             if self._game_proc._thread_new_board is not None:
-                self.update_board(game_proc._thread_new_board)
-                game_proc._thread_new_board = None
+                self.update_board(self._game_proc._thread_new_board)
+                self._game_proc._thread_new_board = None
 
-            if game_proc._thread_choices is not None:
-                self.update_choices(game_proc._thread_choices[0], game_proc._thread_choices[1], game_proc._thread_choices[2])
-                game_proc._thread_choices = None
+            if self._game_proc._thread_choices is not None:
+                self.update_choices(self._game_proc._thread_choices[0], self._game_proc._thread_choices[1], self._game_proc._thread_choices[2])
+                self._game_proc._thread_choices = None
 
         self.after(1, self.check_thread)
 
