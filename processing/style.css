@@ -3,6 +3,11 @@
     src: url(upheavtt.ttf);
 }
 
+@font-face {
+    font-family: 'webfont';
+    src: url(000webfont.ttf);
+}
+
 @keyframes floating {
     0% { transform: translate(0,  0px); }
     50%  { transform: translate(0, 15px); }
@@ -38,8 +43,10 @@
 }
 
 .card {
-    background-color: rgb(130, 126, 150);
+    background-color: rgb(196, 193, 224);
+    border: 4px solid rgb(102, 91, 128);
     border-radius: 20px;
+    padding: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -47,6 +54,8 @@
     width: 50%;
 }
 
-a {
-    color: rgb(255, 255, 255);
+button {
+    color: rgb(70, 59, 59);
+    font-family: webfont;
+    font-size: 24px;
 }

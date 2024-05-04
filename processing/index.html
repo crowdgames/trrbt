@@ -8,7 +8,6 @@
       <br />
       <br />
 
-
       <div class="title">
         <span>REWRITE RULES</span>
       </div>
@@ -21,49 +20,99 @@
       <div class="margins">
         <div class="col">
           <div class="row">
-            <div class="card">
-              <a href="games/ttt-text.html">ttt-text</a><br />
-            </div>
-            <div class="card">
-              <a href="games/connect4-text.html">connect4-text</a><br />
-            </div>
-            <div class="card">
-              <a href="games/checkers-text.html">checkers-text</a><br />
-            </div>
+            <button id="ttt" class="card">tic-tac-toe (text)</button>
+            <script type="text/javascript">
+              document.getElementById("ttt").onclick = function () {
+                location.href = "games/ttt-text.html";
+              };
+            </script>
+
+            <button id="connect4" class="card">connect4 (text)</button>
+            <script type="text/javascript">
+              document.getElementById("connect4").onclick = function () {
+                location.href = "games/connect4-text.html";
+              };
+            </script>
+
+            <button id="checkersText" class="card">checkers (text)</button>
+            <script type="text/javascript">
+              document.getElementById("checkersText").onclick = function () {
+                location.href = "games/checkers-text.html";
+              };
+            </script>
           </div>
-  
+
           <div class="row">
-            <div class="card">
-              <a href="games/checkers.html">checkers</a><br />
-            </div>
-            <div class="card">
-              <a href="games/soko-text.html">soko-text</a><br />
-            </div>
-            <div class="card"><a href="games/soko.html">soko</a><br /></div>
+            <button id="checkers" class="card">checkers</button>
+            <script type="text/javascript">
+              document.getElementById("checkers").onclick = function () {
+                location.href = "games/checkers.html";
+              };
+            </script>
+
+            <button id="sokoText" class="card">soko (text)</button>
+            <script type="text/javascript">
+              document.getElementById("sokoText").onclick = function () {
+                location.href = "games/soko-text.html";
+              };
+            </script>
+
+            <button id="soko" class="card">soko</button>
+            <script type="text/javascript">
+              document.getElementById("soko").onclick = function () {
+                location.href = "games/soko.html";
+              };
+            </script>
           </div>
-  
+
           <div class="row">
-            <div class="card">
-              <a href="games/blockdude-text.html">blockdude-text</a><br />
-            </div>
-            <div class="card">
-              <a href="games/blockdude.html">blockdude</a><br />
-            </div>
-            <div class="card">
-              <a href="games/rust-text.html">rust-text</a><br />
-            </div>
+            <button id="blockdudeText" class="card">blockdude (text)</button>
+            <script type="text/javascript">
+              document.getElementById("blockdudeText").onclick = function () {
+                location.href = "games/blockdude-text.html";
+              };
+            </script>
+
+            <button id="blockdude" class="card">soko (text)</button>
+            <script type="text/javascript">
+              document.getElementById("blockdude").onclick = function () {
+                location.href = "games/blockdude.html";
+              };
+            </script>
+
+            <button id="rustText" class="card">soko</button>
+            <script type="text/javascript">
+              document.getElementById("rustText").onclick = function () {
+                location.href = "games/rust-text.html";
+              };
+            </script>
           </div>
-  
+
           <div class="row">
-            <div class="card"><a href="games/rust.html">rust</a><br /></div>
-            <div class="card">
-              <a href="games/turn-text.html">turn-text</a><br />
-            </div>
-            <div class="card"><a href="games/turn.html">turn</a><br /></div>
+            <button id="rust" class="card">blockdude (text)</button>
+            <script type="text/javascript">
+              document.getElementById("rust").onclick = function () {
+                location.href = "games/rust.html";
+              };
+            </script>
+
+            <button id="turnText" class="card">soko (text)</button>
+            <script type="text/javascript">
+              document.getElementById("turnText").onclick = function () {
+                location.href = "games/turn-text.html";
+              };
+            </script>
+
+            <button id="turn" class="card">soko</button>
+            <script type="text/javascript">
+              document.getElementById("turn").onclick = function () {
+                location.href = "games/turn.html";
+              };
+            </script>
           </div>
         </div>
       </div>
-    
+
       <main></main>
     </center>
   </body>
