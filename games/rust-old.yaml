@@ -1,0 +1,373 @@
+---
+name: rust
+tree:
+  type: order
+  children:
+  - type: random-try
+    children:
+    - type: set-board
+      pattern: .  .  .  .  X  X  X  X  X;
+               .  .  .  .  X  _  _  _  X;
+               .  .  .  .  X  _  P  _  X;
+               .  .  .  .  X  _  _  _  X;
+               .  .  .  .  .  .  _  .  .;
+               .  .  .  .  B  _  _  .  .;
+               .  .  .  .  _  .  .  .  .;
+               X  _  _  _  _  _  _  _  X;
+               X  _  _  _  _  _  _  _  X;
+               X  _  _  X  X  X  _  _  X;
+               X  _  _  _  F  _  _  _  X;
+               X  _  _  _  _  _  _  _  X;
+               .  .  .  .  B  .  .  .  .;
+               X  _  _  _  _  _  _  _  X;
+               X  _  _  _  X  _  _  _  X;
+               X  _  F  _  X  _  F  _  X;
+               X  _  _  _  X  _  _  _  X;
+               X  _  _  _  _  _  _  _  X;
+               .  .  .  .  _  .  .  .  .;
+               .  .  .  .  B  _  B  .  .;
+               .  .  .  .  .  .  _  .  .;
+               .  .  .  .  X  _  _  _  X;
+               .  .  .  .  X  _  O  _  X;
+               .  .  .  .  X  _  _  _  X;
+               .  .  .  .  X  X  X  X  X;
+    - type: set-board
+      pattern: .  X  X  X  X  X  X  X  .  .  .  .  .  .  .  .;
+               .  X  X  X  P  X  X  X  .  .  .  .  .  .  .  .;
+               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
+               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
+               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
+               .  .  .  .  _  .  .  .  .  .  .  .  .  .  .  .;
+               X  X  X  .  F  .  X  X  X  .  .  .  .  .  .  .;
+               X  _  _  _  _  _  _  _  X  .  .  .  .  .  .  .;
+               X  B  _  _  _  _  _  B  X  .  .  .  .  .  .  .;
+               X  B  _  _  A1 _  _  S1 X  .  .  .  .  .  .  .;
+               X  B  _  _  _  _  _  B  X  .  .  .  .  .  .  .;
+               X  _  _  _  _  _  _  _  X  .  .  .  .  .  .  .;
+               X  X  X  X  D1 X  X  X  X  .  .  .  .  .  .  .;
+               X  S2 _  _  T1 _  _  _  X  .  .  .  X  X  X  X;
+               X  _  _  _  _  _  _  _  _  .  .  .  _  _  _  X;
+               X  N1 _  _  _  _  _  N1 _  D2 A3 D3 _  O  _  X;
+               X  _  _  _  A2 _  _  _  _  .  .  .  _  _  _  X;
+               X  _  _  _  _  _  _  S3 X  .  .  .  X  X  X  X;
+               X  X  X  X  X  X  X  X  X  .  .  .  .  .  .  .;
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: x-replace-only
+      what: p
+      with:
+      - P
+      - P:A1
+      - P:A2
+      - P:A3
+      children:
+      - type: x-replace-only
+        what: a
+        with:
+        - _
+        - A1
+        - A2
+        - A3
+        - T1
+        - E
+        - F
+        children:
+        - type: x-replace-only
+          what: b
+          with:
+          - _
+          - A1
+          - A2
+          - A3
+          - T1
+          - E
+          - F
+          children:
+          - type: x-replace-only
+            what: d
+            with:
+            - '<'
+            - '>'
+            - ^
+            - v
+            children:
+            - type: x-spin
+              children:
+              - type: player
+                pid: 1
+                children:
+                - type: rewrite
+                  lhs: P  _
+                  rhs: R  P
+                - type: rewrite
+                  lhs: P  A1
+                  rhs: R  P:A1
+                - type: rewrite
+                  lhs: P:A1 _
+                  rhs: A1   P
+                - type: rewrite
+                  lhs: P  A2
+                  rhs: R  P:A2
+                - type: rewrite
+                  lhs: P:A2 _
+                  rhs: A2   P
+                - type: rewrite
+                  lhs: P  A3
+                  rhs: R  P:A3
+                - type: rewrite
+                  lhs: P:A3 _
+                  rhs: A3   P
+                - type: rewrite
+                  lhs: P  S1
+                  rhs: R  P
+                - type: rewrite
+                  lhs: P  S2
+                  rhs: R  P
+                - type: rewrite
+                  lhs: P  S3
+                  rhs: R  P
+                - type: rewrite
+                  lhs: P  T1
+                  rhs: R  P
+                - type: rewrite
+                  lhs: P  O
+                  rhs: _  W
+                - type: rewrite
+                  lhs: P  B
+                  rhs: P  _
+                - type: rewrite
+                  lhs: p  E
+                  rhs: p  _
+                - type: rewrite
+                  lhs: p  F
+                  rhs: p  _
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: p  a
+                rhs: p  a:<
+              - type: rewrite
+                lhs: a    p
+                rhs: a:>  p
+              - type: rewrite
+                lhs: p;  a
+                rhs: p;  a:^
+              - type: rewrite
+                lhs: a  ; p
+                rhs: a:v; p
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: R  a
+                rhs: R  a:<
+              - type: rewrite
+                lhs: a    R
+                rhs: a:>  R
+              - type: rewrite
+                lhs: R;  a
+                rhs: R;  a:^
+              - type: rewrite
+                lhs: a  ; R
+                rhs: a:v; R
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: p  R
+                rhs: p  _:<
+              - type: rewrite
+                lhs: R    p
+                rhs: _:>  p
+              - type: rewrite
+                lhs: p;  R
+                rhs: p;  _:^
+              - type: rewrite
+                lhs: R  ; p
+                rhs: _:v; p
+            - type: loop-until-all
+              children:
+
+              - type: x-ident
+                nid: arrow-equal
+                children:
+                - type: loop-until-all
+                  children:
+                  - type: x-spin
+                    children:
+                    - type: rewrite
+                      lhs: a:< b
+                      rhs: a:< b:=
+                    - type: rewrite
+                      lhs: a:> b
+                      rhs: a:> b:=
+                    - type: rewrite
+                      lhs: a:^ b
+                      rhs: a:^ b:=
+                    - type: rewrite
+                      lhs: a:v b
+                      rhs: a:v b:=
+
+              - type: x-ident
+                nid: arrow-left-right
+                children:
+                - type: loop-until-all
+                  children:
+                  - type: rewrite
+                    lhs: a:< b:=
+                    rhs: a:< b:<
+                  - type: rewrite
+                    lhs: a:^ b:=
+                    rhs: a:^ b:<
+                  - type: rewrite
+                    lhs: a:v b:=
+                    rhs: a:v b:<
+
+                  - type: rewrite
+                    lhs: a:= b:>
+                    rhs: a:> b:>
+                  - type: rewrite
+                    lhs: a:= b:^
+                    rhs: a:> b:^
+                  - type: rewrite
+                    lhs: a:= b:v
+                    rhs: a:> b:v
+
+              - type: x-ident
+                nid: arrow-up-down
+                children:
+                - type: loop-until-all
+                  children:
+                  - type: rewrite
+                    lhs: a:<; b:=
+                    rhs: a:<; b:^
+                  - type: rewrite
+                    lhs: a:>; b:=
+                    rhs: a:>; b:^
+                  - type: rewrite
+                    lhs: a:^; b:=
+                    rhs: a:^; b:^
+
+                  - type: rewrite
+                    lhs: a:=; b:<
+                    rhs: a:v; b:<
+                  - type: rewrite
+                    lhs: a:=; b:>
+                    rhs: a:v; b:>
+                  - type: rewrite
+                    lhs: a:=; b:v
+                    rhs: a:v; b:v
+              - type: x-link
+                target: arrow-equal
+              - type: x-link
+                target: arrow-up-down
+              - type: x-link
+                target: arrow-left-right
+            - type: order
+              children:
+              - type: rewrite
+                lhs: p  E:<
+                rhs: E' _:<
+              - type: rewrite
+                lhs: E:> p
+                rhs: _:> E'
+              - type: rewrite
+                lhs: p ; E:^
+                rhs: E'; _:^
+              - type: rewrite
+                lhs: E:v; p
+                rhs: _:v; E'
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: _:d E:<
+                rhs: E'  _:<
+              - type: rewrite
+                lhs: E:> _:d
+                rhs: _:> E'
+              - type: rewrite
+                lhs: _:d; E:^
+                rhs: E' ; _:^
+              - type: rewrite
+                lhs: E:v; _:d
+                rhs: _:v; E'
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E'
+                rhs: E
+              - type: rewrite
+                lhs: a:d
+                rhs: a
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: F
+                rhs: E'
+              - type: rewrite
+                lhs: E
+                rhs: F'
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: E'
+                rhs: E
+              - type: rewrite
+                lhs: F'
+                rhs: F
+            - type: none
+              children:
+              - type: match
+                pattern: S1
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: D1
+                  rhs: _
+                - type: rewrite
+                  lhs: A1
+                  rhs: E
+            - type: none
+              children:
+              - type: match
+                pattern: S2
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: D2
+                  rhs: _
+                - type: rewrite
+                  lhs: A2
+                  rhs: E
+            - type: none
+              children:
+              - type: match
+                pattern: S3
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: D3
+                  rhs: _
+                - type: rewrite
+                  lhs: A3
+                  rhs: E
+            - type: none
+              children:
+              - type: match
+                pattern: T1
+              - type: loop-until-all
+                children:
+                - type: rewrite
+                  lhs: N1
+                  rhs: F
+            - type: win
+              pid: 1
+              children:
+              - type: match
+                pattern: W
+            - type: lose
+              pid: 1
+              children:
+              - type: none
+                children:
+                - type: match
+                  pattern: p

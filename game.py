@@ -1,40 +1,36 @@
 import argparse
+import copy
 import os
 import random
 import sys
 import time
 import util
 
-END_WIN = "win"
-END_LOSE = "lose"
-END_DRAW = "draw"
-END_STALE = "stale"
+END_WIN   = 'win'
+END_LOSE  = 'lose'
+END_DRAW  = 'draw'
+END_STALE = 'stale'
 
 DEFAULT_DISPLAY_DELAY = 0.5
-
 
 def cls():
     sys.stdout.flush()
     sys.stderr.flush()
-    os.system("cls" if os.name == "nt" else "clear")
-
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 def delay(seconds):
     sys.stdout.flush()
     sys.stderr.flush()
     time.sleep(seconds)
 
-
 class GameOver:
     def __init__(self, result, player):
         self.result = result
         self.player = player
 
-
 class GameOverException(Exception):
     def __init__(self, result, player):
         self.game_over = GameOver(result, player)
-
 
 class GameProcessor:
     def __init__(self, filename, choice_order, random_players, clear_screen):
@@ -42,7 +38,7 @@ class GameProcessor:
 
         self.name = bt.name
         self.filename = filename
-        self.board = []
+        self.board = {}
         self.m = 0
         self.n = 0
         self.tree = bt.tree
@@ -58,11 +54,10 @@ class GameProcessor:
         self.node_func_map = {
             util.ND_DISPLAY_BOARD: self.execute_displayboard_node,
             util.ND_SET_BOARD: self.execute_setboard_node,
+            util.ND_LAYER_TEMPLATE: self.execute_layertemplate_node,
             util.ND_APPEND_ROWS: self.execute_appendrows_node,
             util.ND_APPEND_COLS: self.execute_appendcols_node,
             util.ND_ORDER: self.execute_order_node,
-            util.ND_ORDER_UNTIL_FAIL: self.execute_order_until_fail_node,
-            util.ND_NEXT_LOOP: self.execute_try_next_loop_node,
             util.ND_LOOP_UNTIL_ALL: self.execute_loop_until_all_node,
             util.ND_WIN: self.execute_win_node,
             util.ND_LOSE: self.execute_lose_node,
@@ -87,7 +82,7 @@ class GameProcessor:
         try:
             self.execute_node(self.tree)
         except GameOverException as e:
-            self.display_board()
+            self.display_board(0)
             go = e.game_over
             if go.result == END_WIN:
                 self.game_over = go
@@ -101,7 +96,7 @@ class GameProcessor:
             else:
                 print("Game over, unrecognized game result:", e.result)
         else:
-            self.display_board()
+            self.display_board(0)
             self.game_over = GameOver(END_STALE, None)
             print("Game over, stalemate - root node exited but game has not ended")
 
@@ -110,7 +105,7 @@ class GameProcessor:
         Display current board.
         :return: Success.
         """
-        self.display_board()
+        self.display_board(node.get(util.NKEY_DELAY, 0))
 
         if self.clear_screen is not None:
             delay(self.clear_screen)
@@ -122,9 +117,18 @@ class GameProcessor:
         Sets current board to given pattern.
         :return: Success.
         """
-        self.board = util.listify(node[util.NKEY_PATTERN])
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.board = { layer: util.listify(patt) for layer, patt in node[util.NKEY_PATTERN].items() }
+        self.m, self.n = util.layer_pattern_size(self.board)
+        return True
+
+    def execute_layertemplate_node(self, node):
+        """
+        Copies layer.
+        :return: Success.
+        """
+        old_layer = self.board[util.DEFAULT_LAYER]
+        new_layer = [[('.' if tile == '.' else node[util.NKEY_WITH]) for tile in row] for row in old_layer]
+        self.board[node[util.NKEY_WHAT]] = new_layer
         return True
 
     def execute_appendrows_node(self, node):
@@ -134,7 +138,7 @@ class GameProcessor:
         """
         pattern = node[util.NKEY_PATTERN]
 
-        if self.n == 0:
+        if self.m == 0 or self.n == 0:
             self.board = util.listify(pattern)
         else:
             new_rows = util.listify(pattern)
@@ -142,12 +146,11 @@ class GameProcessor:
                 for rr in range(len(pattern)):
                     new_rows[rr] += pattern[rr]
             for rr in range(len(pattern)):
-                new_rows[rr] = new_rows[rr][: self.n]
+                new_rows[rr] = new_rows[rr][:self.n]
 
             self.board += new_rows
 
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
     def execute_appendcols_node(self, node):
@@ -157,19 +160,18 @@ class GameProcessor:
         """
         pattern = node[util.NKEY_PATTERN]
 
-        if self.m == 0:
+        if self.m == 0 or self.n == 0:
             self.board = util.listify(pattern)
         else:
             new_cols = util.listify(pattern)
             while len(new_cols) < self.m:
                 new_cols += pattern
-            new_cols = new_cols[: self.m]
+            new_cols = new_cols[:self.m]
 
             for rr in range(len(pattern)):
                 self.board[rr] += new_cols[rr]
 
-        self.m = len(self.board)
-        self.n = len(self.board[0])
+        self.m, self.n = util.layer_pattern_size(self.board)
         return True
 
     def execute_order_node(self, node):
@@ -182,40 +184,6 @@ class GameProcessor:
             if self.execute_node(child):
                 flag = True
         return flag
-
-    def execute_order_until_fail_node(self, node):
-        """
-        Executes children in order until one fails or all children have been executed
-        :return: If any child succeeds, returns success, otherwise returns failure.
-        """
-        flag = False
-        for child in node[util.NKEY_CHILDREN]:
-            if self.execute_node(child):
-                flag = True
-            else:
-                return flag
-        return flag
-
-    def execute_try_next_loop_node(self, node):
-        """
-        Loops around the children, starting with the next one in the sequence, until either a child succeeds or all children have been tried.
-        :return: If any child succeeds, returns success, otherwise returns failure.
-        """
-        if node[util.NKEY_CHILD_IDX] == None:
-            node[util.NKEY_CHILD_IDX] == 0
-        child_idx = node[util.NKEY_CHILD_IDX]
-        i = child_idx
-        first_loop = True
-        while i != child_idx or first_loop:
-            first_loop = False
-            child = node[util.NKEY_CHILDREN][i]
-            i = i + 1
-            if i >= len(node[util.NKEY_CHILDREN]):
-                i = 0
-            if self.execute_node(child):
-                node[util.NKEY_CHILD_IDX] = i
-                return True
-        return False
 
     def execute_loop_times_node(self, node):
         """
@@ -236,10 +204,10 @@ class GameProcessor:
         If there are any lhs pattern matches, randomly rewrites one of these matches with the rhs pattern.
         :return: If any rewrite rule is applied successfully, return true, otherwise return false.
         """
-        res = self.find_pattern(node)
-        if res:
-            res = random.choice(res[1])
-            self.make_move(res)
+        res = self.find_layer_pattern(node[util.NKEY_LHS])
+        if len(res) > 0:
+            row, col = random.choice(res)
+            self.make_move(node[util.NKEY_RHS], row, col)
             return True
         return False
 
@@ -252,16 +220,15 @@ class GameProcessor:
         valid_moves = []
         player_id = str(node[util.NKEY_PID])
 
-        self.display_board()
+        self.display_board(0)
 
         for child in node[util.NKEY_CHILDREN]:
             if child[util.NKEY_TYPE] == util.ND_REWRITE:
-                res = self.find_pattern(child)
-                if res:
-                    res = res[1]
-                    valid_moves.extend(res)
+                res = self.find_layer_pattern(child[util.NKEY_LHS])
+                if len(res) > 0:
+                    valid_moves += [(child.get(util.NKEY_DESC, None), child.get(util.NKEY_BUTTON, None), row, col, child[util.NKEY_LHS], child[util.NKEY_RHS]) for row, col in res]
             else:
-                raise RuntimeError("All children of player nodes must be rewrite")
+                raise RuntimeError('All children of player nodes must be rewrite')
 
         if len(valid_moves) == 0:
             print(f"Player {player_id} doesn't have a valid move!")
@@ -275,16 +242,11 @@ class GameProcessor:
         this_turn_info = {}
 
         for ii, choice in enumerate(valid_moves):
-            node, row, col = choice
+            desc, button, row, col, lhs, rhs = choice
 
-            lhs, rhs = util.pad_tiles_multiple(
-                [node[util.NKEY_LHS], node[util.NKEY_RHS]]
-            )
-            lhs = util.tuplify(lhs)
-            rhs = util.tuplify(rhs)
-            nid = ""
-            if util.NKEY_NID in node:
-                nid = node[util.NKEY_NID]
+            lhs, rhs = util.layer_pad_tiles_multiple([lhs, rhs])
+            lhs = { layer: util.tuplify(patt) for layer, patt in lhs.items() }
+            rhs = { layer: util.tuplify(patt) for layer, patt in rhs.items() }
 
             if self.choice_order:
                 idx = ii + 1
@@ -292,18 +254,14 @@ class GameProcessor:
             else:
                 idx = None
 
-                choice_keys = [(lhs, row, col, rhs), (lhs, row, col), (lhs)]
+                choice_keys = [(str(lhs), row, col, str(rhs)), (str(lhs), row, col), (str(lhs))]
                 for choice_key in choice_keys:
                     if choice_key in self.previous_moves:
                         idx = self.previous_moves[choice_key]
                         break
 
                 if idx is None:
-                    idx = 1 + (
-                        max(self.previous_moves.values())
-                        if len(self.previous_moves) > 0
-                        else 0
-                    )
+                    idx = 1 + (max(self.previous_moves.values()) if len(self.previous_moves) > 0 else 0)
 
                 while idx in this_turn_choices:
                     idx += 1
@@ -312,15 +270,16 @@ class GameProcessor:
                     self.previous_moves[choice_key] = idx
 
             this_turn_choices[idx] = choice
-            this_turn_info[idx] = (nid, lhs, rhs, row, col)
+            this_turn_info[idx] = (desc, button, lhs, rhs, row, col)
 
         if player_id in self.random_players:
             user_input = random.choice(list(this_turn_choices.keys()))
 
-            lhs, rhs, row, col = this_turn_info[user_input]
-            lhs = util.pattern_to_string(lhs, " ", "; ")
-            rhs = util.pattern_to_string(rhs, " ", "; ")
-            print(f"Player {player_id} choice: {lhs} → {rhs} at {row},{col}")
+            desc, button, lhs, rhs, row, col = this_turn_info[user_input]
+
+            lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
+            print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
             if self.clear_screen is not None:
                 delay(self.clear_screen)
@@ -328,20 +287,18 @@ class GameProcessor:
         else:
             user_input = self.get_player_choice_input(player_id, this_turn_info)
 
-        choice = this_turn_choices[user_input]
-        self.make_move(choice)
+        desc, button, row, col, lhs, rhs = this_turn_choices[user_input]
+        self.make_move(rhs, row, col)
         return True
 
     def get_player_choice_input(self, player_id, this_turn_info):
         print(f"Choices for player {player_id} are:")
         for idx in sorted(this_turn_info.keys()):
-            nid, lhs, rhs, row, col = this_turn_info[idx]
-            lhs = util.pattern_to_string(lhs, " ", "; ")
-            rhs = util.pattern_to_string(rhs, " ", "; ")
-            choiceName = f"{idx}"
-            if nid != "":
-                choiceName += f" ({nid})"
-            print(f"{choiceName}: {lhs} → {rhs} at {row},{col}")
+            desc, button, lhs, rhs, row, col = this_turn_info[idx]
+            lhs = util.layer_pattern_to_string(lhs, None, '-', '-:', '&', '', '', ' ', '; ')
+            rhs = util.layer_pattern_to_string(rhs, None, '-', '-:', '&', '', '', ' ', '; ')
+            choice_desc = f'({desc}) ' if desc is not None else ''
+            print(f'{choice_desc}{idx}: {lhs} → {rhs} at {row},{col}')
 
         while True:
             try:
@@ -387,14 +344,14 @@ class GameProcessor:
         :return: Returns success if pattern matches current board, otherwise returns failure.
         """
         pattern = node[util.NKEY_PATTERN]
-        if self.match_pattern(pattern):
-            # print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
+        if self.match_layer_pattern(pattern):
+            #print("Pattern matched:", util.pattern_to_string(pattern, ' ', '; '))
             return True
         return False
 
     def execute_all_node(self, node):
         """
-        Executes children in order, until any child fils.
+        Executes children in order, until any child fails.
         :return: If any child fails, returns failure, otherwise returns success.
         """
         children = node[util.NKEY_CHILDREN]
@@ -449,98 +406,69 @@ class GameProcessor:
                 raise GameOverException(END_DRAW, None)
         return False
 
-    def make_move(self, choice):
-        if len(choice) != 3:
-            raise RuntimeError("Choice wrong size.")
+    def make_move(self, lpatt, row, col):
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(pr):
+            for cc in range(pc):
+                for layer, patt in lpatt.items():
+                    tile = patt[rr][cc]
+                    if tile == '.':
+                        continue
+                    self.board[layer][row + rr][col + cc] = tile
 
-        node, x, y = choice[0], choice[1], choice[2]
-        lhs, rhs = node[util.NKEY_LHS], node[util.NKEY_RHS]
-        for i in range(len(lhs)):
-            for j in range(len(lhs[i])):
-                if rhs[i][j] != ".":
-                    self.board[x + i][y + j] = rhs[i][j]
-
-    def find_pattern(self, child):
+    def find_layer_pattern(self, lpatt):
         ret = []
-        for i in range(self.m):
-            for j in range(self.n):
-                if self.is_match(child[util.NKEY_LHS], i, j):
-                    ret.append([child, i, j])
-        if len(ret) == 0:
-            return False
-        return True, ret
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(self.m - pr + 1):
+            for cc in range(self.n - pc + 1):
+                if self.is_match(lpatt, rr, cc):
+                    ret.append([rr, cc])
+        return ret
 
-    def is_match(self, lhs, x, y):
-        for i in range(len(lhs)):
-            for j in range(len(lhs[i])):
-                if lhs[i][j] != ".":
-                    if (
-                        x + i >= self.m
-                        or y + j >= self.n
-                        or self.board[x + i][y + j] != lhs[i][j]
-                    ):
-                        return False
-        return True, x, y
-
-    def match_pattern(self, pattern):
-        pattern_rows = len(pattern)
-        pattern_cols = len(pattern[0])
-
-        if self.m < pattern_rows or self.n < pattern_cols:
-            return False
-
-        for i in range(self.m - pattern_rows + 1):
-            for j in range(self.n - pattern_cols + 1):
-                match = True
-                for r in range(pattern_rows):
-                    for c in range(pattern_cols):
-                        if pattern[r][c] != ".":
-                            if self.board[i + r][j + c] != pattern[r][c]:
-                                match = False
-                                break
-                    if not match:
-                        break
-                if match:
+    def match_layer_pattern(self, lpatt):
+        ret = []
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(self.m - pr + 1):
+            for cc in range(self.n - pc + 1):
+                if self.is_match(lpatt, rr, cc):
                     return True
         return False
 
-    def display_board(self):
+    def is_match(self, lpatt, row, col):
+        pr, pc = util.layer_pattern_size(lpatt)
+        for rr in range(pr):
+            for cc in range(pc):
+                for layer, patt in lpatt.items():
+                    tile = patt[rr][cc]
+                    if tile == '.':
+                        continue
+                    if self.board[layer][row + rr][col + cc] != tile:
+                        return False
+        return True
+
+    def display_board(self, delay):
         if self.clear_screen is not None:
             cls()
         else:
             print()
 
         print("Current board is:")
-        print(util.pattern_to_string(self.board, " ", "\n", self.max_tile_width))
+        print(util.layer_pattern_to_string(self.board, None, '-', '-\n', '\n', '', '', ' ', '\n', self.max_tile_width))
         print()
 
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Play game YAML.")
-    parser.add_argument("filename", type=str, help="Filename to process.")
-    parser.add_argument(
-        "--player-random",
-        type=str,
-        nargs="+",
-        help="Player IDs to play randomly.",
-        default=[],
-    )
-    parser.add_argument("--random", type=int, help="Random seed.")
-    parser.add_argument(
-        "--choice-order", action="store_true", help="Keep move choices in order."
-    )
-    parser.add_argument(
-        "--cls",
-        type=float,
-        nargs="?",
-        const=DEFAULT_DISPLAY_DELAY,
-        default=None,
-        help="Clear screen before moves, optionally providing move delay.",
-    )
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Play game YAML.')
+    parser.add_argument('filename', type=str, help='Filename to process.')
+    parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
+    parser.add_argument('--random', type=int, help='Random seed.')
+    parser.add_argument('--choice-order', action='store_true', help='Keep move choices in order.')
+    parser.add_argument('--cls', type=float, nargs='?', const=DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
-    print(f"Using random seed {random_seed}")
+    print(f'Using random seed {random_seed}')
     random.seed(random_seed)
 
     game = GameProcessor(args.filename, args.choice_order, args.player_random, args.cls)

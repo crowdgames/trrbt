@@ -1,5 +1,7 @@
 import argparse
+import copy
 import game
+import json
 import os
 import PIL.Image, PIL.ImageDraw, PIL.ImageTk
 import random
@@ -25,13 +27,15 @@ class ThreadedGameProcessor(game.GameProcessor):
 
         self._thread_new_board = None
 
-    def display_board(self):
+    def display_board(self, delay):
         with self._thread_mtx:
             self._thread_new_board = self.board
+        if delay != 0:
+            time.sleep(delay / 1000)
 
     def get_player_choice_input(self, player_id, this_turn_info):
         with self._thread_mtx:
-            self._thread_choices = (player_id, this_turn_info)
+            self._thread_choices = (player_id, this_turn_info, copy.deepcopy(self.board))
             self._thread_choice = None
 
         while True:
@@ -54,7 +58,7 @@ class GameFrame(tkinter.Frame):
 
         self._rows = 0
         self._cols = 0
-        self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#dddddd')
+        self._cvs = tkinter.Canvas(self, width=self.tocvsx(self._cols) + self._padding, height=self.tocvsy(self._rows) + self._padding, bg='#ffffff')
         self._cvs.grid(column=0, row=0)
 
         self._player_id_colors = {}
@@ -64,14 +68,17 @@ class GameFrame(tkinter.Frame):
         if sprites is not None:
             sprite_info = util.yamlload(sprites)
             for k, v in sprite_info['sprites'].items():
-                img = PIL.Image.open(os.path.join(os.path.dirname(sprites), v + '.png')).resize((self._cell_size, self._cell_size), PIL.Image.Resampling.NEAREST)
-                imgx = img.convert('RGBA')
-                datax = imgx.getdata()
-                newdatax = []
-                for item in datax:
-                    newdatax.append((item[0], item[1], item[2], item[3] // 2))
-                imgx.putdata(newdatax)
-                self._sprites[k] = (PIL.ImageTk.PhotoImage(img), PIL.ImageTk.PhotoImage(imgx), img, imgx)
+                if v != '.':
+                    img = PIL.Image.open(os.path.join(os.path.dirname(sprites), v + '.png')).resize((self._cell_size, self._cell_size), PIL.Image.Resampling.NEAREST)
+                    imgx = img.convert('RGBA')
+                    datax = imgx.getdata()
+                    newdatax = []
+                    for item in datax:
+                        newdatax.append((item[0], item[1], item[2], item[3] // 2))
+                    imgx.putdata(newdatax)
+                    self._sprites[k] = (PIL.ImageTk.PhotoImage(img), PIL.ImageTk.PhotoImage(imgx), img, imgx)
+                else:
+                    self._sprites[k] = None
             if 'back' in sprite_info:
                 self._back_board = util.string_to_pattern(sprite_info['back'])
             if 'players' in sprite_info:
@@ -94,6 +101,12 @@ class GameFrame(tkinter.Frame):
         self._cvs.bind('<ButtonPress-1>', self.on_mouse_button)
         self._cvs.bind('<ButtonPress-2>', self.on_mouse_button_alt_down)
         self._cvs.bind('<ButtonRelease-2>', self.on_mouse_button_alt_up)
+
+        self.bind_all('<Left>',  lambda evt: self.on_button(evt, 'left'))
+        self.bind_all('<Right>', lambda evt: self.on_button(evt, 'right'))
+        self.bind_all('<Up>',    lambda evt: self.on_button(evt, 'up'))
+        self.bind_all('<Down>',  lambda evt: self.on_button(evt, 'down'))
+        self.bind_all('<KeyPress-z>',  lambda evt: self.on_button(evt, 'z'))
 
         self._game_proc = game_proc
         self._game_thread = game_thread
@@ -128,23 +141,43 @@ class GameFrame(tkinter.Frame):
                                         x0, y0,
                                         fill=fill, outline=outline, joinstyle=tkinter.ROUND, smooth=1, width=5)
 
+    def on_button(self, event, evt_button):
+        if self._choices_by_idx is not None:
+            button_idx = None
+            for idx, (desc, button, rhs, row, col) in self._choices_by_idx.items():
+                if button == evt_button:
+                    button_idx = idx
+                    break
+
+            if button_idx is not None:
+                self.make_choice(button_idx)
+
     def on_mouse_motion(self, event):
         with self._game_proc._thread_mtx:
-            mr, mc = self.fromcvsy(event.y), self.fromcvsx(event.x)
-
             choice = None
-            best_choice = None
 
             if self._choices_by_rect is not None:
-                for (row, col, rows, cols), choices in self._choices_by_rect.items():
-                    if row <= mr and mr <= row + rows and col <= mc and mc <= col + cols:
-                        rowmid = row + rows / 2.0
-                        colmid = col + cols / 2.0
-                        dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2
-                        if choice is None or dist_sqr < best_choice:
-                            idx, desc, lhs, rhs = choices[max(0, min(len(choices) - 1, int(len(choices) * ((mc - col) / cols))))]
-                            choice = idx
-                            best_choice = dist_sqr
+                mr, mc = self.fromcvsy(event.y), self.fromcvsx(event.x)
+
+                if 0 <= mr and mr < self._rows and 0 <= mc and mc < self._cols:
+                    best_choices = []
+                    best_dist_sqr = None
+
+                    for (row, col, rows, cols), choices in self._choices_by_rect.items():
+                        if row <= mr and mr < row + rows and col <= mc and mc < col + cols:
+                            rowmid = row + rows / 2.0
+                            colmid = col + cols / 2.0
+                            dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2
+                            if best_dist_sqr is None or dist_sqr < best_dist_sqr - 0.001:
+                                best_dist_sqr = dist_sqr
+                                best_choices = choices
+                            elif dist_sqr < best_dist_sqr + 0.001:
+                                best_choices = best_choices + choices
+
+                    if len(best_choices) != 0:
+                        choice_idx = max(0, min(len(best_choices) - 1, int(len(best_choices) * (mc - int(mc)))))
+                        idx, desc, rhs = best_choices[choice_idx]
+                        choice = idx
 
             self.update_mouse_choice(choice)
 
@@ -182,8 +215,7 @@ class GameFrame(tkinter.Frame):
                         self._cvs.itemconfigure(choice_cid, state='hidden')
 
     def update_board(self, new_board):
-        new_rows = len(new_board)
-        new_cols = 0 if new_rows == 0 else len(new_board[0])
+        new_rows, new_cols = util.layer_pattern_size(new_board)
 
         if new_rows != self._rows or new_cols != self._cols:
             for rr in range(self._rows):
@@ -191,7 +223,8 @@ class GameFrame(tkinter.Frame):
                     if rr >= new_rows or cc >= new_cols:
                         key = (rr, cc)
                         if key in self._fg_cids:
-                            self._cvs.delete(self._fg_cids[key][1])
+                            for cid in self._fg_cids[key][1]:
+                                self._cvs.delete(cid)
                             del self._fg_cids[key]
                         if key in self._bg_ids:
                             self._cvs.delete(self._bg_cids[key])
@@ -203,48 +236,70 @@ class GameFrame(tkinter.Frame):
 
             for rr in range(self._rows):
                 for cc in range(self._cols):
-                    text = new_board[rr][cc]
-                    if text != '.':
+                    all_invis = True
+                    for layer in reversed(new_board.keys()):
+                        all_invis = all_invis and new_board[layer][rr][cc] == '.'
+
+                    if not all_invis:
                         key = (rr, cc)
                         if self._back_board and key not in self._bg_cids:
                             back_rows = len(self._back_board)
                             back_cols = len(self._back_board[0])
                             back_text = self._back_board[rr % back_rows][cc % back_cols]
                             cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[back_text][0])
-                            self._cvs.tag_lower(cid)
-                            self._bg_cids[key] = cid
+                        else:
+                            cid = self._cvs.create_rectangle(self.tocvsx(cc), self.tocvsy(rr),
+                                                             self.tocvsx(cc + 1), self.tocvsy(rr + 1),
+                                                             fill='#dddddd', outline='')
+                        self._cvs.tag_lower(cid)
+                        self._bg_cids[key] = cid
 
         for rr in range(self._rows):
             for cc in range(self._cols):
-                text = new_board[rr][cc].strip()
-                if text != '.':
-                    key = (rr, cc)
-                    if key not in self._fg_cids or text != self._fg_cids[key][0]:
-                        if key in self._fg_cids:
-                            self._cvs.delete(self._fg_cids[key][1])
-                        font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
+                tiles = ()
+                for layer in reversed(new_board.keys()):
+                    tiles = tiles + (new_board[layer][rr][cc].strip(),)
 
-                        if text in self._sprites:
-                            cid = self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[text][0])
+                key = (rr, cc)
+                if key not in self._fg_cids or tiles != self._fg_cids[key][0]:
+                    if key in self._fg_cids:
+                        for cid in self._fg_cids[key][1]:
+                            self._cvs.delete(cid)
+                    new_cids = []
+                    for tile in tiles:
+                        if tile == '.':
+                            continue
+                        if tile in self._sprites:
+                            if self._sprites[tile] is not None:
+                                new_cids.append(self._cvs.create_image(self.tocvsx(cc), self.tocvsy(rr), anchor=tkinter.NW, image=self._sprites[tile][0]))
                         else:
-                            cid = self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
-                                                        text=text, fill='#000000', font=font, anchor=tkinter.CENTER)
-                        self._fg_cids[key] = (text, cid)
+                            font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
+                            new_cids.append(self._cvs.create_text(self.tocvsx(cc + 0.5), self.tocvsy(rr + 0.5),
+                                                                  text=tile, fill='#000000', font=font, anchor=tkinter.CENTER))
+                    self._fg_cids[key] = (tiles, new_cids)
 
-    def update_choices(self, player_id, choices):
+    def update_choices(self, player_id, choices, choice_board):
+        choices_unique = dict()
+        choices_seen = set()
+        for idx, choice in choices.items():
+            choicek = json.dumps(choice, sort_keys=True)
+            if choicek not in choices_seen:
+                choices_seen.add(choicek)
+                choices_unique[idx] = choice
+        choices = choices_unique
+
         self._choices_by_idx = {}
         self._choices_by_rect = {}
-        for idx, (desc, lhs, rhs, row, col) in choices.items():
-            rows = len(lhs)
-            cols = len(lhs[0])
+        for idx, (desc, button, lhs, rhs, row, col) in choices.items():
+            rows, cols = util.layer_pattern_size(rhs)
 
-            self._choices_by_idx[idx] = (desc, lhs, rhs, row, col)
+            self._choices_by_idx[idx] = (desc, button, rhs, row, col)
 
             rect = (row, col, rows, cols)
             if rect not in self._choices_by_rect:
                 self._choices_by_rect[rect] = []
 
-            self._choices_by_rect[rect].append((idx, desc, lhs, rhs))
+            self._choices_by_rect[rect].append((idx, desc, rhs))
 
         corner = self._cell_size / 4
         corner_box = corner * 1.5
@@ -267,15 +322,25 @@ class GameFrame(tkinter.Frame):
         self._choice_cids[None] = []
 
         for (row, col, rows, cols), choices in self._choices_by_rect.items():
-            for ii, (idx, desc, lhs, rhs) in enumerate(choices):
+            for ii, (idx, desc, rhs) in enumerate(choices):
                 self._choice_cids[idx] = []
 
                 for rr in range(rows):
                     for cc in range(cols):
-                        text = rhs[rr][cc].strip()
-                        if text == '.':
+                        tiles = []
+                        overwrites = []
+                        all_invis = True
+                        for layer in reversed(choice_board.keys()):
+                            if layer in rhs and rhs[layer][rr][cc].strip() != '.':
+                                tiles.append(rhs[layer][rr][cc].strip())
+                                overwrites.append(True)
+                            else:
+                                tiles.append(choice_board[layer][row + rr][col + cc].strip())
+                                overwrites.append(False)
+                            all_invis = all_invis and tiles[-1] == '.'
+
+                        if all_invis:
                             continue
-                        font = ('Courier', str(int(0.9 * self._cell_size / len(text))))
 
                         if self._back_board:
                             back_rows = len(self._back_board)
@@ -288,12 +353,19 @@ class GameFrame(tkinter.Frame):
                                                              fill='#dddddd', outline='')
                         self._choice_cids[idx].append((cid, False))
 
-                        if text in self._sprites:
-                            cid = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[text][1])
-                        else:
-                            cid = self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
-                                                        text=text, fill='#999999', font=font, anchor=tkinter.CENTER)
-                        self._choice_cids[idx].append((cid, False))
+                        for tile, overwrite in zip(tiles, overwrites):
+                            cid = None
+                            if tile in self._sprites:
+                                if self._sprites[tile] is not None:
+                                    ind = 1 if overwrite else 0
+                                    cid = self._cvs.create_image(self.tocvsx(col + cc), self.tocvsy(row + rr), anchor=tkinter.NW, image=self._sprites[tile][ind])
+                            else:
+                                fill= '#999999' if overwrite else '#000000'
+                                font = ('Courier', str(int(0.9 * self._cell_size / len(tile))))
+                                cid = self._cvs.create_text(self.tocvsx(col + cc + 0.5), self.tocvsy(row + rr + 0.5),
+                                                            text=tile, fill=fill, font=font, anchor=tkinter.CENTER)
+                            if cid is not None:
+                                self._choice_cids[idx].append((cid, False))
                 self._choice_cids[idx].append((self.create_rrect(self.tocvsx(col), self.tocvsy(row),
                                                                  self.tocvsx(col + cols), self.tocvsy(row + rows),
                                                                  corner,
@@ -352,14 +424,18 @@ class GameFrame(tkinter.Frame):
                     self._cvs.delete(choice_cid)
             self._choice_cids = {}
 
-            desc, lhs, rhs, row, col = self._choices_by_idx[choice]
+            desc, button, rhs, row, col = self._choices_by_idx[choice]
 
-            tmp_board = util.listify(game_proc.board)
-            for rr in range(len(rhs)):
-                for cc in range(len(rhs[rr])):
-                    text = rhs[rr][cc].strip()
-                    if text != '.':
-                        tmp_board[row + rr][col + cc] = text
+            tmp_board = copy.deepcopy(game_proc.board)
+            lpatt = rhs
+            pr, pc = util.layer_pattern_size(lpatt)
+            for rr in range(pr):
+                for cc in range(pc):
+                    for layer, patt in lpatt.items():
+                        tile = patt[rr][cc]
+                        if tile == '.':
+                            continue
+                        tmp_board[layer][row + rr][col + cc] = tile
             self.update_board(tmp_board)
 
             self._choices_by_idx = None
@@ -401,7 +477,7 @@ class GameFrame(tkinter.Frame):
                 game_proc._thread_new_board = None
 
             if game_proc._thread_choices is not None:
-                self.update_choices(game_proc._thread_choices[0], game_proc._thread_choices[1])
+                self.update_choices(game_proc._thread_choices[0], game_proc._thread_choices[1], game_proc._thread_choices[2])
                 game_proc._thread_choices = None
 
         self.after(1, self.check_thread)
