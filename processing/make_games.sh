@@ -2,6 +2,9 @@ rm -rf out
 mkdir -p out
 
 cp index.html out/
+cp style.css out/
+cp 000webfont.ttf out/
+cp upheavtt.ttf out/
 cp p5js/p5.min.js out/
 if command -v terser &> /dev/null
 then
