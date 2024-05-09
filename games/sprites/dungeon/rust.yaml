@@ -1,28 +1,41 @@
 ---
 sprites:
   P: player
-  R: blank
+  R: .
   W: win-exit
   O: exit
   X: wall
   B: barrel
   E: guard
   F: guard-closed
-  _: blank
+  G: patrol-right
+  _: .
   S1: switch
   S2: switch
   S3: switch
-  D1: door
-  D2: door
-  D3: door
-  T1: blank
-  'P:A1': player
-  'P:A2': player
-  'P:A3': player
-  A1: blank
-  A2: blank
-  A3: blank
-  N1: blank
+  S: switch-pressed
+  SD1: door
+  SD2: door
+  SD3: door
+  SD: door-open
+  SS1: .
+  SS2: .
+  SS3: .
+  T1: .
+  T2: .
+  T3: .
+  TS1: .
+  TS2: .
+  TS3: .
+  WS1: warp-src
+  WS2: warp-src
+  WS3: warp-src
+  WD1: warp-dst
+  WD2: warp-dst
+  WD3: warp-dst
+  I1: spike-up
+  I2: spike-warn
+  I3: spike-down
   B0: back0
   B1: back1
 back: B0 B0 B0 B0;

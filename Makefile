@@ -1,4 +1,4 @@
-.PHONY: all clean
+.PHONY: all clean pdf png
 .SECONDARY:
 
 # Determine the operating system
@@ -11,15 +11,23 @@ else
 endif
 
 GAMES=$(basename $(notdir $(wildcard games/*.yaml)))
+OUTFILES=$(addprefix out/, $(addsuffix -unxform, $(GAMES))) \
+         $(addprefix out/, $(addsuffix -xform, $(GAMES)))
 
-all: $(addprefix out/, $(addsuffix -unxform.pdf, $(GAMES))) \
-     $(addprefix out/, $(addsuffix -xform.pdf, $(GAMES)))
+all: pdf
+
+pdf: $(addsuffix .pdf, $(OUTFILES))
+
+png: $(addsuffix .png, $(OUTFILES))
 
 out:
 	mkdir -p out
 
 out/%.pdf: out/%.gv | out
 	dot $< -Tpdf -o $@
+
+out/%.png: out/%.gv | out
+	dot $< -Gbgcolor=transparent -Gdpi=300 -Tpng -o $@
 
 out/%-unxform.gv: games/%.yaml yaml2bt.py util.py | out
 	python yaml2bt.py $< > $@

@@ -1,0 +1,346 @@
+---
+name: turn
+tree:
+  type: order
+  children:
+  - type: order
+    comment: setup board and layers
+    children:
+    - type: random-try
+      children:
+      - type: set-board
+        pattern: _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  T  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  X  _  _  _  _  _  _  _  _  X  =  X  X  X  X  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  X  _  _  _  _  _  _  _  _  _  =  _  _  X  X  _  _  _  _  _  _  _  _  _  _  _  _  _;
+                 _  _  X  _  _  PRS _ _  _  _  X  X  X  X  X  X  X  _  _  X  _  _  VL _  _  X  _  O  _  _;
+                 X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X;
+    - type: layer-template
+      what: stmv
+      with: _
+    - type: layer-template
+      what: stld
+      with: _
+    - type: layer-template
+      what: ladd
+      with: _
+    - type: loop-until-all
+      children:
+      - type: rewrite
+        lhs:
+          main: '='
+          ladd: '_'
+        rhs:
+          main: '_'
+          ladd: '='
+  - type: x-replace-only
+    what: d
+    with:
+    - L
+    - R
+    children:
+    - type: x-replace-only
+      what: a
+      with:
+      - J
+      - C
+      - S
+      children:
+      - type: x-replace-only
+        what: b
+        with:
+        - R
+        - J
+        - C
+        - S
+        children:
+        - type: x-replace-only
+          what: s
+          with:
+          - '->'
+          - '<-'
+          children:
+          - type: loop-until-all
+            children:
+            - type: none
+              children:
+              - type: none
+                children:
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs:
+                      main: PdR
+                      stld: s
+                    rhs:
+                      main: PdC
+                  - type: rewrite
+                    lhs:
+                      main: PdR
+                      stld: '='
+                    rhs:
+                      main: PdC
+                  - type: rewrite
+                    lhs: PdR
+                    rhs: PdS
+                  - type: rewrite
+                    lhs:
+                      main: PdS; _
+                      stld: .  ; _
+                      ladd: .  ; _
+                    rhs:
+                      main: _ ; PdS
+                  - type: rewrite
+                    lhs:
+                      main: PdS; T
+                      stld: .  ; _
+                      ladd: .  ; _
+                    rhs:
+                      main: _ ; PdS
+                  - type: rewrite
+                    lhs:
+                      main: PdS; O
+                      stld: .  ; _
+                      ladd: .  ; _
+                    rhs:
+                      main: _  ; W
+
+                - type: order
+                  children:
+                  - type: rewrite
+                    lhs: PdJ ; _
+                    rhs: PdJ*; .
+                  - type: rewrite
+                    lhs: PdJ
+                    rhs: PdS
+                  - type: rewrite
+                    lhs: PdJ*
+                    rhs: PdJ
+
+                  - type: player
+                    pid: 1
+                    children:
+                    - type: rewrite
+                      button: up
+                      lhs: _  ; PdS
+                      rhs: PdJ; _
+
+                    - type: rewrite
+                      button: down
+                      lhs: PdS; _
+                      rhs: _  ; PdS
+                    - type: rewrite
+                      button: down
+                      lhs: PdJ; _
+                      rhs: _  ; PdS
+
+                    - type: rewrite
+                      button: up
+                      lhs: _   ; PdC
+                      rhs: PdS ; _
+                    - type: rewrite
+                      button: down
+                      lhs: PdC ; _
+                      rhs: _   ; PdS
+                    - type: rewrite
+                      button: up
+                      lhs: T   ; PdC
+                      rhs: PdS ; _
+                    - type: rewrite
+                      button: down
+                      lhs: PdC ; T
+                      rhs: _   ; PdS
+                    - type: rewrite
+                      button: up
+                      lhs: O   ; PdC
+                      rhs: W   ; _
+                    - type: rewrite
+                      button: down
+                      lhs: PdC ; O
+                      rhs: _   ; W
+
+                    - type: rewrite
+                      button: right
+                      lhs: Pda _
+                      rhs: _   PRS
+                    - type: rewrite
+                      button: left
+                      lhs: _   Pda
+                      rhs: PLS _
+                    - type: rewrite
+                      button: right
+                      lhs: Pda T
+                      rhs: _   PRS
+                    - type: rewrite
+                      button: left
+                      lhs: T   Pda
+                      rhs: PLS _
+                    - type: rewrite
+                      button: right
+                      lhs: Pda O
+                      rhs: _   W
+                    - type: rewrite
+                      button: left
+                      lhs: O   Pda
+                      rhs: W   _
+
+                    - type: rewrite
+                      button: z
+                      lhs: PLa
+                      rhs:
+                        main: 'PLR'
+                        stmv: '<<'
+                    - type: rewrite
+                      button: z
+                      lhs: PRa
+                      rhs:
+                        main: 'PRR'
+                        stmv: '>>'
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs:
+                  main: '.  X'
+                  stmv: '>> .'
+                rhs:
+                  stmv: '_ .'
+                  stld: '-> .'
+              - type: rewrite
+                lhs:
+                  main: 'X .'
+                  stmv: '. <<'
+                rhs:
+                  stmv: '. _'
+                  stld: '. <-'
+              - type: rewrite
+                layer: stmv
+                lhs: '>>  _'
+                rhs: '_   >>*'
+              - type: rewrite
+                layer: stmv
+                lhs: '_   <<'
+                rhs: '<<* _'
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                layer: stmv
+                lhs: '>>'
+                rhs: '_'
+              - type: rewrite
+                layer: stmv
+                lhs: '<<'
+                rhs: '_'
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                layer: stmv
+                lhs: '>>*'
+                rhs: '>>'
+              - type: rewrite
+                layer: stmv
+                lhs: '<<*'
+                rhs: '<<'
+
+            - type: loop-until-all
+              nid: steak-collide
+              children:
+              - type: rewrite
+                lhs:
+                  main: Vd
+                  stmv: '>>'
+                rhs:
+                  main: _
+                  stmv: _
+              - type: rewrite
+                lhs:
+                  main: Vd
+                  stmv: '<<'
+                rhs:
+                  main: _
+                  stmv: _
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: VR _
+                rhs: _ VR*
+              - type: rewrite
+                lhs: VR Pdb
+                rhs: _ VR*
+              - type: rewrite
+                lhs: _   VL
+                rhs: VL* _
+              - type: rewrite
+                lhs: Pdb VL
+                rhs: VL* _
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: VR
+                rhs: VL*
+              - type: rewrite
+                lhs: VL
+                rhs: VR*
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs: VR*
+                rhs: VR
+              - type: rewrite
+                lhs: VL*
+                rhs: VL
+
+            - type: x-link
+              target: steak-collide
+
+            - type: loop-until-all
+              children:
+              - type: rewrite
+                lhs:
+                  main: PdS
+                  stld: s
+                rhs:
+                  main: PdC
+              - type: rewrite
+                lhs:
+                  main: PdJ
+                  stld: s
+                rhs:
+                  main: PdC
+              - type: rewrite
+                lhs:
+                  main: PdS
+                  ladd: '='
+                rhs:
+                  main: PdC
+              - type: rewrite
+                lhs:
+                  main: PdJ
+                  ladd: '='
+                rhs:
+                  main: PdC
+
+            - type: order
+              comment: end conditions
+              children:
+              - type: win
+                pid: 1
+                children:
+                - type: match
+                  pattern: W
+              - type: lose
+                pid: 1
+                children:
+                - type: none
+                  children:
+                  - type: match
+                    pattern: Pdb
+
+            - type: display-board
+              delay: 200

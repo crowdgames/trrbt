@@ -16,6 +16,7 @@ let g_mouseChoice = null;
 let g_mouseAlt = false;
 
 let g_choicesByRct = null;
+let g_choicesByBtn = null;
 let g_choicePlayer = null;
 let g_choiceWait = false;
 
@@ -72,7 +73,7 @@ function setup() {
 }
 
 function draw() {
-    background(220);
+    background(255);
 
     noStroke();
 
@@ -82,8 +83,13 @@ function draw() {
 
         for (let rr = 0; rr < g_rows; rr += 1) {
             for (let cc = 0; cc < g_cols; cc += 1) {
-                let tile = g_board[rr][cc];
-                if (tile != '.') {
+                let all_invis = true;
+                for (const [layer, pattern] of Object.entries(g_board)) {
+                    if (pattern[rr][cc] !== '.') {
+                        all_invis = false;
+                    }
+                }
+                if (!all_invis) {
                     let back_tile = g_back[rr % brows][cc % bcols];
                     if (g_spriteTiles !== null && g_spriteTiles.has(back_tile)) {
                         tint(255, 255, 255, 255);
@@ -102,34 +108,58 @@ function draw() {
 
     for (let rr = 0; rr < g_rows; rr += 1) {
         for (let cc = 0; cc < g_cols; cc += 1) {
-            let tile = null;
-            let overwrite = false;
+            let tiles = [];
+            let overwrites = [];
             if (choiceOverwrite !== null &&
                 choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
-                choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols &&
-                choiceOverwrite.rhs[rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col] !== '.') {
-                tile = choiceOverwrite.rhs[rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
-                overwrite = true;
+                choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
+                for (const [layer, pattern] of Object.entries(g_board)) {
+                    if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
+                        const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                        if (tileOverwrite !== '.') {
+                            tiles.push(tileOverwrite);
+                            overwrites.push(true);
+                        } else {
+                            tiles.push(pattern[rr][cc]);
+                            overwrites.push(false);
+                        }
+                    } else {
+                        tiles.push(pattern[rr][cc]);
+                        overwrites.push(false);
+                    }
+                }
             } else {
-                tile = g_board[rr][cc];
+                for (const [layer, pattern] of Object.entries(g_board)) {
+                    tiles.push(pattern[rr][cc]);
+                    overwrites.push(false);
+                }
             }
-            if (tile != '.') {
-                if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
-                    if (overwrite) {
-                        tint(255, 255, 255, 128);
+            tiles = tiles.reverse();
+            overwrites = overwrites.reverse();
+            for (let ii in tiles) {
+                const tile = tiles[ii];
+                const overwrite = overwrites[ii];
+                if (tile !== '.') {
+                    if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
+                        if (overwrite) {
+                            tint(255, 255, 255, 128);
+                        } else {
+                            tint(255, 255, 255, 255);
+                        }
+                        const imgName = g_spriteTiles.get(tile);
+                        if (imgName !== null) {
+                            const img = g_spriteImages.get(imgName);
+                            image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
+                        }
                     } else {
-                        tint(255, 255, 255, 255);
+                        if (overwrite) {
+                            fill(0, 0, 0, 128);
+                        } else {
+                            fill(0, 0, 0, 255);
+                        }
+                        textSize(g_cell_size / tile.length);
+                        text(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                     }
-                    let img = g_spriteImages.get(g_spriteTiles.get(tile));
-                    image(img, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
-                } else {
-                    if (overwrite) {
-                        fill(0, 0, 0, 128);
-                    } else {
-                        fill(0, 0, 0, 255);
-                    }
-                    textSize(g_cell_size / tile.length);
-                    text(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
                 }
             }
         }
@@ -161,14 +191,25 @@ function draw() {
 
             let rct = g_mouseChoice.rct;
             let idx = g_mouseChoice.idx;
+
+            let rct_choices = g_choicesByRct.get(JSON.stringify(rct)).choices;
+            let desc = rct_choices[idx].desc;
+
             noFill();
             rect(tocvsx(rct.col), tocvsy(rct.row), tocvsx(rct.col + rct.cols), tocvsy(rct.row + rct.rows), 3);
-            if (g_choicesByRct.get(JSON.stringify(rct)).choices.length > 1) {
+            if (rct_choices.length > 1) {
+                noStroke();
                 fill(player_color[0], player_color[1], player_color[2]);
                 rect(tocvsx(rct.col), tocvsy(rct.row), tocvsx(rct.col + 0.4), tocvsy(rct.row + 0.4), 3);
                 fill(220);
                 textSize(0.9 * 0.4 * g_cell_size);
                 text(idx + 1, tocvsx(rct.col + 0.2), tocvsy(rct.row + 0.2 + 0.025));
+            }
+            if (desc !== undefined) {
+                noStroke();
+                fill(player_color[0], player_color[1], player_color[2]);
+                textSize(0.9 * 0.4 * g_cell_size);
+                text(desc, tocvsx(rct.col + 0.5 * rct.cols), tocvsy(rct.row + rct.rows - 0.2));
             }
         } else {
             if (!g_mouseAlt) {
@@ -205,14 +246,41 @@ const waitForChoice = () => new Promise(resolve => {
     checkChoiceMade(resolve);
 });
 
+function keyPressed() {
+    if (g_choiceWait === true) {
+        let keyp = null;
+        if (keyCode === LEFT_ARROW) {
+            keyp = 'left';
+        } else if (keyCode === RIGHT_ARROW) {
+            keyp = 'right';
+        } else if (keyCode === UP_ARROW) {
+            keyp = 'up';
+        } else if (keyCode === DOWN_ARROW) {
+            keyp = 'down';
+        } else if (key === 'z') {
+            keyp = 'z';
+        }
+        if (keyp !== null && g_choicesByBtn.has(keyp)) {
+            g_choiceWait = g_choicesByBtn.get(keyp);
+            rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
+            g_mouseChoice = null;
+            g_choicesByRct = null;
+            g_choicesByBtn = null;
+            g_choicePlayer = null;
+        }
+    }
+    return false;
+}
+
 function mousePressed() {
     if (mouseButton === LEFT) {
         if (g_mouseChoice !== null) {
             if (g_choiceWait === true) {
                 g_choiceWait = g_choicesByRct.get(JSON.stringify(g_mouseChoice.rct)).choices[g_mouseChoice.idx];
-                rewritePattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
+                rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
                 g_mouseChoice = null;
                 g_choicesByRct = null;
+                g_choicesByBtn = null;
                 g_choicePlayer = null;
             }
         }
@@ -233,8 +301,8 @@ function mouseMoved() {
         const mr = fromcvsy(mouseY);
         const mc = fromcvsy(mouseX);
         if (0 <= mr && mr < g_rows && 0 <= mc && mc < g_cols) {
-            let choice = null;
-            let best_choice = null;
+            let best_choices = [];
+            let best_dist_sqr = null;
 
             for (const [rctk, rctChoices] of g_choicesByRct.entries()) {
                 let rct = rctChoices.rct;
@@ -243,12 +311,23 @@ function mouseMoved() {
                     let rowmid = rct.row + rct.rows / 2.0;
                     let colmid = rct.col + rct.cols / 2.0;
                     let dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2;
-                    if (best_choice === null || dist_sqr < best_choice) {
-                        best_choice = dist_sqr;
-                        let idx = Math.max(0, Math.min(choices.length - 1, Math.floor((mc - rct.col) / rct.cols * choices.length)));
-                        g_mouseChoice = {rct:rct, idx:idx};
+                    if (best_dist_sqr === null || dist_sqr < best_dist_sqr - 0.001) {
+                        best_dist_sqr = dist_sqr;
+                        best_choices = [];
+                        for (let ii = 0; ii < choices.length; ii += 1) {
+                            best_choices.push({rct:rct, idx:ii});
+                        }
+                    } else if (dist_sqr < best_dist_sqr + 0.001) {
+                        for (let ii = 0; ii < choices.length; ii += 1) {
+                            best_choices.push({rct:rct, idx:ii});
+                        }
                     }
                 }
+            }
+
+            if (best_choices.length > 0) {
+                const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
+                g_mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
             }
         }
     }
@@ -288,44 +367,53 @@ function resizeImage(img, ww, hh) {
     return newimg;
 }
 
-function matchPattern(pattern, row, col) {
-    const prows = pattern.length;
-    const pcols = pattern[0].length;
+function layerPatternSize(lpattern) {
+    for (const [layer, pattern] of Object.entries(lpattern)) {
+        return [pattern.length, pattern[0].length];
+    }
+    return [0, 0];
+}
+
+function matchLayerPattern(lpattern, row, col) {
+    const [prows, pcols] = layerPatternSize(lpattern);
+
     for (let rr = 0; rr < prows; rr += 1) {
         for (let cc = 0; cc < pcols; cc += 1) {
-            if (pattern[rr][cc] === '.') {
-                continue;
-            }
-            if (g_board[row + rr][col + cc] !== pattern[rr][cc]) {
-                return false;
+            for (let layer in lpattern) {
+                if (lpattern[layer][rr][cc] === '.') {
+                    continue;
+                }
+                if (g_board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
+                    return false;
+                }
             }
         }
     }
     return true;
 }
 
-function rewritePattern(pattern, row, col) {
-    const prows = pattern.length;
-    const pcols = pattern[0].length;
+function rewriteLayerPattern(lpattern, row, col) {
+    const [prows, pcols] = layerPatternSize(lpattern);
 
     for (let rr = 0; rr < prows; rr += 1) {
         for (let cc = 0; cc < pcols; cc += 1) {
-            if (pattern[rr][cc] === '.') {
-                continue;
+            for (let layer in lpattern) {
+                if (lpattern[layer][rr][cc] === '.') {
+                    continue;
+                }
+                g_board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
             }
-            g_board[row + rr][col + cc] = pattern[rr][cc];
         }
     }
 }
 
-function findPattern(pattern) {
-    const prows = pattern.length;
-    const pcols = pattern[0].length;
+function findLayerPattern(lpattern) {
+    const [prows, pcols] = layerPatternSize(lpattern);
 
     let ret = []
     for (let rr = 0; rr < g_rows - prows + 1; rr += 1) {
         for (let cc = 0; cc < g_cols - pcols + 1; cc += 1) {
-            if (matchPattern(pattern, rr, cc)) {
+            if (matchLayerPattern(lpattern, rr, cc)) {
                 ret.push({row:rr, col:cc});
             }
         }
@@ -337,11 +425,13 @@ async function runGameTree(tree) {
     let fnMap = {
         'display-board': runNodeDisplayBoard,
         'set-board': runNodeSetBoard,
+        'layer-template': runNodeLayerTemplate,
         'append-rows': runNodeAppendRows,
         'order': runNodeOrder,
         'loop-until-all': runNodeLoopUntilAll,
         'loop-times': runNodeLoopTimes,
         'random-try': runNodeRandomTry,
+        'all': runNodeAll,
         'none': runNodeNone,
         'win': runNodeWin,
         'lose': runNodeLose,
@@ -353,11 +443,11 @@ async function runGameTree(tree) {
     try {
         await runNode(tree, fnMap);
     } catch(ex) {
-        if (ex.result == 'win') {
+        if (ex.result === 'win') {
             setTimeout(() => { alert('Game over, player ' + ex.player + ' wins!'); }, 10);
-        } else if (ex.result == 'lose') {
+        } else if (ex.result === 'lose') {
             setTimeout(() => { alert('Game over, player ' + ex.player + ' loses!'); }, 10);
-        } else if (ex.result == 'draw') {
+        } else if (ex.result === 'draw') {
             setTimeout(() => { alert('Game over, draw!'); }, 10);
         } else {
             throw ex;
@@ -387,17 +477,23 @@ async function runNodeOrder(node, fnMap) {
 }
 
 async function runNodeDisplayBoard(node, fnMap) {
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    if (node.delay !== undefined) {
+        await sleep(node.delay);
+    }
     return true;
 }
 
 async function runNodeSetBoard(node, fnMap) {
-    g_board = node.pattern.slice();
+    g_board = JSON.parse(JSON.stringify(node.pattern));
 
-    let newRows = g_board.length;
-    let newCols = g_board[0].length;
-    if (newRows !== g_rows || newCols != g_cols) {
-        g_rows = g_board.length;
-        g_cols = g_board[0].length;
+    const [newRows, newCols] = layerPatternSize(g_board);
+    if (newRows !== g_rows || newCols !== g_cols) {
+        g_rows = newRows;
+        g_cols = newCols;
 
         g_canvas = resizeCanvas(tocvsx(g_cols) + g_padding, tocvsy(g_rows) + g_padding);
     }
@@ -405,8 +501,27 @@ async function runNodeSetBoard(node, fnMap) {
     return true;
 }
 
+async function runNodeLayerTemplate(node, fnMap) {
+    let newLayer = [];
+    for (let row of g_board['main']) {
+        let newRow = [];
+        for (let tile of row) {
+            if (tile === '.') {
+                newRow.push('.');
+            } else {
+                newRow.push(node.with);
+            }
+        }
+        newLayer.push(newRow);
+    }
+
+    g_board[node.what] = newLayer;
+
+    return true;
+}
+
 async function runNodeAppendRows(node, fnMap) {
-    if (g_rows == 0 || g_cols === 0) {
+    if (g_rows === 0 || g_cols === 0) {
         g_board = node.pattern.slice();
     } else {
         for (let patternRow of node.pattern) {
@@ -424,7 +539,7 @@ async function runNodeAppendRows(node, fnMap) {
 
     let newRows = g_board.length;
     let newCols = g_board[0].length;
-    if (newRows !== g_rows || newCols != g_cols) {
+    if (newRows !== g_rows || newCols !== g_cols) {
         g_rows = g_board.length;
         g_cols = g_board[0].length;
 
@@ -474,6 +589,15 @@ async function runNodeRandomTry(node, fnMap) {
     return false;
 }
 
+async function runNodeAll(node, fnMap) {
+    for (let child of node.children) {
+        if (!await runNode(child, fnMap)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 async function runNodeNone(node, fnMap) {
     for (let child of node.children) {
         if (await runNode(child, fnMap)) {
@@ -511,7 +635,7 @@ async function runNodeDraw(node, fnMap) {
 }
 
 async function runNodeMatch(node, fnMap) {
-    if (findPattern(node.pattern).length > 0) {
+    if (findLayerPattern(node.pattern).length > 0) {
         return true;
     } else {
         return false;
@@ -519,10 +643,10 @@ async function runNodeMatch(node, fnMap) {
 }
 
 async function runNodeRewrite(node, fnMap) {
-    let matches = findPattern(node.lhs);
+    let matches = findLayerPattern(node.lhs);
     if (matches.length > 0) {
         let match = matches[Math.floor(Math.random()*matches.length)];
-        rewritePattern(node.rhs, match.row, match.col);
+        rewriteLayerPattern(node.rhs, match.row, match.col);
         return true;
     } else {
         return false;
@@ -533,20 +657,33 @@ async function runNodePlayer(node, fnMap) {
     let choices = []
     for (let child of node.children) {
         if (child.type === 'rewrite') {
-            let matches = findPattern(child.lhs);
+            let matches = findLayerPattern(child.lhs);
             for (let match of matches) {
-                choices.push({rhs:child.rhs, row:match.row, col:match.col});
+                choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
             }
         }
     }
+
+    let choicesUnique = []
+    let choicesSeen = new Set();
+    for (let choice of choices) {
+        const choicek = JSON.stringify(choice);
+        if (!choicesSeen.has(choicek)) {
+            choicesSeen.add(choicek);
+            choicesUnique.push(choice);
+        }
+    }
+    choices = choicesUnique;
 
     if (choices.length > 0) {
         g_choicePlayer = node.pid;
 
         g_choicesByRct = new Map();
+        g_choicesByBtn = new Map();
 
         for (let choice of choices) {
-            let rct = {row:choice.row, col:choice.col, rows:choice.rhs.length, cols:choice.rhs[0].length };
+            let [rowsChoice, colsChoice] = layerPatternSize(choice.rhs);
+            let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
             let rctk = JSON.stringify(rct);
 
             let mapChoices = []
@@ -556,6 +693,10 @@ async function runNodePlayer(node, fnMap) {
 
             mapChoices.push(choice);
             g_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
+
+            if (choice.button !== undefined) {
+                g_choicesByBtn.set(choice.button, choice);
+            }
         }
 
         await waitForChoice();
@@ -563,7 +704,7 @@ async function runNodePlayer(node, fnMap) {
         let choiceInfo = g_choiceWait;
         g_choiceWait = false;
 
-        rewritePattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
+        rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
         return true;
     } else {
         return false;

@@ -1,0 +1,9 @@
+---
+sprites:
+  P: player_05
+  B: crate_07
+  Bf: crate_07
+  B': crate_07
+  W: block_04
+  D: environment_15
+  _: .

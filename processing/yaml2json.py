@@ -14,10 +14,13 @@ def get_sprite_data(sprites):
     sprite_map = {}
     sprite_cache = {}
     for tile, filename in sprite_info['sprites'].items():
-        if filename not in sprite_cache:
-            with open(os.path.join(os.path.dirname(sprites), filename + '.png'), 'rb') as f:
-                sprite_cache[filename] = base64.b64encode(f.read()).decode('utf-8')
-        sprite_map[tile] = filename
+        if filename == '.':
+            sprite_map[tile] = None
+        else:
+            if filename not in sprite_cache:
+                with open(os.path.join(os.path.dirname(sprites), filename + '.png'), 'rb') as f:
+                    sprite_cache[filename] = base64.b64encode(f.read()).decode('utf-8')
+            sprite_map[tile] = filename
 
     sprite_data['images'] = sprite_cache
     sprite_data['tiles'] = sprite_map
@@ -48,12 +51,15 @@ if __name__ == '__main__':
         f.write('const GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
 
     with open(args.outname + '.html', 'wt') as f:
+        f.write('<!DOCTYPE html>\n')
         f.write('<html>\n')
         f.write('  <head>\n')
-        f.write('    <script src="https://cdn.jsdelivr.net/npm/p5@1.9.0/lib/p5.js"></script>\n')
         f.write('    <script src="' + os.path.basename(args.outname) + '.js"></script>\n')
-        ndir = len(args.outname.split('/')) - 1
-        f.write('    <script src="' + ('/'.join(['..'] * ndir) + '/' if ndir > 0 else '') + 'sketch.js"></script>\n')
+        f.write('    <script src="../p5.min.js"></script>\n')
+        if os.path.exists(os.path.join(os.path.dirname(args.outname), '..', 'sketch.min.js')):
+            f.write('    <script src="../sketch.min.js"></script>\n')
+        else:
+            f.write('    <script src="../sketch.js"></script>\n')
         f.write('  </head>\n')
         f.write('  <body>\n')
         f.write('    <center>\n')

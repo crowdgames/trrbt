@@ -1,0 +1,54 @@
+---
+name: soko
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern:
+      main: . . . . X X X X X . . . . . . . . . .;
+            . . . . X _ _ _ X . . . . . . . . . .;
+            . . . . X @ _ _ X . . . . . . . . . .;
+            . . X X X _ _ @ X X . . . . . . . . .;
+            . . X _ _ @ _ @ _ X . . . . . . . . .;
+            X X X _ X _ X X _ X . . . X X X X X X;
+            X _ _ _ X _ X X _ X X X X X _ _ _ _ X;
+            X _ @ _ _ @ _ _ _ _ _ _ _ _ _ _ _ _ X;
+            X X X X X _ _ _ _ _ X P X X _ _ _ _ X;
+            . . . . X _ _ _ _ _ X X X X X X X X X;
+            . . . . X X X X X X X . . . . . . . .;
+      trgt: . . . . _ _ _ _ _ . . . . . . . . . .;
+            . . . . _ _ _ _ _ . . . . . . . . . .;
+            . . . . _ _ _ _ _ . . . . . . . . . .;
+            . . _ _ _ _ _ _ _ _ . . . . . . . . .;
+            . . _ _ _ _ _ _ _ _ . . . . . . . . .;
+            _ _ _ _ _ _ _ _ _ _ . . . _ _ _ _ _ _;
+            _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ O O _;
+            _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ O O _;
+            _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ O O _;
+            . . . . _ _ _ _ _ _ _ _ _ _ _ _ _ _ _;
+            . . . . _ _ _ _ _ _ _ . . . . . . . .;
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: player
+      pid: X
+      children:
+      - type: x-spin
+        children:
+        - type: rewrite
+          button: right
+          lhs: P _
+          rhs: _ P
+        - type: rewrite
+          button: right
+          lhs: P @ _
+          rhs: _ P @
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern:
+            main: '@'
+            trgt: _
