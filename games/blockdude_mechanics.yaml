@@ -10,293 +10,321 @@ tree:
     - type: order
       comment: set up facing layer
       children:
-      - type: order 
-        comment: set player direction
+      - type: layer-template
+        what: face
+        with: _
+      - type: rewrite
+        comment: start player facing left if unset
+        lhs: . P
+        rhs: . <P
+      - type: rewrite
+        comment: face left
+        lhs: 
+          main: . <P
+          face: _ _
+        rhs: 
+          face: F Y
+      - type: rewrite
+        comment: face right
+        lhs: 
+          main: P> .
+          face: _ _
+        rhs: 
+          face: Y F
+    - type: loop-until-all
+      comment: mark floating blocks
+      children:
+      - type: rewrite
+        lhs: B;_
+        rhs: Bf;_
+    - type: loop-until-all
+      nid: gameloop
+      children:
+      - type: all
         children:
-        # - type: layer-template
-        #   what: face
-        #   with: _
-        - type: rewrite
-          comment: start player facing left if unset
-          lhs: . P
-          rhs: . <P
-        # - type: rewrite
-        #   comment: face left
-        #   lhs: 
-        #     main: . <P
-        #     face: _ _
-        #   rhs: 
-        #     face: F P
-        # - type: rewrite
-        #   comment: face right
-        #   lhs: 
-        #     main: P> .
-        #     face: _ _
-        #   rhs: 
-        #     face: P F
-    # - type: loop-until-all
-    #   comment: mark floating blocks
-    #   children:
-    #   - type: rewrite
-    #     lhs: B;_
-    #     rhs: Bf;_
-    # - type: loop-until-all
-    #   nid: gameloop
-    #   children:
-    #   - type: all
-    #     children:
-    #     - type: x-replace-only
-    #       comment: player
-    #       what: P
-    #       with:
-    #       - P>
-    #       - <P
-    #       children:
-    #       - type: match
-    #         pattern: P
-    #       - type: order
-    #         comment: genericize
-    #         children:
-    #         - type: x-replace-only
-    #           comment: solid tiles
-    #           what: S
-    #           with:
-    #           - B
-    #           - Bf
-    #           - W
-    #           children:
-    #           - type: x-replace-only
-    #             comment: not holding a block
-    #             what: X
-    #             with:
-    #             - W
-    #             - _
-    #             - Bf
-    #             children:
-    #             - type: player
-    #               pid: 1
-    #               children:
-    #               - type: x-mirror
-    #                 comment: regardless of block
-    #                 children:
-    #                 - type: rewrite
-    #                   comment: stay still
-    #                   desc: wait
-    #                   lhs: P
-    #                   rhs: P
-    #                 - type: rewrite
-    #                   comment: change directions
-    #                   layer: face
-    #                   desc: turn
-    #                   lhs: _ P F ;
-    #                   rhs: F P _ ;
-    #                 - type: x-mirror
-    #                   comment: door
-    #                   children:
-    #                   - type: rewrite
-    #                     comment: walk through door
-    #                     desc: door
-    #                     lhs: 
-    #                       main: . P D ;
-    #                       face: . P F ;
-    #                     rhs: 
-    #                       main: _ D ;
-    #                       face: _ _ ;
-    #                     button: right
-    #                   - type: rewrite
-    #                     comment: jump to door
-    #                     desc: jump_door
-    #                     lhs:  
-    #                       main: _ D ;
-    #                             P S ;
-    #                       face: _ _ ;
-    #                             P F ;
-    #                     rhs:  
-    #                       main: _ D ;
-    #                             _ S ;
-    #                       face: _ _ ;
-    #                             _ _ ;
-    #                     button: up
-    #                 - type: x-mirror
-    #                   comment: movement without a block
-    #                   children:
-    #                   - type: rewrite
-    #                     comment: walk
-    #                     desc: walk
-    #                     lhs:
-    #                       main: X . . ;
-    #                             P _ . ;
-    #                       face: _ _ _ ;
-    #                             P F _ ;
-    #                     rhs:  
-    #                       main: X . . ;
-    #                             _ P . ;
-    #                       face: _ _ _ ;
-    #                             _ P F ;
-    #                     button: right
-    #                   - type: rewrite
-    #                     comment: jump
-    #                     desc: jump
-    #                     lhs:  
-    #                       main: _ _ . ;
-    #                             P S . ;
-    #                       face: _ _ _ ;
-    #                             P F _ ;
-    #                     rhs:  
-    #                       main: _ P . ;
-    #                             _ S . ;
-    #                       face: _ P F ;
-    #                             _ _ _ ;
-    #                     button: up
-    #                 - type: x-mirror
-    #                   comment: block handling
-    #                   children:
-    #                   - type: x-replace-only
-    #                     comment: block-agnostic
-    #                     what: B
-    #                     with:
-    #                     - B
-    #                     - Bf
-    #                     children:
-    #                     - type: x-mirror
-    #                       comment: blocks adjacent to player
-    #                       children:
-    #                       - type: rewrite
-    #                         comment: take from next to
-    #                         desc: take
-    #                         lhs:  
-    #                           main: _ _ ;
-    #                                 P B ;
-    #                           face: _ _ ;
-    #                                 P F ;
-    #                         rhs:  
-    #                           main: B' _ ;
-    #                                 P  _ ;
-    #                         button: space
-    #                       - type: rewrite
-    #                         comment: drop next to
-    #                         desc: drop
-    #                         lhs:  
-    #                           main: B _ ;
-    #                                 P _ ;
-    #                           face: _ _ ;
-    #                                 P F ;
-    #                         rhs:  
-    #                           main: _ _ ;
-    #                                 P B ;
-    #                         button: space
-    #                     - type: x-mirror
-    #                       comment: blocks one up from player
-    #                       children:
-    #                       - type: rewrite
-    #                         comment: take from tower
-    #                         desc: take_above
-    #                         lhs:  
-    #                           main: . X ;
-    #                                 _ B ;
-    #                                 P . ;
-    #                           face: _ _ ;
-    #                                 _ _ ;
-    #                                 P F ;
-    #                         rhs:  
-    #                           main: .  X ;
-    #                                 B' _ ;
-    #                                 P  . ;
-    #                         button: space
-    #                       - type: rewrite
-    #                         comment: drop onto tower
-    #                         desc: drop_onto
-    #                         lhs:  
-    #                           main: B _ ;
-    #                                 P S ;
-    #                           face: _ _ ;
-    #                                 P F ;
-    #                         rhs:  
-    #                           main: _ B ;
-    #                                 P S ;
-    #                         button: space
-    #                   - type: x-mirror
-    #                     comment: move with block
-    #                     children:
-    #                     - type: rewrite
-    #                       comment: walk with block
-    #                       desc: walk_block
-    #                       lhs:  
-    #                         main: B _ . ;
-    #                               P _ . ;
-    #                               S . . ;
-    #                         face: _ _ _ ;
-    #                               P F _ ;
-    #                               _ _ _ ;
-    #                       rhs:  
-    #                         main: _ B . ;
-    #                               _ P . ;
-    #                               S . . ;
-    #                         face: _ _ _ ;
-    #                               _ P F ;
-    #                               _ _ _ ;
-    #                       button: right
-    #                     - type: rewrite
-    #                       comment: jump with block
-    #                       desc: jump_block
-    #                       lhs:  
-    #                         main: _ _ . ;
-    #                               B _ . ;
-    #                               P S . ;
-    #                         face: _ _ _ ;
-    #                               _ _ _ ;
-    #                               P F _ ;
-    #                       rhs:  
-    #                         main: _ B . ;
-    #                               _ P . ;
-    #                               _ S . ;
-    #                         face: _ _ _ ;
-    #                               _ P F ;
-    #                               _ _ _ ;
-    #                       button: up
-    #           - type: loop-until-all
-    #             comment: unmark taken blocks
-    #             children:
-    #             - type: rewrite
-    #               comment: unmark taken blocks
-    #               lhs: B'
-    #               rhs: B
-    #             - type: rewrite
-    #               comment: unmark taken blocks (Bfs become normal blocks)
-    #               lhs: Bf'
-    #               rhs: B
-    #           - type: loop-until-all
-    #             comment: falling
-    #             children:
-    #             - type: x-replace-only
-    #               comment: falling tiles
-    #               what: F
-    #               with:
-    #               - B
-    #               - P
-    #               children:
-    #               - type: rewrite
-    #                 comment: falling
-    #                 lhs: F;_
-    #                 rhs: _;F
-    #               - type: rewrite
-    #                 comment: fall into door
-    #                 lhs: F;D
-    #                 rhs: _;D
-    #     - type: loop-until-all
-    #       comment: set player direction
-    #       children:
-    #       - type: rewrite
-    #         comment: right to left
-    #         lhs: 
-    #           main: . P>
-    #           face: F P
-    #         rhs: 
-    #           main: . <P
-    #       - type: rewrite
-    #         comment: left to right
-    #         lhs: 
-    #           main: <P .
-    #           face: P F
-    #         rhs: 
-    #           main: P> .
+        - type: order
+          comment: does P exist? order as "or"
+          children:
+          - type: match
+            pattern: P>
+          - type: match
+            pattern: <P
+        - type: order
+          children:
+          - type: x-replace-only
+            comment: player
+            what: P
+            with:
+            - P>
+            - <P
+            children:
+            - type: x-replace-only
+              comment: solid tiles
+              what: S
+              with:
+              - B
+              - Bf
+              - W
+              children:
+              - type: x-replace-only
+                comment: not holding a block
+                what: X
+                with:
+                - W
+                - _
+                - Bf
+                children:
+                - type: player
+                  pid: 1
+                  children:
+                  - type: x-mirror
+                    comment: regardless of block
+                    children:
+                    - type: rewrite
+                      comment: change directions
+                      desc: turn
+                      lhs: 
+                        main: . P . ;
+                        face: F Y _ ;
+                      rhs: 
+                        main: . P . ;
+                        face: _ Y F ;
+                      button: right
+                    - type: x-ident
+                      comment: door
+                      children:
+                      - type: rewrite
+                        comment: walk through door
+                        desc: door
+                        lhs: 
+                          main: . P D ;
+                          face: _ Y F ;
+                        rhs: 
+                          main: _ _ D ;
+                          face: _ _ _ ;
+                        button: right
+                      - type: rewrite
+                        comment: jump to door
+                        desc: jump_door
+                        lhs:  
+                          main: _ D ;
+                                P S ;
+                          face: _ _ ;
+                                Y F ;
+                        rhs:  
+                          main: _ D ;
+                                _ S ;
+                          face: _ _ ;
+                                _ _ ;
+                        button: up
+                  - type: x-mirror
+                    comment: movement without a block
+                    children:
+                      - type: rewrite
+                        comment: walk
+                        desc: walk
+                        lhs:
+                          main: X . . ;
+                                P _ . ;
+                          face: _ _ _ ;
+                                Y F _ ;
+                        rhs:  
+                          main: X . . ;
+                                _ P . ;
+                          face: _ _ _ ;
+                                _ Y F ;
+                        button: right
+                      - type: rewrite
+                        comment: jump
+                        desc: jump
+                        lhs:  
+                          main: _ _ . ;
+                                P S . ;
+                          face: _ _ _ ;
+                                Y F _ ;
+                        rhs:  
+                          main: _ P . ;
+                                _ S . ;
+                          face: _ Y F ;
+                                _ _ _ ;
+                        button: up
+                  - type: x-mirror
+                    comment: block handling
+                    children:
+                    - type: x-replace-only
+                      comment: block-agnostic
+                      what: B
+                      with:
+                      - B
+                      - Bf
+                      children:
+                      - type: x-ident
+                        comment: blocks adjacent to player
+                        children:
+                        - type: rewrite
+                          comment: take from next to
+                          desc: take
+                          lhs:  
+                            main: _ _ ;
+                                  P B ;
+                            face: _ _ ;
+                                  Y F ;
+                          rhs:  
+                            main: B' _ ;
+                                  P  _ ;
+                          button: down
+                        - type: rewrite
+                          comment: drop next to
+                          desc: drop
+                          lhs:  
+                            main: B _ ;
+                                  P _ ;
+                            face: _ _ ;
+                                  Y F ;
+                          rhs:  
+                            main: _ _ ;
+                                  P B ;
+                          button: down
+                      - type: x-ident
+                        comment: blocks one up from player
+                        children:
+                        - type: rewrite
+                          comment: take from tower
+                          desc: take
+                          lhs:  
+                            main: . X ;
+                                  _ B ;
+                                  P . ;
+                            face: _ _ ;
+                                  _ _ ;
+                                  Y F ;
+                          rhs:  
+                            main: .  X ;
+                                  B' _ ;
+                                  P  . ;
+                          button: down
+                        - type: rewrite
+                          comment: drop onto tower
+                          desc: drop
+                          lhs:  
+                            main: B _ ;
+                                  P S ;
+                            face: _ _ ;
+                                  Y F ;
+                          rhs:  
+                            main: _ B ;
+                                  P S ;
+                          button: down
+                    - type: x-ident
+                      comment: move with block
+                      children:
+                      - type: rewrite
+                        comment: walk with block
+                        desc: walk
+                        lhs:  
+                          main: B _ . ;
+                                P _ . ;
+                                S . . ;
+                          face: _ _ _ ;
+                                Y F _ ;
+                                _ _ _ ;
+                        rhs:  
+                          main: _ B . ;
+                                _ P . ;
+                                S . . ;
+                          face: _ _ _ ;
+                                _ Y F ;
+                                _ _ _ ;
+                        button: right
+                      - type: rewrite
+                        comment: jump with block
+                        desc: jump
+                        lhs:  
+                          main: _ _ . ;
+                                B _ . ;
+                                P S . ;
+                          face: _ _ _ ;
+                                _ _ _ ;
+                                Y F _ ;
+                        rhs:  
+                          main: _ B . ;
+                                _ P . ;
+                                _ S . ;
+                          face: _ _ _ ;
+                                _ Y F ;
+                                _ _ _ ;
+                        button: up
+                - type: order
+                  comment: fast forward results of player choice
+                  children:
+                  - type: loop-until-all
+                    comment: unmark taken blocks
+                    children:
+                    - type: rewrite
+                      comment: unmark taken blocks
+                      lhs: B'
+                      rhs: B
+                    - type: rewrite
+                      comment: unmark taken blocks (Bfs become normal blocks)
+                      lhs: Bf'
+                      rhs: B
+                  - type: loop-until-all
+                    comment: falling
+                    children:
+                    - type: loop-until-all
+                      comment: falling blocks
+                      children:
+                      - type: rewrite
+                        comment: falling normal
+                        lhs: B;_
+                        rhs: _;B
+                      - type: rewrite
+                        comment: block fall into door
+                        lhs: B;D
+                        rhs: _;D
+                    - type: x-mirror
+                      comment: falling player
+                      children:
+                      - type: loop-until-all
+                        children:
+                        - type: rewrite
+                          comment: falling normal
+                          lhs: 
+                            main: P . ;
+                                  _ . ;
+                            face: Y F ;
+                                  _ _ ;
+                          rhs:
+                            main: _ . ;
+                                  P . ;
+                            face: _ _ ;
+                                  Y F ;
+                        - type: rewrite
+                          comment: fall into door
+                          lhs: 
+                            main: P . ;
+                                  D . ;
+                            face: Y F ;
+                                  _ _
+                          rhs:
+                            main: _ . ;
+                                  D . ;
+                            face: _ _ ;
+                                  _ _ ;
+          - type: order
+            comment: set new player direction
+            children:
+            - type: rewrite
+              comment: right to left
+              lhs: 
+                main: . P>
+                face: F Y
+              rhs: 
+                main: . <P
+            - type: rewrite
+              comment: left to right
+              lhs: 
+                main: <P .
+                face: Y F
+              rhs: 
+                main: P> .
