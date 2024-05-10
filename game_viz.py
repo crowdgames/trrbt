@@ -1,6 +1,6 @@
 import argparse
 import copy
-import trrbt.game as game
+import game
 import json
 import os
 import PIL.Image, PIL.ImageDraw, PIL.ImageTk
@@ -9,7 +9,7 @@ import sys
 import threading
 import time
 import tkinter, tkinter.messagebox
-import trrbt.util as util
+import util
 import yaml
 
 
@@ -467,7 +467,7 @@ class GameFrame(tkinter.Frame):
                 else:
                     msg = 'Error in game over.'
                 tkinter.messagebox.showinfo(message=msg)
-                
+
                 #self.winfo_toplevel().destroy()
                 #return
 
