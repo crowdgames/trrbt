@@ -4,7 +4,7 @@ import os
 import random
 import sys
 import time
-import trrbt.util as util
+import util
 
 END_WIN = "win"
 END_LOSE = "lose"
