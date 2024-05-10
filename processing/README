@@ -1,2 +1,4 @@
-`bash make_games.sh`
-`open index.html`
+```
+bash make_games.sh
+open out/index.html
+```
