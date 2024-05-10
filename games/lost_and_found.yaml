@@ -245,7 +245,7 @@ tree:
                           pattern: ANY_ROOM DIR ANY_DIR
                         - type: rewrite
                           lhs: R T _ _ ; R _
-                          rhs: R ACT GO ANY_DIR ; R _
+                          rhs: R ACT GO ANY_DIR ; R T
                 - type: rewrite
                   comment: After printing other results, add the always-present EX inventory
                   lhs: R T _ _ ; R _
