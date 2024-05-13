@@ -1,4 +1,4 @@
-import trrbt.util as util
+import util as util
 import random
 import numpy as np
 import argparse
@@ -6,8 +6,8 @@ import time
 import copy
 from queue import PriorityQueue
 from collections import deque
-import trrbt.game as game
-from trrbt.game import GameOverException, END_WIN
+import game as game
+from game import GameOverException, END_WIN
 
 
 def manhattan(board, a, b):
@@ -38,10 +38,11 @@ class Frontier:
 
 
 class AgentGameProcessor(game.GameProcessor):
-    def __init__(self, filename, agent_id, agent_heuristic):
+    def __init__(self, filename, agent_id, agent_heuristic, timeout):
         super().__init__(filename, True, [], False)
         self.agent_id = agent_id
         self.agent_heuristic = agent_heuristic
+        self.timeout = timeout
 
         self.agent_frontier = PriorityQueue()
         self.agent_came_from = dict()
@@ -132,12 +133,11 @@ class AgentGameProcessor(game.GameProcessor):
         return
 
     def execute_player_node(self, node):
-        print(str(self.board))
         if self.solution == []:
             self.solution = [self.board]
         self.move_count += 1
         self.elapsed = time.time() - self.start
-        if self.elapsed > 7200:
+        if self.elapsed > self.timeout:
             raise Exception("Timed Out after " + str(self.move_count) + "moves")
 
         player_id = str(node[util.NKEY_PID])
@@ -199,8 +199,8 @@ class AgentGameProcessor(game.GameProcessor):
 
 
 class AgentBlockdudeProcessor(AgentGameProcessor):
-    def __init__(self, filename):
-        super().__init__(filename, "1", blockdude_heuristic)
+    def __init__(self, filename, timeout):
+        super().__init__(filename, "1", blockdude_heuristic, timeout)
 
 
 if __name__ == "__main__":
@@ -215,7 +215,7 @@ if __name__ == "__main__":
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
     random.seed(random_seed)
 
-    game = AgentBlockdudeProcessor(args.filename)
+    game = AgentBlockdudeProcessor(args.filename, 7200)
     game.game_play()
 
     soln = game.solution

@@ -1,6 +1,7 @@
 ---
 sprites:
-  P: player_05
+  P>: player_right
+  <P: player_left
   B: crate_07
   Bf: crate_07
   B': crate_07
