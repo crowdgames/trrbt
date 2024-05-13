@@ -1,0 +1,127 @@
+---
+name: limerick mechanics
+tree:
+  type: order
+  nid: gameroot
+  children: 
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: all
+      comment: DEVNOTE all used as if
+      children:
+      - type: match
+        comment: has apple been eaten?
+        pattern: A
+      - type: x-replace-only
+        comment: head
+        what: H!
+        with:
+        - H1
+        - H2
+        - H3
+        - H4
+        children:
+        - type: x-replace-only
+          comment: takeable objects (key, apple)
+          what: T
+          with:
+          - K
+          - A
+          children:
+          - type: order
+            children:
+            - type: player
+              pid: 1
+              children:
+              - type: rewrite
+                comment: wait
+                lhs: H!
+                rhs: H!
+              - type: x-mirror
+                comment: horizontal movement
+                children:
+                - type: rewrite
+                  comment: horizontal
+                  desc: walk
+                  button: right
+                  lhs: H! _ ;
+                  rhs: Bh H1 ;
+                - type: rewrite
+                  comment: eat apple or get key (walk)
+                  desc: eat
+                  button: right
+                  lhs: H! T ;
+                  rhs: Bh H1 ;
+                - type: rewrite
+                  comment: push crate
+                  desc: push
+                  button: right
+                  lhs: H! C _ ;
+                  rhs: Bh H! C ;
+              - type: x-ident
+                comment: climb
+                children:
+                - type: rewrite
+                  comment: vertical
+                  desc: up
+                  button: up
+                  lhs:  _ ; 
+                        H1 ;
+                  rhs:  H2 ; 
+                        Bv ;
+                - type: rewrite
+                  comment: vertical
+                  desc: up
+                  button: up
+                  lhs:  _ ; 
+                        H2 ;
+                  rhs:  H3 ; 
+                        Bv ;
+                - type: rewrite
+                  comment: vertical
+                  desc: up
+                  button: up
+                  lhs:  _ ; 
+                        H3 ;
+                  rhs:  H4 ; 
+                        Bv ;
+            - type: loop-until-all
+              comment: fall
+              children: 
+              - type: rewrite
+                comment: fall
+                lhs:  H1 ;
+                      _ ;
+                rhs:  Bv ;
+                      H1 ;
+              - type: rewrite
+                comment: eat/take (fall)
+                lhs:  H1 ;
+                      T ;
+                rhs:  Bv ;
+                      H1 ;
+              - type: rewrite
+                comment: crate fall
+                lhs:  C ;
+                      _ ;
+                rhs:  _ ;
+                      C ;
+            - type: all
+              comment: DEVNOTE all used as if
+              children:
+              - type: none
+                comment: DEVNOTE none used as not
+                children:
+                - type: match
+                  comment: is a key present?
+                  pattern: K
+              - type: match
+                comment: is a lock present?
+                pattern: L
+              - type: loop-until-all
+                comment: if the key is gone, remove all the locks
+                children:
+                - type: rewrite
+                  lhs:  L
+                  rhs:  _
