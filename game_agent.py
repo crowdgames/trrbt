@@ -6,7 +6,7 @@ import time
 import copy
 from queue import PriorityQueue
 from collections import deque
-import game as game
+import game
 from game import GameOverException, END_WIN
 
 
