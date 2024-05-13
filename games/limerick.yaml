@@ -1,0 +1,40 @@
+---
+name: limerick
+tree:
+  type: order
+  children:
+  - type: set-board
+    comment: level initializer
+    pattern: LVX
+  - type: loop-until-all
+    children:
+    - type: order
+      comment: next level
+      children:
+      - type: none
+        comment: game levels
+        children:
+        - type: all
+          children:
+          - type: match
+            pattern: LVX
+          - type: x-file
+            file: limerick_levels/limerick_1
+            target: board_1
+        - type: all
+          children:
+          - type: match
+            pattern: LV1
+          - type: x-file
+            file: limerick_levels/limerick_2
+            target: board_2
+        - type: win
+          pid: 1
+          children:
+          - type: none
+            children:
+            - type: match
+              pattern: A
+    - type: x-file
+      file: limerick_mechanics
+      target: gameroot
