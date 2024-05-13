@@ -1,5 +1,5 @@
 import argparse
-import trrbt.util as util
+import util
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Process game YAML.')
