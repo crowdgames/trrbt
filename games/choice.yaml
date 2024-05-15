@@ -1,0 +1,26 @@
+---
+name: choice
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern:  PROMPT CHOSE NULL;
+              CHOICE LEFT;
+              CHOICE RIGHT;
+  - type: loop-until-all
+    children:
+    - type: player
+      pid: 1
+      children:
+      - type: rewrite
+        lhs: CHOICE .
+        rhs: CHOOSE .
+    - type: all
+      children:
+      - type: match
+        pattern: CHOOSE LEFT
+      - type: set-board
+        pattern:  PROMPT CHOSE LEFT;
+                  CHOICE UP;
+                  CHOICE DOWN;
+  
