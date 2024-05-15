@@ -28,7 +28,9 @@ To play a game, run `python game.py games/NAME.yaml`.
 
 ## Node Behaviors
 
-**sequence**: Executes children in order (regardless of their success or failure); if any child succeeds, returns success, otherwise returns failure.
+**order**: Executes children in order (regardless of their success or failure); if any child succeeds, returns success, otherwise returns failure.
+
+**all**: Executed children in order, until any child fails; if any child fails, returns failure, otherwise returns success.
 
 **none**: Executes children in order, until any child succeeds; if any child succeeds, returns failure, otherwise returns success.
 
