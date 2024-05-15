@@ -1,0 +1,36 @@
+---
+name: limerick level 24
+tree:
+  type: order
+  children:
+  - type: set-board
+    nid: board_24
+    comment: level 24
+    pattern:  LV24 SKIP ;
+              W W W W W W W W W W W W W W W W W W W ; 
+              W _ _ _ _ _ _ W _ A _ W _ _ _ _ _ _ W ; 
+              W _ _ _ W _ _ W _ _ _ W _ W W _ W _ W ; 
+              W W _ W W W _ W _ _ _ W K _ _ _ _ _ W ; 
+              W _ _ _ _ _ _ W W _ W W W W _ _ _ _ W ; 
+              W _ W _ W _ W W W _ C _ L _ _ _ W _ W ; 
+              W _ W _ W _ W W _ _ W W W _ W _ W _ W ; 
+              W _ W _ _ _ _ _ _ _ W _ _ _ _ _ W _ W ; 
+              W _ W _ W W _ W W W W _ W W _ _ W _ W ; 
+              W _ W _ _ W _ _ _ _ _ _ W _ _ _ W _ W ; 
+              W _ W _ _ _ _ _ _ _ _ _ _ _ _ _ W _ W ; 
+              W _ W W W W W W W _ W W W W W W W _ W ; 
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ C _ C W _ X H1 X W _ C _ C _ _ W ; 
+              W W W W W W W W W W W W W W W W W W W ; 
+  - type: loop-until-all
+    children:
+    - type: x-file
+      file: ../limerick_mechanics
+      target: gameroot
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: A

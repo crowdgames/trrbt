@@ -1,0 +1,36 @@
+---
+name: limerick level 26
+tree:
+  type: order
+  children:
+  - type: set-board
+    nid: board_26
+    comment: level 26
+    pattern:  LV26 SKIP ;
+              W W W W W W W W W W W W W W W W W W W ; 
+              W W _ W _ _ _ _ _ _ _ _ _ _ _ W C W W ; 
+              W W L W _ _ _ _ _ X _ _ _ _ _ W L W W ; 
+              W _ _ _ _ _ _ _ _ W _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ _ C _ _ _ _ _ _ _ C _ _ _ _ W ; 
+              W _ _ _ _ W W W _ _ _ W W W _ _ _ _ W ; 
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ _ _ C _ _ W _ _ C _ _ _ _ _ W ; 
+              W _ _ _ _ _ W _ _ _ _ _ W _ _ _ _ _ W ; 
+              W _ _ _ _ _ W W W _ W W W _ _ _ _ _ W ; 
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W K _ _ _ _ _ _ _ H1 _ _ _ _ _ _ _ A W ; 
+              W W _ W _ W W W W W W W W W _ W _ W W ; 
+              W W W W W W W W W W W W W W W W _ W W ; 
+              W W W W W W W W W W W W W W W W W W W ; 
+  - type: loop-until-all
+    children:
+    - type: x-file
+      file: ../limerick_mechanics
+      target: gameroot
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: A

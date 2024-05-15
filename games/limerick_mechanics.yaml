@@ -24,7 +24,7 @@ tree:
         children:
         - type: x-replace-only
           comment: takeable objects (key, apple)
-          what: T
+          what: O
           with:
           - K
           - A
@@ -36,8 +36,14 @@ tree:
               children:
               - type: rewrite
                 comment: wait
+                desc: wait
                 lhs: H!
                 rhs: H!
+              - type: rewrite
+                comment: next level
+                desc: next
+                lhs: SKIP
+                rhs: NEXT
               - type: x-mirror
                 comment: horizontal movement
                 children:
@@ -48,10 +54,16 @@ tree:
                   lhs: H! _ ;
                   rhs: Bh H1 ;
                 - type: rewrite
+                  comment: wrap
+                  desc: walk
+                  button: right
+                  lhs: _ . . . . . . . . . . . . . . . . . H! ;
+                  rhs: H1 . . . . . . . . . . . . . . . . . Bh ;
+                - type: rewrite
                   comment: eat apple or get key (walk)
                   desc: eat
                   button: right
-                  lhs: H! T ;
+                  lhs: H! O ;
                   rhs: Bh H1 ;
                 - type: rewrite
                   comment: push crate
@@ -59,6 +71,12 @@ tree:
                   button: right
                   lhs: H! C _ ;
                   rhs: Bh H! C ;
+                - type: rewrite
+                  comment: get erase
+                  desc: erase
+                  button: right
+                  lhs: H! X ;
+                  rhs: Bh HX ;
               - type: x-ident
                 comment: climb
                 children:
@@ -86,42 +104,86 @@ tree:
                         H3 ;
                   rhs:  H4 ; 
                         Bv ;
-            - type: loop-until-all
-              comment: fall
-              children: 
-              - type: rewrite
-                comment: fall
-                lhs:  H1 ;
-                      _ ;
-                rhs:  Bv ;
-                      H1 ;
-              - type: rewrite
-                comment: eat/take (fall)
-                lhs:  H1 ;
-                      T ;
-                rhs:  Bv ;
-                      H1 ;
-              - type: rewrite
-                comment: crate fall
-                lhs:  C ;
-                      _ ;
-                rhs:  _ ;
-                      C ;
             - type: all
               comment: DEVNOTE all used as if
               children:
-              - type: none
-                comment: DEVNOTE none used as not
-                children:
-                - type: match
-                  comment: is a key present?
-                  pattern: K
               - type: match
-                comment: is a lock present?
-                pattern: L
+                comment: next level?
+                pattern: NEXT
               - type: loop-until-all
-                comment: if the key is gone, remove all the locks
+                comment: remove apples to win
                 children:
                 - type: rewrite
-                  lhs:  L
-                  rhs:  _
+                  lhs: A
+                  rhs: _
+            - type: loop-until-all
+              comment: fastforward
+              children:
+              - type: loop-until-all
+                comment: fall
+                children: 
+                - type: rewrite
+                  comment: fall
+                  lhs:  H1 ;
+                        _ ;
+                  rhs:  Bv ;
+                        H1 ;
+                - type: rewrite
+                  comment: eat/take (fall)
+                  lhs:  H1 ;
+                        O ;
+                  rhs:  Bv ;
+                        H1 ;
+                - type: rewrite
+                  comment: erase (fall)
+                  lhs:  H1 ;
+                        X ;
+                  rhs:  Bv ;
+                        HX ;
+                - type: rewrite
+                  comment: crate fall
+                  lhs:  C ;
+                        _ ;
+                  rhs:  _ ;
+                        C ;
+              - type: all
+                comment: DEVNOTE all used as if
+                children:
+                - type: none
+                  comment: DEVNOTE none used as not
+                  children:
+                  - type: match
+                    comment: is a key present?
+                    pattern: K
+                - type: match
+                  comment: is a lock present?
+                  pattern: L
+                - type: loop-until-all
+                  comment: if the key is gone, remove all the locks
+                  children:
+                  - type: rewrite
+                    lhs:  L
+                    rhs:  _
+              - type: all
+                comment: DEVNOTE all used as if
+                children:
+                - type: match
+                  comment: erase?
+                  pattern: HX
+                - type: rewrite
+                  comment: replace HX
+                  lhs: HX
+                  rhs: H1
+                - type: loop-until-all
+                  comment: erase the body
+                  children:
+                  - type: x-replace-only
+                    comment: body
+                    what: B
+                    with:
+                    - Bv
+                    - Bh
+                    children:
+                    - type: rewrite
+                      lhs:  B
+                      rhs:  _      

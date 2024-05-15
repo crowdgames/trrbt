@@ -11,4 +11,5 @@ sprites:
   W: block_06
   L: tile_0028
   K: tile_0027
+  X: tile_0151
   _: .

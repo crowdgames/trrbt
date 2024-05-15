@@ -1,26 +1,27 @@
 ---
-name: limerick level 5
+name: limerick level 30
 tree:
   type: order
   children:
   - type: set-board
-    nid: board_5
-    comment: level 5
-    pattern:  LV5 SKIP ;
+    nid: board_30
+    comment: level 30
+    pattern:  LV30 SKIP ;
               W W W W W W W W W W W W W W W W W W W ; 
+              W _ _ _ _ _ C _ _ _ _ _ C _ _ _ _ _ W ; 
+              W _ W W W W W _ _ _ _ _ W W W W W _ W ; 
+              W _ W _ _ _ _ _ _ _ _ _ _ _ _ _ W _ W ; 
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ _ _ _ W W _ W W W _ _ _ _ _ W ; 
+              W _ W _ _ _ _ _ W _ A W _ _ _ _ W _ W ; 
+              W _ W W W _ _ _ W _ W W _ _ W W W _ W ; 
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ H1 _ _ W W W _ W W W _ _ _ _ _ W ; 
+              W _ W W W _ W _ W _ W _ W _ W W W _ W ; 
+              W _ W _ _ _ W _ _ _ _ _ W _ _ _ W _ W ; 
               W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
               W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
-              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
-              W _ _ _ C _ _ _ _ _ _ _ _ C _ _ _ _ W ; 
-              W _ _ W W W _ _ _ _ _ _ W W W _ _ _ W ; 
-              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
-              W _ _ _ H1 _ _ _ _ _ _ _ _ A _ _ _ _ W ; 
-              W W W W W W W W W _ W W _ W _ W W W W ; 
               W W W W W W W W W W W W W W W W W W W ; 
-              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
-              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
-              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
-              W W W W W W W W W W W W W W W W W W W ;
   - type: loop-until-all
     children:
     - type: x-file
