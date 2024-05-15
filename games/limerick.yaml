@@ -28,6 +28,209 @@ tree:
           - type: x-file
             file: limerick_levels/limerick_2
             target: board_2
+        - type: all
+          children:
+          - type: match
+            pattern: LV2
+          - type: x-file
+            file: limerick_levels/limerick_3
+            target: board_3
+        - type: all
+          children:
+          - type: match
+            pattern: LV3
+          - type: x-file
+            file: limerick_levels/limerick_4
+            target: board_4
+        - type: all
+          children:
+          - type: match
+            pattern: LV4
+          - type: x-file
+            file: limerick_levels/limerick_5
+            target: board_5
+        - type: all
+          children:
+          - type: match
+            pattern: LV5
+          - type: x-file
+            file: limerick_levels/limerick_6
+            target: board_6
+        - type: all
+          children:
+          - type: match
+            pattern: LV6
+          - type: x-file
+            file: limerick_levels/limerick_7
+            target: board_7
+        - type: all
+          children:
+          - type: match
+            pattern: LV7
+          - type: x-file
+            file: limerick_levels/limerick_8
+            target: board_8
+        - type: all
+          children:
+          - type: match
+            pattern: LV8
+          - type: x-file
+            file: limerick_levels/limerick_9
+            target: board_9
+        - type: all
+          children:
+          - type: match
+            pattern: LV9
+          - type: x-file
+            file: limerick_levels/limerick_10
+            target: board_10
+        - type: all
+          children:
+          - type: match
+            pattern: LV10
+          - type: x-file
+            file: limerick_levels/limerick_11
+            target: board_11
+        - type: all
+          children:
+          - type: match
+            pattern: LV11
+          - type: x-file
+            file: limerick_levels/limerick_12
+            target: board_12
+        - type: all
+          children:
+          - type: match
+            pattern: LV12
+          - type: x-file
+            file: limerick_levels/limerick_13
+            target: board_13
+        - type: all
+          children:
+          - type: match
+            pattern: LV13
+          - type: x-file
+            file: limerick_levels/limerick_14
+            target: board_14
+        - type: all
+          children:
+          - type: match
+            pattern: LV14
+          - type: x-file
+            file: limerick_levels/limerick_15
+            target: board_15
+        - type: all
+          children:
+          - type: match
+            pattern: LV15
+          - type: x-file
+            file: limerick_levels/limerick_16
+            target: board_16
+        - type: all
+          children:
+          - type: match
+            pattern: LV16
+          - type: x-file
+            file: limerick_levels/limerick_17
+            target: board_17
+        - type: all
+          children:
+          - type: match
+            pattern: LV17
+          - type: x-file
+            file: limerick_levels/limerick_18
+            target: board_18
+        - type: all
+          children:
+          - type: match
+            pattern: LV18
+          - type: x-file
+            file: limerick_levels/limerick_19
+            target: board_19
+        - type: all
+          children:
+          - type: match
+            pattern: LV19
+          - type: x-file
+            file: limerick_levels/limerick_20
+            target: board_20
+        - type: all
+          children:
+          - type: match
+            pattern: LV20
+          - type: x-file
+            file: limerick_levels/limerick_21
+            target: board_21
+        - type: all
+          children:
+          - type: match
+            pattern: LV21
+          - type: x-file
+            file: limerick_levels/limerick_22
+            target: board_22
+        - type: all
+          children:
+          - type: match
+            pattern: LV22
+          - type: x-file
+            file: limerick_levels/limerick_23
+            target: board_23
+        - type: all
+          children:
+          - type: match
+            pattern: LV23
+          - type: x-file
+            file: limerick_levels/limerick_24
+            target: board_24
+        - type: all
+          children:
+          - type: match
+            pattern: LV24
+          - type: x-file
+            file: limerick_levels/limerick_25
+            target: board_25
+        - type: all
+          children:
+          - type: match
+            pattern: LV25
+          - type: x-file
+            file: limerick_levels/limerick_26
+            target: board_26
+        - type: all
+          children:
+          - type: match
+            pattern: LV26
+          - type: x-file
+            file: limerick_levels/limerick_27
+            target: board_27
+        - type: all
+          children:
+          - type: match
+            pattern: LV27
+          - type: x-file
+            file: limerick_levels/limerick_28
+            target: board_28
+        - type: all
+          children:
+          - type: match
+            pattern: LV28
+          - type: x-file
+            file: limerick_levels/limerick_29
+            target: board_29
+        - type: all
+          children:
+          - type: match
+            pattern: LV29
+          - type: x-file
+            file: limerick_levels/limerick_30
+            target: board_30
+        - type: all
+          children:
+          - type: match
+            pattern: LV30
+          - type: x-file
+            file: limerick_levels/limerick_31
+            target: board_31
         - type: win
           pid: 1
           children:
