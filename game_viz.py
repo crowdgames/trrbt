@@ -226,7 +226,7 @@ class GameFrame(tkinter.Frame):
                             for cid in self._fg_cids[key][1]:
                                 self._cvs.delete(cid)
                             del self._fg_cids[key]
-                        if key in self._bg_ids:
+                        if key in self._bg_cids:
                             self._cvs.delete(self._bg_cids[key])
                             del self._bg_cids[key]
 
