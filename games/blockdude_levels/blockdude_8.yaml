@@ -1,0 +1,39 @@
+---
+name: blockdude levels
+tree:
+  type: order
+  children:
+  - type: set-board
+    nid: board_8
+    comment: level 8
+    pattern:  LV8;
+              _ W W W _ _ _ _ _ _ _ W W W W _ _ _ W W W W W W W _ _ ;
+              W _ _ _ W _ _ _ _ _ W _ _ _ _ W _ W _ _ _ _ _ _ _ W _ ;
+              W _ _ _ _ W _ _ _ W _ _ _ _ _ W W _ _ _ _ _ _ _ _ _ W ;
+              W B _ _ _ _ W W W _ _ _ _ W _ W _ _ _ _ _ W W W _ _ W ;
+              W B B _ _ _ _ _ _ _ _ _ W W _ _ _ _ _ _ W W _ W _ _ W ;
+              W W W W _ _ _ _ _ _ _ W W _ _ _ _ _ _ _ _ _ _ W D _ W ;
+              _ _ _ W W _ _ _ _ _ _ _ _ _ _ _ _ W W _ _ _ _ W W _ W ;
+              _ _ W _ _ _ _ B _ W _ _ _ _ _ _ W _ _ W _ _ _ _ _ _ W ;
+              _ _ W _ _ _ _ B W _ W _ _ _ _ W _ _ _ W _ _ _ _ _ _ W ;
+              _ W _ _ _ W W W _ _ _ W _ _ _ _ W _ _ W _ _ _ _ _ B W ;
+              _ W _ _ _ _ _ _ W _ W _ _ _ _ _ _ W W _ _ _ _ _ B B W ;
+              W _ _ _ _ _ _ _ _ W _ _ _ _ _ _ _ _ _ _ _ W W W W W W ;
+              W _ _ _ _ _ _ _ _ _ _ _ _ B _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              W _ _ _ _ B _ _ _ _ _ _ W W W _ _ _ _ _ _ _ _ _ _ B W ;
+              W _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+              W _ _ _ _ _ _ _ _ B _ _ _ _ _ _ _ B _ _ P _ _ B B B W ;
+              W W W W W W W W W W W W W W W W W W W W W W W W W W W ;
+  - type: loop-until-all
+    children:
+    - type: x-file
+      file: ../blockdude_mechanics
+      target: gameroot
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: P
+                    

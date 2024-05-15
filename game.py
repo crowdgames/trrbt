@@ -39,6 +39,7 @@ class GameProcessor:
         self.name = bt.name
         self.filename = filename
         self.board = {}
+        self.history = []
         self.m = 0
         self.n = 0
         self.tree = bt.tree
@@ -415,6 +416,7 @@ class GameProcessor:
                     if tile == '.':
                         continue
                     self.board[layer][row + rr][col + cc] = tile
+        self.history.append(copy.deepcopy(self.board["main"]))
 
     def find_layer_pattern(self, lpatt):
         ret = []
