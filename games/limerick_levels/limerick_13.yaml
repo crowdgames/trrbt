@@ -6,7 +6,7 @@ tree:
   - type: set-board
     nid: board_13
     comment: level 13
-    pattern:  LV13;
+    pattern:  LV13 SKIP ;
               W W W W W W W W W W W W W W W W W W W ;  
               W _ _ _ _ _ W _ _ _ _ _ W _ _ _ _ _ W ;  
               W _ _ _ _ _ _ _ _ K _ _ _ _ _ _ _ _ W ;  
