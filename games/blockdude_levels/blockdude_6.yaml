@@ -1,0 +1,35 @@
+---
+name: blockdude levels
+tree:
+  type: order
+  children:
+  - type: set-board
+    nid: board_6
+    comment: level 6
+    pattern:  LV6;
+              _ W W W _ _ _ _ _ _ _ _ _ _ _ _ _ W W W W ;
+              _ W _ _ W W W W W W W W W W W W W _ _ _ W ;
+              W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              W D _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              W W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              _ W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ B B W ;
+              _ W B B _ _ _ _ _ _ _ _ W _ _ B _ _ W W W ;
+              _ W B B B _ _ _ _ _ _ _ W P B B B _ W _ _ ;
+              _ W B B B B _ _ _ _ _ _ W W W W W _ W _ _ ;
+              _ W W W W W _ _ _ _ W W W _ _ _ W W W _ _ ;
+              _ _ _ _ _ W _ _ _ B W _ _ _ _ _ _ _ _ _ _ ;
+              _ _ _ _ _ W W _ W W W _ _ _ _ _ _ _ _ _ _ ;
+              _ _ _ _ _ _ W W W _ _ _ _ _ _ _ _ _ _ _ _ ;
+  - type: loop-until-all
+    children:
+    - type: x-file
+      file: ../blockdude_mechanics
+      target: gameroot
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: P
+                    

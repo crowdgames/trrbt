@@ -1,0 +1,36 @@
+---
+name: limerick level 9
+tree:
+  type: order
+  children:
+  - type: set-board
+    nid: board_9
+    comment: level 9
+    pattern:  LV9 SKIP ;
+              W W W W W W W W W W W W W W W W W W W ; 
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ C _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ C _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ C _ _ _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ C C C _ _ _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ _ C C C _ C _ _ _ _ _ _ _ _ _ W ; 
+              W _ _ C C C C _ C C _ _ _ _ _ _ _ A W ; 
+              W _ _ C C C C _ C C _ _ _ _ _ _ _ C W ; 
+              W _ _ C C C C C C C _ _ _ _ _ C _ C W ; 
+              W _ _ C C C C C C C _ _ _ C _ C _ C W ; 
+              W _ C C C C C C C C C _ _ C _ C _ C W ; 
+              W _ C C C C C C C C C _ _ C _ C _ C W ; 
+              W H1 C C C C C C C C C C C C _ C C C W ; 
+              W W W W W W W W W W W W W W W W W W W ; 
+  - type: loop-until-all
+    children:
+    - type: x-file
+      file: ../limerick_mechanics
+      target: gameroot
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: A
