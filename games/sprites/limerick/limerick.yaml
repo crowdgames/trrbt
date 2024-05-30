@@ -1,0 +1,15 @@
+---
+sprites:
+  H1: H1
+  H2: H2
+  H3: H3
+  H4: H4
+  Bh: Bh
+  Bv: Bv
+  A: tile_0044
+  C: tile_0026
+  W: block_06
+  L: tile_0028
+  K: tile_0027
+  X: tile_0151
+  _: .

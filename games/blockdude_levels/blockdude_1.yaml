@@ -1,0 +1,27 @@
+---
+name: blockdude levels
+tree:
+  type: order
+  children:
+  - type: set-board
+    nid: board_1
+    comment: level 1
+    pattern:  LV1;
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              W _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ W ;
+              W _ _ _ W _ _ _ _ _ _ _ W _ _ _ _ _ _ W ;
+              W D _ _ W _ _ _ W _ B _ W _ B _ P _ _ W ;
+              W W W W W W W W W W W W W W W W W W W W ;
+  - type: loop-until-all
+    children:
+    - type: x-file
+      file: ../blockdude_mechanics
+      target: gameroot
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern: P
