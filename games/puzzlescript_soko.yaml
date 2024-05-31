@@ -1,0 +1,128 @@
+---
+name: soko
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern:
+      main: W W W W _ _ ;
+            W _ _ W _ _ ;
+            W _ _ W W W ;
+            W C P _ _ W ;
+            W _ _ C _ W ;
+            W _ _ W W W ;
+            W W W W _ _ ;
+      trgt: _ _ _ _ _ _ ;
+            _ _ O _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ O _ _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+      move: _ _ _ _ _ _ ; 
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+            _ _ _ _ _ _ ;
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: player
+      pid: 1
+      children:
+      - type: x-spin
+        children:
+        - type: rewrite
+          comment: Puzzlescript movement is marked and then actually happens after all non-late rules are applied 
+          button: right
+          lhs: 
+            main: P .
+            move: . _
+          rhs: 
+            main: P' .
+            move: . P
+    - type: order
+      comment: rules
+      children:
+      - type: loop-until-all
+        comment: Puzzlescript rules loop-until-all by rule
+        children:
+        - type: x-spin
+          children:
+          - type: rewrite
+            lhs: 
+              main: P' C . ;
+              move: . P _ ;
+            rhs: 
+              main: P' C' . ;
+              move: . P C ;
+    - type: x-spin
+      comment: movement
+      children:
+      - type: x-replace-only
+        comment: moveables
+        what: S
+        with:
+        - P
+        - C
+        children:
+        - type: x-replace-only
+          comment: available spaces to move into
+          what: E
+          with: 
+          - P'
+          - C'
+          - _
+          children:
+          - type: loop-until-all
+            children:
+            - type: rewrite
+              comment: move what can be moved
+              lhs: 
+                main: E ;
+                move: S ;
+              rhs: 
+                main: S ;
+                move: S ;
+          - type: loop-until-all
+            comment: unset movement
+            children: 
+            - type: loop-until-all
+              comment: remove marked entities that successfully moved
+              children:
+              - type: rewrite
+                lhs: 
+                  main: S' S ;
+                  move: . S ;
+                rhs: 
+                  main: _ S ;
+                  move: . _ ;
+            - type: loop-until-all
+              comment: unmark remaining marked entities that were unable to move
+              children:
+              - type: rewrite
+                lhs: 
+                  main: S' . ;
+                  move: . S ;
+                rhs: 
+                  main: S . ;
+                  move: . _ ;
+            - type: loop-until-all
+              comment: clear any remaining moves
+              children:
+              - type: rewrite
+                lhs: 
+                  move: S
+                rhs: 
+                  move: _
+    - type: win
+      pid: 1
+      children:
+      - type: none
+        children:
+        - type: match
+          pattern:
+            main: C
+            trgt: _
