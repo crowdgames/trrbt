@@ -1,7 +1,3 @@
-let g_board = null;
-let g_rows = 0;
-let g_cols = 0;
-
 let g_canvas = null;
 let g_padding = 10;
 let g_cell_size = 50;
@@ -12,13 +8,115 @@ let g_back = null;
 
 let g_player_id_colors = new Map();
 
-let g_mouseChoice = null;
-let g_mouseAlt = false;
+let g_undoStack = [];
+
+let g_callStack = null;
+let g_callResult = null;
+let g_gameResult = null;
+
+let g_board = null;
+let g_rows = 0;
+let g_cols = 0;
 
 let g_choicesByRct = null;
 let g_choicesByBtn = null;
 let g_choicePlayer = null;
 let g_choiceWait = false;
+
+let g_mouseChoice = null;
+let g_mouseAlt = false;
+
+
+
+function copymap(map) {
+    if (map === null) {
+        return null;
+    } else {
+        return new Map(JSON.parse(JSON.stringify(Array.from(map))));
+    }
+}
+
+function deepcopyobj(obj) {
+    if (obj === null) {
+        return null;
+    } else if (obj === true) {
+        return true;
+    } else if (obj === false) {
+        return false;
+    } else {
+        return JSON.parse(JSON.stringify(obj));
+    }
+}
+
+function undoPush() {
+    return;
+
+    var callStackCopy = [];
+    for (var frame of g_callStack) {
+        var frameCopy = {node: frame.node, local: copymap(frame.local)};
+        callStackCopy.push(frameCopy);
+    }
+
+    g_undoStack.push({
+        callStack: callStackCopy,
+        callResult: g_callResult,
+        gameResult: deepcopyobj(g_gameResult),
+
+        board: deepcopyobj(g_board),
+        rows: g_rows,
+        cols: g_cols,
+
+        choicesByRct: copymap(g_choicesByRct),
+        choicesByBtn: copymap(g_choicesByBtn),
+        choicePlayer: g_choicePlayer,
+        choiceWait: deepcopyobj(g_choiceWait)
+    });
+
+    console.log(g_callStack);
+    console.log(g_choiceWait, g_undoStack.length);
+}
+
+function undoPop() {
+    if (g_undoStack.length > 0) {
+        var state = g_undoStack.pop();
+
+        g_callStack = state.callStack;
+        g_callResult = state.callResult;
+        g_gameResult = state.gameResult;
+
+        g_board = state.board;
+        g_rows = state.rows;
+        g_cols = state.cols;
+
+        g_choicesByRct = state.choicesByRct;
+        g_choicesByBtn = state.choicesByBtn;
+        g_choicePlayer = state.choicePlayer;
+        g_choiceWait = state.choiceWait;
+    } else {
+        g_callStack = null;
+        g_callResult = null;
+        g_gameResult = null;
+
+        g_board = null;
+        g_rows = 0;
+        g_cols = 0;
+
+        g_choicesByRct = null;
+        g_choicesByBtn = null;
+        g_choicePlayer = null;
+        g_choiceWait = false;
+    }
+
+    g_mouseChoice = null;
+    g_mouseAlt = false;
+
+    console.log(g_callStack);
+    console.log(g_choiceWait, g_undoStack.length);
+}
+
+function shouldStepToInput() {
+    return g_choiceWait !== true && g_gameResult !== true;
+}
 
 function preload() {
     if (GAME_SETUP.sprites !== null) {
@@ -47,9 +145,21 @@ function setup() {
         return false;
     }
 
+    g_callStack = null;
+    g_callResult = null;
+    g_gameResult = null;
+
     g_board = null;
     g_rows = 0;
     g_cols = 0;
+
+    g_choicesByRct = null;
+    g_choicesByBtn = null;
+    g_choicePlayer = null;
+    g_choiceWait = false;
+
+    g_mouseChoice = null;
+    g_mouseAlt = false;
 
     g_canvas = createCanvas(tocvsx(g_cols) + g_padding, tocvsy(g_rows) + g_padding);
     g_canvas.mousePressed(mousePressed);
@@ -68,11 +178,13 @@ function setup() {
     textFont('Courier New');
     rectMode(CORNERS);
     imageMode(CENTER);
-
-    runGameTree(GAME_SETUP.tree);
 }
 
 function draw() {
+    while (shouldStepToInput()) {
+        stepGameTree();
+    }
+
     background(255);
 
     noStroke();
@@ -233,20 +345,25 @@ function draw() {
     }
 }
 
-const waitForChoice = () => new Promise(resolve => {
-    function checkChoiceMade(resolve) {
-        if (g_choiceWait !== true) {
-            resolve();
-        } else {
-            setTimeout(() => { checkChoiceMade(resolve); });
+function keyPressed() {
+    if (key === 'n' || key === 'N') {
+        if (shouldStepToInput()) {
+            stepGameTree();
+            if (key === 'n') {
+                while (shouldStepToInput()) {
+                    stepGameTree();
+                }
+            }
+        }
+    } else if (key === 'p' || key === 'P') {
+        undoPop();
+        if (key === 'p') {
+            while (g_undoStack.length > 0 && shouldStepToInput()) {
+                undoPop();
+            }
         }
     }
 
-    g_choiceWait = true;
-    checkChoiceMade(resolve);
-});
-
-function keyPressed() {
     if (g_choiceWait === true) {
         let keyp = null;
         if (keyCode === LEFT_ARROW) {
@@ -261,6 +378,8 @@ function keyPressed() {
             keyp = 'z';
         }
         if (keyp !== null && g_choicesByBtn.has(keyp)) {
+            stepGameTree();
+
             g_choiceWait = g_choicesByBtn.get(keyp);
             rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
             g_mouseChoice = null;
@@ -269,6 +388,7 @@ function keyPressed() {
             g_choicePlayer = null;
         }
     }
+
     return false;
 }
 
@@ -276,6 +396,8 @@ function mousePressed() {
     if (mouseButton === LEFT) {
         if (g_mouseChoice !== null) {
             if (g_choiceWait === true) {
+                stepGameTree();
+
                 g_choiceWait = g_choicesByRct.get(JSON.stringify(g_mouseChoice.rct)).choices[g_mouseChoice.idx];
                 rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
                 g_mouseChoice = null;
@@ -421,74 +543,245 @@ function findLayerPattern(lpattern) {
     return ret;
 }
 
-async function runGameTree(tree) {
-    let fnMap = {
-        'display-board': runNodeDisplayBoard,
-        'set-board': runNodeSetBoard,
-        'layer-template': runNodeLayerTemplate,
-        'append-rows': runNodeAppendRows,
-        'order': runNodeOrder,
-        'loop-until-all': runNodeLoopUntilAll,
-        'loop-times': runNodeLoopTimes,
-        'random-try': runNodeRandomTry,
-        'all': runNodeAll,
-        'none': runNodeNone,
-        'win': runNodeWin,
-        'lose': runNodeLose,
-        'draw': runNodeDraw,
-        'match': runNodeMatch,
-        'rewrite': runNodeRewrite,
-        'player': runNodePlayer,
-    };
-    try {
-        await runNode(tree, fnMap);
-    } catch(ex) {
-        if (ex.result === 'win') {
-            setTimeout(() => { alert('Game over, player ' + ex.player + ' wins!'); }, 10);
-        } else if (ex.result === 'lose') {
-            setTimeout(() => { alert('Game over, player ' + ex.player + ' loses!'); }, 10);
-        } else if (ex.result === 'draw') {
-            setTimeout(() => { alert('Game over, draw!'); }, 10);
+const NODE_FN_MAP = {
+    'display-board': stepNodeDisplayBoard,
+    'set-board': stepNodeSetBoard,
+    'layer-template': stepNodeLayerTemplate,
+    'append-rows': stepNodeAppendRows,
+    'order': stepNodeOrder,
+    'loop-until-all': stepNodeLoopUntilAll,
+    'loop-times': stepNodeLoopTimes,
+    'random-try': stepNodeRandomTry,
+    'all': stepNodeAll,
+    'none': stepNodeNone,
+    'win': stepNodeWin,
+    'lose': stepNodeLose,
+    'draw': stepNodeDraw,
+    'match': stepNodeMatch,
+    'rewrite': stepNodeRewrite,
+    'player': stepNodePlayer,
+};
+
+function localInit(frame, what) {
+    if (frame.local === null) {
+        frame.local = new Map();
+        for (let [name, val] of what) {
+            frame.local.set(name, val);
+        }
+    }
+}
+
+function localGet(frame, name) {
+    return frame.local.get(name);
+}
+
+function localSet(frame, name, val) {
+    return frame.local.set(name, val);
+}
+
+function localSetIfTrue(frame, name, check) {
+    if (check === true) {
+        frame.local.set(name, true);
+    }
+}
+
+function localIncrement(frame, name) {
+    frame.local.set(name, frame.local.get(name) + 1)
+}
+
+function localEqual(frame, name, val) {
+    return frame.local.get(name) === val;
+}
+
+function pushCallStack(node) {
+    g_callStack.push({node: node, local: null});
+}
+
+function pushCallStackNextChild(frame) {
+    pushCallStack(frame.node.children[frame.local.get('index')]);
+    frame.local.set('index', frame.local.get('index') + 1);
+    return null;
+}
+
+function stepGameTree(stack) {
+    if (g_callStack === null) {
+        g_callStack = [];
+        pushCallStack(GAME_SETUP.tree);
+    }
+
+    undoPush();
+
+    if (g_gameResult === true) {
+    } else if (g_gameResult === null) {
+        if (g_callStack.length === 0) {
+            g_gameResult = {result:'stalemate'};
         } else {
-            throw ex;
-        }
-        return;
-    }
-    setTimeout(() => { alert('Game over, stalemate!'); }, 10);
-}
+            var frame = g_callStack.at(-1);
+            g_callResult = NODE_FN_MAP[frame.node.type](frame, g_callResult);
 
-async function runNode(node, fnMap) {
-    if (node.type in fnMap) {
-        return await fnMap[node.type](node, fnMap);
+            if (g_callResult === true || g_callResult === false) {
+                g_callStack.pop();
+            }
+        }
     } else {
-        console.log('unknown node type ' + node.type);
-        return false;
-    }
-}
-
-async function runNodeOrder(node, fnMap) {
-    let flag = false;
-    for (let child of node.children) {
-        if (await runNode(child, fnMap)) {
-            flag = true;
+        if (g_gameResult.result === 'win') {
+            var player = g_gameResult.player;
+            setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
+        } else if (g_gameResult.result === 'lose') {
+            var player = g_gameResult.player;
+            setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
+        } else if (g_gameResult.result === 'draw') {
+            setTimeout(() => { alert('Game over, draw!') }, 10);
+        } else if (g_gameResult.result === 'stalemate') {
+            setTimeout(() => { alert('Game over, stalemate!') }, 10);
+        } else {
+            setTimeout(() => { alert('Game over, unknown result!') }, 10);
         }
+        g_gameResult = true;
     }
-    return flag;
 }
 
-async function runNodeDisplayBoard(node, fnMap) {
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
+function stepNodeOrder(frame, lastResult) {
+    localInit(frame, [['any', false],
+                      ['index', 0]]);
 
-    if (node.delay !== undefined) {
-        await sleep(node.delay);
+    localSetIfTrue(frame, 'any', lastResult);
+
+    if (localEqual(frame, 'index', frame.node.children.length)) {
+        return localGet(frame, 'any');
+    } else {
+        return pushCallStackNextChild(frame);
     }
-    return true;
 }
 
-async function runNodeSetBoard(node, fnMap) {
-    g_board = JSON.parse(JSON.stringify(node.pattern));
+function stepNodeLoopUntilAll(frame, lastResult) {
+    localInit(frame, [['any', false],
+                      ['anyThisLoop', false],
+                      ['index', 0]]);
+
+    localSetIfTrue(frame, 'any', lastResult);
+    localSetIfTrue(frame, 'anyThisLoop', lastResult);
+
+    if (localEqual(frame, 'index', frame.node.children.length)) {
+        if (localGet(frame, 'anyThisLoop')) {
+            localSet(frame, 'anyThisLoop', false);
+            localSet(frame, 'index', 0);
+        } else {
+            return localGet(frame, 'any');
+        }
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeLoopTimes(frame, lastResult) {
+    localInit(frame, [['any', false],
+                      ['times', 0],
+                      ['index', 0]]);
+
+    localSetIfTrue(frame, 'any', lastResult);
+
+    if (localEqual(frame, 'index', frame.node.children.length)) {
+        if (localEqual(frame, 'times', frame.node.times)) {
+            return localGet(frame, 'any');
+        } else {
+            localIncrement('times');
+            localSet(frame, 'index', 0);
+        }
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeRandomTry(frame, lastResult) {
+    localInit(frame, [['order', null]]);
+
+    if (localEqual(frame, 'order', null)) {
+        var order = [];
+        for (var ii = 0; ii < frame.node.children.length; ++ ii) {
+            order.push(ii);
+        }
+        order.sort((a, b) => 0.5 - Math.random());
+        localSet(frame, 'order', order);
+    }
+
+
+    if (lastResult === true) {
+        return true;
+    } else if (localGet(frame, 'order').length == 0) {
+        return false;
+    } else {
+        const index = localGet(frame, 'order').pop();
+        pushCallStack(frame.node.children[index]);
+        return null;
+    }
+}
+
+function stepNodeAll(frame, lastResult) {
+    localInit(frame, [['index', 0]]);
+
+    if (lastResult === false) {
+        return false;
+    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+        return true;
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeNone(frame, lastResult) {
+    localInit(frame, [['index', 0]]);
+
+    if (lastResult === true) {
+        return false;
+    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+        return true;
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeWin(frame, lastResult) {
+    localInit(frame, [['index', 0]]);
+
+    if (lastResult === true) {
+        g_gameResult = {result:'win', player:frame.node.pid};
+        return null;
+    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+        return false;
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeLose(frame, lastResult) {
+    localInit(frame, [['index', 0]]);
+
+    if (lastResult === true) {
+        g_gameResult = {result:'lose', player:frame.node.pid};
+        return null;
+    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+        return false;
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeDraw(frame, lastResult) {
+    localInit(frame, [['index', 0]]);
+
+    if (lastResult === true) {
+        g_gameResult = {result:'draw'};
+        return null;
+    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+        return false;
+    } else {
+        return pushCallStackNextChild(frame);
+    }
+}
+
+function stepNodeSetBoard(frame, lastResult) {
+    g_board = JSON.parse(JSON.stringify(frame.node.pattern));
 
     const [newRows, newCols] = layerPatternSize(g_board);
     if (newRows !== g_rows || newCols !== g_cols) {
@@ -501,7 +794,11 @@ async function runNodeSetBoard(node, fnMap) {
     return true;
 }
 
-async function runNodeLayerTemplate(node, fnMap) {
+function stepNodeDisplayBoard(frame, lastResult) {
+    return true;
+}
+
+function stepNodeLayerTemplate(frame, lastResult) {
     let newLayer = [];
     for (let row of g_board['main']) {
         let newRow = [];
@@ -509,22 +806,22 @@ async function runNodeLayerTemplate(node, fnMap) {
             if (tile === '.') {
                 newRow.push('.');
             } else {
-                newRow.push(node.with);
+                newRow.push(frame.node.with);
             }
         }
         newLayer.push(newRow);
     }
 
-    g_board[node.what] = newLayer;
+    g_board[frame.node.what] = newLayer;
 
     return true;
 }
 
-async function runNodeAppendRows(node, fnMap) {
+function stepNodeAppendRows(frame, lastResult) {
     if (g_rows === 0 || g_cols === 0) {
-        g_board = node.pattern.slice();
+        g_board = frame.node.pattern.slice();
     } else {
-        for (let patternRow of node.pattern) {
+        for (let patternRow of frame.node.pattern) {
             let newRow = []
             while (newRow.length < g_cols) {
                 for (let tile of patternRow) {
@@ -549,164 +846,85 @@ async function runNodeAppendRows(node, fnMap) {
     return true;
 }
 
-async function runNodeLoopUntilAll(node, fnMap) {
-    let flag = false;
-    let keep_going = true;
-    while (keep_going) {
-        keep_going = false;
-        for (let child of node.children) {
-            if (await runNode(child, fnMap)) {
-                flag = true;
-                keep_going = true;
-            }
-        }
-    }
-    return flag;
-}
-
-async function runNodeLoopTimes(node, fnMap) {
-    let flag = false;
-    let times = node.times;
-    while (times > 0) {
-        times -= 1;
-        for (let child of node.children) {
-            if (await runNode(child, fnMap)) {
-                flag = true;
-            }
-        }
-    }
-    return flag;
-}
-
-async function runNodeRandomTry(node, fnMap) {
-    children = node.children.slice();
-    children.sort((a, b) => 0.5 - Math.random());
-    for (let child of children) {
-        if (await runNode(child, fnMap)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-async function runNodeAll(node, fnMap) {
-    for (let child of node.children) {
-        if (!await runNode(child, fnMap)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-async function runNodeNone(node, fnMap) {
-    for (let child of node.children) {
-        if (await runNode(child, fnMap)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-async function runNodeWin(node, fnMap) {
-    for (let child of node.children) {
-        if (await runNode(child, fnMap)) {
-            throw {result:'win', player:node.pid};
-        }
-    }
-    return false;
-}
-
-async function runNodeLose(node, fnMap) {
-    for (let child of node.children) {
-        if (await runNode(child, fnMap)) {
-            throw {result:'lose', player:node.pid};
-        }
-    }
-    return false;
-}
-
-async function runNodeDraw(node, fnMap) {
-    for (let child of node.children) {
-        if (await runNode(child, fnMap)) {
-            throw {result:'draw'};
-        }
-    }
-    return false;
-}
-
-async function runNodeMatch(node, fnMap) {
-    if (findLayerPattern(node.pattern).length > 0) {
+function stepNodeMatch(frame, lastResult) {
+    if (findLayerPattern(frame.node.pattern).length > 0) {
         return true;
     } else {
         return false;
     }
 }
 
-async function runNodeRewrite(node, fnMap) {
-    let matches = findLayerPattern(node.lhs);
+function stepNodeRewrite(frame, lastResult) {
+    let matches = findLayerPattern(frame.node.lhs);
     if (matches.length > 0) {
         let match = matches[Math.floor(Math.random()*matches.length)];
-        rewriteLayerPattern(node.rhs, match.row, match.col);
+        rewriteLayerPattern(frame.node.rhs, match.row, match.col);
         return true;
     } else {
         return false;
     }
 }
 
-async function runNodePlayer(node, fnMap) {
-    let choices = []
-    for (let child of node.children) {
-        if (child.type === 'rewrite') {
-            let matches = findLayerPattern(child.lhs);
-            for (let match of matches) {
-                choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
-            }
-        }
-    }
-
-    let choicesUnique = []
-    let choicesSeen = new Set();
-    for (let choice of choices) {
-        const choicek = JSON.stringify(choice);
-        if (!choicesSeen.has(choicek)) {
-            choicesSeen.add(choicek);
-            choicesUnique.push(choice);
-        }
-    }
-    choices = choicesUnique;
-
-    if (choices.length > 0) {
-        g_choicePlayer = node.pid;
-
-        g_choicesByRct = new Map();
-        g_choicesByBtn = new Map();
-
-        for (let choice of choices) {
-            let [rowsChoice, colsChoice] = layerPatternSize(choice.rhs);
-            let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
-            let rctk = JSON.stringify(rct);
-
-            let mapChoices = []
-            if (g_choicesByRct.has(rctk)) {
-                mapChoices = g_choicesByRct.get(rctk).choices;
-            }
-
-            mapChoices.push(choice);
-            g_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
-
-            if (choice.button !== undefined) {
-                g_choicesByBtn.set(choice.button, choice);
-            }
-        }
-
-        await waitForChoice();
-
+function stepNodePlayer(frame, lastResult) {
+    if (g_choiceWait === true) {
+        return null;
+    } else if (g_choiceWait !== false) {
         let choiceInfo = g_choiceWait;
         g_choiceWait = false;
 
         rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
         return true;
     } else {
-        return false;
+        let choices = []
+        for (let child of frame.node.children) {
+            if (child.type === 'rewrite') {
+                let matches = findLayerPattern(child.lhs);
+                for (let match of matches) {
+                    choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
+                }
+            }
+        }
+
+        let choicesUnique = []
+        let choicesSeen = new Set();
+        for (let choice of choices) {
+            const choicek = JSON.stringify(choice);
+            if (!choicesSeen.has(choicek)) {
+                choicesSeen.add(choicek);
+                choicesUnique.push(choice);
+            }
+        }
+        choices = choicesUnique;
+
+        if (choices.length > 0) {
+            g_choicePlayer = frame.node.pid;
+
+            g_choicesByRct = new Map();
+            g_choicesByBtn = new Map();
+
+            for (let choice of choices) {
+                let [rowsChoice, colsChoice] = layerPatternSize(choice.rhs);
+                let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
+                let rctk = JSON.stringify(rct);
+
+                let mapChoices = []
+                if (g_choicesByRct.has(rctk)) {
+                    mapChoices = g_choicesByRct.get(rctk).choices;
+                }
+
+                mapChoices.push(choice);
+                g_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
+
+                if (choice.button !== undefined) {
+                    g_choicesByBtn.set(choice.button, choice);
+                }
+            }
+
+            g_choiceWait = true;
+
+            return null;
+        } else {
+            return false;
+        }
     }
 }
