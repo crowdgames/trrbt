@@ -35,3 +35,4 @@ python3 yaml2json.py ../games/rust.yaml out/games/rust-text
 python3 yaml2json.py ../games/rust.yaml out/games/rust --sprites ../games/sprites/dungeon/rust.yaml
 python3 yaml2json.py ../games/turn.yaml out/games/turn-text
 python3 yaml2json.py ../games/turn.yaml out/games/turn --sprites ../games/sprites/turn/turn.yaml
+python3 yaml2json.py ../games/loop.yaml out/games/loop-text
