@@ -31,7 +31,7 @@ tree:
     nid: gameloop
     children:
     - type: player
-      pid: X
+      pid: 1
       children:
       - type: x-spin
         children:
