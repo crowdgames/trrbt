@@ -13,6 +13,7 @@ let g_undoStack = [];
 let g_callStack = null;
 let g_callResult = null;
 let g_gameResult = null;
+let g_loopCheck = 0;
 
 let g_board = null;
 let g_rows = 0;
@@ -57,20 +58,23 @@ function undoPush() {
         callStackCopy.push(frameCopy);
     }
 
-    g_undoStack.push({
-        callStack: callStackCopy,
-        callResult: g_callResult,
-        gameResult: deepcopyobj(g_gameResult),
+    var state = {};
 
-        board: deepcopyobj(g_board),
-        rows: g_rows,
-        cols: g_cols,
+    state.callStack = callStackCopy;
+    state.callResult = g_callResult;
+    state.gameResult = deepcopyobj(g_gameResult);
+    state.loopCheck = g_loopCheck;
 
-        choicesByRct: copymap(g_choicesByRct),
-        choicesByBtn: copymap(g_choicesByBtn),
-        choicePlayer: g_choicePlayer,
-        choiceWait: deepcopyobj(g_choiceWait)
-    });
+    state.board = deepcopyobj(g_board);
+    state.rows = g_rows;
+    state.cols = g_cols;
+
+    state.choicesByRct = copymap(g_choicesByRct);
+    state.choicesByBtn = copymap(g_choicesByBtn);
+    state.choicePlayer = g_choicePlayer;
+    state.choiceWait = deepcopyobj(g_choiceWait);
+
+    g_undoStack.push(state);
 
     console.log(g_callStack);
     console.log(g_choiceWait, g_undoStack.length);
@@ -83,6 +87,7 @@ function undoPop() {
         g_callStack = state.callStack;
         g_callResult = state.callResult;
         g_gameResult = state.gameResult;
+        g_loopCheck: loopCheck;
 
         g_board = state.board;
         g_rows = state.rows;
@@ -96,6 +101,7 @@ function undoPop() {
         g_callStack = null;
         g_callResult = null;
         g_gameResult = null;
+        g_loopCheck = 0;
 
         g_board = null;
         g_rows = 0;
@@ -115,7 +121,23 @@ function undoPop() {
 }
 
 function shouldStepToInput() {
-    return g_choiceWait !== true && g_gameResult !== true;
+    return g_gameResult !== true && g_choiceWait !== true && g_loopCheck !== true;
+}
+
+function stepToInput() {
+    if (g_loopCheck !== true) {
+        g_loopCheck = 0;
+        while (shouldStepToInput()) {
+            stepGameTree();
+            ++ g_loopCheck;
+
+            if (g_loopCheck === 100000) {
+                g_loopCheck = true;
+                setTimeout(() => { alert('too many steps before player input, stopping') }, 10);
+                break;
+            }
+        }
+    }
 }
 
 function preload() {
@@ -157,6 +179,7 @@ function setup() {
     g_choicesByBtn = null;
     g_choicePlayer = null;
     g_choiceWait = false;
+    g_loopCheck = 0;
 
     g_mouseChoice = null;
     g_mouseAlt = false;
@@ -181,9 +204,7 @@ function setup() {
 }
 
 function draw() {
-    while (shouldStepToInput()) {
-        stepGameTree();
-    }
+    stepToInput();
 
     background(255);
 
@@ -350,9 +371,7 @@ function keyPressed() {
         if (shouldStepToInput()) {
             stepGameTree();
             if (key === 'n') {
-                while (shouldStepToInput()) {
-                    stepGameTree();
-                }
+                stepToInput();
             }
         }
     } else if (key === 'p' || key === 'P') {
@@ -604,40 +623,44 @@ function pushCallStackNextChild(frame) {
 }
 
 function stepGameTree(stack) {
-    if (g_callStack === null) {
-        g_callStack = [];
-        pushCallStack(GAME_SETUP.tree);
-    }
+    if (g_loopCheck !== true) {
+        if (g_callStack === null) {
+            g_callStack = [];
+            pushCallStack(GAME_SETUP.tree);
+        }
 
-    undoPush();
+        if (g_gameResult === true) {
+        } else if (g_gameResult === null) {
+            undoPush();
 
-    if (g_gameResult === true) {
-    } else if (g_gameResult === null) {
-        if (g_callStack.length === 0) {
-            g_gameResult = {result:'stalemate'};
-        } else {
-            var frame = g_callStack.at(-1);
-            g_callResult = NODE_FN_MAP[frame.node.type](frame, g_callResult);
+            if (g_callStack.length === 0) {
+                g_gameResult = {result:'stalemate'};
+            } else {
+                var frame = g_callStack.at(-1);
+                g_callResult = NODE_FN_MAP[frame.node.type](frame, g_callResult);
 
-            if (g_callResult === true || g_callResult === false) {
-                g_callStack.pop();
+                if (g_callResult === true || g_callResult === false) {
+                    g_callStack.pop();
+                }
             }
-        }
-    } else {
-        if (g_gameResult.result === 'win') {
-            var player = g_gameResult.player;
-            setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
-        } else if (g_gameResult.result === 'lose') {
-            var player = g_gameResult.player;
-            setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
-        } else if (g_gameResult.result === 'draw') {
-            setTimeout(() => { alert('Game over, draw!') }, 10);
-        } else if (g_gameResult.result === 'stalemate') {
-            setTimeout(() => { alert('Game over, stalemate!') }, 10);
         } else {
-            setTimeout(() => { alert('Game over, unknown result!') }, 10);
+            undoPush();
+
+            if (g_gameResult.result === 'win') {
+                var player = g_gameResult.player;
+                setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
+            } else if (g_gameResult.result === 'lose') {
+                var player = g_gameResult.player;
+                setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
+            } else if (g_gameResult.result === 'draw') {
+                setTimeout(() => { alert('Game over, draw!') }, 10);
+            } else if (g_gameResult.result === 'stalemate') {
+                setTimeout(() => { alert('Game over, stalemate!') }, 10);
+            } else {
+                setTimeout(() => { alert('Game over, unknown result!') }, 10);
+            }
+            g_gameResult = true;
         }
-        g_gameResult = true;
     }
 }
 

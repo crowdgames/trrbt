@@ -1,0 +1,21 @@
+---
+name: loop
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern: _ _ _
+  - type: loop-until-all
+    children:
+    - type: player
+      children:
+      - type: rewrite
+        lhs: _
+        rhs: X
+      - type: rewrite
+        lhs: _
+        rhs: O
+    - type: loop-until-all
+      children:
+      - type: match
+        pattern: O
