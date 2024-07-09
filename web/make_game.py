@@ -22,8 +22,8 @@ def get_sprite_data(sprites):
             if filename not in sprite_cache:
                 img = PIL.Image.open(os.path.join(os.path.dirname(sprites), filename + '.png')).convert('RGBA')
                 img_data = sum(img.getdata(), ())
-                #b64data = base64.b64encode(struct.pack('%dB' % len(img_data), *img_data)).decode('utf-8')
-                sprite_cache[filename] = { 'size':img.size, 'data': img_data }
+                b64data = base64.b64encode(struct.pack('%dB' % len(img_data), *img_data)).decode('utf-8')
+                sprite_cache[filename] = { 'size':img.size, 'data': b64data }
             sprite_map[tile] = filename
 
     sprite_data['images'] = sprite_cache
