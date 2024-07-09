@@ -2,7 +2,9 @@ import argparse
 import base64
 import json
 import os
+import struct
 import sys
+import PIL.Image
 sys.path.append('..')
 import util
 
@@ -18,8 +20,10 @@ def get_sprite_data(sprites):
             sprite_map[tile] = None
         else:
             if filename not in sprite_cache:
-                with open(os.path.join(os.path.dirname(sprites), filename + '.png'), 'rb') as f:
-                    sprite_cache[filename] = base64.b64encode(f.read()).decode('utf-8')
+                img = PIL.Image.open(os.path.join(os.path.dirname(sprites), filename + '.png')).convert('RGBA')
+                img_data = sum(img.getdata(), ())
+                #b64data = base64.b64encode(struct.pack('%dB' % len(img_data), *img_data)).decode('utf-8')
+                sprite_cache[filename] = { 'size':img.size, 'data': img_data }
             sprite_map[tile] = filename
 
     sprite_data['images'] = sprite_cache
