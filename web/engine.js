@@ -149,7 +149,7 @@ function stepToInput() {
 }
 
 function resizeImage(image_info, ww, hh) {
-    const from_data = image_info.data;
+    const from_data = Uint8Array.from(atob(image_info.data), c => c.charCodeAt(0));
     const fw = image_info.size[0];
     const fh = image_info.size[1];
 
