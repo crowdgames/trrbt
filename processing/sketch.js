@@ -440,7 +440,7 @@ function mouseMoved() {
     g_mouseChoice = null;
     if (g_choicesByRct !== null) {
         const mr = fromcvsy(mouseY);
-        const mc = fromcvsy(mouseX);
+        const mc = fromcvsx(mouseX);
         if (0 <= mr && mr < g_rows && 0 <= mc && mc < g_cols) {
             let best_choices = [];
             let best_dist_sqr = null;
@@ -487,7 +487,7 @@ function tocvsy(y) {
 }
 
 function fromcvsx(x) {
-    return (y - g_padding) / g_cell_size;
+    return (x - g_padding) / g_cell_size;
 }
 
 function fromcvsy(y) {
