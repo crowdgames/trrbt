@@ -181,9 +181,12 @@ function onLoad() {
     if (GAME_SETUP.sprites !== null) {
         g_spriteImages = new Map();
         for (let imageName in GAME_SETUP.sprites.images) {
-            let img = new Image();
-            img.src = 'data:image/png;base64,' + GAME_SETUP.sprites.images[imageName];
-            g_spriteImages.set(imageName, img);
+            g_spriteImages.set(imageName, null);
+
+            const image_info = GAME_SETUP.sprites.images[imageName];
+            let img_promise = createImageBitmap(new ImageData(new Uint8ClampedArray(image_info.data), image_info.size[0], image_info.size[1]),
+                                                { resizeWidth:g_cell_size, resizeHeight:g_cell_size, resizeQuality:'pixelated', premultiplyAlpha:'premultiply' });
+            Promise.all([img_promise]).then((img_loaded) => g_spriteImages.set(imageName, img_loaded[0]));
         }
         g_spriteTiles = new Map();
         for (let tile in GAME_SETUP.sprites.tiles) {
@@ -205,6 +208,15 @@ function onLoad() {
 }
 
 function onDraw() {
+    if (g_spriteImages !== null) {
+        for (let [imgName, img] of g_spriteImages) {
+            if (img === null) {
+                window.requestAnimationFrame(onDraw);
+                return;
+            }
+        }
+    }
+
     stepToInput();
 
     g_ctx.clearRect(0, 0, g_canvas.width, g_canvas.height);
@@ -227,7 +239,7 @@ function onDraw() {
                     const back_tile = g_back[rr % brows][cc % bcols];
                     if (g_spriteTiles !== null && g_spriteTiles.has(back_tile)) {
                         const img = g_spriteImages.get(g_spriteTiles.get(back_tile));
-                        g_ctx.drawImage(img, tocvsx(cc), tocvsy(rr), g_cell_size, g_cell_size);
+                        g_ctx.drawImage(img, tocvsx(cc), tocvsy(rr));
                     }
                 }
             }
@@ -284,7 +296,7 @@ function onDraw() {
                         const imgName = g_spriteTiles.get(tile);
                         if (imgName !== null) {
                             const img = g_spriteImages.get(imgName);
-                            g_ctx.drawImage(img, tocvsx(cc), tocvsy(rr), g_cell_size, g_cell_size);
+                            g_ctx.drawImage(img, tocvsx(cc), tocvsy(rr));
                         }
                     } else {
                         g_ctx.font = (g_cell_size / tile.length) + FONTNAME;
@@ -329,7 +341,7 @@ function onDraw() {
             g_ctx.beginPath();
             g_ctx.roundRect(tocvsx(rct.col), tocvsy(rct.row), rct.cols * g_cell_size, rct.rows * g_cell_size, 3);
             g_ctx.stroke();
-            
+
             if (rct_choices.length > 1) {
                 g_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
                 g_ctx.beginPath();
@@ -432,7 +444,7 @@ function onKeyDown(evt) {
 
 function onMouseDown(evt) {
     const mouseButton = evt.button;
-    
+
     if (mouseButton === BUTTON_LEFT) {
         if (g_mouseChoice !== null) {
             if (g_choiceWait === true) {
@@ -460,7 +472,7 @@ function onMouseUp(evt) {
     if (mouseButton === BUTTON_RIGHT) {
         g_mouseAlt = false;
     }
-    
+
     evt.preventDefault();
     window.requestAnimationFrame(onDraw);
 }
@@ -505,14 +517,14 @@ function onMouseMove(evt) {
             }
         }
     }
-    
+
     evt.preventDefault();
     window.requestAnimationFrame(onDraw);
 }
 
 function onMouseOut(evt) {
     g_mouseChoice = null;
- 
+
     evt.preventDefault();
     window.requestAnimationFrame(onDraw);
 }
