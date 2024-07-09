@@ -148,6 +148,26 @@ function stepToInput() {
     }
 }
 
+function resizeImage(image_info, ww, hh) {
+    const from_data = image_info.data;
+    const fw = image_info.size[0];
+    const fh = image_info.size[1];
+
+    const new_data = new Uint8ClampedArray(ww * hh * 4);
+    for (let xx = 0; xx < ww; xx += 1) {
+        for (let yy = 0; yy < hh; yy += 1) {
+            const fx = Math.floor(xx / ww * fw);
+            const fy = Math.floor(yy / hh * fh);
+
+            new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
+            new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
+            new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
+            new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
+        }
+    }
+    return new ImageData(new_data, ww, hh);
+}
+
 function onLoad() {
     document.oncontextmenu = function() {
         return false;
@@ -186,8 +206,8 @@ function onLoad() {
             g_spriteImages.set(imageName, null);
 
             const image_info = GAME_SETUP.sprites.images[imageName];
-            let img_promise = createImageBitmap(new ImageData(new Uint8ClampedArray(image_info.data), image_info.size[0], image_info.size[1]),
-                                                { resizeWidth:g_cell_size, resizeHeight:g_cell_size, resizeQuality:'pixelated', premultiplyAlpha:'premultiply' });
+            const image_data = resizeImage(image_info, g_cell_size, g_cell_size);
+            let img_promise = createImageBitmap(image_data);
             Promise.all([img_promise]).then((img_loaded) => g_spriteImages.set(imageName, img_loaded[0]));
         }
         g_spriteTiles = new Map();
