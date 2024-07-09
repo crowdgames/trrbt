@@ -30,10 +30,10 @@ out/%.png: out/%.gv | out
 	dot $< -Gbgcolor=transparent -Gdpi=300 -Tpng -o $@
 
 out/%-unxform.gv: games/%.yaml yaml2bt.py util.py | out
-	python3 yaml2bt.py $< > $@
+	python yaml2bt.py $< > $@
 
 out/%-xform.gv: games/%.yaml yaml2bt.py util.py | out
-	python3 yaml2bt.py --xform $< > $@
+	python yaml2bt.py --xform $< > $@
 
 clean:
 	$(RMRF) out

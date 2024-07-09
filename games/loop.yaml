@@ -8,6 +8,7 @@ tree:
   - type: loop-until-all
     children:
     - type: player
+      pid: 1
       children:
       - type: rewrite
         lhs: _
