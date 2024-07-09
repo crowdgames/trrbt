@@ -4,6 +4,7 @@ let g_canvas = null;
 let g_ctx = null;
 let g_padding = 10;
 let g_cell_size = 50;
+let g_keysDown = new Set();
 
 let g_spriteImages = null;
 let g_spriteTiles = null;
@@ -177,6 +178,7 @@ function onLoad() {
     g_canvas.addEventListener('mouseup', onMouseUp);
     g_canvas.addEventListener('mouseout', onMouseOut);
     window.addEventListener('keydown', onKeyDown);
+    window.addEventListener('keyup', onKeyUp);
 
     if (GAME_SETUP.sprites !== null) {
         g_spriteImages = new Map();
@@ -397,49 +399,61 @@ function resizeCanvas() {
 function onKeyDown(evt) {
     var key = evt.key;
 
-    if (key === 'n' || key === 'N') {
-        if (shouldStepToInput()) {
-            stepGameTree();
-            if (key === 'n') {
-                stepToInput();
+    if (!g_keysDown.has(key)) {
+        g_keysDown.add(key);
+
+        if (key === 'n' || key === 'N') {
+            if (shouldStepToInput()) {
+                stepGameTree();
+                if (key === 'n') {
+                    stepToInput();
+                }
+            }
+        } else if (key === 'p' || key === 'P') {
+            undoPop();
+            if (key === 'p') {
+                while (g_undoStack.length > 0 && shouldStepToInput()) {
+                    undoPop();
+                }
             }
         }
-    } else if (key === 'p' || key === 'P') {
-        undoPop();
-        if (key === 'p') {
-            while (g_undoStack.length > 0 && shouldStepToInput()) {
-                undoPop();
+
+        if (g_choiceWait === true) {
+            let keyp = null;
+            if (key === 'ArrowLeft') {
+                keyp = 'left';
+            } else if (key === 'ArrowRight') {
+                keyp = 'right';
+            } else if (key === 'ArrowUp') {
+                keyp = 'up';
+            } else if (key === 'ArrowDown') {
+                keyp = 'down';
+            } else if (key === 'z') {
+                keyp = 'z';
             }
-        }
-    }
+            if (keyp !== null && g_choicesByBtn.has(keyp)) {
+                stepGameTree();
 
-    if (g_choiceWait === true) {
-        let keyp = null;
-        if (key === 'ArrowLeft') {
-            keyp = 'left';
-        } else if (key === 'ArrowRight') {
-            keyp = 'right';
-        } else if (key === 'ArrowUp') {
-            keyp = 'up';
-        } else if (key === 'ArrowDown') {
-            keyp = 'down';
-        } else if (key === 'z') {
-            keyp = 'z';
-        }
-        if (keyp !== null && g_choicesByBtn.has(keyp)) {
-            stepGameTree();
-
-            g_choiceWait = g_choicesByBtn.get(keyp);
-            rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
-            g_mouseChoice = null;
-            g_choicesByRct = null;
-            g_choicesByBtn = null;
-            g_choicePlayer = null;
+                g_choiceWait = g_choicesByBtn.get(keyp);
+                rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
+                g_mouseChoice = null;
+                g_choicesByRct = null;
+                g_choicesByBtn = null;
+                g_choicePlayer = null;
+            }
         }
     }
 
     evt.preventDefault();
     window.requestAnimationFrame(onDraw);
+}
+
+function onKeyUp(evt) {
+    var key = evt.key;
+
+    g_keysDown.delete(key);
+
+    evt.preventDefault();
 }
 
 function onMouseDown(evt) {
