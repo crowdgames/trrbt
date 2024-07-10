@@ -30,6 +30,7 @@ let g_choiceWait = false;
 
 let g_mouseChoice = null;
 let g_mouseAlt = false;
+let g_stepDelay = null;
 
 const FONTNAME = 'px Courier New, Courier, sans-serif';
 const BUTTON_LEFT = 0;
@@ -123,13 +124,14 @@ function undoPop() {
 
     g_mouseChoice = null;
     g_mouseAlt = false;
+    g_stepDelay = null;
 
     console.log(g_callStack);
     console.log(g_choiceWait, g_undoStack.length);
 }
 
 function shouldStepToInput() {
-    return g_gameResult !== true && g_choiceWait !== true && g_loopCheck !== true;
+    return g_gameResult !== true && g_choiceWait !== true && g_loopCheck !== true && g_stepDelay === null;
 }
 
 function stepToInput() {
@@ -189,6 +191,7 @@ function onLoad() {
 
     g_mouseChoice = null;
     g_mouseAlt = false;
+    g_stepDelay = null;
 
     g_canvas = document.getElementById('enginecanvas');
     g_ctx = g_canvas.getContext('2d');
@@ -239,7 +242,20 @@ function onDraw() {
         }
     }
 
+    if (g_stepDelay !== null) {
+        if (Date.now() < g_stepDelay) {
+            window.requestAnimationFrame(onDraw);
+            return;
+        } else {
+            g_stepDelay = null;
+        }
+    }
+
     stepToInput();
+
+    if (g_stepDelay !== null) {
+        window.requestAnimationFrame(onDraw);
+    }
 
     g_ctx.clearRect(0, 0, g_canvas.width, g_canvas.height);
     g_ctx.textAlign = 'center';
@@ -694,7 +710,7 @@ function pushCallStackNextChild(frame) {
 }
 
 function stepGameTree(stack) {
-    if (g_loopCheck !== true) {
+    if (g_loopCheck !== true && g_stepDelay === null) {
         if (g_callStack === null) {
             g_callStack = [];
             pushCallStack(GAME_SETUP.tree);
@@ -889,6 +905,9 @@ function stepNodeSetBoard(frame, lastResult) {
 }
 
 function stepNodeDisplayBoard(frame, lastResult) {
+    if (frame.node.hasOwnProperty('delay')) {
+        g_stepDelay = Date.now() + frame.node.delay;
+    }
     return true;
 }
 
