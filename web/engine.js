@@ -150,12 +150,8 @@ function stepToInput() {
     }
 }
 
-function resizeImage(image_info, ww, hh) {
-    const from_data = Uint8Array.from(atob(image_info.data), c => c.charCodeAt(0));
-    const fw = image_info.size[0];
-    const fh = image_info.size[1];
-
-    const new_data = new Uint8ClampedArray(ww * hh * 4);
+function arrayToImageData(from_data, fw, fh, ww, hh) {
+    let new_data = new Uint8ClampedArray(ww * hh * 4);
     for (let xx = 0; xx < ww; xx += 1) {
         for (let yy = 0; yy < hh; yy += 1) {
             const fx = Math.floor(xx / ww * fw);
@@ -168,6 +164,37 @@ function resizeImage(image_info, ww, hh) {
         }
     }
     return new ImageData(new_data, ww, hh);
+}
+
+function loadSpriteImage(image_name, image_info) {
+    g_spriteImages.set(image_name, null);
+
+    const image_info_data = image_info.data;
+    const image_decoded = atob(image_info_data);
+    const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
+    const image_blob = new Blob([image_array.buffer]);
+    const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
+    const image_reader = image_decompressed.getReader();
+
+    let image_read_array = null;
+
+    image_reader.read().then(function process({ done, value }) {
+        if (!done) {
+            if (image_read_array === null) {
+                image_read_array = value;
+            } else {
+                var merged_array = new Uint8Array(image_read_array.length + value.length);
+                merged_array.set(image_read_array);
+                merged_array.set(value, image_read_array.length);
+                image_read_array = merged_array;
+            }
+            return image_reader.read().then(process);
+        } else {
+            const image_data = arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], g_cell_size, g_cell_size);
+            let img_promise = createImageBitmap(image_data);
+            img_promise.then((img_loaded) => g_spriteImages.set(image_name, img_loaded));
+        }
+    });
 }
 
 function onLoad() {
@@ -206,12 +233,8 @@ function onLoad() {
     if (GAME_SETUP.sprites !== null) {
         g_spriteImages = new Map();
         for (let imageName in GAME_SETUP.sprites.images) {
-            g_spriteImages.set(imageName, null);
-
             const image_info = GAME_SETUP.sprites.images[imageName];
-            const image_data = resizeImage(image_info, g_cell_size, g_cell_size);
-            let img_promise = createImageBitmap(image_data);
-            Promise.all([img_promise]).then((img_loaded) => g_spriteImages.set(imageName, img_loaded[0]));
+            loadSpriteImage(imageName, image_info)
         }
         g_spriteTiles = new Map();
         for (let tile in GAME_SETUP.sprites.tiles) {
