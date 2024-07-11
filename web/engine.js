@@ -1,68 +1,48 @@
-window.addEventListener('load', onLoad, false);
-
-let g_canvas = null;
-let g_ctx = null;
-let g_padding = 10;
-let g_cell_size = 50;
-let g_keysDown = new Set();
-
-let g_spriteImages = null;
-let g_spriteTiles = null;
-let g_back = null;
-
-let g_player_id_colors = new Map();
-
-let g_undoStack = [];
-
-let g_callStack = null;
-let g_callResult = null;
-let g_gameResult = null;
-let g_loopCheck = 0;
-
-let g_board = null;
-let g_rows = 0;
-let g_cols = 0;
-
-let g_choicesByRct = null;
-let g_choicesByBtn = null;
-let g_choicePlayer = null;
-let g_choiceWait = false;
-
-let g_mouseChoice = null;
-let g_mouseAlt = false;
-let g_stepDelay = null;
-
-const FONTNAME = 'px Courier New, Courier, sans-serif';
-const BUTTON_LEFT = 0;
-const BUTTON_RIGHT = 2;
+window.addEventListener('load', ENG_onLoad, false);
 
 
 
-function copymap(map) {
-    if (map === null) {
-        return null;
-    } else {
-        return new Map(JSON.parse(JSON.stringify(Array.from(map))));
-    }
-}
+let ENG_canvas = null;
+let ENG_ctx = null;
+let ENG_padding = 10;
+let ENG_cell_size = 50;
+let ENG_keysDown = new Set();
 
-function deepcopyobj(obj) {
-    if (obj === null) {
-        return null;
-    } else if (obj === true) {
-        return true;
-    } else if (obj === false) {
-        return false;
-    } else {
-        return JSON.parse(JSON.stringify(obj));
-    }
-}
+let ENG_spriteImages = null;
+let ENG_spriteTiles = null;
+let ENG_back = null;
 
-function undoPush() {
+let ENG_player_id_colors = new Map();
+
+let ENG_undoStack = [];
+
+let ENG_callStack = null;
+let ENG_callResult = null;
+let ENG_gameResult = null;
+let ENG_loopCheck = 0;
+
+let ENG_board = null;
+let ENG_rows = 0;
+let ENG_cols = 0;
+
+let ENG_choicesByRct = null;
+let ENG_choicesByBtn = null;
+let ENG_choicePlayer = null;
+let ENG_choiceWait = false;
+
+let ENG_mouseChoice = null;
+let ENG_mouseAlt = false;
+let ENG_stepDelay = null;
+
+const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
+
+
+
+function ENG_undoPush() {
     return;
 
     var callStackCopy = [];
-    for (var frame of g_callStack) {
+    for (var frame of ENG_callStack) {
         var frameCopy = {node: frame.node, local: copymap(frame.local)};
         callStackCopy.push(frameCopy);
     }
@@ -70,79 +50,79 @@ function undoPush() {
     var state = {};
 
     state.callStack = callStackCopy;
-    state.callResult = g_callResult;
-    state.gameResult = deepcopyobj(g_gameResult);
-    state.loopCheck = g_loopCheck;
+    state.callResult = ENG_callResult;
+    state.gameResult = deepcopyobj(ENG_gameResult);
+    state.loopCheck = ENG_loopCheck;
 
-    state.board = deepcopyobj(g_board);
-    state.rows = g_rows;
-    state.cols = g_cols;
+    state.board = deepcopyobj(ENG_board);
+    state.rows = ENG_rows;
+    state.cols = ENG_cols;
 
-    state.choicesByRct = copymap(g_choicesByRct);
-    state.choicesByBtn = copymap(g_choicesByBtn);
-    state.choicePlayer = g_choicePlayer;
-    state.choiceWait = deepcopyobj(g_choiceWait);
+    state.choicesByRct = copymap(ENG_choicesByRct);
+    state.choicesByBtn = copymap(ENG_choicesByBtn);
+    state.choicePlayer = ENG_choicePlayer;
+    state.choiceWait = deepcopyobj(ENG_choiceWait);
 
-    g_undoStack.push(state);
+    ENG_undoStack.push(state);
 
-    console.log(g_callStack);
-    console.log(g_choiceWait, g_undoStack.length);
+    console.log(ENG_callStack);
+    console.log(ENG_choiceWait, ENG_undoStack.length);
 }
 
-function undoPop() {
-    if (g_undoStack.length > 0) {
-        var state = g_undoStack.pop();
+function ENG_undoPop() {
+    if (ENG_undoStack.length > 0) {
+        var state = ENG_undoStack.pop();
 
-        g_callStack = state.callStack;
-        g_callResult = state.callResult;
-        g_gameResult = state.gameResult;
-        g_loopCheck: loopCheck;
+        ENG_callStack = state.callStack;
+        ENG_callResult = state.callResult;
+        ENG_gameResult = state.gameResult;
+        ENG_loopCheck: loopCheck;
 
-        g_board = state.board;
-        g_rows = state.rows;
-        g_cols = state.cols;
+        ENG_board = state.board;
+        ENG_rows = state.rows;
+        ENG_cols = state.cols;
 
-        g_choicesByRct = state.choicesByRct;
-        g_choicesByBtn = state.choicesByBtn;
-        g_choicePlayer = state.choicePlayer;
-        g_choiceWait = state.choiceWait;
+        ENG_choicesByRct = state.choicesByRct;
+        ENG_choicesByBtn = state.choicesByBtn;
+        ENG_choicePlayer = state.choicePlayer;
+        ENG_choiceWait = state.choiceWait;
     } else {
-        g_callStack = null;
-        g_callResult = null;
-        g_gameResult = null;
-        g_loopCheck = 0;
+        ENG_callStack = null;
+        ENG_callResult = null;
+        ENG_gameResult = null;
+        ENG_loopCheck = 0;
 
-        g_board = null;
-        g_rows = 0;
-        g_cols = 0;
+        ENG_board = null;
+        ENG_rows = 0;
+        ENG_cols = 0;
 
-        g_choicesByRct = null;
-        g_choicesByBtn = null;
-        g_choicePlayer = null;
-        g_choiceWait = false;
+        ENG_choicesByRct = null;
+        ENG_choicesByBtn = null;
+        ENG_choicePlayer = null;
+        ENG_choiceWait = false;
     }
 
-    g_mouseChoice = null;
-    g_mouseAlt = false;
-    g_stepDelay = null;
+    ENG_mouseChoice = null;
+    ENG_mouseAlt = false;
+    ENG_stepDelay = null;
 
-    console.log(g_callStack);
-    console.log(g_choiceWait, g_undoStack.length);
+    console.log(ENG_callStack);
+    console.log(ENG_choiceWait, ENG_undoStack.length);
 }
 
-function shouldStepToInput() {
-    return g_gameResult !== true && g_choiceWait !== true && g_loopCheck !== true && g_stepDelay === null;
+function ENG_shouldStepToInput() {
+    return ENG_gameResult !== true && ENG_choiceWait !== true && ENG_loopCheck !== true && ENG_stepDelay === null;
 }
 
-function stepToInput() {
-    if (g_loopCheck !== true) {
-        g_loopCheck = 0;
-        while (shouldStepToInput()) {
+function ENG_stepToInput() {
+    if (ENG_loopCheck !== true) {
+        ENG_loopCheck = 0;
+        while (ENG_shouldStepToInput()) {
             stepGameTree();
-            ++ g_loopCheck;
+            ++ ENG_loopCheck;
 
-            if (g_loopCheck === 100000) {
-                g_loopCheck = true;
+            if (ENG_loopCheck === 100000) {
+                ENG_loopCheck = true;
                 setTimeout(() => { alert('too many steps before player input, stopping') }, 10);
                 break;
             }
@@ -150,7 +130,7 @@ function stepToInput() {
     }
 }
 
-function arrayToImageData(from_data, fw, fh, ww, hh) {
+function ENG_arrayToImageData(from_data, fw, fh, ww, hh) {
     let new_data = new Uint8ClampedArray(ww * hh * 4);
     for (let xx = 0; xx < ww; xx += 1) {
         for (let yy = 0; yy < hh; yy += 1) {
@@ -166,8 +146,8 @@ function arrayToImageData(from_data, fw, fh, ww, hh) {
     return new ImageData(new_data, ww, hh);
 }
 
-function loadSpriteImage(image_name, image_info) {
-    g_spriteImages.set(image_name, null);
+function ENG_loadSpriteImage(image_name, image_info) {
+    ENG_spriteImages.set(image_name, null);
 
     const image_info_data = image_info.data;
     const image_decoded = atob(image_info_data);
@@ -190,117 +170,117 @@ function loadSpriteImage(image_name, image_info) {
             }
             return image_reader.read().then(process);
         } else {
-            const image_data = arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], g_cell_size, g_cell_size);
+            const image_data = ENG_arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], ENG_cell_size, ENG_cell_size);
             let img_promise = createImageBitmap(image_data);
-            img_promise.then((img_loaded) => g_spriteImages.set(image_name, img_loaded));
+            img_promise.then((img_loaded) => ENG_spriteImages.set(image_name, img_loaded));
         }
     });
 }
 
-function onLoad() {
+function ENG_onLoad() {
     document.oncontextmenu = function() {
         return false;
     }
 
-    g_callStack = null;
-    g_callResult = null;
-    g_gameResult = null;
+    ENG_callStack = null;
+    ENG_callResult = null;
+    ENG_gameResult = null;
 
-    g_board = null;
-    g_rows = 0;
-    g_cols = 0;
+    ENG_board = null;
+    ENG_rows = 0;
+    ENG_cols = 0;
 
-    g_choicesByRct = null;
-    g_choicesByBtn = null;
-    g_choicePlayer = null;
-    g_choiceWait = false;
-    g_loopCheck = 0;
+    ENG_choicesByRct = null;
+    ENG_choicesByBtn = null;
+    ENG_choicePlayer = null;
+    ENG_choiceWait = false;
+    ENG_loopCheck = 0;
 
-    g_mouseChoice = null;
-    g_mouseAlt = false;
-    g_stepDelay = null;
+    ENG_mouseChoice = null;
+    ENG_mouseAlt = false;
+    ENG_stepDelay = null;
 
-    g_canvas = document.getElementById('enginecanvas');
-    g_ctx = g_canvas.getContext('2d');
+    ENG_canvas = document.getElementById('enginecanvas');
+    ENG_ctx = ENG_canvas.getContext('2d');
 
-    g_canvas.addEventListener('mousedown', onMouseDown);
-    g_canvas.addEventListener('mousemove', onMouseMove);
-    g_canvas.addEventListener('mouseup', onMouseUp);
-    g_canvas.addEventListener('mouseout', onMouseOut);
-    window.addEventListener('keydown', onKeyDown);
-    window.addEventListener('keyup', onKeyUp);
+    ENG_canvas.addEventListener('mousedown', ENG_onMouseDown);
+    ENG_canvas.addEventListener('mousemove', ENG_onMouseMove);
+    ENG_canvas.addEventListener('mouseup', ENG_onMouseUp);
+    ENG_canvas.addEventListener('mouseout', ENG_onMouseOut);
+    window.addEventListener('keydown', ENG_onKeyDown);
+    window.addEventListener('keyup', ENG_onKeyUp);
 
     if (GAME_SETUP.sprites !== null) {
-        g_spriteImages = new Map();
+        ENG_spriteImages = new Map();
         for (let imageName in GAME_SETUP.sprites.images) {
             const image_info = GAME_SETUP.sprites.images[imageName];
-            loadSpriteImage(imageName, image_info)
+            ENG_loadSpriteImage(imageName, image_info)
         }
-        g_spriteTiles = new Map();
+        ENG_spriteTiles = new Map();
         for (let tile in GAME_SETUP.sprites.tiles) {
-            g_spriteTiles.set(tile, GAME_SETUP.sprites.tiles[tile]);
+            ENG_spriteTiles.set(tile, GAME_SETUP.sprites.tiles[tile]);
         }
         if (GAME_SETUP.sprites.players !== undefined) {
             for (let pid in GAME_SETUP.sprites.players) {
-                g_player_id_colors.set(pid, GAME_SETUP.sprites.players[pid]);
+                ENG_player_id_colors.set(pid, GAME_SETUP.sprites.players[pid]);
             }
         }
         if (GAME_SETUP.sprites.back !== undefined) {
-            g_back = GAME_SETUP.sprites.back;
+            ENG_back = GAME_SETUP.sprites.back;
         }
     }
 
-    g_canvas.style.backgroundColor = '#ffffff';
+    ENG_canvas.style.backgroundColor = '#ffffff';
 
-    window.requestAnimationFrame(onDraw);
+    window.requestAnimationFrame(ENG_onDraw);
 }
 
-function onDraw() {
-    if (g_spriteImages !== null) {
-        for (let [imgName, img] of g_spriteImages) {
+function ENG_onDraw() {
+    if (ENG_spriteImages !== null) {
+        for (let [imgName, img] of ENG_spriteImages) {
             if (img === null) {
-                window.requestAnimationFrame(onDraw);
+                window.requestAnimationFrame(ENG_onDraw);
                 return;
             }
         }
     }
 
-    if (g_stepDelay !== null) {
-        if (Date.now() < g_stepDelay) {
-            window.requestAnimationFrame(onDraw);
+    if (ENG_stepDelay !== null) {
+        if (Date.now() < ENG_stepDelay) {
+            window.requestAnimationFrame(ENG_onDraw);
             return;
         } else {
-            g_stepDelay = null;
+            ENG_stepDelay = null;
         }
     }
 
-    stepToInput();
+    ENG_stepToInput();
 
-    if (g_stepDelay !== null) {
-        window.requestAnimationFrame(onDraw);
+    if (ENG_stepDelay !== null) {
+        window.requestAnimationFrame(ENG_onDraw);
     }
 
-    g_ctx.clearRect(0, 0, g_canvas.width, g_canvas.height);
-    g_ctx.textAlign = 'center';
-    g_ctx.textBaseline = 'middle';
+    ENG_ctx.clearRect(0, 0, ENG_canvas.width, ENG_canvas.height);
+    ENG_ctx.textAlign = 'center';
+    ENG_ctx.textBaseline = 'middle';
 
-    if (g_back !== null) {
-        const brows = g_back.length;
-        const bcols = g_back[0].length;
+    if (ENG_back !== null) {
+        const brows = ENG_back.length;
+        const bcols = ENG_back[0].length;
 
-        for (let rr = 0; rr < g_rows; rr += 1) {
-            for (let cc = 0; cc < g_cols; cc += 1) {
+        for (let rr = 0; rr < ENG_rows; rr += 1) {
+            for (let cc = 0; cc < ENG_cols; cc += 1) {
                 let all_invis = true;
-                for (const [layer, pattern] of Object.entries(g_board)) {
+                for (const [layer, pattern] of Object.entries(ENG_board)) {
                     if (pattern[rr][cc] !== '.') {
                         all_invis = false;
                     }
                 }
                 if (!all_invis) {
-                    const back_tile = g_back[rr % brows][cc % bcols];
-                    if (g_spriteTiles !== null && g_spriteTiles.has(back_tile)) {
-                        const img = g_spriteImages.get(g_spriteTiles.get(back_tile));
-                        g_ctx.drawImage(img, tocvsx(cc), tocvsy(rr));
+                    const back_tile = ENG_back[rr % brows][cc % bcols];
+                    if (ENG_spriteTiles !== null && ENG_spriteTiles.has(back_tile)) {
+                        const img = ENG_spriteImages.get(ENG_spriteTiles.get(back_tile));
+                        ENG_ctx.drawImage(img, ENG_tocvsx(cc), ENG_tocvsy(rr));
                     }
                 }
             }
@@ -308,20 +288,20 @@ function onDraw() {
     }
 
     let choiceOverwrite = null;
-    if (g_mouseChoice !== null && !g_mouseAlt) {
-        choiceOverwrite = {rct: g_mouseChoice.rct, rhs:g_choicesByRct.get(JSON.stringify(g_mouseChoice.rct)).choices[g_mouseChoice.idx].rhs };
+    if (ENG_mouseChoice !== null && !ENG_mouseAlt) {
+        choiceOverwrite = {rct: ENG_mouseChoice.rct, rhs:ENG_choicesByRct.get(JSON.stringify(ENG_mouseChoice.rct)).choices[ENG_mouseChoice.idx].rhs };
     }
 
-    g_ctx.fillStyle = '#000000';
+    ENG_ctx.fillStyle = '#000000';
 
-    for (let rr = 0; rr < g_rows; rr += 1) {
-        for (let cc = 0; cc < g_cols; cc += 1) {
+    for (let rr = 0; rr < ENG_rows; rr += 1) {
+        for (let cc = 0; cc < ENG_cols; cc += 1) {
             let tiles = [];
             let overwrites = [];
             if (choiceOverwrite !== null &&
                 choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                 choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
-                for (const [layer, pattern] of Object.entries(g_board)) {
+                for (const [layer, pattern] of Object.entries(ENG_board)) {
                     if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
                         const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
                         if (tileOverwrite !== '.') {
@@ -337,7 +317,7 @@ function onDraw() {
                     }
                 }
             } else {
-                for (const [layer, pattern] of Object.entries(g_board)) {
+                for (const [layer, pattern] of Object.entries(ENG_board)) {
                     tiles.push(pattern[rr][cc]);
                     overwrites.push(false);
                 }
@@ -348,32 +328,32 @@ function onDraw() {
                 const tile = tiles[ii];
                 const overwrite = overwrites[ii];
                 if (overwrite) {
-                    g_ctx.globalAlpha = 0.5;
+                    ENG_ctx.globalAlpha = 0.5;
                 } else {
-                    g_ctx.globalAlpha = 1.0;
+                    ENG_ctx.globalAlpha = 1.0;
                 }
                 if (tile !== '.') {
-                    if (g_spriteTiles !== null && g_spriteTiles.has(tile)) {
-                        const imgName = g_spriteTiles.get(tile);
+                    if (ENG_spriteTiles !== null && ENG_spriteTiles.has(tile)) {
+                        const imgName = ENG_spriteTiles.get(tile);
                         if (imgName !== null) {
-                            const img = g_spriteImages.get(imgName);
-                            g_ctx.drawImage(img, tocvsx(cc), tocvsy(rr));
+                            const img = ENG_spriteImages.get(imgName);
+                            ENG_ctx.drawImage(img, ENG_tocvsx(cc), ENG_tocvsy(rr));
                         }
                     } else {
-                        g_ctx.font = (g_cell_size / tile.length) + FONTNAME;
-                        g_ctx.fillText(tile, tocvsx(cc + 0.5), tocvsy(rr + 0.5));
+                        ENG_ctx.font = (ENG_cell_size / tile.length) + ENG_FONTNAME;
+                        ENG_ctx.fillText(tile, ENG_tocvsx(cc + 0.5), ENG_tocvsy(rr + 0.5));
                     }
                 }
             }
         }
     }
 
-    if (g_choicesByRct !== null) {
-        g_ctx.lineWidth = 3;
-        g_ctx.globalAlpha = 1.0;
+    if (ENG_choicesByRct !== null) {
+        ENG_ctx.lineWidth = 3;
+        ENG_ctx.globalAlpha = 1.0;
 
-        if (!g_player_id_colors.has(g_choicePlayer)) {
-            let color_num = g_player_id_colors.size % 5;
+        if (!ENG_player_id_colors.has(ENG_choicePlayer)) {
+            let color_num = ENG_player_id_colors.size % 5;
             let next_color = null;
             if (color_num === 0) {
                 next_color = [0, 0, 220];
@@ -386,55 +366,55 @@ function onDraw() {
             } else {
                 next_color = [0, 220, 220];
             }
-            g_player_id_colors.set(g_choicePlayer, next_color);
+            ENG_player_id_colors.set(ENG_choicePlayer, next_color);
         }
 
-        let player_color = g_player_id_colors.get(g_choicePlayer);
+        let player_color = ENG_player_id_colors.get(ENG_choicePlayer);
 
-        if (g_mouseChoice !== null) {
-            let rct = g_mouseChoice.rct;
-            let idx = g_mouseChoice.idx;
+        if (ENG_mouseChoice !== null) {
+            let rct = ENG_mouseChoice.rct;
+            let idx = ENG_mouseChoice.idx;
 
-            let rct_choices = g_choicesByRct.get(JSON.stringify(rct)).choices;
+            let rct_choices = ENG_choicesByRct.get(JSON.stringify(rct)).choices;
             let desc = rct_choices[idx].desc;
 
-            g_ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-            g_ctx.beginPath();
-            g_ctx.roundRect(tocvsx(rct.col), tocvsy(rct.row), rct.cols * g_cell_size, rct.rows * g_cell_size, 3);
-            g_ctx.stroke();
+            ENG_ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+            ENG_ctx.beginPath();
+            ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), rct.cols * ENG_cell_size, rct.rows * ENG_cell_size, 3);
+            ENG_ctx.stroke();
 
             if (rct_choices.length > 1) {
-                g_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                g_ctx.beginPath();
-                g_ctx.roundRect(tocvsx(rct.col), tocvsy(rct.row), 0.4 * g_cell_size, 0.4 * g_cell_size, 3);
-                g_ctx.fill();
-                g_ctx.fillStyle = '#DCDCDC'
-                g_ctx.font = (0.9 * 0.4 * g_cell_size) + FONTNAME;
-                g_ctx.fillText(idx + 1, tocvsx(rct.col + 0.2), tocvsy(rct.row + 0.2 + 0.025));
+                ENG_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                ENG_ctx.beginPath();
+                ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), 0.4 * ENG_cell_size, 0.4 * ENG_cell_size, 3);
+                ENG_ctx.fill();
+                ENG_ctx.fillStyle = '#DCDCDC'
+                ENG_ctx.font = (0.9 * 0.4 * ENG_cell_size) + ENG_FONTNAME;
+                ENG_ctx.fillText(idx + 1, ENG_tocvsx(rct.col + 0.2), ENG_tocvsy(rct.row + 0.2 + 0.025));
             }
             if (desc !== undefined) {
-                g_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                g_ctx.font = (0.9 * 0.4 * g_cell_size) + FONTNAME;
-                g_ctx.fillText(desc, tocvsx(rct.col + 0.5 * rct.cols), tocvsy(rct.row + rct.rows - 0.2));
+                ENG_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                ENG_ctx.font = (0.9 * 0.4 * ENG_cell_size) + ENG_FONTNAME;
+                ENG_ctx.fillText(desc, ENG_tocvsx(rct.col + 0.5 * rct.cols), ENG_tocvsy(rct.row + rct.rows - 0.2));
             }
         } else {
-            if (!g_mouseAlt) {
-                g_ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+            if (!ENG_mouseAlt) {
+                ENG_ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
 
-                for (const [rctk, rctChoices] of g_choicesByRct.entries()) {
+                for (const [rctk, rctChoices] of ENG_choicesByRct.entries()) {
                     let rct = rctChoices.rct;
                     let choices = rctChoices.choices;
-                    g_ctx.beginPath();
-                    g_ctx.roundRect(tocvsx(rct.col), tocvsy(rct.row), rct.cols * g_cell_size, rct.rows * g_cell_size, 3);
-                    g_ctx.stroke();
+                    ENG_ctx.beginPath();
+                    ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), rct.cols * ENG_cell_size, rct.rows * ENG_cell_size, 3);
+                    ENG_ctx.stroke();
                     if (choices.length > 1) {
-                        g_ctx.fillStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
-                        g_ctx.beginPath();
-                        g_ctx.roundRect(tocvsx(rct.col), tocvsy(rct.row), 0.4 * g_cell_size, 0.4 * g_cell_size, 3);
-                        g_ctx.fill();
-                        g_ctx.fillStyle = '#DCDCDC'
-                        g_ctx.font = (0.9 * 0.4 * g_cell_size) + FONTNAME;
-                        g_ctx.fillText(choices.length, tocvsx(rct.col + 0.2), tocvsy(rct.row + 0.2 + 0.025));
+                        ENG_ctx.fillStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+                        ENG_ctx.beginPath();
+                        ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), 0.4 * ENG_cell_size, 0.4 * ENG_cell_size, 3);
+                        ENG_ctx.fill();
+                        ENG_ctx.fillStyle = '#DCDCDC'
+                        ENG_ctx.font = (0.9 * 0.4 * ENG_cell_size) + ENG_FONTNAME;
+                        ENG_ctx.fillText(choices.length, ENG_tocvsx(rct.col + 0.2), ENG_tocvsy(rct.row + 0.2 + 0.025));
                     }
                 }
             }
@@ -442,42 +422,42 @@ function onDraw() {
     }
 }
 
-function resizeCanvas() {
-    const desiredWidth = tocvsx(g_cols) + g_padding;
-    const desiredHeight = tocvsy(g_rows) + g_padding;
-    if (g_canvas.width != desiredWidth || g_canvas.height != desiredHeight) {
+function ENG_resizeCanvas() {
+    const desiredWidth = ENG_tocvsx(ENG_cols) + ENG_padding;
+    const desiredHeight = ENG_tocvsy(ENG_rows) + ENG_padding;
+    if (ENG_canvas.width != desiredWidth || ENG_canvas.height != desiredHeight) {
         const ratio = window.devicePixelRatio;
-        g_canvas.width = desiredWidth * ratio;
-        g_canvas.height = desiredHeight * ratio;
-        g_canvas.style.width = desiredWidth + "px";
-        g_canvas.style.height = desiredHeight + "px";
-        g_ctx.scale(ratio, ratio);
+        ENG_canvas.width = desiredWidth * ratio;
+        ENG_canvas.height = desiredHeight * ratio;
+        ENG_canvas.style.width = desiredWidth + "px";
+        ENG_canvas.style.height = desiredHeight + "px";
+        ENG_ctx.scale(ratio, ratio);
     }
 }
 
-function onKeyDown(evt) {
+function ENG_onKeyDown(evt) {
     var key = evt.key;
 
-    if (!g_keysDown.has(key)) {
-        g_keysDown.add(key);
+    if (!ENG_keysDown.has(key)) {
+        ENG_keysDown.add(key);
 
         if (key === 'n' || key === 'N') {
-            if (shouldStepToInput()) {
+            if (ENG_shouldStepToInput()) {
                 stepGameTree();
                 if (key === 'n') {
-                    stepToInput();
+                    ENG_stepToInput();
                 }
             }
         } else if (key === 'p' || key === 'P') {
-            undoPop();
+            ENG_undoPop();
             if (key === 'p') {
-                while (g_undoStack.length > 0 && shouldStepToInput()) {
-                    undoPop();
+                while (ENG_undoStack.length > 0 && ENG_shouldStepToInput()) {
+                    ENG_undoPop();
                 }
             }
         }
 
-        if (g_choiceWait === true) {
+        if (ENG_choiceWait === true) {
             let keyp = null;
             if (key === 'ArrowLeft') {
                 keyp = 'left';
@@ -490,80 +470,80 @@ function onKeyDown(evt) {
             } else if (key === 'z') {
                 keyp = 'z';
             }
-            if (keyp !== null && g_choicesByBtn.has(keyp)) {
+            if (keyp !== null && ENG_choicesByBtn.has(keyp)) {
                 stepGameTree();
 
-                g_choiceWait = g_choicesByBtn.get(keyp);
-                rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
-                g_mouseChoice = null;
-                g_choicesByRct = null;
-                g_choicesByBtn = null;
-                g_choicePlayer = null;
+                ENG_choiceWait = ENG_choicesByBtn.get(keyp);
+                ENG_rewriteLayerPattern(ENG_choiceWait.rhs, ENG_choiceWait.row, ENG_choiceWait.col);
+                ENG_mouseChoice = null;
+                ENG_choicesByRct = null;
+                ENG_choicesByBtn = null;
+                ENG_choicePlayer = null;
             }
         }
     }
 
     evt.preventDefault();
-    window.requestAnimationFrame(onDraw);
+    window.requestAnimationFrame(ENG_onDraw);
 }
 
-function onKeyUp(evt) {
+function ENG_onKeyUp(evt) {
     var key = evt.key;
 
-    g_keysDown.delete(key);
+    ENG_keysDown.delete(key);
 
     evt.preventDefault();
 }
 
-function onMouseDown(evt) {
+function ENG_onMouseDown(evt) {
     const mouseButton = evt.button;
 
     if (mouseButton === BUTTON_LEFT) {
-        if (g_mouseChoice !== null) {
-            if (g_choiceWait === true) {
+        if (ENG_mouseChoice !== null) {
+            if (ENG_choiceWait === true) {
                 stepGameTree();
 
-                g_choiceWait = g_choicesByRct.get(JSON.stringify(g_mouseChoice.rct)).choices[g_mouseChoice.idx];
-                rewriteLayerPattern(g_choiceWait.rhs, g_choiceWait.row, g_choiceWait.col);
-                g_mouseChoice = null;
-                g_choicesByRct = null;
-                g_choicesByBtn = null;
-                g_choicePlayer = null;
+                ENG_choiceWait = ENG_choicesByRct.get(JSON.stringify(ENG_mouseChoice.rct)).choices[ENG_mouseChoice.idx];
+                ENG_rewriteLayerPattern(ENG_choiceWait.rhs, ENG_choiceWait.row, ENG_choiceWait.col);
+                ENG_mouseChoice = null;
+                ENG_choicesByRct = null;
+                ENG_choicesByBtn = null;
+                ENG_choicePlayer = null;
             }
         }
     } else if (mouseButton === BUTTON_RIGHT) {
-        g_mouseAlt = true;
+        ENG_mouseAlt = true;
     }
 
     evt.preventDefault();
-    window.requestAnimationFrame(onDraw);
+    window.requestAnimationFrame(ENG_onDraw);
 }
 
-function onMouseUp(evt) {
+function ENG_onMouseUp(evt) {
     const mouseButton = evt.button;
 
     if (mouseButton === BUTTON_RIGHT) {
-        g_mouseAlt = false;
+        ENG_mouseAlt = false;
     }
 
     evt.preventDefault();
-    window.requestAnimationFrame(onDraw);
+    window.requestAnimationFrame(ENG_onDraw);
 }
 
-function onMouseMove(evt) {
-    const rect = g_canvas.getBoundingClientRect();
+function ENG_onMouseMove(evt) {
+    const rect = ENG_canvas.getBoundingClientRect();
     const mouseX = evt.clientX - rect.left;
     const mouseY = evt.clientY - rect.top;
 
-    g_mouseChoice = null;
-    if (g_choicesByRct !== null) {
-        const mr = fromcvsy(mouseY);
-        const mc = fromcvsx(mouseX);
-        if (0 <= mr && mr < g_rows && 0 <= mc && mc < g_cols) {
+    ENG_mouseChoice = null;
+    if (ENG_choicesByRct !== null) {
+        const mr = ENG_fromcvsy(mouseY);
+        const mc = ENG_fromcvsx(mouseX);
+        if (0 <= mr && mr < ENG_rows && 0 <= mc && mc < ENG_cols) {
             let best_choices = [];
             let best_dist_sqr = null;
 
-            for (const [rctk, rctChoices] of g_choicesByRct.entries()) {
+            for (const [rctk, rctChoices] of ENG_choicesByRct.entries()) {
                 let rct = rctChoices.rct;
                 let choices = rctChoices.choices;
                 if (rct.row <= mr && mr <= rct.row + rct.rows && rct.col <= mc && mc <= rct.col + rct.cols) {
@@ -586,47 +566,47 @@ function onMouseMove(evt) {
 
             if (best_choices.length > 0) {
                 const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
-                g_mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
+                ENG_mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
             }
         }
     }
 
     evt.preventDefault();
-    window.requestAnimationFrame(onDraw);
+    window.requestAnimationFrame(ENG_onDraw);
 }
 
-function onMouseOut(evt) {
-    g_mouseChoice = null;
+function ENG_onMouseOut(evt) {
+    ENG_mouseChoice = null;
 
     evt.preventDefault();
-    window.requestAnimationFrame(onDraw);
+    window.requestAnimationFrame(ENG_onDraw);
 }
 
-function tocvsx(x) {
-    return (x * g_cell_size) + g_padding;
+function ENG_tocvsx(x) {
+    return (x * ENG_cell_size) + ENG_padding;
 }
 
-function tocvsy(y) {
-    return (y * g_cell_size) + g_padding;
+function ENG_tocvsy(y) {
+    return (y * ENG_cell_size) + ENG_padding;
 }
 
-function fromcvsx(x) {
-    return (x - g_padding) / g_cell_size;
+function ENG_fromcvsx(x) {
+    return (x - ENG_padding) / ENG_cell_size;
 }
 
-function fromcvsy(y) {
-    return (y - g_padding) / g_cell_size;
+function ENG_fromcvsy(y) {
+    return (y - ENG_padding) / ENG_cell_size;
 }
 
-function layerPatternSize(lpattern) {
+function ENG_layerPatternSize(lpattern) {
     for (const [layer, pattern] of Object.entries(lpattern)) {
         return [pattern.length, pattern[0].length];
     }
     return [0, 0];
 }
 
-function matchLayerPattern(lpattern, row, col) {
-    const [prows, pcols] = layerPatternSize(lpattern);
+function ENG_matchLayerPattern(lpattern, row, col) {
+    const [prows, pcols] = ENG_layerPatternSize(lpattern);
 
     for (let rr = 0; rr < prows; rr += 1) {
         for (let cc = 0; cc < pcols; cc += 1) {
@@ -634,7 +614,7 @@ function matchLayerPattern(lpattern, row, col) {
                 if (lpattern[layer][rr][cc] === '.') {
                     continue;
                 }
-                if (g_board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
+                if (ENG_board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
                     return false;
                 }
             }
@@ -643,8 +623,8 @@ function matchLayerPattern(lpattern, row, col) {
     return true;
 }
 
-function rewriteLayerPattern(lpattern, row, col) {
-    const [prows, pcols] = layerPatternSize(lpattern);
+function ENG_rewriteLayerPattern(lpattern, row, col) {
+    const [prows, pcols] = ENG_layerPatternSize(lpattern);
 
     for (let rr = 0; rr < prows; rr += 1) {
         for (let cc = 0; cc < pcols; cc += 1) {
@@ -652,19 +632,19 @@ function rewriteLayerPattern(lpattern, row, col) {
                 if (lpattern[layer][rr][cc] === '.') {
                     continue;
                 }
-                g_board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
+                ENG_board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
             }
         }
     }
 }
 
-function findLayerPattern(lpattern) {
-    const [prows, pcols] = layerPatternSize(lpattern);
+function ENG_findLayerPattern(lpattern) {
+    const [prows, pcols] = ENG_layerPatternSize(lpattern);
 
     let ret = []
-    for (let rr = 0; rr < g_rows - prows + 1; rr += 1) {
-        for (let cc = 0; cc < g_cols - pcols + 1; cc += 1) {
-            if (matchLayerPattern(lpattern, rr, cc)) {
+    for (let rr = 0; rr < ENG_rows - prows + 1; rr += 1) {
+        for (let cc = 0; cc < ENG_cols - pcols + 1; cc += 1) {
+            if (ENG_matchLayerPattern(lpattern, rr, cc)) {
                 ret.push({row:rr, col:cc});
             }
         }
@@ -673,25 +653,25 @@ function findLayerPattern(lpattern) {
 }
 
 const NODE_FN_MAP = {
-    'display-board': stepNodeDisplayBoard,
-    'set-board': stepNodeSetBoard,
-    'layer-template': stepNodeLayerTemplate,
-    'append-rows': stepNodeAppendRows,
-    'order': stepNodeOrder,
-    'loop-until-all': stepNodeLoopUntilAll,
-    'loop-times': stepNodeLoopTimes,
-    'random-try': stepNodeRandomTry,
-    'all': stepNodeAll,
-    'none': stepNodeNone,
-    'win': stepNodeWin,
-    'lose': stepNodeLose,
-    'draw': stepNodeDraw,
-    'match': stepNodeMatch,
-    'rewrite': stepNodeRewrite,
-    'player': stepNodePlayer,
+    'display-board': ENG_stepNodeDisplayBoard,
+    'set-board': ENG_stepNodeSetBoard,
+    'layer-template': ENG_stepNodeLayerTemplate,
+    'append-rows': ENG_stepNodeAppendRows,
+    'order': ENG_stepNodeOrder,
+    'loop-until-all': ENG_stepNodeLoopUntilAll,
+    'loop-times': ENG_stepNodeLoopTimes,
+    'random-try': ENG_stepNodeRandomTry,
+    'all': ENG_stepNodeAll,
+    'none': ENG_stepNodeNone,
+    'win': ENG_stepNodeWin,
+    'lose': ENG_stepNodeLose,
+    'draw': ENG_stepNodeDraw,
+    'match': ENG_stepNodeMatch,
+    'rewrite': ENG_stepNodeRewrite,
+    'player': ENG_stepNodePlayer,
 };
 
-function localInit(frame, what) {
+function ENG_localInit(frame, what) {
     if (frame.local === null) {
         frame.local = new Map();
         for (let [name, val] of what) {
@@ -700,243 +680,243 @@ function localInit(frame, what) {
     }
 }
 
-function localGet(frame, name) {
+function ENG_localGet(frame, name) {
     return frame.local.get(name);
 }
 
-function localSet(frame, name, val) {
+function ENG_localSet(frame, name, val) {
     return frame.local.set(name, val);
 }
 
-function localSetIfTrue(frame, name, check) {
+function ENG_localSetIfTrue(frame, name, check) {
     if (check === true) {
         frame.local.set(name, true);
     }
 }
 
-function localIncrement(frame, name) {
+function ENG_localIncrement(frame, name) {
     frame.local.set(name, frame.local.get(name) + 1)
 }
 
-function localEqual(frame, name, val) {
+function ENG_localEqual(frame, name, val) {
     return frame.local.get(name) === val;
 }
 
-function pushCallStack(node) {
-    g_callStack.push({node: node, local: null});
+function ENG_pushCallStack(node) {
+    ENG_callStack.push({node: node, local: null});
 }
 
-function pushCallStackNextChild(frame) {
-    pushCallStack(frame.node.children[frame.local.get('index')]);
+function ENG_pushCallStackNextChild(frame) {
+    ENG_pushCallStack(frame.node.children[frame.local.get('index')]);
     frame.local.set('index', frame.local.get('index') + 1);
     return null;
 }
 
 function stepGameTree(stack) {
-    if (g_loopCheck !== true && g_stepDelay === null) {
-        if (g_callStack === null) {
-            g_callStack = [];
-            pushCallStack(GAME_SETUP.tree);
+    if (ENG_loopCheck !== true && ENG_stepDelay === null) {
+        if (ENG_callStack === null) {
+            ENG_callStack = [];
+            ENG_pushCallStack(GAME_SETUP.tree);
         }
 
-        if (g_gameResult === true) {
-        } else if (g_gameResult === null) {
-            undoPush();
+        if (ENG_gameResult === true) {
+        } else if (ENG_gameResult === null) {
+            ENG_undoPush();
 
-            if (g_callStack.length === 0) {
-                g_gameResult = {result:'stalemate'};
+            if (ENG_callStack.length === 0) {
+                ENG_gameResult = {result:'stalemate'};
             } else {
-                var frame = g_callStack.at(-1);
-                g_callResult = NODE_FN_MAP[frame.node.type](frame, g_callResult);
+                var frame = ENG_callStack.at(-1);
+                ENG_callResult = NODE_FN_MAP[frame.node.type](frame, ENG_callResult);
 
-                if (g_callResult === true || g_callResult === false) {
-                    g_callStack.pop();
+                if (ENG_callResult === true || ENG_callResult === false) {
+                    ENG_callStack.pop();
                 }
             }
         } else {
-            undoPush();
+            ENG_undoPush();
 
-            if (g_gameResult.result === 'win') {
-                var player = g_gameResult.player;
+            if (ENG_gameResult.result === 'win') {
+                var player = ENG_gameResult.player;
                 setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
-            } else if (g_gameResult.result === 'lose') {
-                var player = g_gameResult.player;
+            } else if (ENG_gameResult.result === 'lose') {
+                var player = ENG_gameResult.player;
                 setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
-            } else if (g_gameResult.result === 'draw') {
+            } else if (ENG_gameResult.result === 'draw') {
                 setTimeout(() => { alert('Game over, draw!') }, 10);
-            } else if (g_gameResult.result === 'stalemate') {
+            } else if (ENG_gameResult.result === 'stalemate') {
                 setTimeout(() => { alert('Game over, stalemate!') }, 10);
             } else {
                 setTimeout(() => { alert('Game over, unknown result!') }, 10);
             }
-            g_gameResult = true;
+            ENG_gameResult = true;
         }
     }
 }
 
-function stepNodeOrder(frame, lastResult) {
-    localInit(frame, [['any', false],
-                      ['index', 0]]);
+function ENG_stepNodeOrder(frame, lastResult) {
+    ENG_localInit(frame, [['any', false],
+                          ['index', 0]]);
 
-    localSetIfTrue(frame, 'any', lastResult);
+    ENG_localSetIfTrue(frame, 'any', lastResult);
 
-    if (localEqual(frame, 'index', frame.node.children.length)) {
-        return localGet(frame, 'any');
+    if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
+        return ENG_localGet(frame, 'any');
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeLoopUntilAll(frame, lastResult) {
-    localInit(frame, [['any', false],
-                      ['anyThisLoop', false],
-                      ['index', 0]]);
+function ENG_stepNodeLoopUntilAll(frame, lastResult) {
+    ENG_localInit(frame, [['any', false],
+                          ['anyThisLoop', false],
+                          ['index', 0]]);
 
-    localSetIfTrue(frame, 'any', lastResult);
-    localSetIfTrue(frame, 'anyThisLoop', lastResult);
+    ENG_localSetIfTrue(frame, 'any', lastResult);
+    ENG_localSetIfTrue(frame, 'anyThisLoop', lastResult);
 
-    if (localEqual(frame, 'index', frame.node.children.length)) {
-        if (localGet(frame, 'anyThisLoop')) {
-            localSet(frame, 'anyThisLoop', false);
-            localSet(frame, 'index', 0);
+    if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
+        if (ENG_localGet(frame, 'anyThisLoop')) {
+            ENG_localSet(frame, 'anyThisLoop', false);
+            ENG_localSet(frame, 'index', 0);
         } else {
-            return localGet(frame, 'any');
+            return ENG_localGet(frame, 'any');
         }
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeLoopTimes(frame, lastResult) {
-    localInit(frame, [['any', false],
-                      ['times', 0],
-                      ['index', 0]]);
+function ENG_stepNodeLoopTimes(frame, lastResult) {
+    ENG_localInit(frame, [['any', false],
+                          ['times', 0],
+                          ['index', 0]]);
 
-    localSetIfTrue(frame, 'any', lastResult);
+    ENG_localSetIfTrue(frame, 'any', lastResult);
 
-    if (localEqual(frame, 'index', frame.node.children.length)) {
-        if (localEqual(frame, 'times', frame.node.times)) {
-            return localGet(frame, 'any');
+    if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
+        if (ENG_localEqual(frame, 'times', frame.node.times)) {
+            return ENG_localGet(frame, 'any');
         } else {
-            localIncrement('times');
-            localSet(frame, 'index', 0);
+            ENG_localIncrement('times');
+            ENG_localSet(frame, 'index', 0);
         }
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeRandomTry(frame, lastResult) {
-    localInit(frame, [['order', null]]);
+function ENG_stepNodeRandomTry(frame, lastResult) {
+    ENG_localInit(frame, [['order', null]]);
 
-    if (localEqual(frame, 'order', null)) {
+    if (ENG_localEqual(frame, 'order', null)) {
         var order = [];
         for (var ii = 0; ii < frame.node.children.length; ++ ii) {
             order.push(ii);
         }
         order.sort((a, b) => 0.5 - Math.random());
-        localSet(frame, 'order', order);
+        ENG_localSet(frame, 'order', order);
     }
 
 
     if (lastResult === true) {
         return true;
-    } else if (localGet(frame, 'order').length == 0) {
+    } else if (ENG_localGet(frame, 'order').length == 0) {
         return false;
     } else {
-        const index = localGet(frame, 'order').pop();
-        pushCallStack(frame.node.children[index]);
+        const index = ENG_localGet(frame, 'order').pop();
+        ENG_pushCallStack(frame.node.children[index]);
         return null;
     }
 }
 
-function stepNodeAll(frame, lastResult) {
-    localInit(frame, [['index', 0]]);
+function ENG_stepNodeAll(frame, lastResult) {
+    ENG_localInit(frame, [['index', 0]]);
 
     if (lastResult === false) {
         return false;
-    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
         return true;
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeNone(frame, lastResult) {
-    localInit(frame, [['index', 0]]);
+function ENG_stepNodeNone(frame, lastResult) {
+    ENG_localInit(frame, [['index', 0]]);
 
     if (lastResult === true) {
         return false;
-    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
         return true;
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeWin(frame, lastResult) {
-    localInit(frame, [['index', 0]]);
+function ENG_stepNodeWin(frame, lastResult) {
+    ENG_localInit(frame, [['index', 0]]);
 
     if (lastResult === true) {
-        g_gameResult = {result:'win', player:frame.node.pid};
+        ENG_gameResult = {result:'win', player:frame.node.pid};
         return null;
-    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
         return false;
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeLose(frame, lastResult) {
-    localInit(frame, [['index', 0]]);
+function ENG_stepNodeLose(frame, lastResult) {
+    ENG_localInit(frame, [['index', 0]]);
 
     if (lastResult === true) {
-        g_gameResult = {result:'lose', player:frame.node.pid};
+        ENG_gameResult = {result:'lose', player:frame.node.pid};
         return null;
-    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
         return false;
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeDraw(frame, lastResult) {
-    localInit(frame, [['index', 0]]);
+function ENG_stepNodeDraw(frame, lastResult) {
+    ENG_localInit(frame, [['index', 0]]);
 
     if (lastResult === true) {
-        g_gameResult = {result:'draw'};
+        ENG_gameResult = {result:'draw'};
         return null;
-    } else if (localEqual(frame, 'index', frame.node.children.length)) {
+    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
         return false;
     } else {
-        return pushCallStackNextChild(frame);
+        return ENG_pushCallStackNextChild(frame);
     }
 }
 
-function stepNodeSetBoard(frame, lastResult) {
-    g_board = JSON.parse(JSON.stringify(frame.node.pattern));
+function ENG_stepNodeSetBoard(frame, lastResult) {
+    ENG_board = JSON.parse(JSON.stringify(frame.node.pattern));
 
-    const [newRows, newCols] = layerPatternSize(g_board);
-    if (newRows !== g_rows || newCols !== g_cols) {
-        g_rows = newRows;
-        g_cols = newCols;
+    const [newRows, newCols] = ENG_layerPatternSize(ENG_board);
+    if (newRows !== ENG_rows || newCols !== ENG_cols) {
+        ENG_rows = newRows;
+        ENG_cols = newCols;
 
-        resizeCanvas();
+        ENG_resizeCanvas();
     }
 
     return true;
 }
 
-function stepNodeDisplayBoard(frame, lastResult) {
+function ENG_stepNodeDisplayBoard(frame, lastResult) {
     if (frame.node.hasOwnProperty('delay')) {
-        g_stepDelay = Date.now() + frame.node.delay;
+        ENG_stepDelay = Date.now() + frame.node.delay;
     }
     return true;
 }
 
-function stepNodeLayerTemplate(frame, lastResult) {
+function ENG_stepNodeLayerTemplate(frame, lastResult) {
     let newLayer = [];
-    for (let row of g_board['main']) {
+    for (let row of ENG_board['main']) {
         let newRow = [];
         for (let tile of row) {
             if (tile === '.') {
@@ -948,73 +928,73 @@ function stepNodeLayerTemplate(frame, lastResult) {
         newLayer.push(newRow);
     }
 
-    g_board[frame.node.what] = newLayer;
+    ENG_board[frame.node.what] = newLayer;
 
     return true;
 }
 
-function stepNodeAppendRows(frame, lastResult) {
-    if (g_rows === 0 || g_cols === 0) {
-        g_board = frame.node.pattern.slice();
+function ENG_stepNodeAppendRows(frame, lastResult) {
+    if (ENG_rows === 0 || ENG_cols === 0) {
+        ENG_board = frame.node.pattern.slice();
     } else {
         for (let patternRow of frame.node.pattern) {
             let newRow = []
-            while (newRow.length < g_cols) {
+            while (newRow.length < ENG_cols) {
                 for (let tile of patternRow) {
-                    if (newRow.length < g_cols) {
+                    if (newRow.length < ENG_cols) {
                         newRow.push(tile);
                     }
                 }
             }
-            g_board.push(newRow);
+            ENG_board.push(newRow);
         }
     }
 
-    let newRows = g_board.length;
-    let newCols = g_board[0].length;
-    if (newRows !== g_rows || newCols !== g_cols) {
-        g_rows = g_board.length;
-        g_cols = g_board[0].length;
+    let newRows = ENG_board.length;
+    let newCols = ENG_board[0].length;
+    if (newRows !== ENG_rows || newCols !== ENG_cols) {
+        ENG_rows = ENG_board.length;
+        ENG_cols = ENG_board[0].length;
 
-        resizeCanvas();
+        ENG_resizeCanvas();
     }
 
     return true;
 }
 
-function stepNodeMatch(frame, lastResult) {
-    if (findLayerPattern(frame.node.pattern).length > 0) {
+function ENG_stepNodeMatch(frame, lastResult) {
+    if (ENG_findLayerPattern(frame.node.pattern).length > 0) {
         return true;
     } else {
         return false;
     }
 }
 
-function stepNodeRewrite(frame, lastResult) {
-    let matches = findLayerPattern(frame.node.lhs);
+function ENG_stepNodeRewrite(frame, lastResult) {
+    let matches = ENG_findLayerPattern(frame.node.lhs);
     if (matches.length > 0) {
         let match = matches[Math.floor(Math.random()*matches.length)];
-        rewriteLayerPattern(frame.node.rhs, match.row, match.col);
+        ENG_rewriteLayerPattern(frame.node.rhs, match.row, match.col);
         return true;
     } else {
         return false;
     }
 }
 
-function stepNodePlayer(frame, lastResult) {
-    if (g_choiceWait === true) {
+function ENG_stepNodePlayer(frame, lastResult) {
+    if (ENG_choiceWait === true) {
         return null;
-    } else if (g_choiceWait !== false) {
-        let choiceInfo = g_choiceWait;
-        g_choiceWait = false;
+    } else if (ENG_choiceWait !== false) {
+        let choiceInfo = ENG_choiceWait;
+        ENG_choiceWait = false;
 
-        rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
+        ENG_rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
         return true;
     } else {
         let choices = []
         for (let child of frame.node.children) {
             if (child.type === 'rewrite') {
-                let matches = findLayerPattern(child.lhs);
+                let matches = ENG_findLayerPattern(child.lhs);
                 for (let match of matches) {
                     choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
                 }
@@ -1033,30 +1013,30 @@ function stepNodePlayer(frame, lastResult) {
         choices = choicesUnique;
 
         if (choices.length > 0) {
-            g_choicePlayer = frame.node.pid;
+            ENG_choicePlayer = frame.node.pid;
 
-            g_choicesByRct = new Map();
-            g_choicesByBtn = new Map();
+            ENG_choicesByRct = new Map();
+            ENG_choicesByBtn = new Map();
 
             for (let choice of choices) {
-                let [rowsChoice, colsChoice] = layerPatternSize(choice.rhs);
+                let [rowsChoice, colsChoice] = ENG_layerPatternSize(choice.rhs);
                 let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
                 let rctk = JSON.stringify(rct);
 
                 let mapChoices = []
-                if (g_choicesByRct.has(rctk)) {
-                    mapChoices = g_choicesByRct.get(rctk).choices;
+                if (ENG_choicesByRct.has(rctk)) {
+                    mapChoices = ENG_choicesByRct.get(rctk).choices;
                 }
 
                 mapChoices.push(choice);
-                g_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
+                ENG_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
 
                 if (choice.button !== undefined) {
-                    g_choicesByBtn.set(choice.button, choice);
+                    ENG_choicesByBtn.set(choice.button, choice);
                 }
             }
 
-            g_choiceWait = true;
+            ENG_choiceWait = true;
 
             return null;
         } else {
