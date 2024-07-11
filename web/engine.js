@@ -14,7 +14,8 @@ let ENG_back = null;
 
 let ENG_player_id_colors = new Map();
 
-let ENG_undoStack = [];
+let ENG_undoStackPlayer = [];
+let ENG_undoStackRecent = [];
 
 let ENG_callStack = null;
 let ENG_callResult = null;
@@ -36,7 +37,9 @@ let ENG_stepManual = false;
 let ENG_stepDelay = null;
 
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
-const ENG_UNDO_MAX = 100;
+
+const ENG_UNDO_PLAYER_MAX = 100;
+const ENG_UNDO_RECENT_MAX = 100;
 
 
 
@@ -67,19 +70,27 @@ function ENG_undoPush() {
     state.choicePlayer = ENG_choicePlayer;
     state.choiceWait = deepcopyobj(ENG_choiceWait);
 
-    while (ENG_undoStack.length >= ENG_UNDO_MAX) {
-        ENG_undoStack.shift();
+    while (ENG_undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
+        var oldState = ENG_undoStackRecent.shift();
+        if (oldState.callStack !== null && oldState.callStack.length > 0 && oldState.callStack.at(-1).node.type === 'player' && oldState.choiceWait === true) {
+            while (ENG_undoStackPlayer.length >= ENG_UNDO_PLAYER_MAX) {
+                ENG_undoStackPlayer.shift();
+            }
+            ENG_undoStackPlayer.push(oldState);
+        }
     }
-    ENG_undoStack.push(state);
-
-    //console.log(ENG_callStack);
-    //console.log(ENG_choiceWait, ENG_undoStack.length);
+    ENG_undoStackRecent.push(state);
 }
 
 function ENG_undoPop() {
-    if (ENG_undoStack.length > 0) {
-        var state = ENG_undoStack.pop();
+    var state = null;
+    if (ENG_undoStackRecent.length > 0) {
+        state = ENG_undoStackRecent.pop();
+    } else if (ENG_undoStackPlayer.length > 0) {
+        state = ENG_undoStackPlayer.pop();
+    }
 
+    if (state !== null) {
         ENG_callStack = state.callStack;
         ENG_callResult = state.callResult;
         ENG_gameResult = state.gameResult;
@@ -116,9 +127,10 @@ function ENG_undoPop() {
     if (typeof EDT_onDraw !== 'undefined') {
         window.requestAnimationFrame(EDT_onDraw);
     }
+}
 
-    //console.log(ENG_callStack);
-    //console.log(ENG_choiceWait, ENG_undoStack.length);
+function ENG_undoEmpty() {
+    return (ENG_undoStackRecent.length + ENG_undoStackPlayer.length) === 0;
 }
 
 function ENG_shouldStepToInput() {
@@ -475,7 +487,7 @@ function ENG_onKeyDown(evt) {
         } else if (key === 'p' || key === 'P') {
             ENG_undoPop();
             if (key === 'p') {
-                while (ENG_undoStack.length > 0 && ENG_shouldStepToInput()) {
+                while (!ENG_undoEmpty() && ENG_shouldStepToInput()) {
                     ENG_undoPop();
                 }
             } else {
