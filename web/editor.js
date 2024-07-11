@@ -68,11 +68,18 @@ function EDT_onDraw() {
 }
 
 function EDT_drawTree(ctx, nodeLocations, tree) {
+    var stackNodes = new Set();
+    if (typeof ENG_callStack !== 'undefined' && ENG_callStack !== null) {
+        for (var frame of ENG_callStack) {
+            stackNodes.add(frame.node);
+        }
+    }
+
     var depth_index = new Map();
-    EDT_drawTreeNode(ctx, nodeLocations, tree, 0, depth_index);
+    EDT_drawTreeNode(ctx, nodeLocations, stackNodes, tree, 0, depth_index);
 }
 
-function EDT_drawTreeNode(ctx, nodeLocations, node, depth, depth_index) {
+function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, depth_index) {
     const NODE_WIDTH = 80;
     const NODE_HEIGHT = 40;
     const NODE_SPACING = 25;
@@ -86,14 +93,34 @@ function EDT_drawTreeNode(ctx, nodeLocations, node, depth, depth_index) {
     if (node.hasOwnProperty('children')) {
         if (EDT_collapsedNodes.has(node)) {
             const childScale = 5 + 2 * Math.min(node.children.length - 1, 5);
+
+            var childOnStack = false;
+            for (let child of node.children) {
+                if (stackNodes.has(child)) {
+                    childOnStack = true;
+                    break;
+                }
+            }
+
             ctx.beginPath();
-            ctx.fillStyle = '#444488';
-            ctx.moveTo(nx + NODE_WIDTH / 2, ny + NODE_HEIGHT + 5);
-            ctx.lineTo(nx + NODE_WIDTH / 2 - childScale, ny + NODE_HEIGHT);
+            if (childOnStack) {
+                ctx.fillStyle = '#222222';
+            } else {
+                ctx.fillStyle = '#444488';
+            }
+            ctx.lineTo(nx + NODE_WIDTH / 2 + childScale, ny + NODE_HEIGHT);
+            ctx.moveTo(nx + NODE_WIDTH / 2 - childScale, ny + NODE_HEIGHT);
+            ctx.lineTo(nx + NODE_WIDTH / 2, ny + NODE_HEIGHT + 5);
             ctx.lineTo(nx + NODE_WIDTH / 2 + childScale, ny + NODE_HEIGHT);
             ctx.fill();
+            if (childOnStack) {
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#222222';
+                ctx.stroke();
+            }
         } else {
             const child_depth = depth + 1;
+            let stackEdges = [];
             for (let child of node.children) {
                 var child_index = depth_index.has(child_depth) ? depth_index.get(child_depth) : 0;
                 if (child_index < index) {
@@ -103,14 +130,34 @@ function EDT_drawTreeNode(ctx, nodeLocations, node, depth, depth_index) {
                 const cnx = (child_index + 1) * NODE_SPACING + child_index * NODE_WIDTH;
                 const cny = (child_depth + 1) * NODE_SPACING + child_depth * NODE_HEIGHT;
 
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#444488';
-                ctx.beginPath();
-                ctx.moveTo(nx + NODE_WIDTH / 2, ny + NODE_HEIGHT);
-                ctx.bezierCurveTo(nx + NODE_WIDTH / 2, cny - NODE_SPACING / 2, cnx + NODE_WIDTH / 2, cny - NODE_SPACING / 2, cnx + NODE_WIDTH / 2, cny);
-                ctx.stroke();
+                const edge = [nx + NODE_WIDTH / 2, ny + NODE_HEIGHT,
+                              nx + NODE_WIDTH / 2, cny - NODE_SPACING / 2,
+                              cnx + NODE_WIDTH / 2, cny - NODE_SPACING / 2,
+                              cnx + NODE_WIDTH / 2, cny];
 
-                EDT_drawTreeNode(ctx, nodeLocations, child, child_depth, depth_index);
+                if (stackNodes.has(child)) {
+                    stackEdges.push(edge)
+                } else {
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = '#444488';
+
+                    ctx.beginPath();
+                    ctx.moveTo(edge[0], edge[1]);
+                    ctx.bezierCurveTo(edge[2], edge[3], edge[4], edge[5], edge[6], edge[7]);
+                    ctx.stroke();
+                }
+
+                EDT_drawTreeNode(ctx, nodeLocations, stackNodes, child, child_depth, depth_index);
+            }
+
+            for (let edge of stackEdges) {
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#222222';
+
+                ctx.beginPath();
+                ctx.moveTo(edge[0], edge[1]);
+                ctx.bezierCurveTo(edge[2], edge[3], edge[4], edge[5], edge[6], edge[7]);
+                ctx.stroke();
             }
         }
     }
@@ -124,11 +171,17 @@ function EDT_drawTreeNode(ctx, nodeLocations, node, depth, depth_index) {
     ctx.roundRect(nx, ny, NODE_WIDTH, NODE_HEIGHT, 6)
     ctx.fill();
 
+    if (stackNodes.has(node)) {
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#222222';
+        ctx.stroke();
+    }
+
     ctx.fillStyle = '#222222'
     ctx.font = (NODE_WIDTH / node.type.length) + 'px'
     ctx.fillText(node.type, nx + NODE_WIDTH / 2, ny + NODE_HEIGHT / 2);
 
-    EDT_nodeLocations.push({rect:[nx, ny, nx + NODE_WIDTH, ny + NODE_HEIGHT], node:node});
+    nodeLocations.push({rect:[nx, ny, nx + NODE_WIDTH, ny + NODE_HEIGHT], node:node});
 }
 
 function EDT_updateCanvasSize(desiredWidth, desiredHeight) {

@@ -32,6 +32,7 @@ let ENG_choiceWait = false;
 
 let ENG_mouseChoice = null;
 let ENG_mouseAlt = false;
+let ENG_stepManual = false;
 let ENG_stepDelay = null;
 
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
@@ -199,6 +200,7 @@ function ENG_onLoad() {
     ENG_mouseChoice = null;
     ENG_mouseAlt = false;
     ENG_stepDelay = null;
+    ENG_stepManual = false;
 
     ENG_canvas = document.getElementById('enginecanvas');
     ENG_ctx = ENG_canvas.getContext('2d');
@@ -254,7 +256,9 @@ function ENG_onDraw() {
         }
     }
 
-    ENG_stepToInput();
+    if (!ENG_stepManual) {
+        ENG_stepToInput();
+    }
 
     if (ENG_stepDelay !== null) {
         window.requestAnimationFrame(ENG_onDraw);
@@ -420,6 +424,12 @@ function ENG_onDraw() {
             }
         }
     }
+
+    if (ENG_stepManual) {
+        ENG_ctx.lineWidth = 10;
+        ENG_ctx.strokeStyle = '#ffdddd';
+        ENG_ctx.strokeRect(0, 0, ENG_canvas.width / PIXEL_RATIO, ENG_canvas.height / PIXEL_RATIO);
+    }
 }
 
 function ENG_resizeCanvas() {
@@ -441,7 +451,9 @@ function ENG_onKeyDown(evt) {
     if (!ENG_keysDown.has(key)) {
         ENG_keysDown.add(key);
 
-        if (key === 'n' || key === 'N') {
+        if (key === 'b' || key === 'B') {
+            ENG_stepManual = !ENG_stepManual;
+        } else if (key === 'n' || key === 'N') {
             if (ENG_shouldStepToInput()) {
                 ENG_stepGameTree();
                 if (key === 'n') {
@@ -750,6 +762,10 @@ function ENG_stepGameTree(stack) {
                 setTimeout(() => { alert('Game over, unknown result!') }, 10);
             }
             ENG_gameResult = true;
+        }
+
+        if (typeof EDT_onDraw !== 'undefined') {
+            window.requestAnimationFrame(EDT_onDraw);
         }
     }
 }
