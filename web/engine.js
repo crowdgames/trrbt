@@ -118,7 +118,7 @@ function ENG_stepToInput() {
     if (ENG_loopCheck !== true) {
         ENG_loopCheck = 0;
         while (ENG_shouldStepToInput()) {
-            stepGameTree();
+            ENG_stepGameTree();
             ++ ENG_loopCheck;
 
             if (ENG_loopCheck === 100000) {
@@ -443,7 +443,7 @@ function ENG_onKeyDown(evt) {
 
         if (key === 'n' || key === 'N') {
             if (ENG_shouldStepToInput()) {
-                stepGameTree();
+                ENG_stepGameTree();
                 if (key === 'n') {
                     ENG_stepToInput();
                 }
@@ -471,7 +471,7 @@ function ENG_onKeyDown(evt) {
                 keyp = 'z';
             }
             if (keyp !== null && ENG_choicesByBtn.has(keyp)) {
-                stepGameTree();
+                ENG_stepGameTree();
 
                 ENG_choiceWait = ENG_choicesByBtn.get(keyp);
                 ENG_rewriteLayerPattern(ENG_choiceWait.rhs, ENG_choiceWait.row, ENG_choiceWait.col);
@@ -501,7 +501,7 @@ function ENG_onMouseDown(evt) {
     if (mouseButton === BUTTON_LEFT) {
         if (ENG_mouseChoice !== null) {
             if (ENG_choiceWait === true) {
-                stepGameTree();
+                ENG_stepGameTree();
 
                 ENG_choiceWait = ENG_choicesByRct.get(JSON.stringify(ENG_mouseChoice.rct)).choices[ENG_mouseChoice.idx];
                 ENG_rewriteLayerPattern(ENG_choiceWait.rhs, ENG_choiceWait.row, ENG_choiceWait.col);
@@ -712,7 +712,7 @@ function ENG_pushCallStackNextChild(frame) {
     return null;
 }
 
-function stepGameTree(stack) {
+function ENG_stepGameTree(stack) {
     if (ENG_loopCheck !== true && ENG_stepDelay === null) {
         if (ENG_callStack === null) {
             ENG_callStack = [];
