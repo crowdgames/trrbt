@@ -36,16 +36,19 @@ let ENG_stepManual = false;
 let ENG_stepDelay = null;
 
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
+const ENG_UNDO_MAX = 100;
 
 
 
 function ENG_undoPush() {
-    return;
+    var callStackCopy = null;
 
-    var callStackCopy = [];
-    for (var frame of ENG_callStack) {
-        var frameCopy = {node: frame.node, local: copymap(frame.local)};
-        callStackCopy.push(frameCopy);
+    if (ENG_callStack !== null) {
+        callStackCopy = [];
+        for (var frame of ENG_callStack) {
+            var frameCopy = {node: frame.node, local: copymap(frame.local)};
+            callStackCopy.push(frameCopy);
+        }
     }
 
     var state = {};
@@ -64,10 +67,13 @@ function ENG_undoPush() {
     state.choicePlayer = ENG_choicePlayer;
     state.choiceWait = deepcopyobj(ENG_choiceWait);
 
+    while (ENG_undoStack.length >= ENG_UNDO_MAX) {
+        ENG_undoStack.shift();
+    }
     ENG_undoStack.push(state);
 
-    console.log(ENG_callStack);
-    console.log(ENG_choiceWait, ENG_undoStack.length);
+    //console.log(ENG_callStack);
+    //console.log(ENG_choiceWait, ENG_undoStack.length);
 }
 
 function ENG_undoPop() {
@@ -77,7 +83,7 @@ function ENG_undoPop() {
         ENG_callStack = state.callStack;
         ENG_callResult = state.callResult;
         ENG_gameResult = state.gameResult;
-        ENG_loopCheck: loopCheck;
+        ENG_loopCheck: state.loopCheck;
 
         ENG_board = state.board;
         ENG_rows = state.rows;
@@ -107,8 +113,12 @@ function ENG_undoPop() {
     ENG_mouseAlt = false;
     ENG_stepDelay = null;
 
-    console.log(ENG_callStack);
-    console.log(ENG_choiceWait, ENG_undoStack.length);
+    if (typeof EDT_onDraw !== 'undefined') {
+        window.requestAnimationFrame(EDT_onDraw);
+    }
+
+    //console.log(ENG_callStack);
+    //console.log(ENG_choiceWait, ENG_undoStack.length);
 }
 
 function ENG_shouldStepToInput() {
@@ -459,6 +469,8 @@ function ENG_onKeyDown(evt) {
                 if (key === 'n') {
                     ENG_stepToInput();
                 }
+            } else {
+                ENG_stepManual = true;
             }
         } else if (key === 'p' || key === 'P') {
             ENG_undoPop();
@@ -466,6 +478,8 @@ function ENG_onKeyDown(evt) {
                 while (ENG_undoStack.length > 0 && ENG_shouldStepToInput()) {
                     ENG_undoPop();
                 }
+            } else {
+                ENG_stepManual = true;
             }
         }
 
@@ -727,41 +741,43 @@ function ENG_pushCallStackNextChild(frame) {
 function ENG_stepGameTree(stack) {
     if (ENG_loopCheck !== true && ENG_stepDelay === null) {
         if (ENG_callStack === null) {
+            ENG_undoPush();
+
             ENG_callStack = [];
             ENG_pushCallStack(GAME_SETUP.tree);
-        }
-
-        if (ENG_gameResult === true) {
-        } else if (ENG_gameResult === null) {
-            ENG_undoPush();
-
-            if (ENG_callStack.length === 0) {
-                ENG_gameResult = {result:'stalemate'};
-            } else {
-                var frame = ENG_callStack.at(-1);
-                ENG_callResult = NODE_FN_MAP[frame.node.type](frame, ENG_callResult);
-
-                if (ENG_callResult === true || ENG_callResult === false) {
-                    ENG_callStack.pop();
-                }
-            }
         } else {
-            ENG_undoPush();
+            if (ENG_gameResult === true) {
+            } else if (ENG_gameResult === null) {
+                ENG_undoPush();
 
-            if (ENG_gameResult.result === 'win') {
-                var player = ENG_gameResult.player;
-                setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
-            } else if (ENG_gameResult.result === 'lose') {
-                var player = ENG_gameResult.player;
-                setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
-            } else if (ENG_gameResult.result === 'draw') {
-                setTimeout(() => { alert('Game over, draw!') }, 10);
-            } else if (ENG_gameResult.result === 'stalemate') {
-                setTimeout(() => { alert('Game over, stalemate!') }, 10);
+                if (ENG_callStack.length === 0) {
+                    ENG_gameResult = {result:'stalemate'};
+                } else {
+                    var frame = ENG_callStack.at(-1);
+                    ENG_callResult = NODE_FN_MAP[frame.node.type](frame, ENG_callResult);
+
+                    if (ENG_callResult === true || ENG_callResult === false) {
+                        ENG_callStack.pop();
+                    }
+                }
             } else {
-                setTimeout(() => { alert('Game over, unknown result!') }, 10);
+                ENG_undoPush();
+
+                if (ENG_gameResult.result === 'win') {
+                    var player = ENG_gameResult.player;
+                    setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
+                } else if (ENG_gameResult.result === 'lose') {
+                    var player = ENG_gameResult.player;
+                    setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
+                } else if (ENG_gameResult.result === 'draw') {
+                    setTimeout(() => { alert('Game over, draw!') }, 10);
+                } else if (ENG_gameResult.result === 'stalemate') {
+                    setTimeout(() => { alert('Game over, stalemate!') }, 10);
+                } else {
+                    setTimeout(() => { alert('Game over, unknown result!') }, 10);
+                }
+                ENG_gameResult = true;
             }
-            ENG_gameResult = true;
         }
 
         if (typeof EDT_onDraw !== 'undefined') {
