@@ -8,6 +8,7 @@ let g_mousePan = null;
 let g_mouseZoom = null;
 let g_mousePos = null;
 let g_mousePos_u = null;
+let g_mouseLastTime = null;
 let g_xformInv = null;
 let g_mouseNode = null;
 
@@ -16,6 +17,7 @@ let g_collapsedNodes = null;
 const BUTTON_LEFT = 0;
 const BUTTON_RIGHT = 2;
 const PIXEL_RATIO = window.devicePixelRatio;
+const DOUBLE_CLICK_TIME = 300;
 
 function onload() {
     document.oncontextmenu = function() {
@@ -30,6 +32,7 @@ function onload() {
     g_mouseZoom = null;
     g_mousePos = null;
     g_mousePos_u = null;
+    g_mouseLastTime = null;
     g_xformInv = null;
     g_mouseNode = null;
 
@@ -134,8 +137,7 @@ function updateCanvasSize(desiredWidth, desiredHeight) {
     g_canvas.height = desiredHeight * PIXEL_RATIO;
     g_canvas.style.width = desiredWidth + "px";
     g_canvas.style.height = desiredHeight + "px";
-    g_ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
-    updateXformInv();
+    resetXform();
 }
 
 function updateXformInv() {
@@ -143,31 +145,65 @@ function updateXformInv() {
     g_xformInv.invertSelf();
 }
 
-function zoomAround(pt, scale) {
+function resetXform() {
+    g_ctx.resetTransform();
+    g_ctx.scale(PIXEL_RATIO, PIXEL_RATIO);
+    updateXformInv();
+}
+
+function translateXform(byx, byy) {
+    g_ctx.translate(byx, byy);
+    updateXformInv();
+}
+
+function zoomAroundXform(pt, scale) {
     g_ctx.translate(pt.x, pt.y);
     g_ctx.scale(scale, scale);
     g_ctx.translate(-pt.x, -pt.y);
     updateXformInv();
 }
 
+function collapseNodes(node, recurse, collapse) {
+    if (node.hasOwnProperty('children')) {
+        if (collapse) {
+            g_collapsedNodes.add(node);
+        } else {
+            g_collapsedNodes.delete(node);
+        }
+        if (recurse) {
+            for (let child of node.children) {
+                collapseNodes(child, recurse, collapse);
+            }
+        }
+    }
+}
+
 function onMouseDown(evt) {
     const mouseButton = evt.button;
 
+    const mouseTime = Date.now();
+
+    const isDouble = (g_mouseLastTime !== null && mouseTime - g_mouseLastTime <= DOUBLE_CLICK_TIME);
+
     if (g_mouseNode !== null) {
-        if (g_mouseNode.hasOwnProperty('children')) {
-            if (g_collapsedNodes.has(g_mouseNode)) {
-                g_collapsedNodes.delete(g_mouseNode);
-            } else {
-                g_collapsedNodes.add(g_mouseNode);
-            }
+        if (isDouble) {
+            collapseNodes(g_mouseNode, true, g_collapsedNodes.has(g_mouseNode));
+        } else {
+            collapseNodes(g_mouseNode, false, !g_collapsedNodes.has(g_mouseNode));
         }
     } else {
-        if (mouseButton === BUTTON_LEFT) {
-            g_mousePan = true;
-        } else if (mouseButton === BUTTON_RIGHT) {
-            g_mouseZoom = g_mousePos;
+        if (isDouble) {
+            resetXform();
+        } else {
+            if (mouseButton === BUTTON_LEFT) {
+                g_mousePan = true;
+            } else if (mouseButton === BUTTON_RIGHT) {
+                g_mouseZoom = g_mousePos;
+            }
         }
     }
+
+    g_mouseLastTime = mouseTime;
 
     evt.preventDefault();
     window.requestAnimationFrame(onDraw);
@@ -193,13 +229,12 @@ function onMouseMove(evt) {
 
     if (g_mousePan !== null) {
         if (g_mousePos !== null) {
-            g_ctx.translate((mousePos.x - g_mousePos.x), (mousePos.y - g_mousePos.y));
-            updateXformInv();
+            translateXform(mousePos.x - g_mousePos.x, mousePos.y - g_mousePos.y);
             mousePos = g_xformInv.transformPoint(mousePos_u);
         }
     } else if (g_mouseZoom !== null) {
         if (g_mousePos !== null) {
-            zoomAround(g_mouseZoom, 1 + ((mousePos_u.y - g_mousePos_u.y) / 400));
+            zoomAroundXform(g_mouseZoom, 1 + ((mousePos_u.y - g_mousePos_u.y) / 400));
             mousePos = g_xformInv.transformPoint(mousePos_u);
         }
     } else {
@@ -230,9 +265,9 @@ function onMouseOut(evt) {
 function onMouseWheel(evt) {
     if (g_mousePos !== null) {
         if (evt.deltaY < 0) {
-            zoomAround(g_mousePos, 1 + (10 / 400));
+            zoomAroundXform(g_mousePos, 1 + (10 / 400));
         } else {
-            zoomAround(g_mousePos, 1 - (10 / 400));
+            zoomAroundXform(g_mousePos, 1 - (10 / 400));
         }
     }
 
