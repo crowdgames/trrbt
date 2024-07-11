@@ -108,7 +108,6 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, depth_ind
             } else {
                 ctx.fillStyle = '#444488';
             }
-            ctx.lineTo(nx + NODE_WIDTH / 2 + childScale, ny + NODE_HEIGHT);
             ctx.moveTo(nx + NODE_WIDTH / 2 - childScale, ny + NODE_HEIGHT);
             ctx.lineTo(nx + NODE_WIDTH / 2, ny + NODE_HEIGHT + 5);
             ctx.lineTo(nx + NODE_WIDTH / 2 + childScale, ny + NODE_HEIGHT);
