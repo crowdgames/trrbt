@@ -226,6 +226,7 @@ function ENG_onLoad() {
 
     ENG_canvas = document.getElementById('enginecanvas');
     ENG_ctx = ENG_canvas.getContext('2d');
+    ENG_keysDown = new Set();
 
     ENG_canvas.addEventListener('mousedown', ENG_onMouseDown);
     ENG_canvas.addEventListener('mousemove', ENG_onMouseMove);
