@@ -4,6 +4,7 @@ window.addEventListener('load', EDT_onload, false);
 
 let EDT_canvas = null;
 let EDT_ctx = null;
+let EDT_keysDown = new Set();
 
 let EDT_nodeLocations = null;
 let EDT_mousePan = null;
@@ -14,6 +15,7 @@ let EDT_mouseLastTime = null;
 let EDT_xformInv = null;
 let EDT_mouseNode = null;
 
+let EDT_followStack = false;
 let EDT_collapsedNodes = null;
 
 
@@ -25,6 +27,7 @@ function EDT_onload() {
 
     EDT_canvas = document.getElementById('editorcanvas');
     EDT_ctx = EDT_canvas.getContext('2d');
+    EDT_keysDown = new Set();
 
     EDT_nodeLocations = [];
     EDT_mousePan = null;
@@ -35,6 +38,7 @@ function EDT_onload() {
     EDT_xformInv = null;
     EDT_mouseNode = null;
 
+    EDT_followStack = false;
     EDT_collapsedNodes = new Set();
 
     EDT_canvas.addEventListener('mousedown', EDT_onMouseDown);
@@ -42,6 +46,8 @@ function EDT_onload() {
     EDT_canvas.addEventListener('mouseup', EDT_onMouseUp);
     EDT_canvas.addEventListener('mouseout', EDT_onMouseOut);
     EDT_canvas.addEventListener('wheel', EDT_onMouseWheel);
+    window.addEventListener('keydown', EDT_onKeyDown);
+    window.addEventListener('keyup', EDT_onKeyUp);
 
     EDT_updateCanvasSize(EDT_canvas.width, EDT_canvas.height);
 
@@ -91,7 +97,14 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, depth_ind
     const ny = (depth + 1) * NODE_SPACING + depth * NODE_HEIGHT;
 
     if (node.hasOwnProperty('children')) {
-        if (EDT_collapsedNodes.has(node)) {
+        var collapse = false;
+
+        if (EDT_followStack) {
+            collapse = !stackNodes.has(node);
+        } else {
+            collapse = EDT_collapsedNodes.has(node);
+        }
+        if (collapse) {
             const childScale = 5 + 2 * Math.min(node.children.length - 1, 5);
 
             var childOnStack = false;
@@ -327,4 +340,27 @@ function EDT_onMouseWheel(evt) {
 
     evt.preventDefault();
     window.requestAnimationFrame(EDT_onDraw);
+}
+
+function EDT_onKeyDown(evt) {
+    var key = evt.key;
+
+    if (!EDT_keysDown.has(key)) {
+        EDT_keysDown.add(key);
+
+        if (key === 'f' || key === 'F') {
+            EDT_followStack = !EDT_followStack;
+        }
+    }
+
+    evt.preventDefault();
+    window.requestAnimationFrame(EDT_onDraw);
+}
+
+function EDT_onKeyUp(evt) {
+    var key = evt.key;
+
+    EDT_keysDown.delete(key);
+
+    evt.preventDefault();
 }
