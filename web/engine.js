@@ -43,6 +43,12 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 
 
+function ENG_updateEditor() {
+    if (typeof EDT_onDraw !== 'undefined') {
+        window.requestAnimationFrame(EDT_onDraw);
+    }
+}
+
 function ENG_undoPush() {
     var callStackCopy = null;
 
@@ -123,10 +129,6 @@ function ENG_undoPop() {
     ENG_mouseChoice = null;
     ENG_mouseAlt = false;
     ENG_stepDelay = null;
-
-    if (typeof EDT_onDraw !== 'undefined') {
-        window.requestAnimationFrame(EDT_onDraw);
-    }
 }
 
 function ENG_undoEmpty() {
@@ -150,6 +152,8 @@ function ENG_stepToInput() {
                 break;
             }
         }
+
+        ENG_updateEditor();
     }
 }
 
@@ -482,6 +486,7 @@ function ENG_onKeyDown(evt) {
                 if (key === 'n') {
                     ENG_stepToInput();
                 }
+                ENG_updateEditor();
             } else {
                 ENG_stepManual = true;
             }
@@ -494,6 +499,7 @@ function ENG_onKeyDown(evt) {
             } else {
                 ENG_stepManual = true;
             }
+            ENG_updateEditor();
         }
 
         if (ENG_choiceWait === true) {
@@ -791,10 +797,6 @@ function ENG_stepGameTree(stack) {
                 }
                 ENG_gameResult = true;
             }
-        }
-
-        if (typeof EDT_onDraw !== 'undefined') {
-            window.requestAnimationFrame(EDT_onDraw);
         }
     }
 }
