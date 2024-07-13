@@ -7,6 +7,9 @@ let EDT_ctx = null;
 let EDT_keysDown = new Set();
 
 let EDT_nodeLocations = null;
+let EDT_nodeLocationsDesired = null;
+let EDT_drawLastTime = null
+
 let EDT_mousePan = null;
 let EDT_mouseZoom = null;
 let EDT_mousePos = null;
@@ -30,6 +33,9 @@ function EDT_onload() {
     EDT_keysDown = new Set();
 
     EDT_nodeLocations = new Map();
+    EDT_nodeLocationsDesired = new Map();
+    EDT_drawLastTime = null;
+
     EDT_mousePan = null;
     EDT_mouseZoom = null;
     EDT_mousePos = null;
@@ -68,10 +74,25 @@ function EDT_onDraw() {
     EDT_ctx.textAlign = 'center';
     EDT_ctx.textBaseline = 'middle';
 
-    EDT_nodeLocations = new Map();
+    EDT_nodeLocationsDesired = new Map();
+    EDT_updateDesiredPositionsTree(EDT_nodeLocationsDesired, GAME_SETUP.tree);
 
-    EDT_updateDesiredPositionsTree(EDT_nodeLocations, GAME_SETUP.tree);
+    const drawTime = Date.now();
+    var moved = false;
+
+    if (EDT_drawLastTime !== null) {
+        moved = EDT_updateNodePositions(EDT_nodeLocations, EDT_nodeLocationsDesired, drawTime - EDT_drawLastTime);
+    } else {
+        EDT_nodeLocations = EDT_nodeLocationsDesired
+    }
+
     EDT_drawTree(EDT_ctx, EDT_nodeLocations, GAME_SETUP.tree);
+
+    if (moved) {
+        window.requestAnimationFrame(EDT_onDraw);
+    }
+
+    EDT_drawLastTime = drawTime;
 }
 
 function EDT_nodeCollapsed(node, stackNodes) {
@@ -90,6 +111,48 @@ function EDT_getStackNodes() {
         }
     }
     return stackNodes;
+}
+
+function EDT_rectClose(ra, rb) {
+    const EPSILON = 1;
+    return Math.abs(ra.x - rb.x) <= EPSILON && Math.abs(ra.y - rb.y) <= EPSILON && Math.abs(ra.w - rb.w) <= EPSILON && Math.abs(ra.h - rb.h) <= EPSILON;
+}
+
+function EDT_rectValueUpdate(curr, des, dt) {
+    return 0.2 * (des - curr);
+}
+
+function EDT_updateNodePositions(nodeLocations, nodeLocationsDesired, deltaTime) {
+    var anyMoved = false;
+
+    var toDelete = [];
+    for (let node of nodeLocations.keys()) {
+        if (!nodeLocationsDesired.has(node)) {
+            toDelete.push(node);
+        }
+    }
+    for (let node of toDelete) {
+        nodeLocations.delete(node);
+    }
+
+    for (let [node, desRect] of nodeLocationsDesired.entries()) {
+        if (nodeLocations.has(node)) {
+            var rect = nodeLocations.get(node);
+            if (EDT_rectClose(rect, desRect)) {
+                nodeLocations.set(node, desRect);
+            } else {
+                rect.x += EDT_rectValueUpdate(rect.x, desRect.x, deltaTime);
+                rect.y += EDT_rectValueUpdate(rect.y, desRect.y, deltaTime);
+                rect.w += EDT_rectValueUpdate(rect.w, desRect.w, deltaTime);
+                rect.h += EDT_rectValueUpdate(rect.h, desRect.h, deltaTime);
+                anyMoved = true;
+            }
+        } else {
+            nodeLocations.set(node, desRect);
+        }
+    }
+
+    return anyMoved;
 }
 
 function EDT_updateDesiredPositionsTree(nodeLocations, tree) {
@@ -288,6 +351,7 @@ function EDT_onMouseDown(evt) {
     if (EDT_mouseNode !== null) {
         if (isDouble) {
             EDT_collapseNodes(EDT_mouseNode, true, EDT_collapsedNodes.has(EDT_mouseNode));
+            EDT_drawLastTime = null; // prevents node sliding animation
         } else {
             EDT_collapseNodes(EDT_mouseNode, false, !EDT_collapsedNodes.has(EDT_mouseNode));
         }
