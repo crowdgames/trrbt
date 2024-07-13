@@ -164,32 +164,35 @@ function EDT_updateDesiredPositionsTree(nodeLocations, tree) {
 }
 
 function EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, node, xpos, ypos) {
-    var NODE_WIDTH = 80;
-    var NODE_HEIGHT = 40;
-    if (node.type === 'player') {
-        NODE_WIDTH = 120;
-        NODE_HEIGHT = 60;
-    } else if (node.type === 'match') {
-        NODE_WIDTH = 40;
-        NODE_HEIGHT = 30;
-    }
-
     const nx = xpos;
     const ny = ypos;
 
-    let next_xpos = xpos + NODE_WIDTH + EDT_NODE_SPACING;
+    var nw = 80;
+    var nh = 40;
+    if (node.type === 'player') {
+        nw = 120;
+        nh = 40;
+    } else if (node.type === 'match') {
+        nw = 40;
+        nh = 30;
+    } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
+        nw = 40;
+        nh = 40;
+    }
+
+    let next_xpos = xpos + nw + EDT_NODE_SPACING;
 
     if (node.hasOwnProperty('children')) {
         if (!EDT_nodeCollapsed(node, stackNodes)) {
             let child_next_xpos = xpos;
             for (let child of node.children) {
-                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, child, child_next_xpos, ypos + NODE_HEIGHT + EDT_NODE_SPACING);
+                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, child, child_next_xpos, ypos + nh + EDT_NODE_SPACING);
             }
             next_xpos = Math.max(next_xpos, child_next_xpos);
         }
     }
 
-    nodeLocations.set(node, {x:nx, y:ny, w:NODE_WIDTH, h:NODE_HEIGHT})
+    nodeLocations.set(node, {x:nx, y:ny, w:nw, h:nh})
 
     return next_xpos;
 }
@@ -282,14 +285,50 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
         }
     }
 
-    if (node === EDT_mouseNode) {
-        ctx.fillStyle = '#ddffff';
+    const lt = (node === EDT_mouseNode) ? 'ff' : 'ee';
+    const dk = (node === EDT_mouseNode) ? 'dd' : 'cc';
+
+    if (node.type === 'player') {
+        ctx.fillStyle = '#' + dk + dk + lt;
+        ctx.beginPath();
+        ctx.moveTo(nx + 0.40 * nw, ny + 0.00 * nh);
+        ctx.lineTo(nx + 0.60 * nw, ny + 0.00 * nh);
+        ctx.lineTo(nx + 1.00 * nw, ny + 0.40 * nh);
+        ctx.lineTo(nx + 1.00 * nw, ny + 0.60 * nh);
+        ctx.lineTo(nx + 0.60 * nw, ny + 1.00 * nh);
+        ctx.lineTo(nx + 0.40 * nw, ny + 1.00 * nh);
+        ctx.lineTo(nx + 0.00 * nw, ny + 0.60 * nh);
+        ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
+        ctx.fill();
+    } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
+        ctx.fillStyle = '#' + lt + dk + dk;
+        ctx.beginPath();
+        ctx.moveTo(nx + 0.25 * nw, ny + 0.00 * nh);
+        ctx.lineTo(nx + 0.75 * nw, ny + 0.00 * nh);
+        ctx.lineTo(nx + 1.00 * nw, ny + 0.25 * nh);
+        ctx.lineTo(nx + 1.00 * nw, ny + 0.75 * nh);
+        ctx.lineTo(nx + 0.75 * nw, ny + 1.00 * nh);
+        ctx.lineTo(nx + 0.25 * nw, ny + 1.00 * nh);
+        ctx.lineTo(nx + 0.00 * nw, ny + 0.75 * nh);
+        ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
+        ctx.fill();
+    } else if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'match', 'display-board'].indexOf(node.type) >= 0) {
+        if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols'].indexOf(node.type) >= 0) {
+            ctx.fillStyle = '#' + dk + lt + dk;
+        } else if (['match'].indexOf(node.type) >= 0) {
+            ctx.fillStyle = '#' + dk + lt + lt;
+        } else {
+            ctx.fillStyle = '#' + dk + dk + dk;
+        }
+        ctx.beginPath();
+        ctx.roundRect(nx, ny, nw, nh, 6)
+        ctx.fill();
     } else {
-        ctx.fillStyle = '#cceeee';
+        ctx.fillStyle = '#' + lt + lt + lt;
+        ctx.beginPath();
+        ctx.ellipse(nx + 0.5 * nw, ny + 0.5 * nh, 0.5 * nw, 0.5 * nh, 0, 0, 2 * Math.PI);
+        ctx.fill();
     }
-    ctx.beginPath();
-    ctx.roundRect(nx, ny, nw, nh, 6)
-    ctx.fill();
 
     if (stackNodes.has(node)) {
         ctx.lineWidth = 4;
