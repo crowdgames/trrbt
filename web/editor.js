@@ -21,6 +21,8 @@ let EDT_mouseNode = null;
 let EDT_followStack = false;
 let EDT_collapsedNodes = null;
 
+const EDT_NODE_SPACING = 25;
+
 
 
 function EDT_onload() {
@@ -158,33 +160,38 @@ function EDT_updateNodePositions(nodeLocations, nodeLocationsDesired, deltaTime)
 function EDT_updateDesiredPositionsTree(nodeLocations, tree) {
     nodeLocations.clear()
 
-    EDT_updateDesiredPositionsTreeNode(nodeLocations, EDT_getStackNodes(), tree, 0, [0]);
+    EDT_updateDesiredPositionsTreeNode(nodeLocations, EDT_getStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING);
 }
 
-function EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, node, depth, index_arr) {
-    const NODE_WIDTH = 80;
-    const NODE_HEIGHT = 40;
-    const NODE_SPACING = 25;
+function EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, node, xpos, ypos) {
+    var NODE_WIDTH = 80;
+    var NODE_HEIGHT = 40;
+    if (node.type === 'player') {
+        NODE_WIDTH = 120;
+        NODE_HEIGHT = 60;
+    } else if (node.type === 'match') {
+        NODE_WIDTH = 40;
+        NODE_HEIGHT = 30;
+    }
 
-    const index = index_arr[0];
-    const nx = (index + 1) * NODE_SPACING + index * NODE_WIDTH;
-    const ny = (depth + 1) * NODE_SPACING + depth * NODE_HEIGHT;
+    const nx = xpos;
+    const ny = ypos;
+
+    let next_xpos = xpos + NODE_WIDTH + EDT_NODE_SPACING;
 
     if (node.hasOwnProperty('children')) {
         if (!EDT_nodeCollapsed(node, stackNodes)) {
-            let child_number = 0;
+            let child_next_xpos = xpos;
             for (let child of node.children) {
-                EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, child, depth + 1, index_arr);
-
-                child_number += 1;
-                if (child_number < node.children.length) {
-                    index_arr[0] += 1;
-                }
+                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, child, child_next_xpos, ypos + NODE_HEIGHT + EDT_NODE_SPACING);
             }
+            next_xpos = Math.max(next_xpos, child_next_xpos);
         }
     }
 
     nodeLocations.set(node, {x:nx, y:ny, w:NODE_WIDTH, h:NODE_HEIGHT})
+
+    return next_xpos;
 }
 
 function EDT_drawTree(ctx, nodeLocations, tree) {
