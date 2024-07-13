@@ -174,12 +174,12 @@ function EDT_updateNodePositions(nodePositions, nodePositionsDesired, deltaTime)
 function EDT_updateDesiredPositionsTree(nodePositions, tree) {
     nodePositions.clear()
 
-    EDT_updateDesiredPositionsTreeNode(nodePositions, EDT_getStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING);
+    EDT_updateDesiredPositionsTreeNode(nodePositions, EDT_getStackNodes(), tree, EDT_NODE_SPACING, null, EDT_NODE_SPACING);
 }
 
-function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpos, ypos) {
-    const nx = xpos;
-    const ny = ypos;
+function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpos, xalign, ypos) {
+    var nx = xpos;
+    var ny = ypos;
 
     var nw = 80;
     var nh = 40;
@@ -194,13 +194,19 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpo
         nh = 40;
     }
 
-    let next_xpos = xpos + nw + EDT_NODE_SPACING;
+    if (xalign !== null) {
+        nx = Math.max(nx, nx + 0.5 * xalign - 0.5 * nw);
+    }
+
+    let next_xpos = nx + nw + EDT_NODE_SPACING;
 
     if (node.hasOwnProperty('children')) {
         if (!EDT_nodeCollapsed(node, stackNodes)) {
-            let child_next_xpos = xpos;
+            let child_next_xpos = nx;
+            let child_xalign = nw;
             for (let child of node.children) {
-                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, child, child_next_xpos, ypos + nh + EDT_NODE_SPACING);
+                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, child, child_next_xpos, child_xalign, ypos + nh + EDT_NODE_SPACING);
+                child_xalign = null;
             }
             next_xpos = Math.max(next_xpos, child_next_xpos);
         }
