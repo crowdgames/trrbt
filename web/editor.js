@@ -81,18 +81,15 @@ function EDT_drawTree(ctx, nodeLocations, tree) {
         }
     }
 
-    var depth_index = new Map();
-    EDT_drawTreeNode(ctx, nodeLocations, stackNodes, tree, 0, depth_index);
+    EDT_drawTreeNode(ctx, nodeLocations, stackNodes, tree, 0, [0]);
 }
 
-function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, depth_index) {
+function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr) {
     const NODE_WIDTH = 80;
     const NODE_HEIGHT = 40;
     const NODE_SPACING = 25;
 
-    var index = depth_index.has(depth) ? depth_index.get(depth) : 0;
-    depth_index.set(depth, index + 1);
-
+    const index = index_arr[0];
     const nx = (index + 1) * NODE_SPACING + index * NODE_WIDTH;
     const ny = (depth + 1) * NODE_SPACING + depth * NODE_HEIGHT;
 
@@ -133,12 +130,10 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, depth_ind
         } else {
             const child_depth = depth + 1;
             let stackEdges = [];
+            let child_number = 0;
             for (let child of node.children) {
-                var child_index = depth_index.has(child_depth) ? depth_index.get(child_depth) : 0;
-                if (child_index < index) {
-                    child_index = index;
-                    depth_index.set(child_depth, child_index);
-                }
+                const child_index = index_arr[0];
+                const child_depth = depth + 1;
                 const cnx = (child_index + 1) * NODE_SPACING + child_index * NODE_WIDTH;
                 const cny = (child_depth + 1) * NODE_SPACING + child_depth * NODE_HEIGHT;
 
@@ -159,7 +154,12 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, depth_ind
                     ctx.stroke();
                 }
 
-                EDT_drawTreeNode(ctx, nodeLocations, stackNodes, child, child_depth, depth_index);
+                EDT_drawTreeNode(ctx, nodeLocations, stackNodes, child, child_depth, index_arr);
+
+                child_number += 1;
+                if (child_number < node.children.length) {
+                    index_arr[0] += 1;
+                }
             }
 
             for (let edge of stackEdges) {
