@@ -6,8 +6,9 @@ let EDT_canvas = null;
 let EDT_ctx = null;
 let EDT_keysDown = new Set();
 
-let EDT_nodeLocations = null;
-let EDT_nodeLocationsDesired = null;
+let EDT_nodePositions = null;
+let EDT_nodePositionsDesired = null;
+let EDT_nodePositionsWantUpdate = true;
 let EDT_drawLastTime = null
 
 let EDT_mousePan = null;
@@ -34,8 +35,9 @@ function EDT_onload() {
     EDT_ctx = EDT_canvas.getContext('2d');
     EDT_keysDown = new Set();
 
-    EDT_nodeLocations = new Map();
-    EDT_nodeLocationsDesired = new Map();
+    EDT_nodePositions = new Map();
+    EDT_nodePositionsDesired = new Map();
+    EDT_nodePositionsWantUpdate = true;
     EDT_drawLastTime = null;
 
     EDT_mousePan = null;
@@ -76,25 +78,37 @@ function EDT_onDraw() {
     EDT_ctx.textAlign = 'center';
     EDT_ctx.textBaseline = 'middle';
 
-    EDT_nodeLocationsDesired = new Map();
-    EDT_updateDesiredPositionsTree(EDT_nodeLocationsDesired, GAME_SETUP.tree);
-
     const drawTime = Date.now();
-    var moved = false;
 
-    if (EDT_drawLastTime !== null) {
-        moved = EDT_updateNodePositions(EDT_nodeLocations, EDT_nodeLocationsDesired, drawTime - EDT_drawLastTime);
-    } else {
-        EDT_nodeLocations = EDT_nodeLocationsDesired
+    if (EDT_nodePositionsWantUpdate) {
+        EDT_nodePositionsDesired = new Map();
+        EDT_updateDesiredPositionsTree(EDT_nodePositionsDesired, GAME_SETUP.tree);
+
+        var anyNodeMoved = false;
+        if (EDT_drawLastTime !== null) {
+            anyNodeMoved = EDT_updateNodePositions(EDT_nodePositions, EDT_nodePositionsDesired, drawTime - EDT_drawLastTime);
+        } else {
+            EDT_nodePositions = EDT_nodePositionsDesired
+        }
+
+        if (anyNodeMoved) {
+            window.requestAnimationFrame(EDT_onDraw);
+        } else {
+            EDT_nodePositionsWantUpdate = false;
+        }
     }
 
-    EDT_drawTree(EDT_ctx, EDT_nodeLocations, GAME_SETUP.tree);
-
-    if (moved) {
-        window.requestAnimationFrame(EDT_onDraw);
-    }
+    EDT_drawTree(EDT_ctx, EDT_nodePositions, GAME_SETUP.tree);
 
     EDT_drawLastTime = drawTime;
+}
+
+function EDT_updatePositionsAndDraw(animate) {
+    if (!animate) {
+        EDT_drawLastTime = null; // prevents node sliding animation
+    }
+    EDT_nodePositionsWantUpdate = true;
+    window.requestAnimationFrame(EDT_onDraw);
 }
 
 function EDT_nodeCollapsed(node, stackNodes) {
@@ -124,24 +138,24 @@ function EDT_rectValueUpdate(curr, des, dt) {
     return 0.2 * (des - curr);
 }
 
-function EDT_updateNodePositions(nodeLocations, nodeLocationsDesired, deltaTime) {
+function EDT_updateNodePositions(nodePositions, nodePositionsDesired, deltaTime) {
     var anyMoved = false;
 
     var toDelete = [];
-    for (let node of nodeLocations.keys()) {
-        if (!nodeLocationsDesired.has(node)) {
+    for (let node of nodePositions.keys()) {
+        if (!nodePositionsDesired.has(node)) {
             toDelete.push(node);
         }
     }
     for (let node of toDelete) {
-        nodeLocations.delete(node);
+        nodePositions.delete(node);
     }
 
-    for (let [node, desRect] of nodeLocationsDesired.entries()) {
-        if (nodeLocations.has(node)) {
-            var rect = nodeLocations.get(node);
+    for (let [node, desRect] of nodePositionsDesired.entries()) {
+        if (nodePositions.has(node)) {
+            var rect = nodePositions.get(node);
             if (EDT_rectClose(rect, desRect)) {
-                nodeLocations.set(node, desRect);
+                nodePositions.set(node, desRect);
             } else {
                 rect.x += EDT_rectValueUpdate(rect.x, desRect.x, deltaTime);
                 rect.y += EDT_rectValueUpdate(rect.y, desRect.y, deltaTime);
@@ -150,20 +164,20 @@ function EDT_updateNodePositions(nodeLocations, nodeLocationsDesired, deltaTime)
                 anyMoved = true;
             }
         } else {
-            nodeLocations.set(node, desRect);
+            nodePositions.set(node, desRect);
         }
     }
 
     return anyMoved;
 }
 
-function EDT_updateDesiredPositionsTree(nodeLocations, tree) {
-    nodeLocations.clear()
+function EDT_updateDesiredPositionsTree(nodePositions, tree) {
+    nodePositions.clear()
 
-    EDT_updateDesiredPositionsTreeNode(nodeLocations, EDT_getStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING);
+    EDT_updateDesiredPositionsTreeNode(nodePositions, EDT_getStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING);
 }
 
-function EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, node, xpos, ypos) {
+function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpos, ypos) {
     const nx = xpos;
     const ny = ypos;
 
@@ -186,23 +200,23 @@ function EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, node, xpo
         if (!EDT_nodeCollapsed(node, stackNodes)) {
             let child_next_xpos = xpos;
             for (let child of node.children) {
-                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, child, child_next_xpos, ypos + nh + EDT_NODE_SPACING);
+                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, child, child_next_xpos, ypos + nh + EDT_NODE_SPACING);
             }
             next_xpos = Math.max(next_xpos, child_next_xpos);
         }
     }
 
-    nodeLocations.set(node, {x:nx, y:ny, w:nw, h:nh})
+    nodePositions.set(node, {x:nx, y:ny, w:nw, h:nh})
 
     return next_xpos;
 }
 
-function EDT_drawTree(ctx, nodeLocations, tree) {
-    EDT_drawTreeNode(ctx, nodeLocations, EDT_getStackNodes(), tree);
+function EDT_drawTree(ctx, nodePositions, tree) {
+    EDT_drawTreeNode(ctx, nodePositions, EDT_getStackNodes(), tree);
 }
 
-function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
-    const nrect = nodeLocations.get(node);
+function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
+    const nrect = nodePositions.get(node);
     const nx = nrect.x;
     const ny = nrect.y;
     const nw = nrect.w;
@@ -239,7 +253,7 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
             let stackEdges = [];
             let nonStackEdges = [];
             for (let child of node.children) {
-                const cnrect = nodeLocations.get(child);
+                const cnrect = nodePositions.get(child);
                 const cnx = cnrect.x;
                 const cny = cnrect.y;
                 const cnw = cnrect.w;
@@ -280,7 +294,7 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
             }
 
             for (let child of node.children) {
-                EDT_drawTreeNode(ctx, nodeLocations, stackNodes, child);
+                EDT_drawTreeNode(ctx, nodePositions, stackNodes, child);
             }
         }
     }
@@ -299,6 +313,7 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
         ctx.lineTo(nx + 0.40 * nw, ny + 1.00 * nh);
         ctx.lineTo(nx + 0.00 * nw, ny + 0.60 * nh);
         ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
+        ctx.lineTo(nx + 0.40 * nw, ny + 0.00 * nh);
         ctx.fill();
     } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
         ctx.fillStyle = '#' + lt + dk + dk;
@@ -311,6 +326,7 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
         ctx.lineTo(nx + 0.25 * nw, ny + 1.00 * nh);
         ctx.lineTo(nx + 0.00 * nw, ny + 0.75 * nh);
         ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
+        ctx.lineTo(nx + 0.25 * nw, ny + 0.00 * nh);
         ctx.fill();
     } else if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'match', 'display-board'].indexOf(node.type) >= 0) {
         if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols'].indexOf(node.type) >= 0) {
@@ -397,9 +413,10 @@ function EDT_onMouseDown(evt) {
     if (EDT_mouseNode !== null) {
         if (isDouble) {
             EDT_collapseNodes(EDT_mouseNode, true, EDT_collapsedNodes.has(EDT_mouseNode));
-            EDT_drawLastTime = null; // prevents node sliding animation
+            EDT_updatePositionsAndDraw(false);
         } else {
             EDT_collapseNodes(EDT_mouseNode, false, !EDT_collapsedNodes.has(EDT_mouseNode));
+            EDT_updatePositionsAndDraw(true);
         }
     } else {
         if (isDouble) {
@@ -448,7 +465,7 @@ function EDT_onMouseMove(evt) {
             mousePos = EDT_xformInv.transformPoint(mousePos_u);
         }
     } else {
-        for (let [node, rect] of EDT_nodeLocations.entries()) {
+        for (let [node, rect] of EDT_nodePositions.entries()) {
             if (rect.x < mousePos.x && rect.y < mousePos.y && rect.x + rect.w > mousePos.x && rect.y + rect.h > mousePos.y) {
                 EDT_mouseNode = node;
                 break;
