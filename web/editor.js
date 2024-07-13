@@ -29,7 +29,7 @@ function EDT_onload() {
     EDT_ctx = EDT_canvas.getContext('2d');
     EDT_keysDown = new Set();
 
-    EDT_nodeLocations = [];
+    EDT_nodeLocations = new Map();
     EDT_mousePan = null;
     EDT_mouseZoom = null;
     EDT_mousePos = null;
@@ -68,23 +68,37 @@ function EDT_onDraw() {
     EDT_ctx.textAlign = 'center';
     EDT_ctx.textBaseline = 'middle';
 
-    EDT_nodeLocations = []
+    EDT_nodeLocations = new Map();
 
+    EDT_updateDesiredPositionsTree(EDT_nodeLocations, GAME_SETUP.tree);
     EDT_drawTree(EDT_ctx, EDT_nodeLocations, GAME_SETUP.tree);
 }
 
-function EDT_drawTree(ctx, nodeLocations, tree) {
+function EDT_nodeCollapsed(node, stackNodes) {
+    if (EDT_followStack) {
+        return !stackNodes.has(node);
+    } else {
+        return EDT_collapsedNodes.has(node);
+    }
+}
+
+function EDT_getStackNodes() {
     var stackNodes = new Set();
     if (typeof ENG_callStack !== 'undefined' && ENG_callStack !== null) {
         for (var frame of ENG_callStack) {
             stackNodes.add(frame.node);
         }
     }
-
-    EDT_drawTreeNode(ctx, nodeLocations, stackNodes, tree, 0, [0]);
+    return stackNodes;
 }
 
-function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr) {
+function EDT_updateDesiredPositionsTree(nodeLocations, tree) {
+    nodeLocations.clear()
+
+    EDT_updateDesiredPositionsTreeNode(nodeLocations, EDT_getStackNodes(), tree, 0, [0]);
+}
+
+function EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, node, depth, index_arr) {
     const NODE_WIDTH = 80;
     const NODE_HEIGHT = 40;
     const NODE_SPACING = 25;
@@ -94,14 +108,35 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr
     const ny = (depth + 1) * NODE_SPACING + depth * NODE_HEIGHT;
 
     if (node.hasOwnProperty('children')) {
-        var collapse = false;
+        if (!EDT_nodeCollapsed(node, stackNodes)) {
+            let child_number = 0;
+            for (let child of node.children) {
+                EDT_updateDesiredPositionsTreeNode(nodeLocations, stackNodes, child, depth + 1, index_arr);
 
-        if (EDT_followStack) {
-            collapse = !stackNodes.has(node);
-        } else {
-            collapse = EDT_collapsedNodes.has(node);
+                child_number += 1;
+                if (child_number < node.children.length) {
+                    index_arr[0] += 1;
+                }
+            }
         }
-        if (collapse) {
+    }
+
+    nodeLocations.set(node, {x:nx, y:ny, w:NODE_WIDTH, h:NODE_HEIGHT})
+}
+
+function EDT_drawTree(ctx, nodeLocations, tree) {
+    EDT_drawTreeNode(ctx, nodeLocations, EDT_getStackNodes(), tree);
+}
+
+function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node) {
+    const nrect = nodeLocations.get(node);
+    const nx = nrect.x;
+    const ny = nrect.y;
+    const nw = nrect.w;
+    const nh = nrect.h;
+
+    if (node.hasOwnProperty('children')) {
+        if (EDT_nodeCollapsed(node, stackNodes)) {
             const childScale = 5 + 2 * Math.min(node.children.length - 1, 5);
 
             var childOnStack = false;
@@ -118,9 +153,9 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr
             } else {
                 ctx.fillStyle = '#444488';
             }
-            ctx.moveTo(nx + NODE_WIDTH / 2 - childScale, ny + NODE_HEIGHT);
-            ctx.lineTo(nx + NODE_WIDTH / 2, ny + NODE_HEIGHT + 5);
-            ctx.lineTo(nx + NODE_WIDTH / 2 + childScale, ny + NODE_HEIGHT);
+            ctx.moveTo(nx + nw / 2 - childScale, ny + nh);
+            ctx.lineTo(nx + nw / 2, ny + nh + 5);
+            ctx.lineTo(nx + nw / 2 + childScale, ny + nh);
             ctx.fill();
             if (childOnStack) {
                 ctx.lineWidth = 4;
@@ -128,38 +163,37 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr
                 ctx.stroke();
             }
         } else {
-            const child_depth = depth + 1;
             let stackEdges = [];
-            let child_number = 0;
+            let nonStackEdges = [];
             for (let child of node.children) {
-                const child_index = index_arr[0];
-                const child_depth = depth + 1;
-                const cnx = (child_index + 1) * NODE_SPACING + child_index * NODE_WIDTH;
-                const cny = (child_depth + 1) * NODE_SPACING + child_depth * NODE_HEIGHT;
+                const cnrect = nodeLocations.get(child);
+                const cnx = cnrect.x;
+                const cny = cnrect.y;
+                const cnw = cnrect.w;
+                const cnh = cnrect.h;
 
-                const edge = [nx + NODE_WIDTH / 2, ny + NODE_HEIGHT,
-                              nx + NODE_WIDTH / 2, cny - NODE_SPACING / 2,
-                              cnx + NODE_WIDTH / 2, cny - NODE_SPACING / 2,
-                              cnx + NODE_WIDTH / 2, cny];
+                const midy = 0.5 * (ny + nh + cny);
+
+                const edge = [nx + nw / 2, ny + nh,
+                              nx + nw / 2, midy,
+                              cnx + cnw / 2, midy,
+                              cnx + cnw / 2, cny];
 
                 if (stackNodes.has(child)) {
-                    stackEdges.push(edge)
+                    stackEdges.push(edge);
                 } else {
-                    ctx.lineWidth = 2;
-                    ctx.strokeStyle = '#444488';
-
-                    ctx.beginPath();
-                    ctx.moveTo(edge[0], edge[1]);
-                    ctx.bezierCurveTo(edge[2], edge[3], edge[4], edge[5], edge[6], edge[7]);
-                    ctx.stroke();
+                    nonStackEdges.push(edge);
                 }
+            }
 
-                EDT_drawTreeNode(ctx, nodeLocations, stackNodes, child, child_depth, index_arr);
+            for (let edge of nonStackEdges) {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#444488';
 
-                child_number += 1;
-                if (child_number < node.children.length) {
-                    index_arr[0] += 1;
-                }
+                ctx.beginPath();
+                ctx.moveTo(edge[0], edge[1]);
+                ctx.bezierCurveTo(edge[2], edge[3], edge[4], edge[5], edge[6], edge[7]);
+                ctx.stroke();
             }
 
             for (let edge of stackEdges) {
@@ -171,6 +205,10 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr
                 ctx.bezierCurveTo(edge[2], edge[3], edge[4], edge[5], edge[6], edge[7]);
                 ctx.stroke();
             }
+
+            for (let child of node.children) {
+                EDT_drawTreeNode(ctx, nodeLocations, stackNodes, child);
+            }
         }
     }
 
@@ -180,7 +218,7 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr
         ctx.fillStyle = '#cceeee';
     }
     ctx.beginPath();
-    ctx.roundRect(nx, ny, NODE_WIDTH, NODE_HEIGHT, 6)
+    ctx.roundRect(nx, ny, nw, nh, 6)
     ctx.fill();
 
     if (stackNodes.has(node)) {
@@ -190,10 +228,8 @@ function EDT_drawTreeNode(ctx, nodeLocations, stackNodes, node, depth, index_arr
     }
 
     ctx.fillStyle = '#222222'
-    ctx.font = (NODE_WIDTH / node.type.length) + 'px'
-    ctx.fillText(node.type, nx + NODE_WIDTH / 2, ny + NODE_HEIGHT / 2);
-
-    nodeLocations.push({rect:[nx, ny, nx + NODE_WIDTH, ny + NODE_HEIGHT], node:node});
+    ctx.font = (nw / node.type.length) + 'px'
+    ctx.fillText(node.type, nx + nw / 2, ny + nh / 2);
 }
 
 function EDT_updateCanvasSize(desiredWidth, desiredHeight) {
@@ -302,8 +338,8 @@ function EDT_onMouseMove(evt) {
             mousePos = EDT_xformInv.transformPoint(mousePos_u);
         }
     } else {
-        for (const {rect, node} of EDT_nodeLocations) {
-            if (rect[0] < mousePos.x && rect[1] < mousePos.y && rect[2] > mousePos.x && rect[3] > mousePos.y) {
+        for (let [node, rect] of EDT_nodeLocations.entries()) {
+            if (rect.x < mousePos.x && rect.y < mousePos.y && rect.x + rect.w > mousePos.x && rect.y + rect.h > mousePos.y) {
                 EDT_mouseNode = node;
                 break;
             }

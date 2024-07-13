@@ -140,11 +140,14 @@ function ENG_shouldStepToInput() {
 }
 
 function ENG_stepToInput() {
+    var stepped = false;
+
     if (ENG_loopCheck !== true) {
         ENG_loopCheck = 0;
         while (ENG_shouldStepToInput()) {
             ENG_stepGameTree();
             ++ ENG_loopCheck;
+            stepped = true;
 
             if (ENG_loopCheck === 100000) {
                 ENG_loopCheck = true;
@@ -152,7 +155,9 @@ function ENG_stepToInput() {
                 break;
             }
         }
+    }
 
+    if (stepped) {
         ENG_updateEditor();
     }
 }
