@@ -44,8 +44,8 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 
 function ENG_updateEditor() {
-    if (typeof EDT_onDraw !== 'undefined') {
-        window.requestAnimationFrame(EDT_onDraw);
+    if (typeof EDT_updatePositionsAndDraw !== 'undefined') {
+        EDT_updatePositionsAndDraw();
     }
 }
 
@@ -151,7 +151,7 @@ function ENG_stepToInput() {
 
             if (ENG_loopCheck === 100000) {
                 ENG_loopCheck = true;
-                setTimeout(() => { alert('too many steps before player input, stopping') }, 10);
+                setTimeout(() => { alert('too many steps before player input, stopping') }, 100);
                 break;
             }
         }
@@ -789,16 +789,16 @@ function ENG_stepGameTree(stack) {
 
                 if (ENG_gameResult.result === 'win') {
                     var player = ENG_gameResult.player;
-                    setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 10);
+                    setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 100);
                 } else if (ENG_gameResult.result === 'lose') {
                     var player = ENG_gameResult.player;
-                    setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 10);
+                    setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 100);
                 } else if (ENG_gameResult.result === 'draw') {
-                    setTimeout(() => { alert('Game over, draw!') }, 10);
+                    setTimeout(() => { alert('Game over, draw!') }, 100);
                 } else if (ENG_gameResult.result === 'stalemate') {
-                    setTimeout(() => { alert('Game over, stalemate!') }, 10);
+                    setTimeout(() => { alert('Game over, stalemate!') }, 100);
                 } else {
-                    setTimeout(() => { alert('Game over, unknown result!') }, 10);
+                    setTimeout(() => { alert('Game over, unknown result!') }, 100);
                 }
                 ENG_gameResult = true;
             }
