@@ -3,6 +3,8 @@ const BUTTON_RIGHT = 2;
 const PIXEL_RATIO = window.devicePixelRatio;
 const DOUBLE_CLICK_TIME = 300;
 
+const TAU = 2 * Math.PI;
+
 function copymap(map) {
     if (map === null) {
         return null;

@@ -24,6 +24,9 @@ let EDT_collapsedNodes = null;
 
 const EDT_NODE_SPACING = 25;
 
+const EDT_FONT_SIZE = 10;
+const EDT_FONT_CHAR_SIZE = 6;
+const EDT_FONT_LINE_SIZE = 12;
 
 
 function EDT_onload() {
@@ -135,7 +138,7 @@ function EDT_rectClose(ra, rb) {
 }
 
 function EDT_rectValueUpdate(curr, des, dt) {
-    return 0.2 * (des - curr);
+    return 0.15 * (des - curr);
 }
 
 function EDT_updateNodePositions(nodePositions, nodePositionsDesired, deltaTime) {
@@ -186,9 +189,29 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpo
     if (node.type === 'player') {
         nw = 120;
         nh = 40;
-    } else if (node.type === 'match') {
-        nw = 40;
-        nh = 30;
+    } else if (['rewrite', 'match', 'set-board'].indexOf(node.type) >= 0) {
+        nw = 50;
+        nh = 10;
+
+        var line = 1;
+
+        const multChars = (node.type === 'rewrite') ? 2 : 1;
+        const addChars = (node.type === 'rewrite') ? 3 : 0;
+
+        const pattern = (node.type === 'rewrite') ? node.lhs : node.pattern;
+        const layers = Object.getOwnPropertyNames(pattern);
+
+        for (const layer of layers) {
+            nw = Math.max(nw, 10 + EDT_FONT_CHAR_SIZE * (multChars * (2 * pattern[layer][0].length - 1) + addChars))
+            if (layers.length === 1 && layers[0] === 'main') {
+                // pass
+            } else {
+                ++ line;
+            }
+            line += pattern[layer].length;
+        }
+
+        nh += EDT_FONT_LINE_SIZE * line;
     } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
         nw = 40;
         nh = 40;
@@ -308,6 +331,8 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
     const lt = (node === EDT_mouseNode) ? 'ff' : 'ee';
     const dk = (node === EDT_mouseNode) ? 'dd' : 'cc';
 
+    ctx.font = '10px sans-serif';
+
     if (node.type === 'player') {
         ctx.fillStyle = '#' + dk + dk + lt;
         ctx.beginPath();
@@ -321,6 +346,9 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
         ctx.lineTo(nx + 0.40 * nw, ny + 0.00 * nh);
         ctx.fill();
+
+        ctx.fillStyle = '#222222'
+        ctx.fillText(node.type + ': ' + node.pid, nx + nw / 2, ny + nh / 2);
     } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
         ctx.fillStyle = '#' + lt + dk + dk;
         ctx.beginPath();
@@ -334,7 +362,14 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
         ctx.lineTo(nx + 0.25 * nw, ny + 0.00 * nh);
         ctx.fill();
-    } else if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'match', 'display-board'].indexOf(node.type) >= 0) {
+
+        ctx.fillStyle = '#222222'
+        if (['win', 'lose'].indexOf(node.type) >= 0) {
+            ctx.fillText(node.type + ': ' + node.pid, nx + nw / 2, ny + nh / 2);
+        } else {
+            ctx.fillText(node.type, nx + nw / 2, ny + nh / 2);
+        }
+    } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
         if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols'].indexOf(node.type) >= 0) {
             ctx.fillStyle = '#' + dk + lt + dk;
         } else if (['match'].indexOf(node.type) >= 0) {
@@ -345,11 +380,51 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.beginPath();
         ctx.roundRect(nx, ny, nw, nh, 6)
         ctx.fill();
+
+        const textx = nx + nw / 2;
+        var line = 1;
+
+        ctx.fillStyle = '#222222'
+        ctx.fillText(node.type, textx, ny + EDT_FONT_LINE_SIZE * line);
+        ++ line;
+
+        if (['rewrite', 'match', 'set-board', 'set-board', 'append-rows', 'append-cols'].indexOf(node.type) >= 0) {
+            const pattern = (node.type === 'rewrite') ? node.lhs : node.pattern;
+            const layers = Object.getOwnPropertyNames(pattern);
+
+            for (const layer of layers) {
+                if (layers.length === 1 && layers[0] === 'main') {
+                    // pass
+                } else {
+                    ctx.fillStyle = '#888888'
+                    ctx.font = 'italic 10px sans-serif';
+                    ctx.fillText('- ' + layer + ' -', textx, ny + EDT_FONT_LINE_SIZE * line);
+                    ++ line;
+                }
+                ctx.fillStyle = '#222222'
+                ctx.font = '10px Courier New';
+
+                for (let ii = 0; ii < pattern[layer].length; ++ ii) {
+                    if (node.type === 'rewrite') {
+                        const connect = (ii === 0) ? ' → ' : '   ';
+                        const lhs = node.lhs[layer][ii].join(' ');
+                        const rhs = node.rhs.hasOwnProperty(layer) ? node.rhs[layer][ii].join(' ') : ' '.repeat(lhs.length);
+                        ctx.fillText(lhs + connect + rhs, textx, ny + EDT_FONT_LINE_SIZE * line);
+                    } else {
+                        ctx.fillText(node.pattern[layer][ii].join(' '), textx, ny + EDT_FONT_LINE_SIZE * line);
+                    }
+                    ++ line;
+                }
+            }
+        }
     } else {
         ctx.fillStyle = '#' + lt + lt + lt;
         ctx.beginPath();
-        ctx.ellipse(nx + 0.5 * nw, ny + 0.5 * nh, 0.5 * nw, 0.5 * nh, 0, 0, 2 * Math.PI);
+        ctx.ellipse(nx + 0.5 * nw, ny + 0.5 * nh, 0.5 * nw, 0.5 * nh, 0, 0, TAU);
         ctx.fill();
+
+        ctx.fillStyle = '#222222'
+        ctx.fillText(node.type, nx + nw / 2, ny + nh / 2);
     }
 
     if (stackNodes.has(node)) {
@@ -357,10 +432,6 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.strokeStyle = '#222222';
         ctx.stroke();
     }
-
-    ctx.fillStyle = '#222222'
-    ctx.font = (nw / node.type.length) + 'px'
-    ctx.fillText(node.type, nx + nw / 2, ny + nh / 2);
 }
 
 function EDT_updateCanvasSize(desiredWidth, desiredHeight) {
