@@ -9,18 +9,24 @@
   <body>
     <center>
       <table>
-        <tr>
-          <td>
-            <canvas id="editorcanvas" width="800px" height="600px">
-              Browser does not support canvas.
-            </canvas>
-          </td>
-          <td>
-            <canvas id="enginecanvas" width="600px" height="600px">
-              Browser does not support canvas.
-            </canvas>
-          </td>
-        </tr>
+        <tbody>
+          <tr>
+            <td>
+              <canvas id="editorcanvas" width="600px" height="600px" tabindex="1">
+                Browser does not support canvas.
+              </canvas>
+            </td>
+            <td>
+              <div id="editordiv" style="width:400px; height:600px" tabindex="2">
+              </div>
+            </td>
+            <td>
+              <canvas id="enginecanvas" width="600px" height="600px" tabindex="3">
+                Browser does not support canvas.
+              </canvas>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </center>
   </body>
