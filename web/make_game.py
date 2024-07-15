@@ -68,7 +68,7 @@ if __name__ == '__main__':
         f.write('  </head>\n')
         f.write('  <body>\n')
         f.write('    <center>\n')
-        f.write('      <canvas id="enginecanvas" width="600px" height="600px">\n')
+        f.write('      <canvas id="enginecanvas" width="600px" height="600px" tabindex="1">\n')
         f.write('        Browser does not support canvas.\n')
         f.write('      </canvas>\n')
         f.write('    </center>\n')

@@ -4,6 +4,7 @@ window.addEventListener('load', EDT_onload, false);
 
 let EDT_canvas = null;
 let EDT_ctx = null;
+let EDT_propertyEditor = null;
 let EDT_keysDown = new Set();
 
 let EDT_nodePositions = null;
@@ -18,6 +19,7 @@ let EDT_mousePos_u = null;
 let EDT_mouseLastTime = null;
 let EDT_xformInv = null;
 let EDT_mouseNode = null;
+let EDT_propertyNodes = null;
 
 let EDT_followStack = false;
 let EDT_collapsedNodes = null;
@@ -36,6 +38,7 @@ function EDT_onload() {
 
     EDT_canvas = document.getElementById('editorcanvas');
     EDT_ctx = EDT_canvas.getContext('2d');
+    EDT_propertyEditor = document.getElementById('editordiv');
     EDT_keysDown = new Set();
 
     EDT_nodePositions = new Map();
@@ -50,6 +53,7 @@ function EDT_onload() {
     EDT_mouseLastTime = null;
     EDT_xformInv = null;
     EDT_mouseNode = null;
+    EDT_propertyNodes = null;
 
     EDT_followStack = false;
     EDT_collapsedNodes = new Set();
@@ -59,8 +63,8 @@ function EDT_onload() {
     EDT_canvas.addEventListener('mouseup', EDT_onMouseUp);
     EDT_canvas.addEventListener('mouseout', EDT_onMouseOut);
     EDT_canvas.addEventListener('wheel', EDT_onMouseWheel);
-    window.addEventListener('keydown', EDT_onKeyDown);
-    window.addEventListener('keyup', EDT_onKeyUp);
+    EDT_canvas.addEventListener('keydown', EDT_onKeyDown);
+    EDT_canvas.addEventListener('keyup', EDT_onKeyUp);
 
     EDT_updateCanvasSize(EDT_canvas.width, EDT_canvas.height);
 
@@ -106,8 +110,8 @@ function EDT_onDraw() {
     EDT_drawLastTime = drawTime;
 }
 
-function EDT_updatePositionsAndDraw(animate) {
-    if (!animate) {
+function EDT_updatePositionsAndDraw(skipAnimate) {
+    if (skipAnimate) {
         EDT_drawLastTime = null; // prevents node sliding animation
     }
     EDT_nodePositionsWantUpdate = true;
@@ -432,6 +436,12 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.strokeStyle = '#222222';
         ctx.stroke();
     }
+
+    if (EDT_propertyNodes !== null && node === EDT_propertyNodes.node) {
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#880088';
+        ctx.stroke();
+    }
 }
 
 function EDT_updateCanvasSize(desiredWidth, desiredHeight) {
@@ -480,7 +490,158 @@ function EDT_collapseNodes(node, recurse, collapse) {
     }
 }
 
+function EDT_textProperty(id, name, value) {
+    var html = '';
+    html += '<li/>';
+    html += '<label for="' + id + '">' + name + '</label><br/>';
+    html += '<input type="text" id="prop_' + id + '" name="' + id + '" value="' + value + '"/><br/>';
+    return html;
+}
+
+function EDT_patternProperty(id, name, value) {
+    var html = '';
+    html += '<li/>';
+    html += '<label for="' + id + '">' + name + ': </label><br/>';
+    const layers = Object.getOwnPropertyNames(value);
+    for (const layer of layers) {
+        html += '<input type="button" value="-"/><input type="text" id="' + id + '" name="' + id + '" value="' + layer + '"/><br/>';
+        var rows = value[layer].length + 1;
+        var cols = 2;
+        var text = '';
+        for (const row of value[layer]) {
+            const rowText = row.join(' ');
+            text += rowText + '\n';
+            cols = Math.max(cols, rowText.length + 2);
+        }
+        html += '<textarea id="' + id + '" name="' + id + '" rows="' + rows + '" cols= "' + cols + '">' + text + '</textarea><br/>';
+    }
+    html += '<input type="button" value="+"/><br/>';
+    return html;
+}
+
+function EDT_updatePropertyEditor(node) {
+    if (EDT_propertyNodes === null || node !== EDT_propertyNodes.node) {
+        EDT_propertyNodes = (node !== null) ? { node:node, parent:EDT_findNodeParent(GAME_SETUP.tree, node) } : null;
+        if (EDT_propertyNodes) {
+            const parent = EDT_propertyNodes.parent;
+
+            var html = ''
+            html += '<b>' + node.type + '</b><br/>'
+
+            if (parent !== null) {
+                html += '<input type="button" value="Move Earlier" onClick="EDT_onNodeShift(true)"/>'
+                html += '<input type="button" value="Move Later" onClick="EDT_onNodeShift(false)"/>'
+            }
+            html += '<br/>'
+            html += '<br/>'
+            if (node === GAME_SETUP.tree) {
+                // pass
+            } else if (node.hasOwnProperty('children')) {
+                html += '<input type="button" value="Delete and Reparent" onClick="EDT_onNodeDelete(true)"/>'
+                html += '<input type="button" value="Delete Subtree" onClick="EDT_onNodeDelete(false)"/>'
+            } else {
+                html += '<input type="button" value="Delete" onClick="EDT_onNodeDelete(false)"/>'
+            }
+            html += '<br/>'
+            html += '<br/>'
+
+            var anyProperties = false;
+            //html += '<form>'
+            html += '<div id="propertyform">'
+            html += '<ul>'
+            if (node.hasOwnProperty('pid')) {
+                html += EDT_textProperty('pid', 'player id', node.pid);
+                anyProperties = true;
+            }
+            if (node.hasOwnProperty('pattern')) {
+                html += EDT_patternProperty('pattern', 'pattern', node.pattern);
+                anyProperties = true;
+            }
+            if (node.hasOwnProperty('lhs')) {
+                html += EDT_patternProperty('lhs', 'LHS', node.lhs);
+                anyProperties = true;
+            }
+            if (node.hasOwnProperty('rhs')) {
+                html += EDT_patternProperty('rhs', 'RHS', node.rhs);
+                anyProperties = true;
+            }
+            html += '</ul>'
+            if (anyProperties) {
+                html += '<input type="button" value="Save" onClick="EDT_onNodeSaveProperties()"><br/>'
+                html += '<br/>'
+            }
+            //html += '</form>'
+            html += '</div>'
+            EDT_propertyEditor.innerHTML = html;
+        } else {
+            EDT_propertyEditor.innerHTML = '';
+        }
+    }
+}
+
+function EDT_onNodeSaveProperties() {
+    const pidElem = document.getElementById('prop_pid');
+    if (pidElem !== null) {
+        EDT_propertyNodes.node.pid = pidElem.value;
+        EDT_updatePositionsAndDraw();
+    }
+}
+
+function EDT_findNodeParent(from, node) {
+    if (from.hasOwnProperty('children')) {
+        for (let child of from.children) {
+            if (child === node) {
+                return from;
+            }
+            const found = EDT_findNodeParent(child, node);
+            if (found !== null) {
+                return found;
+            }
+        }
+    }
+    return null;
+}
+
+function EDT_onNodeDelete(reparentChildren) {
+    var node = EDT_propertyNodes.node;
+    var parent = EDT_propertyNodes.parent;
+
+    if (parent !== null) {
+        const index = parent.children.indexOf(node);
+        if (index >= 0) {
+            if (reparentChildren) {
+                parent.children.splice(index, 1, ...node.children);
+            } else {
+                parent.children.splice(index, 1);
+            }
+            EDT_updatePositionsAndDraw();
+        }
+    }
+}
+
+function EDT_onNodeShift(earlier) {
+    var node = EDT_propertyNodes.node;
+    var parent = EDT_propertyNodes.parent;
+
+    if (parent !== null) {
+        const index = parent.children.indexOf(node);
+        if (index >= 0) {
+            if (earlier && index > 0) {
+                parent.children.splice(index, 1);
+                parent.children.splice(index - 1, 0, node);
+                EDT_updatePositionsAndDraw();
+            } else if (!earlier && index + 1 < parent.children.length) {
+                parent.children.splice(index, 1);
+                parent.children.splice(index + 1, 0, node);
+                EDT_updatePositionsAndDraw();
+            }
+        }
+    }
+}
+
 function EDT_onMouseDown(evt) {
+    EDT_canvas.focus();
+
     const mouseButton = evt.button;
 
     const mouseTime = Date.now();
@@ -488,13 +649,17 @@ function EDT_onMouseDown(evt) {
     const isDouble = (EDT_mouseLastTime !== null && mouseTime - EDT_mouseLastTime <= DOUBLE_CLICK_TIME);
 
     if (EDT_mouseNode !== null) {
-        if (isDouble) {
-            EDT_collapseNodes(EDT_mouseNode, true, EDT_collapsedNodes.has(EDT_mouseNode));
-            EDT_updatePositionsAndDraw(false);
-        } else {
-            EDT_collapseNodes(EDT_mouseNode, false, !EDT_collapsedNodes.has(EDT_mouseNode));
-            EDT_updatePositionsAndDraw(true);
+        if (EDT_propertyNodes !== null && EDT_mouseNode === EDT_propertyNodes.node) {
+            if (isDouble) {
+                EDT_collapseNodes(EDT_mouseNode, true, EDT_collapsedNodes.has(EDT_mouseNode));
+                EDT_updatePositionsAndDraw(true);
+            } else {
+                EDT_collapseNodes(EDT_mouseNode, false, !EDT_collapsedNodes.has(EDT_mouseNode));
+                EDT_updatePositionsAndDraw();
+            }
         }
+
+        EDT_updatePropertyEditor(EDT_mouseNode);
     } else {
         if (isDouble) {
             EDT_resetXform();
@@ -505,6 +670,8 @@ function EDT_onMouseDown(evt) {
                 EDT_mouseZoom = EDT_mousePos;
             }
         }
+
+        EDT_updatePropertyEditor(null);
     }
 
     EDT_mouseLastTime = mouseTime;
@@ -593,7 +760,7 @@ function EDT_onKeyDown(evt) {
         }
     }
 
-    evt.preventDefault();
+    //evt.preventDefault();
     window.requestAnimationFrame(EDT_onDraw);
 }
 

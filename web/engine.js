@@ -241,8 +241,9 @@ function ENG_onLoad() {
     ENG_canvas.addEventListener('mousemove', ENG_onMouseMove);
     ENG_canvas.addEventListener('mouseup', ENG_onMouseUp);
     ENG_canvas.addEventListener('mouseout', ENG_onMouseOut);
-    window.addEventListener('keydown', ENG_onKeyDown);
-    window.addEventListener('keyup', ENG_onKeyUp);
+    ENG_canvas.addEventListener('keydown', ENG_onKeyDown);
+    ENG_canvas.addEventListener('keyup', ENG_onKeyUp);
+    ENG_canvas.focus();
 
     if (GAME_SETUP.sprites !== null) {
         ENG_spriteImages = new Map();
@@ -546,6 +547,8 @@ function ENG_onKeyUp(evt) {
 }
 
 function ENG_onMouseDown(evt) {
+    ENG_canvas.focus();
+
     const mouseButton = evt.button;
 
     if (mouseButton === BUTTON_LEFT) {
