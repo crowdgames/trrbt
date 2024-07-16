@@ -31,6 +31,27 @@ const EDT_FONT_CHAR_SIZE = 6;
 const EDT_FONT_LINE_SIZE = 12;
 
 
+
+const EDT_EMPTY_PATTERN = {main:[[]]}
+const EDT_NODE_PROTOTYPES = [
+    { type:'player', children:[], pid:'' },
+
+    { type:'win', pid:'' },
+    { type:'lose', pid:'' },
+    { type:'draw' },
+
+    { type:'order', children:[] },
+    { type:'all', children:[] },
+    { type:'none', children:[] },
+    { type:'random-try', children:[] },
+    { type:'loop-until-all', children:[] },
+    { type:'loop-times', children:[], times:1 },
+
+    { type:'rewrite', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
+    { type:'match', pattern:EDT_EMPTY_PATTERN },
+    { type:'set-board', pattern:EDT_EMPTY_PATTERN },
+]
+
 function EDT_onload() {
     document.oncontextmenu = function() {
         return false;
@@ -504,7 +525,10 @@ function EDT_patternProperty(id, name, value) {
     html += '<label for="' + id + '">' + name + ': </label><br/>';
     const layers = Object.getOwnPropertyNames(value);
     for (const layer of layers) {
-        html += '<input type="button" value="-"/><input type="text" id="' + id + '" name="' + id + '" value="' + layer + '"/><br/>';
+        if (layers.length > 1) {
+            html += '<input type="button" value="-"/>'
+        }
+        html += '<input type="text" id="' + id + '" name="' + id + '" value="' + layer + '"/><br/>';
         var rows = value[layer].length + 1;
         var cols = 2;
         var text = '';
@@ -545,12 +569,28 @@ function EDT_updatePropertyEditor(node) {
             html += '<br/>'
             html += '<br/>'
 
+            if (node.hasOwnProperty('children')) {
+                for (const proto of EDT_NODE_PROTOTYPES) {
+                    if (node.type === 'player' && proto.type !== 'rewrite') {
+                        // pass
+                    } else {
+                        html += '<input type="button" value="Add ' + proto.type + '" onClick="EDT_onNodeAddChild(\'' + proto.type + '\')"/>'
+                    }
+                }
+                html += '<br/>'
+                html += '<br/>'
+            }
+
             var anyProperties = false;
             //html += '<form>'
             html += '<div id="propertyform">'
             html += '<ul>'
             if (node.hasOwnProperty('pid')) {
                 html += EDT_textProperty('pid', 'player id', node.pid);
+                anyProperties = true;
+            }
+            if (node.hasOwnProperty('times')) {
+                html += EDT_textProperty('times', 'times', node.times);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('pattern')) {
@@ -615,6 +655,18 @@ function EDT_onNodeDelete(reparentChildren) {
                 parent.children.splice(index, 1);
             }
             EDT_updatePositionsAndDraw();
+        }
+    }
+}
+
+function EDT_onNodeAddChild(type) {
+    var node = EDT_propertyNodes.node;
+
+    for (const proto of EDT_NODE_PROTOTYPES) {
+        if (proto.type === type) {
+            node.children.push(deepcopyobj(proto));
+            EDT_updatePositionsAndDraw();
+            break;
         }
     }
 }
