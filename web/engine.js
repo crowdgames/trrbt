@@ -117,8 +117,8 @@ function ENG_undoPop() {
         ENG_loopCheck = 0;
 
         ENG_board = null;
-        ENG_rows = 0;
-        ENG_cols = 0;
+        ENG_rows = null;
+        ENG_cols = null;
 
         ENG_choicesByRct = null;
         ENG_choicesByBtn = null;
@@ -129,6 +129,8 @@ function ENG_undoPop() {
     ENG_mouseChoice = null;
     ENG_mouseAlt = false;
     ENG_stepDelay = null;
+
+    ENG_resizeCanvas();
 }
 
 function ENG_undoEmpty() {
@@ -219,8 +221,8 @@ function ENG_onLoad() {
     ENG_gameResult = null;
 
     ENG_board = null;
-    ENG_rows = 0;
-    ENG_cols = 0;
+    ENG_rows = null;
+    ENG_cols = null;
 
     ENG_choicesByRct = null;
     ENG_choicesByBtn = null;
@@ -267,6 +269,7 @@ function ENG_onLoad() {
 
     ENG_canvas.style.backgroundColor = '#ffffff';
 
+    ENG_resizeCanvas();
     window.requestAnimationFrame(ENG_onDraw);
 }
 
@@ -298,6 +301,8 @@ function ENG_onDraw() {
     }
 
     ENG_ctx.clearRect(0, 0, ENG_canvas.width, ENG_canvas.height);
+    ENG_ctx.fillStyle = '#eeeeee';
+    ENG_ctx.fillRect(0, 0, ENG_canvas.width, ENG_canvas.height);
     ENG_ctx.textAlign = 'center';
     ENG_ctx.textBaseline = 'middle';
 
@@ -466,8 +471,8 @@ function ENG_onDraw() {
 }
 
 function ENG_resizeCanvas() {
-    const desiredWidth = ENG_tocvsx(ENG_cols) + ENG_padding;
-    const desiredHeight = ENG_tocvsy(ENG_rows) + ENG_padding;
+    const desiredWidth = ENG_tocvsx(Math.max(1, ENG_cols)) + ENG_padding;
+    const desiredHeight = ENG_tocvsy(Math.max(1, ENG_rows)) + ENG_padding;
     if (ENG_canvas.width != desiredWidth || ENG_canvas.height != desiredHeight) {
         const ratio = window.devicePixelRatio;
         ENG_canvas.width = desiredWidth * ratio;
