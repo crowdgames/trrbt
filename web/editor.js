@@ -226,6 +226,7 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpo
         const pattern = (node.type === 'rewrite') ? node.lhs : node.pattern;
         const layers = Object.getOwnPropertyNames(pattern);
 
+        console.log(pattern);
         for (const layer of layers) {
             nw = Math.max(nw, 10 + EDT_FONT_CHAR_SIZE * (multChars * (2 * pattern[layer][0].length - 1) + addChars))
             if (layers.length === 1 && layers[0] === 'main') {
@@ -418,6 +419,9 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
             const layers = Object.getOwnPropertyNames(pattern);
 
             for (const layer of layers) {
+                if (EDT_FONT_LINE_SIZE * (line + 0.3) > nh) {
+                    break;
+                }
                 if (layers.length === 1 && layers[0] === 'main') {
                     // pass
                 } else {
@@ -430,6 +434,9 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
                 ctx.font = '10px Courier New';
 
                 for (let ii = 0; ii < pattern[layer].length; ++ ii) {
+                    if (EDT_FONT_LINE_SIZE * (line + 0.3) > nh) {
+                        break;
+                    }
                     if (node.type === 'rewrite') {
                         const connect = (ii === 0) ? ' → ' : '   ';
                         const lhs = node.lhs[layer][ii].join(' ');
@@ -511,7 +518,7 @@ function EDT_collapseNodes(node, recurse, collapse) {
     }
 }
 
-function EDT_textProperty(id, name, value) {
+function EDT_htmlTextProperty(id, name, value) {
     var html = '';
     html += '<li/>';
     html += '<label for="' + id + '">' + name + '</label><br/>';
@@ -519,28 +526,59 @@ function EDT_textProperty(id, name, value) {
     return html;
 }
 
-function EDT_patternProperty(id, name, value) {
+function EDT_htmlPatternProperty(id, name, value) {
     var html = '';
     html += '<li/>';
     html += '<label for="' + id + '">' + name + ': </label><br/>';
+
+    var rows = 0;
+    var cols = 0;
+    var text = '';
+
     const layers = Object.getOwnPropertyNames(value);
     for (const layer of layers) {
-        if (layers.length > 1) {
-            html += '<input type="button" value="-"/>'
+        if (layers.length === 1 && layers[0] === 'main') {
+            // pass
+        } else {
+            text += ' ' + layer + '\n';
+            rows += 1;
+            cols = Math.max(cols, layer.length + 1);
         }
-        html += '<input type="text" id="' + id + '" name="' + id + '" value="' + layer + '"/><br/>';
-        var rows = value[layer].length + 1;
-        var cols = 2;
-        var text = '';
+
         for (const row of value[layer]) {
             const rowText = row.join(' ');
             text += rowText + '\n';
-            cols = Math.max(cols, rowText.length + 2);
+            rows += 1;
+            cols = Math.max(cols, rowText.length);
         }
-        html += '<textarea id="' + id + '" name="' + id + '" rows="' + rows + '" cols= "' + cols + '">' + text + '</textarea><br/>';
     }
-    html += '<input type="button" value="+"/><br/>';
+    rows = Math.max(4, rows + 2);
+    cols = Math.max(8, cols + 2);
+    html += '<textarea id="prop_' + id + '" name="' + id + '" rows="' + rows + '" cols= "' + cols + '">' + text + '</textarea><br/>'
     return html;
+}
+
+function EDT_parsePatternProperty(id) {
+    var pattern = {};
+    var layer = 'main';
+    const text = document.getElementById(id).value;
+
+    for (const line of text.split('\n')) {
+        const tline = line.trimEnd();
+        if (tline.length === 0) {
+            continue;
+        }
+        if (tline[0] === ' ') {
+            layer = tline.trim();
+        } else {
+            var row = tline.split(' ');
+            if (!pattern.hasOwnProperty(layer)) {
+                pattern[layer] = [];
+            }
+            pattern[layer].push(row);
+        }
+    }
+    return pattern;
 }
 
 function EDT_updatePropertyEditor(node) {
@@ -583,27 +621,26 @@ function EDT_updatePropertyEditor(node) {
             }
 
             var anyProperties = false;
-            //html += '<form>'
             html += '<div id="propertyform">'
             html += '<ul>'
             if (node.hasOwnProperty('pid')) {
-                html += EDT_textProperty('pid', 'player id', node.pid);
+                html += EDT_htmlTextProperty('pid', 'player id', node.pid);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('times')) {
-                html += EDT_textProperty('times', 'times', node.times);
+                html += EDT_htmlTextProperty('times', 'times', node.times);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('pattern')) {
-                html += EDT_patternProperty('pattern', 'pattern', node.pattern);
+                html += EDT_htmlPatternProperty('pattern', 'pattern', node.pattern);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('lhs')) {
-                html += EDT_patternProperty('lhs', 'LHS', node.lhs);
+                html += EDT_htmlPatternProperty('lhs', 'LHS', node.lhs);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('rhs')) {
-                html += EDT_patternProperty('rhs', 'RHS', node.rhs);
+                html += EDT_htmlPatternProperty('rhs', 'RHS', node.rhs);
                 anyProperties = true;
             }
             html += '</ul>'
@@ -611,7 +648,6 @@ function EDT_updatePropertyEditor(node) {
                 html += '<input type="button" value="Save" onClick="EDT_onNodeSaveProperties()"><br/>'
                 html += '<br/>'
             }
-            //html += '</form>'
             html += '</div>'
             EDT_propertyEditor.innerHTML = html;
         } else {
@@ -621,11 +657,19 @@ function EDT_updatePropertyEditor(node) {
 }
 
 function EDT_onNodeSaveProperties() {
-    const pidElem = document.getElementById('prop_pid');
-    if (pidElem !== null) {
-        EDT_propertyNodes.node.pid = pidElem.value;
-        EDT_updatePositionsAndDraw();
+    var node = EDT_propertyNodes.node;
+
+    if (node.hasOwnProperty('pid')) {
+        node.pid = document.getElementById('prop_pid').value;
     }
+    if (node.hasOwnProperty('times')) {
+        node.pid = document.getElementById('prop_times').value;
+    }
+    if (node.hasOwnProperty('pattern')) {
+        node.pattern = EDT_parsePatternProperty('prop_pattern');
+    }
+
+    EDT_updatePositionsAndDraw();
 }
 
 function EDT_findNodeParent(from, node) {
