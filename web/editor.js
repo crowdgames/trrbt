@@ -36,9 +36,9 @@ const EDT_EMPTY_PATTERN = {main:[[]]}
 const EDT_NODE_PROTOTYPES = [
     { type:'player', children:[], pid:'' },
 
-    { type:'win', pid:'' },
-    { type:'lose', pid:'' },
-    { type:'draw' },
+    { type:'win', children:[], pid:'' },
+    { type:'lose', children:[], pid:'' },
+    { type:'draw', children:[] },
 
     { type:'order', children:[] },
     { type:'all', children:[] },
@@ -277,7 +277,7 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
     const nh = nrect.h;
 
     if (node.hasOwnProperty('children')) {
-        if (EDT_nodeCollapsed(node, stackNodes)) {
+        if (EDT_nodeCollapsed(node, stackNodes) && node.children.length > 0) {
             const childScale = 5 + 2 * Math.min(node.children.length - 1, 5);
 
             var childOnStack = false;
@@ -558,12 +558,13 @@ function EDT_updatePropertyEditor(node) {
             }
             html += '<br/>'
             html += '<br/>'
-            if (node === GAME_SETUP.tree) {
-                // pass
-            } else if (node.hasOwnProperty('children')) {
-                html += '<input type="button" value="Delete and Reparent" onClick="EDT_onNodeDelete(true)"/>'
-                html += '<input type="button" value="Delete Subtree" onClick="EDT_onNodeDelete(false)"/>'
-            } else {
+            if (node.hasOwnProperty('children')) {
+                if (node !== GAME_SETUP.tree) {
+                    html += '<input type="button" value="Delete and Reparent" onClick="EDT_onNodeDelete(true)"/>'
+                    html += '<input type="button" value="Delete Subtree" onClick="EDT_onNodeDelete(false)"/>'
+                }
+                html += '<input type="button" value="Delete Children" onClick="EDT_onNodeDeleteChildren()"/>'
+            } else if (node !== GAME_SETUP.tree) {
                 html += '<input type="button" value="Delete" onClick="EDT_onNodeDelete(false)"/>'
             }
             html += '<br/>'
@@ -657,6 +658,13 @@ function EDT_onNodeDelete(reparentChildren) {
             EDT_updatePositionsAndDraw();
         }
     }
+}
+
+function EDT_onNodeDeleteChildren() {
+    var node = EDT_propertyNodes.node;
+
+    node.children = [];
+    EDT_updatePositionsAndDraw();
 }
 
 function EDT_onNodeAddChild(type) {
@@ -809,10 +817,11 @@ function EDT_onKeyDown(evt) {
 
         if (key === 'f' || key === 'F') {
             EDT_followStack = !EDT_followStack;
+            EDT_updatePositionsAndDraw();
         }
     }
 
-    //evt.preventDefault();
+    evt.preventDefault();
     window.requestAnimationFrame(EDT_onDraw);
 }
 
