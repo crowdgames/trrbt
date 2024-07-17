@@ -210,6 +210,34 @@ function EDT_updateNodePositions(nodePositions, nodePositionsDesired, nodeTexts,
     return anyMoved;
 }
 
+function EDT_getTileSize(patterns) {
+    var size = 1;
+    for (const pattern of patterns) {
+        for (const layer of Object.getOwnPropertyNames(pattern)) {
+            for (const row of pattern[layer]) {
+                for (const tile of row) {
+                    size = Math.max(size, tile.length);
+                }
+            }
+        }
+    }
+    return size;
+}
+
+function EDT_joinRow(row, tileSize, alwaysPad) {
+    var rowStr = '';
+    for (let ii = 0; ii < row.length; ++ ii) {
+        if (ii + 1 < row.length) {
+            rowStr += row[ii].padEnd(tileSize) + ' ';
+        } else if (alwaysPad) {
+            rowStr += row[ii].padEnd(tileSize);
+        } else {
+            rowStr += row[ii];
+        }
+    }
+    return rowStr;
+}
+
 function EDT_updateDesiredPositionsTree(nodePositions, nodeTexts, tree) {
     nodePositions.clear();
     nodeTexts.clear();
@@ -242,6 +270,7 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes
 
     if (node.hasOwnProperty('pattern')) {
         const layers = Object.getOwnPropertyNames(node.pattern);
+        const tileSize = EDT_getTileSize([node.pattern]);
 
         for (const layer of layers) {
             if (layers.length === 1 && layers[0] === 'main') {
@@ -256,26 +285,35 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes
             texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
 
             for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
-                texts.push({type:EDT_TEXT_LINE,  data:node.pattern[layer][ii].join(' ')});
+                texts.push({type:EDT_TEXT_LINE, data:EDT_joinRow(node.pattern[layer][ii], tileSize, false)});
             }
         }
     }
 
     if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
-        var layers = []
-        for (const layer of Object.getOwnPropertyNames(node.lhs)) {
-            layers.push(layer);
-        }
-        for (const layer of Object.getOwnPropertyNames(node.rhs)) {
-            if (layers.indexOf(layer) === -1) {
+        var layers = [];
+        var patterns = [];
+        if (node.hasOwnProperty('lhs')) {
+            for (const layer of Object.getOwnPropertyNames(node.lhs)) {
                 layers.push(layer);
             }
+            patterns.push(node.lhs);
+        }
+        if (node.hasOwnProperty('rhs')) {
+            for (const layer of Object.getOwnPropertyNames(node.rhs)) {
+                if (layers.indexOf(layer) === -1) {
+                    layers.push(layer);
+                }
+            }
+            patterns.push(node.rhs);
         }
         const mainIndex = layers.indexOf('main');
         if (mainIndex > 0) {
             layers.splice(mainIndex, 1);
             layers.shift('main');
         }
+
+        const tileSize = EDT_getTileSize(patterns);
 
         for (const layer of layers) {
             if (layers.length === 1 && layers[0] === 'main') {
@@ -292,8 +330,8 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes
             const length = node.lhs.hasOwnProperty(layer) ? node.lhs[layer].length : node.rhs[layer].length;
             for (let ii = 0; ii < length; ++ ii) {
                 const connect = (ii === 0) ? ' → ' : '   ';
-                var lhs = node.lhs.hasOwnProperty(layer) ? node.lhs[layer][ii].join(' ') : null;
-                var rhs = node.rhs.hasOwnProperty(layer) ? node.rhs[layer][ii].join(' ') : null;
+                var lhs = node.lhs.hasOwnProperty(layer) ? EDT_joinRow(node.lhs[layer][ii], tileSize, true) : null;
+                var rhs = node.rhs.hasOwnProperty(layer) ? EDT_joinRow(node.rhs[layer][ii], tileSize, true) : null;
                 lhs = (lhs !== null) ? lhs : ' '.repeat(rhs.length);
                 rhs = (rhs !== null) ? rhs : ' '.repeat(lhs.length);
                 texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
@@ -559,7 +597,7 @@ function EDT_htmlTextProperty(id, name, value) {
     return html;
 }
 
-function EDT_htmlPatternProperty(id, name, value) {
+function EDT_htmlPatternProperty(id, name, value, tileSize) {
     var html = '';
     html += '<li/>';
     html += '<label for="' + id + '">' + name + ': </label><br/>';
@@ -579,7 +617,7 @@ function EDT_htmlPatternProperty(id, name, value) {
         }
 
         for (const row of value[layer]) {
-            const rowText = row.join(' ');
+            const rowText = EDT_joinRow(row, tileSize, false);
             text += rowText + '\n';
             rows += 1;
             cols = Math.max(cols, rowText.length);
@@ -604,7 +642,7 @@ function EDT_parsePatternProperty(id) {
         if (tline[0] === ' ') {
             layer = tline.trim();
         } else {
-            var row = tline.split(' ');
+            var row = tline.split(/\s+/);
             if (!pattern.hasOwnProperty(layer)) {
                 pattern[layer] = [];
             }
@@ -690,16 +728,22 @@ function EDT_updatePropertyEditor(node) {
                 anyProperties = true;
             }
             if (node.hasOwnProperty('pattern')) {
-                html += EDT_htmlPatternProperty('pattern', 'pattern', node.pattern);
+                const tileSize = EDT_getTileSize([node.pattern]);
+                html += EDT_htmlPatternProperty('pattern', 'pattern', node.pattern, tileSize);
                 anyProperties = true;
             }
-            if (node.hasOwnProperty('lhs')) {
-                html += EDT_htmlPatternProperty('lhs', 'LHS', node.lhs);
-                anyProperties = true;
-            }
-            if (node.hasOwnProperty('rhs')) {
-                html += EDT_htmlPatternProperty('rhs', 'RHS', node.rhs);
-                anyProperties = true;
+            if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
+                const hasLHS = node.hasOwnProperty('lhs');
+                const hasRHS = node.hasOwnProperty('rhs');
+                const tileSize = (hasLHS && hasRHS) ? EDT_getTileSize([node.lhs, node.rhs]) : (hasLHS ? EDT_getTileSize([node.lhs]) : EDT_getTileSize([node.rhs]));
+                if (hasLHS) {
+                    html += EDT_htmlPatternProperty('lhs', 'LHS', node.lhs, tileSize);
+                    anyProperties = true;
+                }
+                if (hasRHS) {
+                    html += EDT_htmlPatternProperty('rhs', 'RHS', node.rhs, tileSize);
+                    anyProperties = true;
+                }
             }
             html += '</ul>'
             if (anyProperties) {
