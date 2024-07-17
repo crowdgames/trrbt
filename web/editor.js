@@ -487,7 +487,7 @@ function EDT_drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
             if (texty + EDT_FONT_LINE_SIZE / 2 - 1 > nh) {
                 break;
             }
-            ctx.fillText(text.data, nx + nw / 2, ny + texty);
+            ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
             ++ line;
         }
     }
