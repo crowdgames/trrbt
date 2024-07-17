@@ -7,10 +7,11 @@ let EDT_ctx = null;
 let EDT_propertyEditor = null;
 let EDT_keysDown = new Set();
 
-let EDT_nodePositions = null;
-let EDT_nodePositionsDesired = null;
-let EDT_nodePositionsWantUpdate = true;
-let EDT_drawLastTime = null
+let EDT_nodeDrawTexts = null;
+let EDT_nodeDrawPositions = null;
+let EDT_nodeDrawPositionsDesired = null;
+let EDT_nodeDrawPositionsWantUpdate = true;
+let EDT_nodeDrawLastTime = null
 
 let EDT_mousePan = null;
 let EDT_mouseZoom = null;
@@ -25,11 +26,17 @@ let EDT_clipboard = null;
 let EDT_followStack = false;
 let EDT_collapsedNodes = null;
 
+const EDT_NODE_PADDING = 8;
 const EDT_NODE_SPACING = 25;
 
 const EDT_FONT_SIZE = 10;
 const EDT_FONT_CHAR_SIZE = 6;
 const EDT_FONT_LINE_SIZE = 12;
+
+
+const EDT_TEXT_FONT  = 0;
+const EDT_TEXT_COLOR = 1;
+const EDT_TEXT_LINE  = 2;
 
 
 
@@ -63,10 +70,11 @@ function EDT_onload() {
     EDT_propertyEditor = document.getElementById('editordiv');
     EDT_keysDown = new Set();
 
-    EDT_nodePositions = new Map();
-    EDT_nodePositionsDesired = new Map();
-    EDT_nodePositionsWantUpdate = true;
-    EDT_drawLastTime = null;
+    EDT_nodeDrawTexts = new Map();
+    EDT_nodeDrawPositions = new Map();
+    EDT_nodeDrawPositionsDesired = new Map();
+    EDT_nodeDrawPositionsWantUpdate = true;
+    EDT_nodeDrawLastTime = null;
 
     EDT_mousePan = null;
     EDT_mouseZoom = null;
@@ -110,34 +118,34 @@ function EDT_onDraw() {
 
     const drawTime = Date.now();
 
-    if (EDT_nodePositionsWantUpdate) {
-        EDT_nodePositionsDesired = new Map();
-        EDT_updateDesiredPositionsTree(EDT_nodePositionsDesired, GAME_SETUP.tree);
+    if (EDT_nodeDrawPositionsWantUpdate) {
+        EDT_nodeDrawPositionsDesired = new Map();
+        EDT_updateDesiredPositionsTree(EDT_nodeDrawPositionsDesired, EDT_nodeDrawTexts, GAME_SETUP.tree);
 
         var anyNodeMoved = false;
-        if (EDT_drawLastTime !== null) {
-            anyNodeMoved = EDT_updateNodePositions(EDT_nodePositions, EDT_nodePositionsDesired, drawTime - EDT_drawLastTime);
+        if (EDT_nodeDrawLastTime !== null) {
+            anyNodeMoved = EDT_updateNodePositions(EDT_nodeDrawPositions, EDT_nodeDrawPositionsDesired, EDT_nodeDrawTexts, drawTime - EDT_nodeDrawLastTime);
         } else {
-            EDT_nodePositions = EDT_nodePositionsDesired
+            EDT_nodeDrawPositions = EDT_nodeDrawPositionsDesired
         }
 
         if (anyNodeMoved) {
             window.requestAnimationFrame(EDT_onDraw);
         } else {
-            EDT_nodePositionsWantUpdate = false;
+            EDT_nodeDrawPositionsWantUpdate = false;
         }
     }
 
-    EDT_drawTree(EDT_ctx, EDT_nodePositions, GAME_SETUP.tree);
+    EDT_drawTree(EDT_ctx, EDT_nodeDrawPositions, EDT_nodeDrawTexts, GAME_SETUP.tree);
 
-    EDT_drawLastTime = drawTime;
+    EDT_nodeDrawLastTime = drawTime;
 }
 
 function EDT_updatePositionsAndDraw(skipAnimate) {
     if (skipAnimate) {
-        EDT_drawLastTime = null; // prevents node sliding animation
+        EDT_nodeDrawLastTime = null; // prevents node sliding animation
     }
-    EDT_nodePositionsWantUpdate = true;
+    EDT_nodeDrawPositionsWantUpdate = true;
     window.requestAnimationFrame(EDT_onDraw);
 }
 
@@ -168,7 +176,7 @@ function EDT_rectValueUpdate(curr, des, dt) {
     return 0.15 * (des - curr);
 }
 
-function EDT_updateNodePositions(nodePositions, nodePositionsDesired, deltaTime) {
+function EDT_updateNodePositions(nodePositions, nodePositionsDesired, nodeTexts, deltaTime) {
     var anyMoved = false;
 
     var toDelete = [];
@@ -179,6 +187,7 @@ function EDT_updateNodePositions(nodePositions, nodePositionsDesired, deltaTime)
     }
     for (let node of toDelete) {
         nodePositions.delete(node);
+        nodeTexts.delete(node);
     }
 
     for (let [node, desRect] of nodePositionsDesired.entries()) {
@@ -201,48 +210,112 @@ function EDT_updateNodePositions(nodePositions, nodePositionsDesired, deltaTime)
     return anyMoved;
 }
 
-function EDT_updateDesiredPositionsTree(nodePositions, tree) {
-    nodePositions.clear()
+function EDT_updateDesiredPositionsTree(nodePositions, nodeTexts, tree) {
+    nodePositions.clear();
+    nodeTexts.clear();
 
-    EDT_updateDesiredPositionsTreeNode(nodePositions, EDT_getStackNodes(), tree, EDT_NODE_SPACING, null, EDT_NODE_SPACING);
+    EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, EDT_getStackNodes(), tree, EDT_NODE_SPACING, null, EDT_NODE_SPACING);
 }
 
-function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpos, xalign, ypos) {
-    var nx = xpos;
-    var ny = ypos;
+function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, xalign, ypos) {
+    var texts = [];
+    texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
+    texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
+    texts.push({type:EDT_TEXT_LINE,  data:node.type});
+    texts.push({type:EDT_TEXT_FONT,  data:'10px sans-serif'});
 
-    var nw = 80;
-    var nh = 40;
-    if (node.type === 'player') {
-        nw = 120;
-        nh = 40;
-    } else if (['rewrite', 'match', 'set-board'].indexOf(node.type) >= 0) {
-        nw = 50;
-        nh = 10;
+    if (node.hasOwnProperty('pid')) {
+        texts.push({type:EDT_TEXT_LINE,  data:'pid: ' + node.pid});
+    }
 
-        var line = 1;
+    if (node.hasOwnProperty('times')) {
+        texts.push({type:EDT_TEXT_LINE,  data:'times: ' + node.times});
+    }
 
-        const multChars = (node.type === 'rewrite') ? 2 : 1;
-        const addChars = (node.type === 'rewrite') ? 3 : 0;
+    if (node.hasOwnProperty('what')) {
+        texts.push({type:EDT_TEXT_LINE,  data:'what: ' + node.what});
+    }
 
-        const pattern = (node.type === 'rewrite') ? node.lhs : node.pattern;
-        const layers = Object.getOwnPropertyNames(pattern);
+    if (node.hasOwnProperty('with')) {
+        texts.push({type:EDT_TEXT_LINE,  data:'with: ' + node.with});
+    }
+
+    if (node.hasOwnProperty('pattern')) {
+        const layers = Object.getOwnPropertyNames(node.pattern);
 
         for (const layer of layers) {
-            nw = Math.max(nw, 10 + EDT_FONT_CHAR_SIZE * (multChars * (2 * pattern[layer][0].length - 1) + addChars))
             if (layers.length === 1 && layers[0] === 'main') {
                 // pass
             } else {
-                ++ line;
+                texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
+                texts.push({type:EDT_TEXT_COLOR, data:'#888888'});
+                texts.push({type:EDT_TEXT_LINE,  data:'- ' + layer + ' -'});
             }
-            line += pattern[layer].length;
+
+            texts.push({type:EDT_TEXT_FONT,  data:'10px Courier New'});
+            texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
+
+            for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
+                texts.push({type:EDT_TEXT_LINE,  data:node.pattern[layer][ii].join(' ')});
+            }
+        }
+    }
+
+    if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
+        var layers = []
+        for (const layer of Object.getOwnPropertyNames(node.lhs)) {
+            layers.push(layer);
+        }
+        for (const layer of Object.getOwnPropertyNames(node.rhs)) {
+            if (layers.indexOf(layer) === -1) {
+                layers.push(layer);
+            }
+        }
+        const mainIndex = layers.indexOf('main');
+        if (mainIndex > 0) {
+            layers.splice(mainIndex, 1);
+            layers.shift('main');
         }
 
-        nh += EDT_FONT_LINE_SIZE * line;
-    } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
-        nw = 40;
-        nh = 40;
+        for (const layer of layers) {
+            if (layers.length === 1 && layers[0] === 'main') {
+                // pass
+            } else {
+                texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
+                texts.push({type:EDT_TEXT_COLOR, data:'#888888'});
+                texts.push({type:EDT_TEXT_LINE,  data:'- ' + layer + ' -'});
+            }
+
+            texts.push({type:EDT_TEXT_FONT,  data:'10px Courier New'});
+            texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
+
+            const length = node.lhs.hasOwnProperty(layer) ? node.lhs[layer].length : node.rhs[layer].length;
+            for (let ii = 0; ii < length; ++ ii) {
+                const connect = (ii === 0) ? ' → ' : '   ';
+                var lhs = node.lhs.hasOwnProperty(layer) ? node.lhs[layer][ii].join(' ') : null;
+                var rhs = node.rhs.hasOwnProperty(layer) ? node.rhs[layer][ii].join(' ') : null;
+                lhs = (lhs !== null) ? lhs : ' '.repeat(rhs.length);
+                rhs = (rhs !== null) ? rhs : ' '.repeat(lhs.length);
+                texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
+            }
+        }
     }
+
+    var nx = xpos;
+    var ny = ypos;
+
+    var nw = 2 * EDT_NODE_PADDING;
+    var nh = 2 * EDT_NODE_PADDING;
+
+    for (const text of texts) {
+        if (text.type === EDT_TEXT_LINE) {
+            nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * text.data.length);
+            nh += EDT_FONT_LINE_SIZE;
+        }
+    }
+
+    //nw = Math.max(nw, 40);
+    //nh = Math.max(nh, 40);
 
     if (xalign !== null) {
         nx = Math.max(nx, nx + 0.5 * xalign - 0.5 * nw);
@@ -255,7 +328,7 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpo
             let child_next_xpos = nx;
             let child_xalign = nw;
             for (let child of node.children) {
-                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, child, child_next_xpos, child_xalign, ypos + nh + EDT_NODE_SPACING);
+                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, child, child_next_xpos, child_xalign, ypos + nh + EDT_NODE_SPACING);
                 child_xalign = null;
             }
             next_xpos = Math.max(next_xpos, child_next_xpos);
@@ -263,15 +336,16 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, stackNodes, node, xpo
     }
 
     nodePositions.set(node, {x:nx, y:ny, w:nw, h:nh})
+    nodeTexts.set(node, texts);
 
     return next_xpos;
 }
 
-function EDT_drawTree(ctx, nodePositions, tree) {
-    EDT_drawTreeNode(ctx, nodePositions, EDT_getStackNodes(), tree);
+function EDT_drawTree(ctx, nodePositions, nodeTexts, tree) {
+    EDT_drawTreeNode(ctx, nodePositions, nodeTexts, EDT_getStackNodes(), tree);
 }
 
-function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
+function EDT_drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
     const nrect = nodePositions.get(node);
     const nx = nrect.x;
     const ny = nrect.y;
@@ -350,15 +424,13 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
             }
 
             for (let child of node.children) {
-                EDT_drawTreeNode(ctx, nodePositions, stackNodes, child);
+                EDT_drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, child);
             }
         }
     }
 
     const lt = (node === EDT_mouseNode) ? 'dd' : 'cc';
     const dk = (node === EDT_mouseNode) ? 'bb' : 'aa';
-
-    ctx.font = '10px sans-serif';
 
     if (node.type === 'player') {
         ctx.fillStyle = '#' + dk + dk + lt;
@@ -373,9 +445,6 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
         ctx.lineTo(nx + 0.40 * nw, ny + 0.00 * nh);
         ctx.fill();
-
-        ctx.fillStyle = '#222222'
-        ctx.fillText(node.type + ': ' + node.pid, nx + nw / 2, ny + nh / 2);
     } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
         ctx.fillStyle = '#' + lt + dk + dk;
         ctx.beginPath();
@@ -389,13 +458,6 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
         ctx.lineTo(nx + 0.25 * nw, ny + 0.00 * nh);
         ctx.fill();
-
-        ctx.fillStyle = '#222222'
-        if (['win', 'lose'].indexOf(node.type) >= 0) {
-            ctx.fillText(node.type + ': ' + node.pid, nx + nw / 2, ny + nh / 2);
-        } else {
-            ctx.fillText(node.type, nx + nw / 2, ny + nh / 2);
-        }
     } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
         if (['rewrite', 'set-board', 'set-board', 'layer-template', 'append-rows', 'append-cols'].indexOf(node.type) >= 0) {
             ctx.fillStyle = '#' + dk + lt + dk;
@@ -407,57 +469,27 @@ function EDT_drawTreeNode(ctx, nodePositions, stackNodes, node) {
         ctx.beginPath();
         ctx.roundRect(nx, ny, nw, nh, 6)
         ctx.fill();
-
-        const textx = nx + nw / 2;
-        var line = 1;
-
-        ctx.fillStyle = '#222222'
-        ctx.fillText(node.type, textx, ny + EDT_FONT_LINE_SIZE * line);
-        ++ line;
-
-        if (['rewrite', 'match', 'set-board', 'set-board', 'append-rows', 'append-cols'].indexOf(node.type) >= 0) {
-            const pattern = (node.type === 'rewrite') ? node.lhs : node.pattern;
-            const layers = Object.getOwnPropertyNames(pattern);
-
-            for (const layer of layers) {
-                if (EDT_FONT_LINE_SIZE * (line + 0.3) > nh) {
-                    break;
-                }
-                if (layers.length === 1 && layers[0] === 'main') {
-                    // pass
-                } else {
-                    ctx.fillStyle = '#888888'
-                    ctx.font = 'italic 10px sans-serif';
-                    ctx.fillText('- ' + layer + ' -', textx, ny + EDT_FONT_LINE_SIZE * line);
-                    ++ line;
-                }
-                ctx.fillStyle = '#222222'
-                ctx.font = '10px Courier New';
-
-                for (let ii = 0; ii < pattern[layer].length; ++ ii) {
-                    if (EDT_FONT_LINE_SIZE * (line + 0.3) > nh) {
-                        break;
-                    }
-                    if (node.type === 'rewrite') {
-                        const connect = (ii === 0) ? ' → ' : '   ';
-                        const lhs = node.lhs[layer][ii].join(' ');
-                        const rhs = node.rhs.hasOwnProperty(layer) ? node.rhs[layer][ii].join(' ') : ' '.repeat(lhs.length);
-                        ctx.fillText(lhs + connect + rhs, textx, ny + EDT_FONT_LINE_SIZE * line);
-                    } else {
-                        ctx.fillText(node.pattern[layer][ii].join(' '), textx, ny + EDT_FONT_LINE_SIZE * line);
-                    }
-                    ++ line;
-                }
-            }
-        }
     } else {
         ctx.fillStyle = '#' + lt + lt + lt;
         ctx.beginPath();
         ctx.ellipse(nx + 0.5 * nw, ny + 0.5 * nh, 0.5 * nw, 0.5 * nh, 0, 0, TAU);
         ctx.fill();
+    }
 
-        ctx.fillStyle = '#222222'
-        ctx.fillText(node.type, nx + nw / 2, ny + nh / 2);
+    var line = 0;
+    for (const text of nodeTexts.get(node)) {
+        if (text.type === EDT_TEXT_FONT) {
+            ctx.font = text.data;
+        } else if (text.type === EDT_TEXT_COLOR) {
+            ctx.fillStyle = text.data;
+        } else {
+            const texty = EDT_FONT_LINE_SIZE * line + EDT_FONT_LINE_SIZE / 2 + EDT_NODE_PADDING;
+            if (texty + EDT_FONT_LINE_SIZE / 2 - 1 > nh) {
+                break;
+            }
+            ctx.fillText(text.data, nx + nw / 2, ny + texty);
+            ++ line;
+        }
     }
 
     if (stackNodes.has(node)) {
@@ -599,7 +631,9 @@ function EDT_updatePropertyEditor(node) {
             html += '<br/>'
 
             html += '<input type="button" value="Copy Subtree" onClick="EDT_onNodeCopy(false)"/>'
-            html += '<input type="button" value="Cut Subtree" onClick="EDT_onNodeCopy(true)"/>'
+            if (node !== GAME_SETUP.tree) {
+                html += '<input type="button" value="Cut Subtree" onClick="EDT_onNodeCopy(true)"/>'
+            }
             if (EDT_clipboard !== null) {
                 if (node.hasOwnProperty('children')) {
                     if (node.type === 'player' && EDT_clipboard.type !== 'rewrite') {
@@ -647,6 +681,14 @@ function EDT_updatePropertyEditor(node) {
                 html += EDT_htmlTextProperty('times', 'times', node.times);
                 anyProperties = true;
             }
+            if (node.hasOwnProperty('what')) {
+                html += EDT_htmlTextProperty('what', 'what', node.what);
+                anyProperties = true;
+            }
+            if (node.hasOwnProperty('with')) {
+                html += EDT_htmlTextProperty('with', 'with', node.with);
+                anyProperties = true;
+            }
             if (node.hasOwnProperty('pattern')) {
                 html += EDT_htmlPatternProperty('pattern', 'pattern', node.pattern);
                 anyProperties = true;
@@ -688,6 +730,12 @@ function EDT_onNodeSaveProperties() {
     }
     if (node.hasOwnProperty('times')) {
         node.pid = document.getElementById('prop_times').value;
+    }
+    if (node.hasOwnProperty('what')) {
+        node.pid = document.getElementById('prop_what').value;
+    }
+    if (node.hasOwnProperty('with')) {
+        node.pid = document.getElementById('prop_with').value;
     }
     if (node.hasOwnProperty('pattern')) {
         node.pattern = EDT_parsePatternProperty('prop_pattern');
@@ -866,7 +914,7 @@ function EDT_onMouseMove(evt) {
             mousePos = EDT_xformInv.transformPoint(mousePos_u);
         }
     } else {
-        for (let [node, rect] of EDT_nodePositions.entries()) {
+        for (let [node, rect] of EDT_nodeDrawPositions.entries()) {
             if (rect.x < mousePos.x && rect.y < mousePos.y && rect.x + rect.w > mousePos.x && rect.y + rect.h > mousePos.y) {
                 EDT_mouseNode = node;
                 break;
