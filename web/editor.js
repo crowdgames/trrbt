@@ -697,6 +697,13 @@ function EDT_updatePropertyEditor(node) {
         if (EDT_propertyNodes) {
             const parent = EDT_propertyNodes.parent;
 
+            const proto = EDT_getNodePrototype(node.type);
+            for (const prop of Object.getOwnPropertyNames(proto)) {
+                if (!node.hasOwnProperty(prop)) {
+                    node[prop] = deepcopyobj(proto[prop]);
+                }
+            }
+
             var html = '';
             html += '<b>' + node.type + '</b><br/>';
 
@@ -897,16 +904,20 @@ function EDT_onNodeDeleteChildren() {
     EDT_updatePositionsAndDraw();
 }
 
+function EDT_getNodePrototype(type) {
+    for (const proto of EDT_NODE_PROTOTYPES) {
+        if (proto.type === type) {
+            return proto;
+        }
+    }
+    return null;
+}
+
 function EDT_onNodeAddChild(type) {
     var node = EDT_propertyNodes.node;
 
-    for (const proto of EDT_NODE_PROTOTYPES) {
-        if (proto.type === type) {
-            node.children.push(deepcopyobj(proto));
-            EDT_updatePositionsAndDraw();
-            break;
-        }
-    }
+    node.children.push(deepcopyobj(EDT_getNodePrototype(type)));
+    EDT_updatePositionsAndDraw();
 }
 
 function EDT_onNodeShift(earlier) {
