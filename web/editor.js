@@ -99,6 +99,8 @@ function EDT_onload() {
 
     EDT_updateCanvasSize(EDT_canvas.width, EDT_canvas.height);
 
+    EDT_updatePropertyEditor(EDT_mouseNode);
+
     window.requestAnimationFrame(EDT_onDraw);
 }
 
@@ -653,64 +655,68 @@ function EDT_parsePatternProperty(id) {
 }
 
 function EDT_updatePropertyEditor(node) {
+    if (EDT_propertyEditor === null) {
+        return;
+    }
+
     if (EDT_propertyNodes === null || node !== EDT_propertyNodes.node) {
         EDT_propertyNodes = (node !== null) ? { node:node, parent:EDT_findNodeParent(GAME_SETUP.tree, node) } : null;
         if (EDT_propertyNodes) {
             const parent = EDT_propertyNodes.parent;
 
-            var html = ''
-            html += '<b>' + node.type + '</b><br/>'
+            var html = '';
+            html += '<b>' + node.type + '</b><br/>';
 
             if (parent !== null) {
-                html += '<input type="button" value="Move Earlier" onClick="EDT_onNodeShift(true)"/>'
-                html += '<input type="button" value="Move Later" onClick="EDT_onNodeShift(false)"/>'
+                html += '<input type="button" value="Move Earlier" onClick="EDT_onNodeShift(true)"/>';
+                html += '<input type="button" value="Move Later" onClick="EDT_onNodeShift(false)"/>';
             }
-            html += '<br/>'
-            html += '<br/>'
+            html += '<br/>';
+            html += '<br/>';
 
-            html += '<input type="button" value="Copy Subtree" onClick="EDT_onNodeCopy(false)"/>'
+            html += '<input type="button" value="Copy Subtree" onClick="EDT_onNodeCopy(false)"/>';
             if (node !== GAME_SETUP.tree) {
-                html += '<input type="button" value="Cut Subtree" onClick="EDT_onNodeCopy(true)"/>'
+                html += '<input type="button" value="Cut Subtree" onClick="EDT_onNodeCopy(true)"/>';
             }
             if (EDT_clipboard !== null) {
                 if (node.hasOwnProperty('children')) {
                     if (node.type === 'player' && EDT_clipboard.type !== 'rewrite') {
                         // pass
                     } else {
-                        html += '<input type="button" value="Paste Subtree" onClick="EDT_onNodePaste()"/>'
+                        html += '<input type="button" value="Paste Subtree" onClick="EDT_onNodePaste()"/>';
                     }
                 }
             }
-            html += '<br/>'
-            html += '<br/>'
+            html += '<br/>';
+            html += '<br/>';
 
             if (node.hasOwnProperty('children')) {
                 if (node !== GAME_SETUP.tree) {
-                    html += '<input type="button" value="Delete and Reparent" onClick="EDT_onNodeDelete(true)"/>'
-                    html += '<input type="button" value="Delete Subtree" onClick="EDT_onNodeDelete(false)"/>'
+                    html += '<input type="button" value="Delete and Reparent" onClick="EDT_onNodeDelete(true)"/>';
+                    html += '<input type="button" value="Delete Subtree" onClick="EDT_onNodeDelete(false)"/>';
                 }
-                html += '<input type="button" value="Delete Children" onClick="EDT_onNodeDeleteChildren()"/>'
+                html += '<input type="button" value="Delete Children" onClick="EDT_onNodeDeleteChildren()"/>';
             } else if (node !== GAME_SETUP.tree) {
-                html += '<input type="button" value="Delete" onClick="EDT_onNodeDelete(false)"/>'
+                html += '<input type="button" value="Delete" onClick="EDT_onNodeDelete(false)"/>';
             }
-            html += '<br/>'
-            html += '<br/>'
+            html += '<br/>';
+            html += '<br/>';
 
             if (node.hasOwnProperty('children')) {
                 for (const proto of EDT_NODE_PROTOTYPES) {
                     if (node.type === 'player' && proto.type !== 'rewrite') {
                         // pass
                     } else {
-                        html += '<input type="button" value="Add ' + proto.type + '" onClick="EDT_onNodeAddChild(\'' + proto.type + '\')"/>'
+                        html += '<input type="button" value="Add ' + proto.type + '" onClick="EDT_onNodeAddChild(\'' + proto.type + '\')"/>';
                     }
                 }
-                html += '<br/>'
-                html += '<br/>'
+                html += '<br/>';
+                html += '<br/>';
             }
 
             var anyProperties = false;
-            html += '<div id="propertyform">'
-            html += '<ul>'
+            html += '<div id="propertyform">';
+            html += '<ul>';
             if (node.hasOwnProperty('pid')) {
                 html += EDT_htmlTextProperty('pid', 'player id', node.pid);
                 anyProperties = true;
@@ -745,20 +751,15 @@ function EDT_updatePropertyEditor(node) {
                     anyProperties = true;
                 }
             }
-            html += '</ul>'
+            html += '</ul>';
+
             if (anyProperties) {
-                html += '<input type="button" value="Save" onClick="EDT_onNodeSaveProperties()">'
-                html += '<br/>'
-                html += '<br/>'
+                html += '<input type="button" value="Save" onClick="EDT_onNodeSaveProperties()">';
+                html += '<br/>';
+                html += '<br/>';
             }
 
-            if (typeof ENG_onLoad !== 'undefined') {
-                html += '<br/>'
-                html += '<br/>'
-                html += '<input type="button" value="Restart" onClick="ENG_onLoad()">'
-            }
-
-            html += '</div>'
+            html += '</div>';
             EDT_propertyEditor.innerHTML = html;
         } else {
             EDT_propertyEditor.innerHTML = '';

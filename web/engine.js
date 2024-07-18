@@ -4,6 +4,8 @@ window.addEventListener('load', ENG_onLoad, false);
 
 let ENG_canvas = null;
 let ENG_ctx = null;
+let ENG_engineEditor = null;
+
 let ENG_padding = 10;
 let ENG_cell_size = 50;
 let ENG_keysDown = new Set();
@@ -237,6 +239,7 @@ function ENG_onLoad() {
 
     ENG_canvas = document.getElementById('enginecanvas');
     ENG_ctx = ENG_canvas.getContext('2d');
+    ENG_engineEditor = document.getElementById('enginediv');
     ENG_keysDown = new Set();
 
     ENG_canvas.addEventListener('mousedown', ENG_onMouseDown);
@@ -269,8 +272,34 @@ function ENG_onLoad() {
 
     ENG_canvas.style.backgroundColor = '#ffffff';
 
+    ENG_updateEngineEditor();
+
     ENG_resizeCanvas();
     window.requestAnimationFrame(ENG_onDraw);
+}
+
+function ENG_updateEngineEditor() {
+    if (ENG_engineEditor === null) {
+        return;
+    }
+
+    var html = '';
+
+    html += '<input type="button" value="Restart" onClick="ENG_onLoad()">';
+    html += '<br/>';
+    html += '<br/>';
+
+    html += '<input type="button" value="Break/Resume" onClick="ENG_onBreakResume()">';
+    html += '<br/>';
+
+    html += '<input type="button" value="Undo Step" onClick="ENG_onUndo(false)">';
+    html += '<input type="button" value="Undo Move" onClick="ENG_onUndo(true)">';
+    html += '<br/>';
+
+    html += '<input type="button" value="Next Step" onClick="ENG_onNext(false)">';
+    html += '<input type="button" value="Next Move" onClick="ENG_onNext(true)">';
+
+    ENG_engineEditor.innerHTML = html;
 }
 
 function ENG_onDraw() {
@@ -483,6 +512,37 @@ function ENG_resizeCanvas() {
     }
 }
 
+function ENG_onBreakResume() {
+    ENG_stepManual = !ENG_stepManual;
+    window.requestAnimationFrame(ENG_onDraw);
+}
+
+function ENG_onUndo(toInput) {
+    ENG_undoPop();
+    if (toInput) {
+        while (!ENG_undoEmpty() && ENG_shouldStepToInput()) {
+            ENG_undoPop();
+        }
+    } else {
+        ENG_stepManual = true;
+    }
+    ENG_updateEditor();
+    window.requestAnimationFrame(ENG_onDraw);
+}
+
+function ENG_onNext(toInput) {
+    if (ENG_shouldStepToInput()) {
+        ENG_stepGameTree();
+        if (toInput) {
+            ENG_stepToInput();
+        }
+        ENG_updateEditor();
+    } else {
+        ENG_stepManual = true;
+    }
+    window.requestAnimationFrame(ENG_onDraw);
+}
+
 function ENG_onKeyDown(evt) {
     var key = evt.key;
 
@@ -490,27 +550,11 @@ function ENG_onKeyDown(evt) {
         ENG_keysDown.add(key);
 
         if (key === 'b' || key === 'B') {
-            ENG_stepManual = !ENG_stepManual;
+            ENG_onBreakResume();
         } else if (key === 'n' || key === 'N') {
-            if (ENG_shouldStepToInput()) {
-                ENG_stepGameTree();
-                if (key === 'n') {
-                    ENG_stepToInput();
-                }
-                ENG_updateEditor();
-            } else {
-                ENG_stepManual = true;
-            }
+            ENG_onNext(key === 'n');
         } else if (key === 'p' || key === 'P') {
-            ENG_undoPop();
-            if (key === 'p') {
-                while (!ENG_undoEmpty() && ENG_shouldStepToInput()) {
-                    ENG_undoPop();
-                }
-            } else {
-                ENG_stepManual = true;
-            }
-            ENG_updateEditor();
+            ENG_onUndo(key === 'p');
         }
 
         if (ENG_choiceWait === true) {
