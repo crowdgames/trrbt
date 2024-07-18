@@ -42,7 +42,7 @@ const EDT_TEXT_LINE  = 2;
 
 const EDT_BUTTONS = [null, 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
-const EDT_EMPTY_PATTERN = {main:[[]]}
+const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
     { type:'player', children:[], pid:'' },
 
@@ -665,7 +665,7 @@ function EDT_htmlPatternProperty(id, name, value, tileSize) {
 }
 
 function EDT_parsePatternProperty(id) {
-    var pattern = EDT_EMPTY_PATTERN;
+    var pattern = deepcopyobj(EDT_EMPTY_PATTERN);
     var layer = 'main';
     const text = document.getElementById(id).value;
 
