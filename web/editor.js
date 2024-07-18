@@ -40,6 +40,8 @@ const EDT_TEXT_LINE  = 2;
 
 
 
+const EDT_BUTTONS = [null, 'up', 'down', 'left', 'right', 'action1', 'action2'];
+
 const EDT_EMPTY_PATTERN = {main:[[]]}
 const EDT_NODE_PROTOTYPES = [
     { type:'player', children:[], pid:'' },
@@ -55,7 +57,7 @@ const EDT_NODE_PROTOTYPES = [
     { type:'loop-until-all', children:[] },
     { type:'loop-times', children:[], times:1 },
 
-    { type:'rewrite', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
+    { type:'rewrite', button:null, lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
     { type:'match', pattern:EDT_EMPTY_PATTERN },
     { type:'set-board', pattern:EDT_EMPTY_PATTERN },
 ]
@@ -268,6 +270,10 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes
 
     if (node.hasOwnProperty('with')) {
         texts.push({type:EDT_TEXT_LINE,  data:'with: ' + node.with});
+    }
+
+    if (node.hasOwnProperty('button') && node.button !== null) {
+        texts.push({type:EDT_TEXT_LINE,  data:'[' + node.button + ']'});
     }
 
     if (node.hasOwnProperty('pattern')) {
@@ -595,8 +601,35 @@ function EDT_htmlTextProperty(id, name, value) {
     var html = '';
     html += '<li/>';
     html += '<label for="' + id + '">' + name + '</label><br/>';
-    html += '<input type="text" id="prop_' + id + '" name="' + id + '" value="' + value + '"/><br/>';
+    html += '<input type="text" id="' + id + '" name="' + id + '" value="' + value + '"/><br/>';
     return html;
+}
+
+function EDT_htmlChoiceProperty(id, name, value, values) {
+    var html = '';
+    html += '<li/>';
+    html += name + '<br/>';
+    for (const choice_value of values) {
+        const choice_text = (choice_value === null) ? 'none' : choice_value;
+        const choice_id = id + '_' + choice_value;
+        html += '<input type="radio" id="' + choice_id + '" name="' + id + '" value="' + choice_value + '"' + (choice_value === value ? ' checked' : '') + '/>';
+        html += '<label for="' + choice_id + '">' + choice_text + '</label>';
+    }
+    return html;
+}
+
+function EDT_parseChoiceProperty(id, values) {
+    for (const choice_value of values) {
+        var elem = document.getElementById(id + '_' + choice_value);
+        if (elem.checked) {
+            if (choice_value === null) {
+                return null;
+            } else {
+                return elem.value;
+            }
+        }
+    }
+    return null;
 }
 
 function EDT_htmlPatternProperty(id, name, value, tileSize) {
@@ -627,12 +660,12 @@ function EDT_htmlPatternProperty(id, name, value, tileSize) {
     }
     rows = Math.max(4, rows + 2);
     cols = Math.max(8, cols + 2);
-    html += '<textarea id="prop_' + id + '" name="' + id + '" rows="' + rows + '" cols= "' + cols + '">' + text + '</textarea><br/>'
+    html += '<textarea id="' + id + '" name="' + id + '" rows="' + rows + '" cols= "' + cols + '">' + text + '</textarea><br/>'
     return html;
 }
 
 function EDT_parsePatternProperty(id) {
-    var pattern = {};
+    var pattern = EDT_EMPTY_PATTERN;
     var layer = 'main';
     const text = document.getElementById(id).value;
 
@@ -718,24 +751,28 @@ function EDT_updatePropertyEditor(node) {
             html += '<div id="propertyform">';
             html += '<ul>';
             if (node.hasOwnProperty('pid')) {
-                html += EDT_htmlTextProperty('pid', 'player id', node.pid);
+                html += EDT_htmlTextProperty('prop_pid', 'player id', node.pid);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('times')) {
-                html += EDT_htmlTextProperty('times', 'times', node.times);
+                html += EDT_htmlTextProperty('prop_times', 'times', node.times);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('what')) {
-                html += EDT_htmlTextProperty('what', 'what', node.what);
+                html += EDT_htmlTextProperty('prop_what', 'what', node.what);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('with')) {
-                html += EDT_htmlTextProperty('with', 'with', node.with);
+                html += EDT_htmlTextProperty('prop_with', 'with', node.with);
+                anyProperties = true;
+            }
+            if (node.hasOwnProperty('button')) {
+                html += EDT_htmlChoiceProperty('prop_button', 'button', node.button, EDT_BUTTONS);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = EDT_getTileSize([node.pattern]);
-                html += EDT_htmlPatternProperty('pattern', 'pattern', node.pattern, tileSize);
+                html += EDT_htmlPatternProperty('prop_pattern', 'pattern', node.pattern, tileSize);
                 anyProperties = true;
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
@@ -743,11 +780,11 @@ function EDT_updatePropertyEditor(node) {
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? EDT_getTileSize([node.lhs, node.rhs]) : (hasLHS ? EDT_getTileSize([node.lhs]) : EDT_getTileSize([node.rhs]));
                 if (hasLHS) {
-                    html += EDT_htmlPatternProperty('lhs', 'LHS', node.lhs, tileSize);
+                    html += EDT_htmlPatternProperty('prop_lhs', 'LHS', node.lhs, tileSize);
                     anyProperties = true;
                 }
                 if (hasRHS) {
-                    html += EDT_htmlPatternProperty('rhs', 'RHS', node.rhs, tileSize);
+                    html += EDT_htmlPatternProperty('prop_rhs', 'RHS', node.rhs, tileSize);
                     anyProperties = true;
                 }
             }
@@ -781,6 +818,9 @@ function EDT_onNodeSaveProperties() {
     }
     if (node.hasOwnProperty('with')) {
         node.pid = document.getElementById('prop_with').value;
+    }
+    if (node.hasOwnProperty('button')) {
+        node.button = EDT_parseChoiceProperty('prop_button', EDT_BUTTONS);
     }
     if (node.hasOwnProperty('pattern')) {
         node.pattern = EDT_parsePatternProperty('prop_pattern');
