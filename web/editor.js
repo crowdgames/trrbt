@@ -26,6 +26,10 @@ let EDT_clipboard = null;
 let EDT_followStack = false;
 let EDT_collapsedNodes = null;
 
+let EDT_layout_horizontal = null;
+
+
+
 const EDT_NODE_PADDING = 8;
 const EDT_NODE_SPACING = 25;
 
@@ -33,12 +37,9 @@ const EDT_FONT_SIZE = 10;
 const EDT_FONT_CHAR_SIZE = 6;
 const EDT_FONT_LINE_SIZE = 12;
 
-
 const EDT_TEXT_FONT  = 0;
 const EDT_TEXT_COLOR = 1;
 const EDT_TEXT_LINE  = 2;
-
-
 
 const EDT_BUTTONS = [null, 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
@@ -90,6 +91,8 @@ function EDT_onload() {
 
     EDT_followStack = false;
     EDT_collapsedNodes = new Set();
+
+    EDT_layout_horizontal = true;
 
     EDT_canvas.addEventListener('mousedown', EDT_onMouseDown);
     EDT_canvas.addEventListener('mousemove', EDT_onMouseMove);
@@ -246,10 +249,10 @@ function EDT_updateDesiredPositionsTree(nodePositions, nodeTexts, tree) {
     nodePositions.clear();
     nodeTexts.clear();
 
-    EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, EDT_getStackNodes(), tree, EDT_NODE_SPACING, null, EDT_NODE_SPACING);
+    EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, EDT_getStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
 }
 
-function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, xalign, ypos) {
+function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
     var texts = [];
     texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
     texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
@@ -363,28 +366,35 @@ function EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes
     //nw = Math.max(nw, 40);
     //nh = Math.max(nh, 40);
 
-    if (xalign !== null) {
-        nx = Math.max(nx, nx + 0.5 * xalign - 0.5 * nw);
+    if (align !== null) {
+        if (EDT_layout_horizontal) {
+            nx = Math.max(nx, nx + 0.5 * align - 0.5 * nw);
+        } else {
+            ny = Math.max(ny, ny + 0.5 * align - 0.5 * nh);
+        }
     }
 
-    let next_xpos = nx + nw + EDT_NODE_SPACING;
+    let next_pos = EDT_layout_horizontal ? (nx + nw + EDT_NODE_SPACING) : (ny + nh + EDT_NODE_SPACING);
 
     if (node.hasOwnProperty('children')) {
         if (!EDT_nodeCollapsed(node, stackNodes)) {
-            let child_next_xpos = nx;
-            let child_xalign = nw;
+            let child_next_pos = EDT_layout_horizontal ? nx : ny;
+            let child_align = EDT_layout_horizontal ? nw : nh;
             for (let child of node.children) {
-                child_next_xpos = EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, child, child_next_xpos, child_xalign, ypos + nh + EDT_NODE_SPACING);
-                child_xalign = null;
+                const child_xpos = EDT_layout_horizontal ? child_next_pos : (nx + nw + EDT_NODE_SPACING);
+                const child_ypos = EDT_layout_horizontal ? (ny + nh + EDT_NODE_SPACING) : child_next_pos;
+
+                child_next_pos = EDT_updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, child, child_xpos, child_ypos, child_align);
+                child_align = null;
             }
-            next_xpos = Math.max(next_xpos, child_next_xpos);
+            next_pos = Math.max(next_pos, child_next_pos);
         }
     }
 
     nodePositions.set(node, {x:nx, y:ny, w:nw, h:nh})
     nodeTexts.set(node, texts);
 
-    return next_xpos;
+    return next_pos;
 }
 
 function EDT_drawTree(ctx, nodePositions, nodeTexts, tree) {
@@ -416,9 +426,15 @@ function EDT_drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
             } else {
                 ctx.fillStyle = '#444488';
             }
-            ctx.moveTo(nx + nw / 2 - childScale, ny + nh);
-            ctx.lineTo(nx + nw / 2, ny + nh + 5);
-            ctx.lineTo(nx + nw / 2 + childScale, ny + nh);
+            if (EDT_layout_horizontal) {
+                ctx.moveTo(nx + nw / 2 - childScale, ny + nh);
+                ctx.lineTo(nx + nw / 2, ny + nh + 5);
+                ctx.lineTo(nx + nw / 2 + childScale, ny + nh);
+            } else {
+                ctx.moveTo(nx + nw, ny + nh / 2 - childScale);
+                ctx.lineTo(nx + nw + 5, ny + nh / 2);
+                ctx.lineTo(nx + nw, ny + nh / 2 + childScale);
+            }
             ctx.fill();
             if (childOnStack) {
                 ctx.lineWidth = 4;
@@ -435,12 +451,18 @@ function EDT_drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
                 const cnw = cnrect.w;
                 const cnh = cnrect.h;
 
+                const midx = 0.5 * (nx + nw + cnx);
                 const midy = 0.5 * (ny + nh + cny);
 
-                const edge = [nx + nw / 2, ny + nh,
-                              nx + nw / 2, midy,
-                              cnx + cnw / 2, midy,
-                              cnx + cnw / 2, cny];
+                const edge = EDT_layout_horizontal ?
+                      [nx + nw / 2, ny + nh,
+                       nx + nw / 2, midy,
+                       cnx + cnw / 2, midy,
+                       cnx + cnw / 2, cny] :
+                      [nx + nw, ny + nh / 2,
+                       midx, ny + nh / 2,
+                       midx, cny + cnh / 2,
+                       cnx, cny + cnh / 2];
 
                 if (stackNodes.has(child)) {
                     stackEdges.push(edge);
@@ -1058,6 +1080,10 @@ function EDT_onKeyDown(evt) {
 
         if (key === 'f' || key === 'F') {
             EDT_followStack = !EDT_followStack;
+            EDT_updatePositionsAndDraw();
+        }
+        if (key === 'v' || key === 'V') {
+            EDT_layout_horizontal = !EDT_layout_horizontal;
             EDT_updatePositionsAndDraw();
         }
     }
