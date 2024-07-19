@@ -62,6 +62,7 @@ if __name__ == '__main__':
         f.write('<!DOCTYPE html>\n')
         f.write('<html>\n')
         f.write('  <head>\n')
+        f.write('    <meta charset="UTF-8">\n')
         f.write('    <script src="' + os.path.basename(args.outname) + '.js"></script>\n')
         f.write('    <script src="../common.js"></script>\n')
         f.write('    <script src="../engine.js"></script>\n')
