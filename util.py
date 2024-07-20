@@ -38,8 +38,10 @@ ND_LOOP_UNTIL_ALL  = 'loop-until-all'
 ND_LOOP_TIMES      = 'loop-times'
 
 ND_REWRITE         = 'rewrite'
-ND_MATCH           = 'match'
 ND_SET_BOARD       = 'set-board'
+
+ND_MATCH           = 'match'
+
 ND_LAYER_TEMPLATE  = 'layer-template'
 ND_APPEND_ROWS     = 'append-rows'
 ND_APPEND_COLS     = 'append-columns'
