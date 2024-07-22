@@ -9,8 +9,15 @@
   </head>
   <body>
     <script>
-      let editor = new TRRBTEditor();
-      window.addEventListener('load', bind0(editor, 'onLoad'), false);
+      var editor = new TRRBTEditor();
+      var engine = new TRRBTEngine();
+      function onLoad() {
+          editor.engine = engine;
+          engine.editor = editor;
+          editor.onLoad();
+          engine.onLoad();
+      }
+      window.addEventListener('load', onLoad, false);
     </script>
     <center>
       <table>
