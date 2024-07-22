@@ -24,3 +24,11 @@ function deepcopyobj(obj) {
         return JSON.parse(JSON.stringify(obj));
     }
 }
+
+function bind0(obj, fn) {
+    return obj[fn].bind(obj);
+}
+
+function bind1(obj, fn, arg1) {
+    return obj[fn].bind(obj, arg1);
+}
