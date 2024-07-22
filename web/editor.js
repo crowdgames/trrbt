@@ -36,7 +36,11 @@ const EDT_NODE_PROTOTYPES = [
 
 class TRRBTEditor {
 
-    constructor() {
+    constructor(game, canvasname, divname) {
+        this.game = game;
+        this.canvasname = canvasname;
+        this.divname = divname;
+
         this.canvas = null;
         this.ctx = null;
         this.propertyEditor = null;
@@ -90,9 +94,9 @@ class TRRBTEditor {
             return false;
         }
 
-        this.canvas = document.getElementById('editorcanvas');
+        this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
-        this.propertyEditor = document.getElementById('editordiv');
+        this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
 
         this.nodeDrawTexts = new Map();
@@ -149,7 +153,7 @@ class TRRBTEditor {
 
         if (this.nodeDrawPositionsWantUpdate) {
             this.nodeDrawPositionsDesired = new Map();
-            this.updateDesiredPositionsTree(this.nodeDrawPositionsDesired, this.nodeDrawTexts, GAME_SETUP.tree);
+            this.updateDesiredPositionsTree(this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.game.tree);
 
             let anyNodeMoved = false;
             if (this.nodeDrawLastTime !== null) {
@@ -165,7 +169,7 @@ class TRRBTEditor {
             }
         }
 
-        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, GAME_SETUP.tree);
+        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.game.tree);
 
         this.nodeDrawLastTime = drawTime;
     }
@@ -763,7 +767,7 @@ class TRRBTEditor {
         }
 
         if (this.propertyNodes === null || node !== this.propertyNodes.node) {
-            this.propertyNodes = (node !== null) ? { node:node, parent:this.findNodeParent(GAME_SETUP.tree, node) } : null;
+            this.propertyNodes = (node !== null) ? { node:node, parent:this.findNodeParent(this.game.tree, node) } : null;
             if (this.propertyNodes) {
                 const parent = this.propertyNodes.parent;
 
@@ -789,7 +793,7 @@ class TRRBTEditor {
                 appendBr(pe);
 
                 appendButton(pe, 'Copy Subtree', bind1(this, 'onNodeCopy', false));
-                if (node !== GAME_SETUP.tree) {
+                if (node !== this.game.tree) {
                     appendButton(pe, 'Cut Subtree', bind1(this, 'onNodeCopy', true));
                 }
                 if (this.clipboard !== null) {
@@ -805,12 +809,12 @@ class TRRBTEditor {
                 appendBr(pe);
 
                 if (node.hasOwnProperty('children') && node.children.length > 0) {
-                    if (node !== GAME_SETUP.tree) {
+                    if (node !== this.game.tree) {
                         appendButton(pe, 'Delete and Reparent', bind1(this, 'onNodeDelete', true));
                         appendButton(pe, 'Delete Subtree', bind1(this, 'onNodeDelete', false));
                     }
                     appendButton(pe, 'Delete Children', bind1(this, 'onNodeDeleteChildren', false));
-                } else if (node !== GAME_SETUP.tree) {
+                } else if (node !== this.game.tree) {
                     appendButton(pe, 'Delete', bind1(this, 'onNodeDelete', false));
                 }
                 appendBr(pe);

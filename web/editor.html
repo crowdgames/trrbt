@@ -2,13 +2,13 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <script src="game-empty.js"></script>
+    <script src="games/ttt-text.js"></script>
     <script src="common.js"></script>
     <script src="editor.js"></script>
   </head>
   <body>
     <script>
-      let editor = new TRRBTEditor();
+      var editor = new TRRBTEditor(GAME_SETUP, 'editorcanvas', 'editordiv');
       window.addEventListener('load', bind0(editor, 'onLoad'), false);
     </script>
     <center>

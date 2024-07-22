@@ -7,7 +7,11 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 class TRRBTEngine {
 
-    constructor() {
+    constructor(game, canvasname, divname) {
+        this.game = game;
+        this.canvasname = canvasname;
+        this.divname = divname;
+
         this.canvas = null;
         this.ctx = null;
         this.engineEditor = null;
@@ -242,9 +246,9 @@ class TRRBTEngine {
         this.stepDelay = null;
         this.stepManual = false;
 
-        this.canvas = document.getElementById('enginecanvas');
+        this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
-        this.engineEditor = document.getElementById('enginediv');
+        this.engineEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
@@ -255,23 +259,23 @@ class TRRBTEngine {
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
         this.canvas.focus();
 
-        if (GAME_SETUP.sprites !== null) {
+        if (this.game.sprites !== null) {
             this.spriteImages = new Map();
-            for (let imageName in GAME_SETUP.sprites.images) {
-                const image_info = GAME_SETUP.sprites.images[imageName];
+            for (let imageName in this.game.sprites.images) {
+                const image_info = this.game.sprites.images[imageName];
                 this.loadSpriteImage(imageName, image_info)
             }
             this.spriteTiles = new Map();
-            for (let tile in GAME_SETUP.sprites.tiles) {
-                this.spriteTiles.set(tile, GAME_SETUP.sprites.tiles[tile]);
+            for (let tile in this.game.sprites.tiles) {
+                this.spriteTiles.set(tile, this.game.sprites.tiles[tile]);
             }
-            if (GAME_SETUP.sprites.players !== undefined) {
-                for (let pid in GAME_SETUP.sprites.players) {
-                    this.player_id_colors.set(pid, GAME_SETUP.sprites.players[pid]);
+            if (this.game.sprites.players !== undefined) {
+                for (let pid in this.game.sprites.players) {
+                    this.player_id_colors.set(pid, this.game.sprites.players[pid]);
                 }
             }
-            if (GAME_SETUP.sprites.back !== undefined) {
-                this.back = GAME_SETUP.sprites.back;
+            if (this.game.sprites.back !== undefined) {
+                this.back = this.game.sprites.back;
             }
         }
 
@@ -826,7 +830,7 @@ class TRRBTEngine {
                 this.undoPush();
 
                 this.callStack = [];
-                this.pushCallStack(GAME_SETUP.tree);
+                this.pushCallStack(this.game.tree);
             } else {
                 if (this.gameResult === true) {
                 } else if (this.gameResult === null) {
