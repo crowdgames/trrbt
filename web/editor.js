@@ -186,9 +186,13 @@ class TRRBTEditor {
         }
     }
 
-    getStackNodes() {
+    hasEngine() {
+        return this.engine !== null;
+    }
+
+    getEngineStackNodes() {
         let stackNodes = new Set();
-        if (this.engine !== null this.engine.callStack !== null) {
+        if (this.hasEngine() && this.engine.callStack !== null) {
             for (let frame of this.engine.callStack) {
                 stackNodes.add(frame.node);
             }
@@ -271,7 +275,7 @@ class TRRBTEditor {
         nodePositions.clear();
         nodeTexts.clear();
 
-        this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, this.getStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
+        this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, this.getEngineStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
     }
 
     updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
@@ -420,7 +424,7 @@ class TRRBTEditor {
     }
 
     drawTree(ctx, nodePositions, nodeTexts, tree) {
-        this.drawTreeNode(ctx, nodePositions, nodeTexts, this.getStackNodes(), tree);
+        this.drawTreeNode(ctx, nodePositions, nodeTexts, this.getEngineStackNodes(), tree);
     }
 
     drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
@@ -1125,8 +1129,10 @@ class TRRBTEditor {
             this.keysDown.add(key);
 
             if (key === 'f' || key === 'F') {
-                this.followStack = !this.followStack;
-                this.updatePositionsAndDraw();
+                if (this.hasEngine()) {
+                    this.followStack = !this.followStack;
+                    this.updatePositionsAndDraw();
+                }
             }
             if (key === 'v' || key === 'V') {
                 this.layout_horizontal = !this.layout_horizontal;
