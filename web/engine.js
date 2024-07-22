@@ -1,43 +1,3 @@
-window.addEventListener('load', ENG_onLoad, false);
-
-
-
-let ENG_canvas = null;
-let ENG_ctx = null;
-let ENG_engineEditor = null;
-
-let ENG_padding = 10;
-let ENG_cell_size = 50;
-let ENG_keysDown = new Set();
-
-let ENG_spriteImages = null;
-let ENG_spriteTiles = null;
-let ENG_back = null;
-
-let ENG_player_id_colors = new Map();
-
-let ENG_undoStackPlayer = [];
-let ENG_undoStackRecent = [];
-
-let ENG_callStack = null;
-let ENG_callResult = null;
-let ENG_gameResult = null;
-let ENG_loopCheck = 0;
-
-let ENG_board = null;
-let ENG_rows = 0;
-let ENG_cols = 0;
-
-let ENG_choicesByRct = null;
-let ENG_choicesByBtn = null;
-let ENG_choicePlayer = null;
-let ENG_choiceWait = false;
-
-let ENG_mouseChoice = null;
-let ENG_mouseAlt = false;
-let ENG_stepManual = false;
-let ENG_stepDelay = null;
-
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
 const ENG_UNDO_PLAYER_MAX = 100;
@@ -45,1106 +5,1154 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 
 
-function ENG_updateEditor() {
-    if (typeof EDT_updatePositionsAndDraw !== 'undefined') {
-        EDT_updatePositionsAndDraw();
+class TRRBTEngine {
+
+    constructor() {
+        this.canvas = null;
+        this.ctx = null;
+        this.engineEditor = null;
+
+        this.padding = 10;
+        this.cell_size = 50;
+        this.keysDown = new Set();
+
+        this.spriteImages = null;
+        this.spriteTiles = null;
+        this.back = null;
+
+        this.player_id_colors = new Map();
+
+        this.undoStackPlayer = [];
+        this.undoStackRecent = [];
+
+        this.callStack = null;
+        this.callResult = null;
+        this.gameResult = null;
+        this.loopCheck = 0;
+
+        this.board = null;
+        this.rows = 0;
+        this.cols = 0;
+
+        this.choicesByRct = null;
+        this.choicesByBtn = null;
+        this.choicePlayer = null;
+        this.choiceWait = false;
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+        this.stepManual = false;
+        this.stepDelay = null;
+
+        this.editor = null;
     }
-}
 
-function ENG_undoPush() {
-    var callStackCopy = null;
-
-    if (ENG_callStack !== null) {
-        callStackCopy = [];
-        for (var frame of ENG_callStack) {
-            var frameCopy = {node: frame.node, local: copymap(frame.local)};
-            callStackCopy.push(frameCopy);
+    updateEditor() {
+        if (this.editor !== null) {
+            this.editor.updatePositionsAndDraw();
         }
     }
 
-    var state = {};
+    undoPush() {
+        var callStackCopy = null;
 
-    state.callStack = callStackCopy;
-    state.callResult = ENG_callResult;
-    state.gameResult = deepcopyobj(ENG_gameResult);
-    state.loopCheck = ENG_loopCheck;
-
-    state.board = deepcopyobj(ENG_board);
-    state.rows = ENG_rows;
-    state.cols = ENG_cols;
-
-    state.choicesByRct = copymap(ENG_choicesByRct);
-    state.choicesByBtn = copymap(ENG_choicesByBtn);
-    state.choicePlayer = ENG_choicePlayer;
-    state.choiceWait = deepcopyobj(ENG_choiceWait);
-
-    while (ENG_undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
-        var oldState = ENG_undoStackRecent.shift();
-        if (oldState.callStack !== null && oldState.callStack.length > 0 && oldState.callStack.at(-1).node.type === 'player' && oldState.choiceWait === true) {
-            while (ENG_undoStackPlayer.length >= ENG_UNDO_PLAYER_MAX) {
-                ENG_undoStackPlayer.shift();
-            }
-            ENG_undoStackPlayer.push(oldState);
-        }
-    }
-    ENG_undoStackRecent.push(state);
-}
-
-function ENG_undoPop() {
-    var state = null;
-    if (ENG_undoStackRecent.length > 0) {
-        state = ENG_undoStackRecent.pop();
-    } else if (ENG_undoStackPlayer.length > 0) {
-        state = ENG_undoStackPlayer.pop();
-    }
-
-    if (state !== null) {
-        ENG_callStack = state.callStack;
-        ENG_callResult = state.callResult;
-        ENG_gameResult = state.gameResult;
-        ENG_loopCheck: state.loopCheck;
-
-        ENG_board = state.board;
-        ENG_rows = state.rows;
-        ENG_cols = state.cols;
-
-        ENG_choicesByRct = state.choicesByRct;
-        ENG_choicesByBtn = state.choicesByBtn;
-        ENG_choicePlayer = state.choicePlayer;
-        ENG_choiceWait = state.choiceWait;
-    } else {
-        ENG_callStack = null;
-        ENG_callResult = null;
-        ENG_gameResult = null;
-        ENG_loopCheck = 0;
-
-        ENG_board = null;
-        ENG_rows = null;
-        ENG_cols = null;
-
-        ENG_choicesByRct = null;
-        ENG_choicesByBtn = null;
-        ENG_choicePlayer = null;
-        ENG_choiceWait = false;
-    }
-
-    ENG_mouseChoice = null;
-    ENG_mouseAlt = false;
-    ENG_stepDelay = null;
-
-    ENG_resizeCanvas();
-}
-
-function ENG_undoEmpty() {
-    return (ENG_undoStackRecent.length + ENG_undoStackPlayer.length) === 0;
-}
-
-function ENG_shouldStepToInput() {
-    return ENG_gameResult !== true && ENG_choiceWait !== true && ENG_loopCheck !== true && ENG_stepDelay === null;
-}
-
-function ENG_stepToInput() {
-    var stepped = false;
-
-    if (ENG_loopCheck !== true) {
-        ENG_loopCheck = 0;
-        while (ENG_shouldStepToInput()) {
-            ENG_stepGameTree();
-            ++ ENG_loopCheck;
-            stepped = true;
-
-            if (ENG_loopCheck === 100000) {
-                ENG_loopCheck = true;
-                setTimeout(() => { alert('too many steps before player input, stopping') }, 100);
-                break;
+        if (this.callStack !== null) {
+            callStackCopy = [];
+            for (var frame of this.callStack) {
+                var frameCopy = {node: frame.node, local: copymap(frame.local)};
+                callStackCopy.push(frameCopy);
             }
         }
+
+        var state = {};
+
+        state.callStack = callStackCopy;
+        state.callResult = this.callResult;
+        state.gameResult = deepcopyobj(this.gameResult);
+        state.loopCheck = this.loopCheck;
+
+        state.board = deepcopyobj(this.board);
+        state.rows = this.rows;
+        state.cols = this.cols;
+
+        state.choicesByRct = copymap(this.choicesByRct);
+        state.choicesByBtn = copymap(this.choicesByBtn);
+        state.choicePlayer = this.choicePlayer;
+        state.choiceWait = deepcopyobj(this.choiceWait);
+
+        while (this.undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
+            var oldState = this.undoStackRecent.shift();
+            if (oldState.callStack !== null && oldState.callStack.length > 0 && oldState.callStack.at(-1).node.type === 'player' && oldState.choiceWait === true) {
+                while (this.undoStackPlayer.length >= ENG_UNDO_PLAYER_MAX) {
+                    this.undoStackPlayer.shift();
+                }
+                this.undoStackPlayer.push(oldState);
+            }
+        }
+        this.undoStackRecent.push(state);
     }
 
-    if (stepped) {
-        ENG_updateEditor();
+    undoPop() {
+        var state = null;
+        if (this.undoStackRecent.length > 0) {
+            state = this.undoStackRecent.pop();
+        } else if (this.undoStackPlayer.length > 0) {
+            state = this.undoStackPlayer.pop();
+        }
+
+        if (state !== null) {
+            this.callStack = state.callStack;
+            this.callResult = state.callResult;
+            this.gameResult = state.gameResult;
+            this.loopCheck = state.loopCheck;
+
+            this.board = state.board;
+            this.rows = state.rows;
+            this.cols = state.cols;
+
+            this.choicesByRct = state.choicesByRct;
+            this.choicesByBtn = state.choicesByBtn;
+            this.choicePlayer = state.choicePlayer;
+            this.choiceWait = state.choiceWait;
+        } else {
+            this.callStack = null;
+            this.callResult = null;
+            this.gameResult = null;
+            this.loopCheck = 0;
+
+            this.board = null;
+            this.rows = null;
+            this.cols = null;
+
+            this.choicesByRct = null;
+            this.choicesByBtn = null;
+            this.choicePlayer = null;
+            this.choiceWait = false;
+        }
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+        this.stepDelay = null;
+
+        this.resizeCanvas();
     }
-}
 
-function ENG_arrayToImageData(from_data, fw, fh, ww, hh) {
-    let new_data = new Uint8ClampedArray(ww * hh * 4);
-    for (let xx = 0; xx < ww; xx += 1) {
-        for (let yy = 0; yy < hh; yy += 1) {
-            const fx = Math.floor(xx / ww * fw);
-            const fy = Math.floor(yy / hh * fh);
+    undoEmpty() {
+        return (this.undoStackRecent.length + this.undoStackPlayer.length) === 0;
+    }
 
-            new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
-            new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
-            new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
-            new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
+    shouldStepToInput() {
+        return this.gameResult !== true && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
+    }
+
+    stepToInput() {
+        var stepped = false;
+
+        if (this.loopCheck !== true) {
+            this.loopCheck = 0;
+            while (this.shouldStepToInput()) {
+                this.stepGameTree();
+                ++ this.loopCheck;
+                stepped = true;
+
+                if (this.loopCheck === 100000) {
+                    this.loopCheck = true;
+                    setTimeout(() => { alert('too many steps before player input, stopping') }, 100);
+                    break;
+                }
+            }
+        }
+
+        if (stepped) {
+            this.updateEditor();
         }
     }
-    return new ImageData(new_data, ww, hh);
-}
 
-function ENG_loadSpriteImage(image_name, image_info) {
-    ENG_spriteImages.set(image_name, null);
+    arrayToImageData(from_data, fw, fh, ww, hh) {
+        let new_data = new Uint8ClampedArray(ww * hh * 4);
+        for (let xx = 0; xx < ww; xx += 1) {
+            for (let yy = 0; yy < hh; yy += 1) {
+                const fx = Math.floor(xx / ww * fw);
+                const fy = Math.floor(yy / hh * fh);
 
-    const image_info_data = image_info.data;
-    const image_decoded = atob(image_info_data);
-    const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
-    const image_blob = new Blob([image_array.buffer]);
-    const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
-    const image_reader = image_decompressed.getReader();
+                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
+                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
+                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
+                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
+            }
+        }
+        return new ImageData(new_data, ww, hh);
+    }
 
-    let image_read_array = null;
+    loadSpriteImage(image_name, image_info) {
+        this.spriteImages.set(image_name, null);
 
-    image_reader.read().then(function process({ done, value }) {
-        if (!done) {
-            if (image_read_array === null) {
-                image_read_array = value;
+        const image_info_data = image_info.data;
+        const image_decoded = atob(image_info_data);
+        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
+        const image_blob = new Blob([image_array.buffer]);
+        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
+        const image_reader = image_decompressed.getReader();
+
+        let image_read_array = null;
+
+        image_reader.read().then(function process({ done, value }) {
+            if (!done) {
+                if (image_read_array === null) {
+                    image_read_array = value;
+                } else {
+                    var merged_array = new Uint8Array(image_read_array.length + value.length);
+                    merged_array.set(image_read_array);
+                    merged_array.set(value, image_read_array.length);
+                    image_read_array = merged_array;
+                }
+                return image_reader.read().then(process);
             } else {
-                var merged_array = new Uint8Array(image_read_array.length + value.length);
-                merged_array.set(image_read_array);
-                merged_array.set(value, image_read_array.length);
-                image_read_array = merged_array;
+                const image_data = this.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this.cell_size, this.cell_size);
+                let img_promise = createImageBitmap(image_data);
+                img_promise.then((img_loaded) => this.spriteImages.set(image_name, img_loaded));
             }
-            return image_reader.read().then(process);
-        } else {
-            const image_data = ENG_arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], ENG_cell_size, ENG_cell_size);
-            let img_promise = createImageBitmap(image_data);
-            img_promise.then((img_loaded) => ENG_spriteImages.set(image_name, img_loaded));
-        }
-    });
-}
-
-function ENG_onLoad() {
-    document.oncontextmenu = function() {
-        return false;
+        });
     }
 
-    ENG_callStack = null;
-    ENG_callResult = null;
-    ENG_gameResult = null;
-
-    ENG_board = null;
-    ENG_rows = null;
-    ENG_cols = null;
-
-    ENG_choicesByRct = null;
-    ENG_choicesByBtn = null;
-    ENG_choicePlayer = null;
-    ENG_choiceWait = false;
-    ENG_loopCheck = 0;
-
-    ENG_mouseChoice = null;
-    ENG_mouseAlt = false;
-    ENG_stepDelay = null;
-    ENG_stepManual = false;
-
-    ENG_canvas = document.getElementById('enginecanvas');
-    ENG_ctx = ENG_canvas.getContext('2d');
-    ENG_engineEditor = document.getElementById('enginediv');
-    ENG_keysDown = new Set();
-
-    ENG_canvas.addEventListener('mousedown', ENG_onMouseDown);
-    ENG_canvas.addEventListener('mousemove', ENG_onMouseMove);
-    ENG_canvas.addEventListener('mouseup', ENG_onMouseUp);
-    ENG_canvas.addEventListener('mouseout', ENG_onMouseOut);
-    ENG_canvas.addEventListener('keydown', ENG_onKeyDown);
-    ENG_canvas.addEventListener('keyup', ENG_onKeyUp);
-    ENG_canvas.focus();
-
-    if (GAME_SETUP.sprites !== null) {
-        ENG_spriteImages = new Map();
-        for (let imageName in GAME_SETUP.sprites.images) {
-            const image_info = GAME_SETUP.sprites.images[imageName];
-            ENG_loadSpriteImage(imageName, image_info)
+    onLoad() {
+        document.oncontextmenu = function() {
+            return false;
         }
-        ENG_spriteTiles = new Map();
-        for (let tile in GAME_SETUP.sprites.tiles) {
-            ENG_spriteTiles.set(tile, GAME_SETUP.sprites.tiles[tile]);
-        }
-        if (GAME_SETUP.sprites.players !== undefined) {
-            for (let pid in GAME_SETUP.sprites.players) {
-                ENG_player_id_colors.set(pid, GAME_SETUP.sprites.players[pid]);
+
+        this.undoStackPlayer = [];
+        this.undoStackRecent = [];
+
+        this.callStack = null;
+        this.callResult = null;
+        this.gameResult = null;
+
+        this.board = null;
+        this.rows = null;
+        this.cols = null;
+
+        this.choicesByRct = null;
+        this.choicesByBtn = null;
+        this.choicePlayer = null;
+        this.choiceWait = false;
+        this.loopCheck = 0;
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+        this.stepDelay = null;
+        this.stepManual = false;
+
+        this.canvas = document.getElementById('enginecanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.engineEditor = document.getElementById('enginediv');
+        this.keysDown = new Set();
+
+        this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
+        this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
+        this.canvas.addEventListener('mouseup', bind0(this, 'onMouseUp'));
+        this.canvas.addEventListener('mouseout', bind0(this, 'onMouseOut'));
+        this.canvas.addEventListener('keydown', bind0(this, 'onKeyDown'));
+        this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
+        this.canvas.focus();
+
+        if (GAME_SETUP.sprites !== null) {
+            this.spriteImages = new Map();
+            for (let imageName in GAME_SETUP.sprites.images) {
+                const image_info = GAME_SETUP.sprites.images[imageName];
+                this.loadSpriteImage(imageName, image_info)
             }
-        }
-        if (GAME_SETUP.sprites.back !== undefined) {
-            ENG_back = GAME_SETUP.sprites.back;
-        }
-    }
-
-    ENG_canvas.style.backgroundColor = '#ffffff';
-
-    ENG_updateEngineEditor();
-
-    ENG_resizeCanvas();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_updateEngineEditor() {
-    if (ENG_engineEditor === null) {
-        return;
-    }
-
-    var html = '';
-
-    html += '<input type="button" value="Restart" onClick="ENG_onLoad()">';
-    html += '<br/>';
-    html += '<br/>';
-
-    html += '<input type="button" value="Break/Resume" onClick="ENG_onBreakResume()">';
-    html += '<br/>';
-
-    html += '<input type="button" value="Undo Step" onClick="ENG_onUndo(false)">';
-    html += '<input type="button" value="Undo Move" onClick="ENG_onUndo(true)">';
-    html += '<br/>';
-
-    html += '<input type="button" value="Next Step" onClick="ENG_onNext(false)">';
-    html += '<input type="button" value="Next Move" onClick="ENG_onNext(true)">';
-
-    ENG_engineEditor.innerHTML = html;
-}
-
-function ENG_onDraw() {
-    if (ENG_spriteImages !== null) {
-        for (let [imgName, img] of ENG_spriteImages) {
-            if (img === null) {
-                window.requestAnimationFrame(ENG_onDraw);
-                return;
+            this.spriteTiles = new Map();
+            for (let tile in GAME_SETUP.sprites.tiles) {
+                this.spriteTiles.set(tile, GAME_SETUP.sprites.tiles[tile]);
+            }
+            if (GAME_SETUP.sprites.players !== undefined) {
+                for (let pid in GAME_SETUP.sprites.players) {
+                    this.player_id_colors.set(pid, GAME_SETUP.sprites.players[pid]);
+                }
+            }
+            if (GAME_SETUP.sprites.back !== undefined) {
+                this.back = GAME_SETUP.sprites.back;
             }
         }
+
+        this.canvas.style.backgroundColor = '#ffffff';
+
+        this.updateEngineEditor();
+
+        this.resizeCanvas();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
 
-    if (ENG_stepDelay !== null) {
-        if (Date.now() < ENG_stepDelay) {
-            window.requestAnimationFrame(ENG_onDraw);
+    updateEngineEditor() {
+        if (this.engineEditor === null) {
             return;
-        } else {
-            ENG_stepDelay = null;
         }
+
+        const ee = this.engineEditor;
+
+        ee.innerHTML = '';
+
+        appendButton(ee, 'Restart', bind0(this, 'onLoad'));
+        appendBr(ee);
+        appendBr(ee);
+
+        appendButton(ee, 'Break/Resume', bind0(this, 'onBreakResume'));
+        appendBr(ee);
+
+        appendButton(ee, 'Undo Step', bind1(this, 'onUndo', false));
+        appendButton(ee, 'Undo Move', bind1(this, 'onUndo', true));
+        appendBr(ee);
+
+        appendButton(ee, 'Next Step', bind1(this, 'onNext', false));
+        appendButton(ee, 'Next Move', bind1(this, 'onNext', true));
+        appendBr(ee);
     }
 
-    if (!ENG_stepManual) {
-        ENG_stepToInput();
-    }
-
-    if (ENG_stepDelay !== null) {
-        window.requestAnimationFrame(ENG_onDraw);
-    }
-
-    ENG_ctx.clearRect(0, 0, ENG_canvas.width, ENG_canvas.height);
-    ENG_ctx.fillStyle = '#eeeeee';
-    ENG_ctx.fillRect(0, 0, ENG_canvas.width, ENG_canvas.height);
-    ENG_ctx.textAlign = 'center';
-    ENG_ctx.textBaseline = 'middle';
-
-    if (ENG_back !== null) {
-        const brows = ENG_back.length;
-        const bcols = ENG_back[0].length;
-
-        for (let rr = 0; rr < ENG_rows; rr += 1) {
-            for (let cc = 0; cc < ENG_cols; cc += 1) {
-                let all_invis = true;
-                for (const [layer, pattern] of Object.entries(ENG_board)) {
-                    if (pattern[rr][cc] !== '.') {
-                        all_invis = false;
-                    }
+    onDraw() {
+        if (this.spriteImages !== null) {
+            for (let [imgName, img] of this.spriteImages) {
+                if (img === null) {
+                    window.requestAnimationFrame(bind0(this, 'onDraw'));
+                    return;
                 }
-                if (!all_invis) {
-                    const back_tile = ENG_back[rr % brows][cc % bcols];
-                    if (ENG_spriteTiles !== null && ENG_spriteTiles.has(back_tile)) {
-                        const img = ENG_spriteImages.get(ENG_spriteTiles.get(back_tile));
-                        ENG_ctx.drawImage(img, ENG_tocvsx(cc), ENG_tocvsy(rr));
+            }
+        }
+
+        if (this.stepDelay !== null) {
+            if (Date.now() < this.stepDelay) {
+                window.requestAnimationFrame(bind0(this, 'onDraw'));
+                return;
+            } else {
+                this.stepDelay = null;
+            }
+        }
+
+        if (!this.stepManual) {
+            this.stepToInput();
+        }
+
+        if (this.stepDelay !== null) {
+            window.requestAnimationFrame(bind0(this, 'onDraw'));
+        }
+
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = '#eeeeee';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
+        if (this.back !== null) {
+            const brows = this.back.length;
+            const bcols = this.back[0].length;
+
+            for (let rr = 0; rr < this.rows; rr += 1) {
+                for (let cc = 0; cc < this.cols; cc += 1) {
+                    let all_invis = true;
+                    for (const [layer, pattern] of Object.entries(this.board)) {
+                        if (pattern[rr][cc] !== '.') {
+                            all_invis = false;
+                        }
+                    }
+                    if (!all_invis) {
+                        const back_tile = this.back[rr % brows][cc % bcols];
+                        if (this.spriteTiles !== null && this.spriteTiles.has(back_tile)) {
+                            const img = this.spriteImages.get(this.spriteTiles.get(back_tile));
+                            this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
+                        }
                     }
                 }
             }
         }
-    }
 
-    let choiceOverwrite = null;
-    if (ENG_mouseChoice !== null && !ENG_mouseAlt) {
-        choiceOverwrite = {rct: ENG_mouseChoice.rct, rhs:ENG_choicesByRct.get(JSON.stringify(ENG_mouseChoice.rct)).choices[ENG_mouseChoice.idx].rhs };
-    }
+        let choiceOverwrite = null;
+        if (this.mouseChoice !== null && !this.mouseAlt) {
+            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.choicesByRct.get(JSON.stringify(this.mouseChoice.rct)).choices[this.mouseChoice.idx].rhs };
+        }
 
-    ENG_ctx.fillStyle = '#000000';
+        this.ctx.fillStyle = '#000000';
 
-    for (let rr = 0; rr < ENG_rows; rr += 1) {
-        for (let cc = 0; cc < ENG_cols; cc += 1) {
-            let tiles = [];
-            let overwrites = [];
-            if (choiceOverwrite !== null &&
-                choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
-                choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
-                for (const [layer, pattern] of Object.entries(ENG_board)) {
-                    if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
-                        const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
-                        if (tileOverwrite !== '.') {
-                            tiles.push(tileOverwrite);
-                            overwrites.push(true);
+        for (let rr = 0; rr < this.rows; rr += 1) {
+            for (let cc = 0; cc < this.cols; cc += 1) {
+                let tiles = [];
+                let overwrites = [];
+                if (choiceOverwrite !== null &&
+                    choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
+                    choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
+                    for (const [layer, pattern] of Object.entries(this.board)) {
+                        if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
+                            const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                            if (tileOverwrite !== '.') {
+                                tiles.push(tileOverwrite);
+                                overwrites.push(true);
+                            } else {
+                                tiles.push(pattern[rr][cc]);
+                                overwrites.push(false);
+                            }
                         } else {
                             tiles.push(pattern[rr][cc]);
                             overwrites.push(false);
                         }
-                    } else {
+                    }
+                } else {
+                    for (const [layer, pattern] of Object.entries(this.board)) {
                         tiles.push(pattern[rr][cc]);
                         overwrites.push(false);
                     }
                 }
-            } else {
-                for (const [layer, pattern] of Object.entries(ENG_board)) {
-                    tiles.push(pattern[rr][cc]);
-                    overwrites.push(false);
-                }
-            }
-            tiles = tiles.reverse();
-            overwrites = overwrites.reverse();
-            for (let ii in tiles) {
-                const tile = tiles[ii];
-                const overwrite = overwrites[ii];
-                if (overwrite) {
-                    ENG_ctx.globalAlpha = 0.5;
-                } else {
-                    ENG_ctx.globalAlpha = 1.0;
-                }
-                if (tile !== '.') {
-                    if (ENG_spriteTiles !== null && ENG_spriteTiles.has(tile)) {
-                        const imgName = ENG_spriteTiles.get(tile);
-                        if (imgName !== null) {
-                            const img = ENG_spriteImages.get(imgName);
-                            ENG_ctx.drawImage(img, ENG_tocvsx(cc), ENG_tocvsy(rr));
-                        }
+                tiles = tiles.reverse();
+                overwrites = overwrites.reverse();
+                for (let ii in tiles) {
+                    const tile = tiles[ii];
+                    const overwrite = overwrites[ii];
+                    if (overwrite) {
+                        this.ctx.globalAlpha = 0.5;
                     } else {
-                        ENG_ctx.font = (ENG_cell_size / tile.length) + ENG_FONTNAME;
-                        ENG_ctx.fillText(tile, ENG_tocvsx(cc + 0.5), ENG_tocvsy(rr + 0.5));
+                        this.ctx.globalAlpha = 1.0;
+                    }
+                    if (tile !== '.') {
+                        if (this.spriteTiles !== null && this.spriteTiles.has(tile)) {
+                            const imgName = this.spriteTiles.get(tile);
+                            if (imgName !== null) {
+                                const img = this.spriteImages.get(imgName);
+                                this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
+                            }
+                        } else {
+                            this.ctx.font = (this.cell_size / tile.length) + ENG_FONTNAME;
+                            this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
+                        }
                     }
                 }
             }
         }
-    }
 
-    if (ENG_choicesByRct !== null) {
-        ENG_ctx.lineWidth = 3;
-        ENG_ctx.globalAlpha = 1.0;
+        if (this.choicesByRct !== null) {
+            this.ctx.lineWidth = 3;
+            this.ctx.globalAlpha = 1.0;
 
-        if (!ENG_player_id_colors.has(ENG_choicePlayer)) {
-            let color_num = ENG_player_id_colors.size % 5;
-            let next_color = null;
-            if (color_num === 0) {
-                next_color = [0, 0, 220];
-            } else if (color_num === 1) {
-                next_color = [0, 220, 0];
-            } else if (color_num === 2) {
-                next_color = [220, 220, 0];
-            } else if (color_num === 3) {
-                next_color = [220, 0, 220];
-            } else {
-                next_color = [0, 220, 220];
+            if (!this.player_id_colors.has(this.choicePlayer)) {
+                let color_num = this.player_id_colors.size % 5;
+                let next_color = null;
+                if (color_num === 0) {
+                    next_color = [0, 0, 220];
+                } else if (color_num === 1) {
+                    next_color = [0, 220, 0];
+                } else if (color_num === 2) {
+                    next_color = [220, 220, 0];
+                } else if (color_num === 3) {
+                    next_color = [220, 0, 220];
+                } else {
+                    next_color = [0, 220, 220];
+                }
+                this.player_id_colors.set(this.choicePlayer, next_color);
             }
-            ENG_player_id_colors.set(ENG_choicePlayer, next_color);
+
+            let player_color = this.player_id_colors.get(this.choicePlayer);
+
+            if (this.mouseChoice !== null) {
+                let rct = this.mouseChoice.rct;
+                let idx = this.mouseChoice.idx;
+
+                let rct_choices = this.choicesByRct.get(JSON.stringify(rct)).choices;
+                let desc = rct_choices[idx].desc;
+
+                this.ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                this.ctx.beginPath();
+                this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), rct.cols * this.cell_size, rct.rows * this.cell_size, 3);
+                this.ctx.stroke();
+
+                if (rct_choices.length > 1) {
+                    this.ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                    this.ctx.beginPath();
+                    this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), 0.4 * this.cell_size, 0.4 * this.cell_size, 3);
+                    this.ctx.fill();
+                    this.ctx.fillStyle = '#DCDCDC'
+                    this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
+                    this.ctx.fillText(idx + 1, this.tocvsx(rct.col + 0.2), this.tocvsy(rct.row + 0.2 + 0.025));
+                }
+                if (desc !== undefined) {
+                    this.ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                    this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
+                    this.ctx.fillText(desc, this.tocvsx(rct.col + 0.5 * rct.cols), this.tocvsy(rct.row + rct.rows - 0.2));
+                }
+            } else {
+                if (!this.mouseAlt) {
+                    this.ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+
+                    for (const [rctk, rctChoices] of this.choicesByRct.entries()) {
+                        let rct = rctChoices.rct;
+                        let choices = rctChoices.choices;
+                        this.ctx.beginPath();
+                        this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), rct.cols * this.cell_size, rct.rows * this.cell_size, 3);
+                        this.ctx.stroke();
+                        if (choices.length > 1) {
+                            this.ctx.fillStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+                            this.ctx.beginPath();
+                            this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), 0.4 * this.cell_size, 0.4 * this.cell_size, 3);
+                            this.ctx.fill();
+                            this.ctx.fillStyle = '#DCDCDC'
+                            this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
+                            this.ctx.fillText(choices.length, this.tocvsx(rct.col + 0.2), this.tocvsy(rct.row + 0.2 + 0.025));
+                        }
+                    }
+                }
+            }
         }
 
-        let player_color = ENG_player_id_colors.get(ENG_choicePlayer);
+        if (this.stepManual) {
+            this.ctx.lineWidth = 10;
+            this.ctx.strokeStyle = '#ffdddd';
+            this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
+        }
+    }
 
-        if (ENG_mouseChoice !== null) {
-            let rct = ENG_mouseChoice.rct;
-            let idx = ENG_mouseChoice.idx;
+    resizeCanvas() {
+        const desiredWidth = this.tocvsx(Math.max(1, this.cols)) + this.padding;
+        const desiredHeight = this.tocvsy(Math.max(1, this.rows)) + this.padding;
+        if (this.canvas.width != desiredWidth || this.canvas.height != desiredHeight) {
+            const ratio = window.devicePixelRatio;
+            this.canvas.width = desiredWidth * ratio;
+            this.canvas.height = desiredHeight * ratio;
+            this.canvas.style.width = desiredWidth + "px";
+            this.canvas.style.height = desiredHeight + "px";
+            this.ctx.scale(ratio, ratio);
+        }
+    }
 
-            let rct_choices = ENG_choicesByRct.get(JSON.stringify(rct)).choices;
-            let desc = rct_choices[idx].desc;
+    onBreakResume() {
+        this.stepManual = !this.stepManual;
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
 
-            ENG_ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-            ENG_ctx.beginPath();
-            ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), rct.cols * ENG_cell_size, rct.rows * ENG_cell_size, 3);
-            ENG_ctx.stroke();
-
-            if (rct_choices.length > 1) {
-                ENG_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                ENG_ctx.beginPath();
-                ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), 0.4 * ENG_cell_size, 0.4 * ENG_cell_size, 3);
-                ENG_ctx.fill();
-                ENG_ctx.fillStyle = '#DCDCDC'
-                ENG_ctx.font = (0.9 * 0.4 * ENG_cell_size) + ENG_FONTNAME;
-                ENG_ctx.fillText(idx + 1, ENG_tocvsx(rct.col + 0.2), ENG_tocvsy(rct.row + 0.2 + 0.025));
-            }
-            if (desc !== undefined) {
-                ENG_ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                ENG_ctx.font = (0.9 * 0.4 * ENG_cell_size) + ENG_FONTNAME;
-                ENG_ctx.fillText(desc, ENG_tocvsx(rct.col + 0.5 * rct.cols), ENG_tocvsy(rct.row + rct.rows - 0.2));
+    onUndo(toInput) {
+        this.undoPop();
+        if (toInput) {
+            while (!this.undoEmpty() && this.shouldStepToInput()) {
+                this.undoPop();
             }
         } else {
-            if (!ENG_mouseAlt) {
-                ENG_ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+            this.stepManual = true;
+        }
+        this.updateEditor();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
 
-                for (const [rctk, rctChoices] of ENG_choicesByRct.entries()) {
+    onNext(toInput) {
+        if (this.shouldStepToInput()) {
+            this.stepGameTree();
+            if (toInput) {
+                this.stepToInput();
+            }
+            this.updateEditor();
+        } else {
+            this.stepManual = true;
+        }
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onKeyDown(evt) {
+        var key = evt.key;
+
+        if (!this.keysDown.has(key)) {
+            this.keysDown.add(key);
+
+            if (key === 'b' || key === 'B') {
+                this.onBreakResume();
+            } else if (key === 'n' || key === 'N') {
+                this.onNext(key === 'n');
+            } else if (key === 'p' || key === 'P') {
+                this.onUndo(key === 'p');
+            }
+
+            if (this.choiceWait === true) {
+                let keyp = null;
+                if (key === 'ArrowLeft') {
+                    keyp = 'left';
+                } else if (key === 'ArrowRight') {
+                    keyp = 'right';
+                } else if (key === 'ArrowUp') {
+                    keyp = 'up';
+                } else if (key === 'ArrowDown') {
+                    keyp = 'down';
+                } else if (key === 'z') {
+                    keyp = 'z';
+                }
+                if (keyp !== null && this.choicesByBtn.has(keyp)) {
+                    this.stepGameTree();
+
+                    this.choiceWait = this.choicesByBtn.get(keyp);
+                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
+                    this.mouseChoice = null;
+                    this.choicesByRct = null;
+                    this.choicesByBtn = null;
+                    this.choicePlayer = null;
+                }
+            }
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onKeyUp(evt) {
+        var key = evt.key;
+
+        this.keysDown.delete(key);
+
+        evt.preventDefault();
+    }
+
+    onMouseDown(evt) {
+        this.canvas.focus();
+
+        const mouseButton = evt.button;
+
+        if (mouseButton === BUTTON_LEFT) {
+            if (this.mouseChoice !== null) {
+                if (this.choiceWait === true) {
+                    this.stepGameTree();
+
+                    this.choiceWait = this.choicesByRct.get(JSON.stringify(this.mouseChoice.rct)).choices[this.mouseChoice.idx];
+                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
+                    this.mouseChoice = null;
+                    this.choicesByRct = null;
+                    this.choicesByBtn = null;
+                    this.choicePlayer = null;
+                }
+            }
+        } else if (mouseButton === BUTTON_RIGHT) {
+            this.mouseAlt = true;
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onMouseUp(evt) {
+        const mouseButton = evt.button;
+
+        if (mouseButton === BUTTON_RIGHT) {
+            this.mouseAlt = false;
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onMouseMove(evt) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = evt.clientX - rect.left;
+        const mouseY = evt.clientY - rect.top;
+
+        this.mouseChoice = null;
+        if (this.choicesByRct !== null) {
+            const mr = this.fromcvsy(mouseY);
+            const mc = this.fromcvsx(mouseX);
+            if (0 <= mr && mr < this.rows && 0 <= mc && mc < this.cols) {
+                let best_choices = [];
+                let best_dist_sqr = null;
+
+                for (const [rctk, rctChoices] of this.choicesByRct.entries()) {
                     let rct = rctChoices.rct;
                     let choices = rctChoices.choices;
-                    ENG_ctx.beginPath();
-                    ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), rct.cols * ENG_cell_size, rct.rows * ENG_cell_size, 3);
-                    ENG_ctx.stroke();
-                    if (choices.length > 1) {
-                        ENG_ctx.fillStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
-                        ENG_ctx.beginPath();
-                        ENG_ctx.roundRect(ENG_tocvsx(rct.col), ENG_tocvsy(rct.row), 0.4 * ENG_cell_size, 0.4 * ENG_cell_size, 3);
-                        ENG_ctx.fill();
-                        ENG_ctx.fillStyle = '#DCDCDC'
-                        ENG_ctx.font = (0.9 * 0.4 * ENG_cell_size) + ENG_FONTNAME;
-                        ENG_ctx.fillText(choices.length, ENG_tocvsx(rct.col + 0.2), ENG_tocvsy(rct.row + 0.2 + 0.025));
-                    }
-                }
-            }
-        }
-    }
-
-    if (ENG_stepManual) {
-        ENG_ctx.lineWidth = 10;
-        ENG_ctx.strokeStyle = '#ffdddd';
-        ENG_ctx.strokeRect(0, 0, ENG_canvas.width / PIXEL_RATIO, ENG_canvas.height / PIXEL_RATIO);
-    }
-}
-
-function ENG_resizeCanvas() {
-    const desiredWidth = ENG_tocvsx(Math.max(1, ENG_cols)) + ENG_padding;
-    const desiredHeight = ENG_tocvsy(Math.max(1, ENG_rows)) + ENG_padding;
-    if (ENG_canvas.width != desiredWidth || ENG_canvas.height != desiredHeight) {
-        const ratio = window.devicePixelRatio;
-        ENG_canvas.width = desiredWidth * ratio;
-        ENG_canvas.height = desiredHeight * ratio;
-        ENG_canvas.style.width = desiredWidth + "px";
-        ENG_canvas.style.height = desiredHeight + "px";
-        ENG_ctx.scale(ratio, ratio);
-    }
-}
-
-function ENG_onBreakResume() {
-    ENG_stepManual = !ENG_stepManual;
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onUndo(toInput) {
-    ENG_undoPop();
-    if (toInput) {
-        while (!ENG_undoEmpty() && ENG_shouldStepToInput()) {
-            ENG_undoPop();
-        }
-    } else {
-        ENG_stepManual = true;
-    }
-    ENG_updateEditor();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onNext(toInput) {
-    if (ENG_shouldStepToInput()) {
-        ENG_stepGameTree();
-        if (toInput) {
-            ENG_stepToInput();
-        }
-        ENG_updateEditor();
-    } else {
-        ENG_stepManual = true;
-    }
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onKeyDown(evt) {
-    var key = evt.key;
-
-    if (!ENG_keysDown.has(key)) {
-        ENG_keysDown.add(key);
-
-        if (key === 'b' || key === 'B') {
-            ENG_onBreakResume();
-        } else if (key === 'n' || key === 'N') {
-            ENG_onNext(key === 'n');
-        } else if (key === 'p' || key === 'P') {
-            ENG_onUndo(key === 'p');
-        }
-
-        if (ENG_choiceWait === true) {
-            let keyp = null;
-            if (key === 'ArrowLeft') {
-                keyp = 'left';
-            } else if (key === 'ArrowRight') {
-                keyp = 'right';
-            } else if (key === 'ArrowUp') {
-                keyp = 'up';
-            } else if (key === 'ArrowDown') {
-                keyp = 'down';
-            } else if (key === 'z') {
-                keyp = 'z';
-            }
-            if (keyp !== null && ENG_choicesByBtn.has(keyp)) {
-                ENG_stepGameTree();
-
-                ENG_choiceWait = ENG_choicesByBtn.get(keyp);
-                ENG_rewriteLayerPattern(ENG_choiceWait.rhs, ENG_choiceWait.row, ENG_choiceWait.col);
-                ENG_mouseChoice = null;
-                ENG_choicesByRct = null;
-                ENG_choicesByBtn = null;
-                ENG_choicePlayer = null;
-            }
-        }
-    }
-
-    evt.preventDefault();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onKeyUp(evt) {
-    var key = evt.key;
-
-    ENG_keysDown.delete(key);
-
-    evt.preventDefault();
-}
-
-function ENG_onMouseDown(evt) {
-    ENG_canvas.focus();
-
-    const mouseButton = evt.button;
-
-    if (mouseButton === BUTTON_LEFT) {
-        if (ENG_mouseChoice !== null) {
-            if (ENG_choiceWait === true) {
-                ENG_stepGameTree();
-
-                ENG_choiceWait = ENG_choicesByRct.get(JSON.stringify(ENG_mouseChoice.rct)).choices[ENG_mouseChoice.idx];
-                ENG_rewriteLayerPattern(ENG_choiceWait.rhs, ENG_choiceWait.row, ENG_choiceWait.col);
-                ENG_mouseChoice = null;
-                ENG_choicesByRct = null;
-                ENG_choicesByBtn = null;
-                ENG_choicePlayer = null;
-            }
-        }
-    } else if (mouseButton === BUTTON_RIGHT) {
-        ENG_mouseAlt = true;
-    }
-
-    evt.preventDefault();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onMouseUp(evt) {
-    const mouseButton = evt.button;
-
-    if (mouseButton === BUTTON_RIGHT) {
-        ENG_mouseAlt = false;
-    }
-
-    evt.preventDefault();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onMouseMove(evt) {
-    const rect = ENG_canvas.getBoundingClientRect();
-    const mouseX = evt.clientX - rect.left;
-    const mouseY = evt.clientY - rect.top;
-
-    ENG_mouseChoice = null;
-    if (ENG_choicesByRct !== null) {
-        const mr = ENG_fromcvsy(mouseY);
-        const mc = ENG_fromcvsx(mouseX);
-        if (0 <= mr && mr < ENG_rows && 0 <= mc && mc < ENG_cols) {
-            let best_choices = [];
-            let best_dist_sqr = null;
-
-            for (const [rctk, rctChoices] of ENG_choicesByRct.entries()) {
-                let rct = rctChoices.rct;
-                let choices = rctChoices.choices;
-                if (rct.row <= mr && mr <= rct.row + rct.rows && rct.col <= mc && mc <= rct.col + rct.cols) {
-                    let rowmid = rct.row + rct.rows / 2.0;
-                    let colmid = rct.col + rct.cols / 2.0;
-                    let dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2;
-                    if (best_dist_sqr === null || dist_sqr < best_dist_sqr - 0.001) {
-                        best_dist_sqr = dist_sqr;
-                        best_choices = [];
-                        for (let ii = 0; ii < choices.length; ii += 1) {
-                            best_choices.push({rct:rct, idx:ii});
-                        }
-                    } else if (dist_sqr < best_dist_sqr + 0.001) {
-                        for (let ii = 0; ii < choices.length; ii += 1) {
-                            best_choices.push({rct:rct, idx:ii});
+                    if (rct.row <= mr && mr <= rct.row + rct.rows && rct.col <= mc && mc <= rct.col + rct.cols) {
+                        let rowmid = rct.row + rct.rows / 2.0;
+                        let colmid = rct.col + rct.cols / 2.0;
+                        let dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2;
+                        if (best_dist_sqr === null || dist_sqr < best_dist_sqr - 0.001) {
+                            best_dist_sqr = dist_sqr;
+                            best_choices = [];
+                            for (let ii = 0; ii < choices.length; ii += 1) {
+                                best_choices.push({rct:rct, idx:ii});
+                            }
+                        } else if (dist_sqr < best_dist_sqr + 0.001) {
+                            for (let ii = 0; ii < choices.length; ii += 1) {
+                                best_choices.push({rct:rct, idx:ii});
+                            }
                         }
                     }
                 }
-            }
 
-            if (best_choices.length > 0) {
-                const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
-                ENG_mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
-            }
-        }
-    }
-
-    evt.preventDefault();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_onMouseOut(evt) {
-    ENG_mouseChoice = null;
-
-    evt.preventDefault();
-    window.requestAnimationFrame(ENG_onDraw);
-}
-
-function ENG_tocvsx(x) {
-    return (x * ENG_cell_size) + ENG_padding;
-}
-
-function ENG_tocvsy(y) {
-    return (y * ENG_cell_size) + ENG_padding;
-}
-
-function ENG_fromcvsx(x) {
-    return (x - ENG_padding) / ENG_cell_size;
-}
-
-function ENG_fromcvsy(y) {
-    return (y - ENG_padding) / ENG_cell_size;
-}
-
-function ENG_layerPatternSize(lpattern) {
-    for (const [layer, pattern] of Object.entries(lpattern)) {
-        return [pattern.length, pattern[0].length];
-    }
-    return [0, 0];
-}
-
-function ENG_matchLayerPattern(lpattern, row, col) {
-    const [prows, pcols] = ENG_layerPatternSize(lpattern);
-
-    for (let rr = 0; rr < prows; rr += 1) {
-        for (let cc = 0; cc < pcols; cc += 1) {
-            for (let layer in lpattern) {
-                if (lpattern[layer][rr][cc] === '.') {
-                    continue;
-                }
-                if (ENG_board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
-                    return false;
+                if (best_choices.length > 0) {
+                    const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
+                    this.mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
                 }
             }
         }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
-    return true;
-}
 
-function ENG_rewriteLayerPattern(lpattern, row, col) {
-    const [prows, pcols] = ENG_layerPatternSize(lpattern);
+    onMouseOut(evt) {
+        this.mouseChoice = null;
 
-    for (let rr = 0; rr < prows; rr += 1) {
-        for (let cc = 0; cc < pcols; cc += 1) {
-            for (let layer in lpattern) {
-                if (lpattern[layer][rr][cc] === '.') {
-                    continue;
-                }
-                ENG_board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
-            }
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    tocvsx(x) {
+        return (x * this.cell_size) + this.padding;
+    }
+
+    tocvsy(y) {
+        return (y * this.cell_size) + this.padding;
+    }
+
+    fromcvsx(x) {
+        return (x - this.padding) / this.cell_size;
+    }
+
+    fromcvsy(y) {
+        return (y - this.padding) / this.cell_size;
+    }
+
+    layerPatternSize(lpattern) {
+        for (const [layer, pattern] of Object.entries(lpattern)) {
+            return [pattern.length, pattern[0].length];
         }
+        return [0, 0];
     }
-}
 
-function ENG_findLayerPattern(lpattern) {
-    const [prows, pcols] = ENG_layerPatternSize(lpattern);
+    matchLayerPattern(lpattern, row, col) {
+        const [prows, pcols] = this.layerPatternSize(lpattern);
 
-    let ret = []
-    for (let rr = 0; rr < ENG_rows - prows + 1; rr += 1) {
-        for (let cc = 0; cc < ENG_cols - pcols + 1; cc += 1) {
-            if (ENG_matchLayerPattern(lpattern, rr, cc)) {
-                ret.push({row:rr, col:cc});
-            }
-        }
-    }
-    return ret;
-}
-
-const NODE_FN_MAP = {
-    'display-board': ENG_stepNodeDisplayBoard,
-    'set-board': ENG_stepNodeSetBoard,
-    'layer-template': ENG_stepNodeLayerTemplate,
-    'append-rows': ENG_stepNodeAppendRows,
-    'order': ENG_stepNodeOrder,
-    'loop-until-all': ENG_stepNodeLoopUntilAll,
-    'loop-times': ENG_stepNodeLoopTimes,
-    'random-try': ENG_stepNodeRandomTry,
-    'all': ENG_stepNodeAll,
-    'none': ENG_stepNodeNone,
-    'win': ENG_stepNodeWin,
-    'lose': ENG_stepNodeLose,
-    'draw': ENG_stepNodeDraw,
-    'match': ENG_stepNodeMatch,
-    'rewrite': ENG_stepNodeRewrite,
-    'player': ENG_stepNodePlayer,
-};
-
-function ENG_localInit(frame, what) {
-    if (frame.local === null) {
-        frame.local = new Map();
-        for (let [name, val] of what) {
-            frame.local.set(name, val);
-        }
-    }
-}
-
-function ENG_localGet(frame, name) {
-    return frame.local.get(name);
-}
-
-function ENG_localSet(frame, name, val) {
-    return frame.local.set(name, val);
-}
-
-function ENG_localSetIfTrue(frame, name, check) {
-    if (check === true) {
-        frame.local.set(name, true);
-    }
-}
-
-function ENG_localIncrement(frame, name) {
-    frame.local.set(name, frame.local.get(name) + 1)
-}
-
-function ENG_localEqual(frame, name, val) {
-    return frame.local.get(name) === val;
-}
-
-function ENG_pushCallStack(node) {
-    ENG_callStack.push({node: node, local: null});
-}
-
-function ENG_pushCallStackNextChild(frame) {
-    ENG_pushCallStack(frame.node.children[frame.local.get('index')]);
-    frame.local.set('index', frame.local.get('index') + 1);
-    return null;
-}
-
-function ENG_stepGameTree(stack) {
-    if (ENG_loopCheck !== true && ENG_stepDelay === null) {
-        if (ENG_callStack === null) {
-            ENG_undoPush();
-
-            ENG_callStack = [];
-            ENG_pushCallStack(GAME_SETUP.tree);
-        } else {
-            if (ENG_gameResult === true) {
-            } else if (ENG_gameResult === null) {
-                ENG_undoPush();
-
-                if (ENG_callStack.length === 0) {
-                    ENG_gameResult = {result:'stalemate'};
-                } else {
-                    var frame = ENG_callStack.at(-1);
-                    ENG_callResult = NODE_FN_MAP[frame.node.type](frame, ENG_callResult);
-
-                    if (ENG_callResult === true || ENG_callResult === false) {
-                        ENG_callStack.pop();
+        for (let rr = 0; rr < prows; rr += 1) {
+            for (let cc = 0; cc < pcols; cc += 1) {
+                for (let layer in lpattern) {
+                    if (lpattern[layer][rr][cc] === '.') {
+                        continue;
                     }
-                }
-            } else {
-                ENG_undoPush();
-
-                if (ENG_gameResult.result === 'win') {
-                    var player = ENG_gameResult.player;
-                    setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 100);
-                } else if (ENG_gameResult.result === 'lose') {
-                    var player = ENG_gameResult.player;
-                    setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 100);
-                } else if (ENG_gameResult.result === 'draw') {
-                    setTimeout(() => { alert('Game over, draw!') }, 100);
-                } else if (ENG_gameResult.result === 'stalemate') {
-                    setTimeout(() => { alert('Game over, stalemate!') }, 100);
-                } else {
-                    setTimeout(() => { alert('Game over, unknown result!') }, 100);
-                }
-                ENG_gameResult = true;
-            }
-        }
-    }
-}
-
-function ENG_stepNodeOrder(frame, lastResult) {
-    ENG_localInit(frame, [['any', false],
-                          ['index', 0]]);
-
-    ENG_localSetIfTrue(frame, 'any', lastResult);
-
-    if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        return ENG_localGet(frame, 'any');
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeLoopUntilAll(frame, lastResult) {
-    ENG_localInit(frame, [['any', false],
-                          ['anyThisLoop', false],
-                          ['index', 0]]);
-
-    ENG_localSetIfTrue(frame, 'any', lastResult);
-    ENG_localSetIfTrue(frame, 'anyThisLoop', lastResult);
-
-    if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        if (ENG_localGet(frame, 'anyThisLoop')) {
-            ENG_localSet(frame, 'anyThisLoop', false);
-            ENG_localSet(frame, 'index', 0);
-        } else {
-            return ENG_localGet(frame, 'any');
-        }
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeLoopTimes(frame, lastResult) {
-    ENG_localInit(frame, [['any', false],
-                          ['times', 0],
-                          ['index', 0]]);
-
-    ENG_localSetIfTrue(frame, 'any', lastResult);
-
-    if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        if (ENG_localEqual(frame, 'times', frame.node.times)) {
-            return ENG_localGet(frame, 'any');
-        } else {
-            ENG_localIncrement('times');
-            ENG_localSet(frame, 'index', 0);
-        }
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeRandomTry(frame, lastResult) {
-    ENG_localInit(frame, [['order', null]]);
-
-    if (ENG_localEqual(frame, 'order', null)) {
-        var order = [];
-        for (var ii = 0; ii < frame.node.children.length; ++ ii) {
-            order.push(ii);
-        }
-        order.sort((a, b) => 0.5 - Math.random());
-        ENG_localSet(frame, 'order', order);
-    }
-
-
-    if (lastResult === true) {
-        return true;
-    } else if (ENG_localGet(frame, 'order').length == 0) {
-        return false;
-    } else {
-        const index = ENG_localGet(frame, 'order').pop();
-        ENG_pushCallStack(frame.node.children[index]);
-        return null;
-    }
-}
-
-function ENG_stepNodeAll(frame, lastResult) {
-    ENG_localInit(frame, [['index', 0]]);
-
-    if (lastResult === false) {
-        return false;
-    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        return true;
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeNone(frame, lastResult) {
-    ENG_localInit(frame, [['index', 0]]);
-
-    if (lastResult === true) {
-        return false;
-    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        return true;
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeWin(frame, lastResult) {
-    ENG_localInit(frame, [['index', 0]]);
-
-    if (lastResult === true) {
-        ENG_gameResult = {result:'win', player:frame.node.pid};
-        return null;
-    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        return false;
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeLose(frame, lastResult) {
-    ENG_localInit(frame, [['index', 0]]);
-
-    if (lastResult === true) {
-        ENG_gameResult = {result:'lose', player:frame.node.pid};
-        return null;
-    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        return false;
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeDraw(frame, lastResult) {
-    ENG_localInit(frame, [['index', 0]]);
-
-    if (lastResult === true) {
-        ENG_gameResult = {result:'draw'};
-        return null;
-    } else if (ENG_localEqual(frame, 'index', frame.node.children.length)) {
-        return false;
-    } else {
-        return ENG_pushCallStackNextChild(frame);
-    }
-}
-
-function ENG_stepNodeSetBoard(frame, lastResult) {
-    ENG_board = JSON.parse(JSON.stringify(frame.node.pattern));
-
-    const [newRows, newCols] = ENG_layerPatternSize(ENG_board);
-    if (newRows !== ENG_rows || newCols !== ENG_cols) {
-        ENG_rows = newRows;
-        ENG_cols = newCols;
-
-        ENG_resizeCanvas();
-    }
-
-    return true;
-}
-
-function ENG_stepNodeDisplayBoard(frame, lastResult) {
-    if (frame.node.hasOwnProperty('delay')) {
-        ENG_stepDelay = Date.now() + frame.node.delay;
-    }
-    return true;
-}
-
-function ENG_stepNodeLayerTemplate(frame, lastResult) {
-    let newLayer = [];
-    for (let row of ENG_board['main']) {
-        let newRow = [];
-        for (let tile of row) {
-            if (tile === '.') {
-                newRow.push('.');
-            } else {
-                newRow.push(frame.node.with);
-            }
-        }
-        newLayer.push(newRow);
-    }
-
-    ENG_board[frame.node.what] = newLayer;
-
-    return true;
-}
-
-function ENG_stepNodeAppendRows(frame, lastResult) {
-    if (ENG_rows === 0 || ENG_cols === 0) {
-        ENG_board = frame.node.pattern.slice();
-    } else {
-        for (let patternRow of frame.node.pattern) {
-            let newRow = []
-            while (newRow.length < ENG_cols) {
-                for (let tile of patternRow) {
-                    if (newRow.length < ENG_cols) {
-                        newRow.push(tile);
+                    if (this.board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
+                        return false;
                     }
                 }
             }
-            ENG_board.push(newRow);
+        }
+        return true;
+    }
+
+    rewriteLayerPattern(lpattern, row, col) {
+        const [prows, pcols] = this.layerPatternSize(lpattern);
+
+        for (let rr = 0; rr < prows; rr += 1) {
+            for (let cc = 0; cc < pcols; cc += 1) {
+                for (let layer in lpattern) {
+                    if (lpattern[layer][rr][cc] === '.') {
+                        continue;
+                    }
+                    this.board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
+                }
+            }
         }
     }
 
-    let newRows = ENG_board.length;
-    let newCols = ENG_board[0].length;
-    if (newRows !== ENG_rows || newCols !== ENG_cols) {
-        ENG_rows = ENG_board.length;
-        ENG_cols = ENG_board[0].length;
+    findLayerPattern(lpattern) {
+        const [prows, pcols] = this.layerPatternSize(lpattern);
 
-        ENG_resizeCanvas();
+        let ret = []
+        for (let rr = 0; rr < this.rows - prows + 1; rr += 1) {
+            for (let cc = 0; cc < this.cols - pcols + 1; cc += 1) {
+                if (this.matchLayerPattern(lpattern, rr, cc)) {
+                    ret.push({row:rr, col:cc});
+                }
+            }
+        }
+        return ret;
     }
 
-    return true;
-}
-
-function ENG_stepNodeMatch(frame, lastResult) {
-    if (ENG_findLayerPattern(frame.node.pattern).length > 0) {
-        return true;
-    } else {
-        return false;
+    localInit(frame, what) {
+        if (frame.local === null) {
+            frame.local = new Map();
+            for (let [name, val] of what) {
+                frame.local.set(name, val);
+            }
+        }
     }
-}
 
-function ENG_stepNodeRewrite(frame, lastResult) {
-    let matches = ENG_findLayerPattern(frame.node.lhs);
-    if (matches.length > 0) {
-        let match = matches[Math.floor(Math.random()*matches.length)];
-        ENG_rewriteLayerPattern(frame.node.rhs, match.row, match.col);
-        return true;
-    } else {
-        return false;
+    localGet(frame, name) {
+        return frame.local.get(name);
     }
-}
 
-function ENG_stepNodePlayer(frame, lastResult) {
-    if (ENG_choiceWait === true) {
+    localSet(frame, name, val) {
+        return frame.local.set(name, val);
+    }
+
+    localSetIfTrue(frame, name, check) {
+        if (check === true) {
+            frame.local.set(name, true);
+        }
+    }
+
+    localIncrement(frame, name) {
+        frame.local.set(name, frame.local.get(name) + 1)
+    }
+
+    localEqual(frame, name, val) {
+        return frame.local.get(name) === val;
+    }
+
+    pushCallStack(node) {
+        this.callStack.push({node: node, local: null});
+    }
+
+    pushCallStackNextChild(frame) {
+        this.pushCallStack(frame.node.children[frame.local.get('index')]);
+        frame.local.set('index', frame.local.get('index') + 1);
         return null;
-    } else if (ENG_choiceWait !== false) {
-        let choiceInfo = ENG_choiceWait;
-        ENG_choiceWait = false;
+    }
 
-        ENG_rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
-        return true;
-    } else {
-        let choices = []
-        for (let child of frame.node.children) {
-            if (child.type === 'rewrite') {
-                let matches = ENG_findLayerPattern(child.lhs);
-                for (let match of matches) {
-                    choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
+    stepGameTree(stack) {
+        const NODE_FN_MAP = {
+            'display-board': bind0(this, 'stepNodeDisplayBoard'),
+            'set-board': bind0(this, 'stepNodeSetBoard'),
+            'layer-template': bind0(this, 'stepNodeLayerTemplate'),
+            'append-rows': bind0(this, 'stepNodeAppendRows'),
+            'order': bind0(this, 'stepNodeOrder'),
+            'loop-until-all': bind0(this, 'stepNodeLoopUntilAll'),
+            'loop-times': bind0(this, 'stepNodeLoopTimes'),
+            'random-try': bind0(this, 'stepNodeRandomTry'),
+            'all': bind0(this, 'stepNodeAll'),
+            'none': bind0(this, 'stepNodeNone'),
+            'win': bind0(this, 'stepNodeWin'),
+            'lose': bind0(this, 'stepNodeLose'),
+            'draw': bind0(this, 'stepNodeDraw'),
+            'match': bind0(this, 'stepNodeMatch'),
+            'rewrite': bind0(this, 'stepNodeRewrite'),
+            'player': bind0(this, 'stepNodePlayer'),
+        };
+
+        if (this.loopCheck !== true && this.stepDelay === null) {
+            if (this.callStack === null) {
+                this.undoPush();
+
+                this.callStack = [];
+                this.pushCallStack(GAME_SETUP.tree);
+            } else {
+                if (this.gameResult === true) {
+                } else if (this.gameResult === null) {
+                    this.undoPush();
+
+                    if (this.callStack.length === 0) {
+                        this.gameResult = {result:'stalemate'};
+                    } else {
+                        var frame = this.callStack.at(-1);
+                        this.callResult = NODE_FN_MAP[frame.node.type](frame, this.callResult);
+
+                        if (this.callResult === true || this.callResult === false) {
+                            this.callStack.pop();
+                        }
+                    }
+                } else {
+                    this.undoPush();
+
+                    if (this.gameResult.result === 'win') {
+                        var player = this.gameResult.player;
+                        setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 100);
+                    } else if (this.gameResult.result === 'lose') {
+                        var player = this.gameResult.player;
+                        setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 100);
+                    } else if (this.gameResult.result === 'draw') {
+                        setTimeout(() => { alert('Game over, draw!') }, 100);
+                    } else if (this.gameResult.result === 'stalemate') {
+                        setTimeout(() => { alert('Game over, stalemate!') }, 100);
+                    } else {
+                        setTimeout(() => { alert('Game over, unknown result!') }, 100);
+                    }
+                    this.gameResult = true;
                 }
             }
         }
+    }
 
-        let choicesUnique = []
-        let choicesSeen = new Set();
-        for (let choice of choices) {
-            const choicek = JSON.stringify(choice);
-            if (!choicesSeen.has(choicek)) {
-                choicesSeen.add(choicek);
-                choicesUnique.push(choice);
-            }
+    stepNodeOrder(frame, lastResult) {
+        this.localInit(frame, [['any', false],
+                               ['index', 0]]);
+
+        this.localSetIfTrue(frame, 'any', lastResult);
+
+        if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return this.localGet(frame, 'any');
+        } else {
+            return this.pushCallStackNextChild(frame);
         }
-        choices = choicesUnique;
+    }
 
-        if (choices.length > 0) {
-            ENG_choicePlayer = frame.node.pid;
+    stepNodeLoopUntilAll(frame, lastResult) {
+        this.localInit(frame, [['any', false],
+                               ['anyThisLoop', false],
+                               ['index', 0]]);
 
-            ENG_choicesByRct = new Map();
-            ENG_choicesByBtn = new Map();
+        this.localSetIfTrue(frame, 'any', lastResult);
+        this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
 
-            for (let choice of choices) {
-                let [rowsChoice, colsChoice] = ENG_layerPatternSize(choice.rhs);
-                let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
-                let rctk = JSON.stringify(rct);
-
-                let mapChoices = []
-                if (ENG_choicesByRct.has(rctk)) {
-                    mapChoices = ENG_choicesByRct.get(rctk).choices;
-                }
-
-                mapChoices.push(choice);
-                ENG_choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
-
-                if (choice.button !== undefined) {
-                    ENG_choicesByBtn.set(choice.button, choice);
-                }
+        if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            if (this.localGet(frame, 'anyThisLoop')) {
+                this.localSet(frame, 'anyThisLoop', false);
+                this.localSet(frame, 'index', 0);
+            } else {
+                return this.localGet(frame, 'any');
             }
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
 
-            ENG_choiceWait = true;
+    stepNodeLoopTimes(frame, lastResult) {
+        this.localInit(frame, [['any', false],
+                               ['times', 0],
+                               ['index', 0]]);
 
+        this.localSetIfTrue(frame, 'any', lastResult);
+
+        if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            if (this.localEqual(frame, 'times', frame.node.times)) {
+                return this.localGet(frame, 'any');
+            } else {
+                this.localIncrement('times');
+                this.localSet(frame, 'index', 0);
+            }
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
+
+    stepNodeRandomTry(frame, lastResult) {
+        this.localInit(frame, [['order', null]]);
+
+        if (this.localEqual(frame, 'order', null)) {
+            var order = [];
+            for (var ii = 0; ii < frame.node.children.length; ++ ii) {
+                order.push(ii);
+            }
+            order.sort((a, b) => 0.5 - Math.random());
+            this.localSet(frame, 'order', order);
+        }
+
+
+        if (lastResult === true) {
+            return true;
+        } else if (this.localGet(frame, 'order').length == 0) {
+            return false;
+        } else {
+            const index = this.localGet(frame, 'order').pop();
+            this.pushCallStack(frame.node.children[index]);
             return null;
+        }
+    }
+
+    stepNodeAll(frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === false) {
+            return false;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return true;
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
+
+    stepNodeNone(frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            return false;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return true;
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
+
+    stepNodeWin(frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            this.gameResult = {result:'win', player:frame.node.pid};
+            return null;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return false;
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
+
+    stepNodeLose(frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            this.gameResult = {result:'lose', player:frame.node.pid};
+            return null;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return false;
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
+
+    stepNodeDraw(frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            this.gameResult = {result:'draw'};
+            return null;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return false;
+        } else {
+            return this.pushCallStackNextChild(frame);
+        }
+    }
+
+    stepNodeSetBoard(frame, lastResult) {
+        this.board = JSON.parse(JSON.stringify(frame.node.pattern));
+
+        const [newRows, newCols] = this.layerPatternSize(this.board);
+        if (newRows !== this.rows || newCols !== this.cols) {
+            this.rows = newRows;
+            this.cols = newCols;
+
+            this.resizeCanvas();
+        }
+
+        return true;
+    }
+
+    stepNodeDisplayBoard(frame, lastResult) {
+        if (frame.node.hasOwnProperty('delay')) {
+            this.stepDelay = Date.now() + frame.node.delay;
+        }
+        return true;
+    }
+
+    stepNodeLayerTemplate(frame, lastResult) {
+        let newLayer = [];
+        for (let row of this.board['main']) {
+            let newRow = [];
+            for (let tile of row) {
+                if (tile === '.') {
+                    newRow.push('.');
+                } else {
+                    newRow.push(frame.node.with);
+                }
+            }
+            newLayer.push(newRow);
+        }
+
+        this.board[frame.node.what] = newLayer;
+
+        return true;
+    }
+
+    stepNodeAppendRows(frame, lastResult) {
+        if (this.rows === 0 || this.cols === 0) {
+            this.board = frame.node.pattern.slice();
+        } else {
+            for (let patternRow of frame.node.pattern) {
+                let newRow = []
+                while (newRow.length < this.cols) {
+                    for (let tile of patternRow) {
+                        if (newRow.length < this.cols) {
+                            newRow.push(tile);
+                        }
+                    }
+                }
+                this.board.push(newRow);
+            }
+        }
+
+        let newRows = this.board.length;
+        let newCols = this.board[0].length;
+        if (newRows !== this.rows || newCols !== this.cols) {
+            this.rows = this.board.length;
+            this.cols = this.board[0].length;
+
+            this.resizeCanvas();
+        }
+
+        return true;
+    }
+
+    stepNodeMatch(frame, lastResult) {
+        if (this.findLayerPattern(frame.node.pattern).length > 0) {
+            return true;
         } else {
             return false;
         }
     }
-}
+
+    stepNodeRewrite(frame, lastResult) {
+        let matches = this.findLayerPattern(frame.node.lhs);
+        if (matches.length > 0) {
+            let match = matches[Math.floor(Math.random()*matches.length)];
+            this.rewriteLayerPattern(frame.node.rhs, match.row, match.col);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodePlayer(frame, lastResult) {
+        if (this.choiceWait === true) {
+            return null;
+        } else if (this.choiceWait !== false) {
+            let choiceInfo = this.choiceWait;
+            this.choiceWait = false;
+
+            this.rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
+            return true;
+        } else {
+            let choices = []
+            for (let child of frame.node.children) {
+                if (child.type === 'rewrite') {
+                    let matches = this.findLayerPattern(child.lhs);
+                    for (let match of matches) {
+                        choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
+                    }
+                }
+            }
+
+            let choicesUnique = []
+            let choicesSeen = new Set();
+            for (let choice of choices) {
+                const choicek = JSON.stringify(choice);
+                if (!choicesSeen.has(choicek)) {
+                    choicesSeen.add(choicek);
+                    choicesUnique.push(choice);
+                }
+            }
+            choices = choicesUnique;
+
+            if (choices.length > 0) {
+                this.choicePlayer = frame.node.pid;
+
+                this.choicesByRct = new Map();
+                this.choicesByBtn = new Map();
+
+                for (let choice of choices) {
+                    let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
+                    let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
+                    let rctk = JSON.stringify(rct);
+
+                    let mapChoices = []
+                    if (this.choicesByRct.has(rctk)) {
+                        mapChoices = this.choicesByRct.get(rctk).choices;
+                    }
+
+                    mapChoices.push(choice);
+                    this.choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
+
+                    if (choice.button !== undefined) {
+                        this.choicesByBtn.set(choice.button, choice);
+                    }
+                }
+
+                this.choiceWait = true;
+
+                return null;
+            } else {
+                return false;
+            }
+        }
+    }
+
+};

@@ -32,3 +32,36 @@ function bind0(obj, fn) {
 function bind1(obj, fn, arg1) {
     return obj[fn].bind(obj, arg1);
 }
+
+function appendText(parent, text, bold) {
+    const elem = document.createTextNode(text);
+    if (bold) {
+        const elem_b = document.createElement('b');
+        elem_b.appendChild(elem);
+        parent.appendChild(elem_b)
+    } else {
+        parent.appendChild(elem);
+    }
+}
+
+function appendButton(parent, text, callback, color) {
+    const button = document.createElement('button');
+    button.innerHTML = text;
+    button.onclick = callback;
+    if (color !== undefined) {
+        button.style.backgroundColor = color
+    } else {
+        button.style.backgroundColor = '#dddddd';
+    }
+    parent.appendChild(button)
+}
+
+function appendBr(parent) {
+    parent.appendChild(document.createElement('br'));
+}
+
+function appendList(parent) {
+    const list = document.createElement('ul');
+    parent.appendChild(list);
+    return list;
+}
