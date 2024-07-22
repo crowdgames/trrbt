@@ -9,8 +9,9 @@
   </head>
   <body>
     <script>
-      var editor = new TRRBTEditor();
-      var engine = new TRRBTEngine();
+      var game = GAME_SETUP;
+      var editor = new TRRBTEditor(game, 'editorcanvas', 'editordiv');
+      var engine = new TRRBTEngine(game, 'enginecanvas', 'enginediv');
       function onLoad() {
           editor.engine = engine;
           engine.editor = editor;

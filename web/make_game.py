@@ -69,7 +69,7 @@ if __name__ == '__main__':
         f.write('  </head>\n')
         f.write('  <body>\n')
         f.write('    <script>\n')
-        f.write('      let engine = new TRRBTEngine();\n')
+        f.write('      var engine = new TRRBTEngine(GAME_SETUP, \'enginecanvas\', \'enginediv\');\n')
         f.write('      window.addEventListener(\'load\', bind0(engine, \'onLoad\'), false);\n')
         f.write('    </script>\n')
         f.write('    <center>\n')
