@@ -46,12 +46,48 @@ const EDT_XNODE_PROTOTYPES = [
 ];
 
 
+function xform_rule_apply(node, pattern_func, button_obj) {
+    if (pattern_func !== null) {
+        for (const key of ['pattern', 'lhs', 'rhs']) {
+            if (node.hasOwnProperty(key)) {
+                let new_patt = {}
+                for (const layer of Object.getOwnPropertyNames(node[key])) {
+                    new_patt[layer] = pattern_func(node[key][layer]);
+                }
+                node[key] = new_patt;
+            }
+        }
+    }
+
+    if (button_obj !== null) {
+        if (node.hasOwnProperty('button')) {
+            if (button_obj.hasOwnProperty(node.button)) {
+                node.button = button_obj[node.button];
+            }
+        }
+    }
+
+    return node;
+}
+
+function xform_identity(node) {
+    return [node];
+}
+
+function xform_mirror(node) {
+    function pattern_func(patt) {
+        return patt.slice().map(row=>row.slice().reverse());
+    }
+    let button_obj = {'left':'right', 'right':'left'}
+    return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, button_obj)]
+}
 
 function xformApplyToNode(node, xforms, nidToNode) {
     let ret_nodes = [];
 
-    node = Object.assign({}, node);
-    console.log(node);
+    node = shallowcopyobj(node);
+    const node_dispid = node.dispid;
+
     if (node.hasOwnProperty('comment')) {
         delete node.comment;
     }
@@ -62,31 +98,58 @@ function xformApplyToNode(node, xforms, nidToNode) {
     const ntype = node.type;
 
     if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only', 'x-set-player'].indexOf(ntype) >= 0) {
+        let fn = null;
+        if (ntype === 'x-ident') {
+            fn = xform_identity;
+        } else if (ntype === 'x-mirror') {
+            fn = xform_mirror;
+        } else {
+            fn = xform_identity;
+        }
+
         for (const child of node.children) {
-            const child_xformed = xformApplyToNode(child, xforms, nidToNode)
-            ret_nodes.push(...child_xformed);
+            let dispid_suff = 0;
+            const children_xformed = xformApplyToNode(child, [fn].concat(xforms), nidToNode)
+            for (let child_xformed of children_xformed) {
+                if (dispid_suff > 0) {
+                    child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suff;
+                }
+                ++ dispid_suff;
+                ret_nodes.push(child_xformed);
+            }
         }
     } else if ('x-link' === ntype) {
         //const target = nidToNode.get(node.target);
         return [];
     } else {
-        if (node.hasOwnProperty('children')) {
-            let new_children = []
-            for (const child of node.children) {
-                const child_xformed = xformApplyToNode(child, xforms, nidToNode)
-                new_children.push(...child_xformed);
+        let xformed = [node];
+        for (let xform of xforms) {
+            let new_xformed = [];
+            for (let xformed_node of xformed) {
+                const xformed_node_applied = xform(xformed_node);
+                new_xformed.push(...xformed_node_applied);
             }
-            node.children = new_children;
+            xformed = new_xformed;
         }
+        ret_nodes = xformed;
 
-        ret_nodes.push(node);
+        for (let ret_node of ret_nodes) {
+            if (ret_node.hasOwnProperty('children')) {
+                let new_children = []
+                for (const child of ret_node.children) {
+                    const child_xformed = xformApplyToNode(child, xforms, nidToNode)
+                    new_children.push(...child_xformed);
+                }
+                ret_node.children = new_children;
+            }
+        }
     }
 
     return ret_nodes;
 }
 
 function xformApplyToTree(tree) {
-    return xformApplyToNode(tree, [], new Map())[0];
+    return xformApplyToNode(tree, [xform_identity], new Map())[0];
 }
 
 class TRRBTEditor {
@@ -103,7 +166,6 @@ class TRRBTEditor {
 
         this.nidToNode = null;
         this.dispidToNode = null;
-        this.dispidNext = null;
 
         this.nodeDrawTexts = null;
         this.nodeDrawPositions = null;
@@ -164,7 +226,6 @@ class TRRBTEditor {
 
         this.nidToNode = new Map();
         this.dispidToNode = new Map();
-        this.dispidNext = 0;
 
         this.nodeDrawTexts = new Map();
         this.nodeDrawPositions = new Map();
@@ -247,6 +308,7 @@ class TRRBTEditor {
             this.xform_editor.game.name = this.game.name;
             this.xform_editor.game.sprites = this.game.sprites;
             this.xform_editor.game.tree = xformApplyToTree(this.game.tree);
+            this.xform_editor.updateTreeStructure();
         }
     }
 
@@ -256,13 +318,27 @@ class TRRBTEditor {
         }
     }
 
+    clearNodeDispid(node) {
+        if (node.hasOwnProperty('dispid')) {
+            delete node.dispid;
+        }
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                this.clearNodeDispid(child);
+            }
+        }
+    }
+
     updateNodeIdsNode(node) {
         if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
             this.nidToNode.set(node.nid, node);
         }
-        if (!node.hasOwnProperty('dispid')) {
-            node.dispid = this.dispidNext;
-            ++ this.dispidNext;
+        if (node.hasOwnProperty('dispid')) {
+            if (this.dispidToNode.has(node.dispid)) {
+                node.dispid = getNextId();
+            }
+        } else {
+            node.dispid = getNextId();
         }
         this.dispidToNode.set(node.dispid, node);
         if (node.hasOwnProperty('children')) {
@@ -1133,7 +1209,7 @@ class TRRBTEditor {
             node.rhs = this.parsePatternProperty('prop_rhs');
         }
 
-        this.updatePositionsAndDraw();
+        this.updateTreeStructureAndDraw(false);
     }
 
     findNodeParent(from, node) {
@@ -1155,6 +1231,7 @@ class TRRBTEditor {
         let node = this.propertyNodes.node;
 
         this.clipboard = deepcopyobj(node);
+        this.clearNodeDispid(this.clipboard);
 
         if (cut) {
             this.onNodeDelete(false);
@@ -1255,7 +1332,7 @@ class TRRBTEditor {
                     this.updatePositionsAndDraw(true);
                 } else {
                     this.collapseNodes(this.mouseNode, false, !this.collapsedNodes.has(this.mouseNode));
-                    this.updatePositionsAndDraw();
+                    this.updatePositionsAndDraw(false);
                 }
             }
 
@@ -1358,12 +1435,12 @@ class TRRBTEditor {
             if (key === 'f' || key === 'F') {
                 if (this.hasEngine()) {
                     this.followStack = !this.followStack;
-                    this.updatePositionsAndDraw();
+                    this.updatePositionsAndDraw(false);
                 }
             }
             if (key === 'v' || key === 'V') {
                 this.layout_horizontal = !this.layout_horizontal;
-                this.updatePositionsAndDraw();
+                this.updatePositionsAndDraw(false);
             }
         }
 

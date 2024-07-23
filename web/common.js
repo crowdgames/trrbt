@@ -5,11 +5,30 @@ const DOUBLE_CLICK_TIME = 300;
 
 const TAU = 2 * Math.PI;
 
+let G_nextId = 0;
+
+function getNextId() {
+    ++ G_nextId;
+    return G_nextId;
+}
+
 function copymap(map) {
     if (map === null) {
         return null;
     } else {
         return new Map(JSON.parse(JSON.stringify(Array.from(map))));
+    }
+}
+
+function shallowcopyobj(obj) {
+    if (obj === null) {
+        return null;
+    } else if (obj === true) {
+        return true;
+    } else if (obj === false) {
+        return false;
+    } else {
+        return Object.assign({}, obj);
     }
 }
 
