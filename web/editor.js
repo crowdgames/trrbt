@@ -44,6 +44,34 @@ const EDT_XNODE_PROTOTYPES = [
     { type:'x-link', nid:'', target:'' },
 ];
 
+function xform_unique(nodes) {
+    let ret = [];
+    for (const node of nodes) {
+        let unique = true;
+        for (const rnode of ret) {
+            let same = true;
+            for (const key of ['pattern', 'lhs', 'rhs', 'pid', 'button']) {
+                if (node.hasOwnProperty(key) != rnode.hasOwnProperty(key)) {
+                    same = false;
+                    break;
+                } else if (node.hasOwnProperty(key) && rnode.hasOwnProperty(key)) {
+                    if (JSON.stringify(node[key]) != JSON.stringify(rnode[key])) {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+            if (same) {
+                unique = false;
+            }
+        }
+        if (unique) {
+            ret.push(node);
+        }
+    }
+    return ret;
+}
+
 function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
     if (pattern_func !== null) {
         for (const key of ['pattern', 'lhs', 'rhs']) {
@@ -225,7 +253,7 @@ function xform_rule_replace_only_fn(wht, wth) {
         for (const which of wth.split(/\s+/)) {
             ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
         }
-        return ret;
+        return xform_unique(ret);
     }
 
     return rule_replace_only;
@@ -249,7 +277,7 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
 
     const ntype = node.type;
 
-    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only'].indexOf(ntype) >= 0) {
+    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only'].indexOf(ntype) >= 0 || (ntype.startsWith('x-') && ntype !== 'x-link')) {
         let fn = null;
         if (ntype === 'x-ident') {
             fn = xform_rule_identity;
