@@ -9,39 +9,39 @@ const EDT_TEXT_FONT  = 0;
 const EDT_TEXT_COLOR = 1;
 const EDT_TEXT_LINE  = 2;
 
-const EDT_BUTTONS = [null, 'up', 'down', 'left', 'right', 'action1', 'action2'];
+const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type:'player', children:[], pid:'' },
+    { type:'player', nid:'', children:[], pid:'' },
 
-    { type:'win', children:[], pid:'' },
-    { type:'lose', children:[], pid:'' },
-    { type:'draw', children:[] },
+    { type:'win', nid:'', children:[], pid:'' },
+    { type:'lose', nid:'', children:[], pid:'' },
+    { type:'draw', nid:'', children:[] },
 
-    { type:'order', children:[] },
-    { type:'all', children:[] },
-    { type:'none', children:[] },
-    { type:'random-try', children:[] },
-    { type:'loop-until-all', children:[] },
-    { type:'loop-times', children:[], times:1 },
+    { type:'order', nid:'', children:[] },
+    { type:'all', nid:'', children:[] },
+    { type:'none', nid:'', children:[] },
+    { type:'random-try', nid:'', children:[] },
+    { type:'loop-until-all', nid:'', children:[] },
+    { type:'loop-times', nid:'', children:[], times:1 },
 
-    { type:'rewrite', button:null, lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
-    { type:'set-board', pattern:EDT_EMPTY_PATTERN },
+    { type:'rewrite', nid:'', button:'', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
+    { type:'set-board', nid:'', pattern:EDT_EMPTY_PATTERN },
 
     { type:'match', pattern:EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type:'x-ident', children:[] },
-    { type:'x-mirror', children:[] },
-    { type:'x-skew', children:[] },
-    { type:'x-rotate', children:[] },
-    { type:'x-spin', children:[] },
-    { type:'x-flip-only', children:[] },
-    { type:'x-swap-only', children:[], what:'', with:'' },
-    { type:'x-replace-only', children:[], what:'', with:'' },
-    { type:'x-link', target:'' },
+    { type:'x-ident', nid:'', children:[] },
+    { type:'x-mirror', nid:'', children:[] },
+    { type:'x-skew', nid:'', children:[] },
+    { type:'x-rotate', nid:'', children:[] },
+    { type:'x-spin', nid:'', children:[] },
+    { type:'x-flip-only', nid:'', children:[] },
+    { type:'x-swap-only', nid:'', children:[], what:'', with:'' },
+    { type:'x-replace-only', nid:'', children:[], what:'', with:'' },
+    { type:'x-link', nid:'', target:'' },
 ];
 
 function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
@@ -423,7 +423,7 @@ class TRRBTEditor {
     }
 
     updateNodeIdsNode(node) {
-        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
+        if (node.hasOwnProperty('nid') && node.nid != '') {
             this.nidToNode.set(node.nid, node);
         }
         if (node.hasOwnProperty('dispid')) {
@@ -575,15 +575,15 @@ class TRRBTEditor {
 
         //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
 
-        if (node.hasOwnProperty('nid')) {
+        if (node.hasOwnProperty('nid') && node.nid != '') {
             texts.push({type:EDT_TEXT_LINE,  data:'nid: ' + node.nid});
         }
 
-        if (node.hasOwnProperty('target')) {
+        if (node.hasOwnProperty('target') && node.target != '') {
             texts.push({type:EDT_TEXT_LINE,  data:'target: ' + node.target});
         }
 
-        if (node.hasOwnProperty('pid')) {
+        if (node.hasOwnProperty('pid') && node.pid != '') {
             texts.push({type:EDT_TEXT_LINE,  data:'pid: ' + node.pid});
         }
 
@@ -599,7 +599,7 @@ class TRRBTEditor {
             texts.push({type:EDT_TEXT_LINE,  data:'with: ' + node.with});
         }
 
-        if (node.hasOwnProperty('button') && node.button !== null) {
+        if (node.hasOwnProperty('button') && node.button !== '') {
             texts.push({type:EDT_TEXT_LINE,  data:'[' + node.button + ']'});
         }
 
@@ -1014,7 +1014,7 @@ class TRRBTEditor {
         appendText(item, name)
         appendBr(item)
         for (const choice_value of values) {
-            const choice_text = (choice_value === null) ? 'none' : choice_value;
+            const choice_text = (choice_value === '') ? 'none' : choice_value;
             const choice_id = id + '_' + choice_value;
 
             const input = document.createElement('input');
@@ -1125,9 +1125,11 @@ class TRRBTEditor {
                 const parent = this.propertyNodes.parent;
 
                 const proto = this.getNodePrototype(node.type);
-                for (const prop of Object.getOwnPropertyNames(proto)) {
-                    if (!node.hasOwnProperty(prop)) {
-                        node[prop] = deepcopyobj(proto[prop]);
+                if (proto) {
+                    for (const prop of Object.getOwnPropertyNames(proto)) {
+                        if (!node.hasOwnProperty(prop)) {
+                            node[prop] = deepcopyobj(proto[prop]);
+                        }
                     }
                 }
 
