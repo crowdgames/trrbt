@@ -51,7 +51,7 @@ if __name__ == '__main__':
     parser.add_argument('--sprites', type=str, help='Sprite file.')
     args = parser.parse_args()
 
-    game = util.yaml2bt(args.filename, True)
+    game = util.yaml2bt(args.filename, False)
 
     sprite_data = get_sprite_data(args.sprites) if args.sprites else None
 

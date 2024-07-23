@@ -32,6 +32,19 @@ const EDT_NODE_PROTOTYPES = [
     { type:'match', pattern:EDT_EMPTY_PATTERN },
 ];
 
+const EDT_XNODE_PROTOTYPES = [
+    { type:'x-ident', children:[] },
+    { type:'x-mirror', children:[] },
+    { type:'x-skew', children:[] },
+    { type:'x-rotate', children:[] },
+    { type:'x-spin', children:[] },
+    { type:'x-flip-only', children:[] },
+    { type:'x-swap-only', children:[], what:'', with:'' },
+    { type:'x-replace-only', children:[], what:'', with:'' },
+    { type:'x-set-player', children:[], pid:'' },
+    { type:'x-link', target:'' },
+];
+
 
 
 class TRRBTEditor {
@@ -84,8 +97,10 @@ class TRRBTEditor {
             return '#' + dk + lt + lt;
         } else if (['display-board'].indexOf(type) >= 0) {
             return '#' + dk + dk + dk;
-        } else {
+        } else if (type.startsWith('x-')) {
             return '#' + lt + lt + lt;
+        } else {
+            return '#' + lt + lt + dk;
         }
     }
 
@@ -100,6 +115,7 @@ class TRRBTEditor {
         this.keysDown = new Set();
 
         this.nodeDrawTexts = new Map();
+        this.nodeDrawIds = new Map();
         this.nodeDrawPositions = new Map();
         this.nodeDrawPositionsDesired = new Map();
         this.nodeDrawPositionsWantUpdate = true;
@@ -153,11 +169,11 @@ class TRRBTEditor {
 
         if (this.nodeDrawPositionsWantUpdate) {
             this.nodeDrawPositionsDesired = new Map();
-            this.updateDesiredPositionsTree(this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.game.tree);
+            this.updateDesiredPositionsTree(this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.nodeDrawIds, this.game.tree);
 
             let anyNodeMoved = false;
             if (this.nodeDrawLastTime !== null) {
-                anyNodeMoved = this.updateNodePositions(this.nodeDrawPositions, this.nodeDrawPositionsDesired, this.nodeDrawTexts, drawTime - this.nodeDrawLastTime);
+                anyNodeMoved = this.updateNodePositions(this.nodeDrawPositions, this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.nodeDrawIds, drawTime - this.nodeDrawLastTime);
             } else {
                 this.nodeDrawPositions = this.nodeDrawPositionsDesired
             }
@@ -169,7 +185,7 @@ class TRRBTEditor {
             }
         }
 
-        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.game.tree);
+        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.nodeDrawIds, this.game.tree);
 
         this.nodeDrawLastTime = drawTime;
     }
@@ -213,7 +229,7 @@ class TRRBTEditor {
         return 0.15 * (des - curr);
     }
 
-    updateNodePositions(nodePositions, nodePositionsDesired, nodeTexts, deltaTime) {
+    updateNodePositions(nodePositions, nodePositionsDesired, nodeTexts, nodeIds, deltaTime) {
         let anyMoved = false;
 
         let toDelete = [];
@@ -225,6 +241,7 @@ class TRRBTEditor {
         for (let node of toDelete) {
             nodePositions.delete(node);
             nodeTexts.delete(node);
+            nodeIds.delete(node);
         }
 
         for (let [node, desRect] of nodePositionsDesired.entries()) {
@@ -275,19 +292,28 @@ class TRRBTEditor {
         return rowStr;
     }
 
-    updateDesiredPositionsTree(nodePositions, nodeTexts, tree) {
+    updateDesiredPositionsTree(nodePositions, nodeTexts, nodeIds, tree) {
         nodePositions.clear();
         nodeTexts.clear();
+        nodeIds.clear();
 
-        this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, this.getEngineStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
+        this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, nodeIds, this.getEngineStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
     }
 
-    updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
+    updateDesiredPositionsTreeNode(nodePositions, nodeTexts, nodeIds, stackNodes, node, xpos, ypos, align) {
         let texts = [];
         texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
         texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
         texts.push({type:EDT_TEXT_LINE,  data:node.type});
         texts.push({type:EDT_TEXT_FONT,  data:'10px sans-serif'});
+
+        if (node.hasOwnProperty('nid')) {
+            texts.push({type:EDT_TEXT_LINE,  data:'nid: ' + node.nid});
+        }
+
+        if (node.hasOwnProperty('target')) {
+            texts.push({type:EDT_TEXT_LINE,  data:'target: ' + node.target});
+        }
 
         if (node.hasOwnProperty('pid')) {
             texts.push({type:EDT_TEXT_LINE,  data:'pid: ' + node.pid});
@@ -414,7 +440,7 @@ class TRRBTEditor {
                     const child_xpos = this.layout_horizontal ? child_next_pos : (nx + nw + EDT_NODE_SPACING);
                     const child_ypos = this.layout_horizontal ? (ny + nh + EDT_NODE_SPACING) : child_next_pos;
 
-                    child_next_pos = this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, child, child_xpos, child_ypos, child_align);
+                    child_next_pos = this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, nodeIds, stackNodes, child, child_xpos, child_ypos, child_align);
                     child_align = null;
                 }
                 next_pos = Math.max(next_pos, child_next_pos);
@@ -424,14 +450,67 @@ class TRRBTEditor {
         nodePositions.set(node, {x:nx, y:ny, w:nw, h:nh})
         nodeTexts.set(node, texts);
 
+        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
+            nodeIds.set(node.nid, node);
+        }
+
         return next_pos;
     }
 
-    drawTree(ctx, nodePositions, nodeTexts, tree) {
-        this.drawTreeNode(ctx, nodePositions, nodeTexts, this.getEngineStackNodes(), tree);
+    drawTree(ctx, nodePositions, nodeTexts, nodeIds, tree) {
+        const stackNodes = this.getEngineStackNodes();
+        this.drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, tree);
+        this.drawTreeNode(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, tree);
     }
 
-    drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
+    drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, node) {
+        if (node.hasOwnProperty('target')) {
+            const nrect = nodePositions.get(node);
+            const nx = nrect.x;
+            const ny = nrect.y;
+            const nw = nrect.w;
+            const nh = nrect.h;
+
+            const target = nodeIds.get(node.target);
+
+            const x0 = this.layout_horizontal ? (nx + 0.5 * nw) : (nx + 1.0 * nw);
+            const y0 = this.layout_horizontal ? (ny + 1.0 * nh) : (ny + 0.5 * nh);
+
+            const dx = this.layout_horizontal ? (0.0) : (EDT_NODE_SPACING);
+            const dy = this.layout_horizontal ? (EDT_NODE_SPACING) : (0.0);
+
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#ccccff';
+
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.moveTo(x0, y0);
+
+            if (target) {
+                const tnrect = nodePositions.get(target);
+                const tnx = tnrect.x;
+                const tny = tnrect.y;
+                const tnw = tnrect.w;
+                const tnh = tnrect.h;
+                ctx.bezierCurveTo(x0 + 0.5 * dx, y0 + 0.5 * dy, x0 + 1.5 * dx, y0 + 1.5 * dy, tnx + 0.5 * tnw, tny + 0.5 * tnh);
+            } else {
+                ctx.lineTo(x0 + 0.5 * dx, y0 + 0.5 * dy);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                if (this.nodeCollapsed(node, stackNodes) && node.children.length > 0) {
+                } else {
+                    this.drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, child);
+                }
+            }
+        }
+    }
+
+    drawTreeNode(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, node) {
         const nrect = nodePositions.get(node);
         const nx = nrect.x;
         const ny = nrect.y;
@@ -522,7 +601,7 @@ class TRRBTEditor {
                 }
 
                 for (let child of node.children) {
-                    this.drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, child);
+                    this.drawTreeNode(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, child);
                 }
             }
         }
@@ -556,6 +635,16 @@ class TRRBTEditor {
         } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
+            ctx.fill();
+        } else if (node.type.startsWith('x-')) {
+            ctx.beginPath();
+            ctx.moveTo(nx + 0.10 * nw, ny + 0.00 * nh);
+            ctx.lineTo(nx + 1.00 * nw, ny + 0.00 * nh);
+            ctx.lineTo(nx + 1.00 * nw, ny + 0.60 * nh);
+            ctx.lineTo(nx + 0.90 * nw, ny + 1.00 * nh);
+            ctx.lineTo(nx + 0.00 * nw, ny + 1.00 * nh);
+            ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
+            ctx.lineTo(nx + 0.10 * nw, ny + 0.00 * nh);
             ctx.fill();
         } else {
             ctx.beginPath();
@@ -778,65 +867,60 @@ class TRRBTEditor {
                     }
                 }
 
-                const pe = this.propertyEditor;
+                const ed = this.propertyEditor;
 
-                pe.innerHTML = '';
+                ed.innerHTML = '';
 
-                appendText(pe, node.type, true);
-                appendBr(pe);
+                appendText(ed, node.type, true);
+                appendBr(ed);
 
                 if (parent !== null) {
-                    appendButton(pe, 'Move Earlier', bind1(this, 'onNodeShift', true));
-                    appendButton(pe, 'Move Later', bind1(this, 'onNodeShift', false));
+                    appendButton(ed, 'Move Earlier', bind1(this, 'onNodeShift', true));
+                    appendButton(ed, 'Move Later', bind1(this, 'onNodeShift', false));
                 }
-                appendBr(pe);
-                appendBr(pe);
+                appendBr(ed);
+                appendBr(ed);
 
-                appendButton(pe, 'Copy Subtree', bind1(this, 'onNodeCopy', false));
+                appendButton(ed, 'Copy Subtree', bind1(this, 'onNodeCopy', false));
                 if (node !== this.game.tree) {
-                    appendButton(pe, 'Cut Subtree', bind1(this, 'onNodeCopy', true));
+                    appendButton(ed, 'Cut Subtree', bind1(this, 'onNodeCopy', true));
                 }
                 if (this.clipboard !== null) {
                     if (node.hasOwnProperty('children')) {
                         if (node.type === 'player' && this.clipboard.type !== 'rewrite') {
                             // pass
                         } else {
-                            appendButton(pe, 'Paste Subtree', bind1(this, 'onNodePaste', true));
+                            appendButton(ed, 'Paste Subtree', bind1(this, 'onNodePaste', true));
                         }
                     }
                 }
-                appendBr(pe);
-                appendBr(pe);
+                appendBr(ed);
+                appendBr(ed);
 
                 if (node.hasOwnProperty('children') && node.children.length > 0) {
                     if (node !== this.game.tree) {
-                        appendButton(pe, 'Delete and Reparent', bind1(this, 'onNodeDelete', true));
-                        appendButton(pe, 'Delete Subtree', bind1(this, 'onNodeDelete', false));
+                        appendButton(ed, 'Delete and Reparent', bind1(this, 'onNodeDelete', true));
+                        appendButton(ed, 'Delete Subtree', bind1(this, 'onNodeDelete', false));
                     }
-                    appendButton(pe, 'Delete Children', bind1(this, 'onNodeDeleteChildren', false));
+                    appendButton(ed, 'Delete Children', bind1(this, 'onNodeDeleteChildren', false));
                 } else if (node !== this.game.tree) {
-                    appendButton(pe, 'Delete', bind1(this, 'onNodeDelete', false));
+                    appendButton(ed, 'Delete', bind1(this, 'onNodeDelete', false));
                 }
-                appendBr(pe);
-                appendBr(pe);
-
-                if (node.hasOwnProperty('children')) {
-                    for (const proto of EDT_NODE_PROTOTYPES) {
-                        if (node.type === 'player' && proto.type !== 'rewrite') {
-                            // pass
-                        } else {
-                            appendButton(pe, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
-                            appendBr(pe);
-                        }
-                    }
-                    appendBr(pe);
-                    appendBr(pe);
-                }
+                appendBr(ed);
+                appendBr(ed);
 
                 let anyProperties = false;
 
-                const list = appendList(pe);
+                const list = appendList(ed);
 
+                if (node.hasOwnProperty('nid')) {
+                    this.appendTextProperty(list, 'prop_nid', 'node id', node.nid);
+                    anyProperties = true;
+                }
+                if (node.hasOwnProperty('target')) {
+                    this.appendTextProperty(list, 'prop_target', 'target id', node.target);
+                    anyProperties = true;
+                }
                 if (node.hasOwnProperty('pid')) {
                     this.appendTextProperty(list, 'prop_pid', 'player id', node.pid);
                     anyProperties = true;
@@ -878,8 +962,43 @@ class TRRBTEditor {
                 }
 
                 if (anyProperties) {
-                    appendButton(pe, 'Save', bind0(this, 'onNodeSaveProperties'));
-                    appendBr(pe);
+                    appendButton(ed, 'Save', bind0(this, 'onNodeSaveProperties'));
+                    appendBr(ed);
+                }
+
+                if (node.hasOwnProperty('children')) {
+                    appendBr(ed);
+                    appendBr(ed);
+
+                    const table = document.createElement('table');
+                    ed.appendChild(table);
+                    const tbody = document.createElement('tbody');
+                    table.appendChild(tbody);
+                    const tr = document.createElement('tr');
+                    tr.style = 'vertical-align:top';
+                    tbody.appendChild(tr);
+                    const td1 = document.createElement('td');
+                    tr.appendChild(td1);
+                    const td2 = document.createElement('td');
+                    tr.appendChild(td2);
+
+                    const rows = Math.max(EDT_NODE_PROTOTYPES.length, EDT_XNODE_PROTOTYPES.length);
+                    for (let ii = 0; ii < rows; ++ ii) {
+                        if (ii < EDT_NODE_PROTOTYPES.length) {
+                            const proto = EDT_NODE_PROTOTYPES[ii];
+                            if (node.type === 'player' && proto.type !== 'rewrite') {
+                                // pass
+                            } else {
+                                appendButton(td1, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                                appendBr(td1);
+                            }
+                        }
+                        if (ii < EDT_XNODE_PROTOTYPES.length) {
+                            const proto = EDT_XNODE_PROTOTYPES[ii];
+                            appendButton(td2, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                            appendBr(td2);
+                        }
+                    }
                 }
             } else {
                 this.propertyEditor.innerHTML = '';
@@ -890,6 +1009,12 @@ class TRRBTEditor {
     onNodeSaveProperties() {
         let node = this.propertyNodes.node;
 
+        if (node.hasOwnProperty('nid')) {
+            node.nid = document.getElementById('prop_nid').value;
+        }
+        if (node.hasOwnProperty('target')) {
+            node.target = document.getElementById('prop_target').value;
+        }
         if (node.hasOwnProperty('pid')) {
             node.pid = document.getElementById('prop_pid').value;
         }
@@ -982,6 +1107,11 @@ class TRRBTEditor {
 
     getNodePrototype(type) {
         for (const proto of EDT_NODE_PROTOTYPES) {
+            if (proto.type === type) {
+                return proto;
+            }
+        }
+        for (const proto of EDT_XNODE_PROTOTYPES) {
             if (proto.type === type) {
                 return proto;
             }

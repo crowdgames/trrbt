@@ -292,24 +292,24 @@ class TRRBTEngine {
             return;
         }
 
-        const ee = this.engineEditor;
+        const ed = this.engineEditor;
 
-        ee.innerHTML = '';
+        ed.innerHTML = '';
 
-        appendButton(ee, 'Restart', bind0(this, 'onLoad'));
-        appendBr(ee);
-        appendBr(ee);
+        appendButton(ed, 'Restart', bind0(this, 'onLoad'));
+        appendBr(ed);
+        appendBr(ed);
 
-        appendButton(ee, 'Break/Resume', bind0(this, 'onBreakResume'));
-        appendBr(ee);
+        appendButton(ed, 'Break/Resume', bind0(this, 'onBreakResume'));
+        appendBr(ed);
 
-        appendButton(ee, 'Undo Step', bind1(this, 'onUndo', false));
-        appendButton(ee, 'Undo Move', bind1(this, 'onUndo', true));
-        appendBr(ee);
+        appendButton(ed, 'Undo Step', bind1(this, 'onUndo', false));
+        appendButton(ed, 'Undo Move', bind1(this, 'onUndo', true));
+        appendBr(ed);
 
-        appendButton(ee, 'Next Step', bind1(this, 'onNext', false));
-        appendButton(ee, 'Next Move', bind1(this, 'onNext', true));
-        appendBr(ee);
+        appendButton(ed, 'Next Step', bind1(this, 'onNext', false));
+        appendButton(ed, 'Next Move', bind1(this, 'onNext', true));
+        appendBr(ed);
     }
 
     onDraw() {
