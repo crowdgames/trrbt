@@ -96,6 +96,19 @@ function xform_rule_rotate(node) {
     return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)];
 }
 
+function xform_rule_spin(node) {
+    function pattern_func(patt) {
+        return patt[0].slice().map((val, index) => patt.slice().map(row => row.slice()[index]).reverse());
+    }
+    let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'};
+
+    let ret = [node];
+    for (let ii = 0; ii < 3; ++ ii) {
+        ret.push(xform_rule_apply(shallowcopyobj(ret.at(-1)), pattern_func, null, button_obj));
+    }
+    return ret;
+}
+
 function xform_rule_skew(node) {
     function pattern_func(patt) {
         const rows = patt.length;
@@ -117,6 +130,15 @@ function xform_rule_skew(node) {
     }
 
     return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, null)];
+}
+
+function xform_rule_flip_only(node) {
+    function pattern_func(patt) {
+        return patt.slice().reverse();
+    }
+    let button_obj = {'up':'down', 'down':'up'};
+
+    return [xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)];
 }
 
 function xform_rule_swap_only_fn(wht, wth) {
@@ -154,11 +176,59 @@ function xform_rule_swap_only_fn(wht, wth) {
         return ret;
     }
 
-    function rule_swaponly(node) {
+    function rule_swap_only(node) {
         return [xform_rule_apply(shallowcopyobj(node), pattern_func, pid_func, null)];
     }
 
-    return rule_swaponly;
+    return rule_swap_only;
+}
+
+function xform_rule_replace_only_fn(wht, wth) {
+    function pattern_func_fn(which) {
+        function pattern_func(patt) {
+            let ret = [];
+            for (let row of patt) {
+                let ret_row = [];
+                for (let tile of row) {
+                    let ret_tile = '';
+                    for (let char of tile) {
+                        if (char === wht) {
+                            char = which;
+                        }
+                        ret_tile += char;
+                    }
+                    ret_row.push(ret_tile);
+                }
+                ret.push(ret_row);
+            }
+            return ret;
+        }
+        return pattern_func;
+    }
+
+    function pid_func_fn(which) {
+        function pid_func(pid) {
+            let ret = '';
+            for (let char of pid) {
+                if (char === wht) {
+                    char = which;
+                }
+                ret += char;
+            }
+            return ret;
+        }
+        return pid_func;
+    }
+
+    function rule_replace_only(node) {
+        let ret = [];
+        for (const which of wth.split(/\s+/)) {
+            ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
+        }
+        return ret;
+    }
+
+    return rule_replace_only;
 }
 
 function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
@@ -179,7 +249,7 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
 
     const ntype = node.type;
 
-    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only', 'x-set-player'].indexOf(ntype) >= 0) {
+    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only'].indexOf(ntype) >= 0) {
         let fn = null;
         if (ntype === 'x-ident') {
             fn = xform_rule_identity;
@@ -187,10 +257,16 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
             fn = xform_rule_mirror;
         } else if (ntype === 'x-rotate') {
             fn = xform_rule_rotate;
+        } else if (ntype === 'x-spin') {
+            fn = xform_rule_spin;
         } else if (ntype === 'x-skew') {
             fn = xform_rule_skew;
+        } else if (ntype === 'x-flip-only') {
+            fn = xform_rule_flip_only;
         } else if (ntype === 'x-swap-only') {
             fn = xform_rule_swap_only_fn(node.what, node.with);
+        } else if (ntype === 'x-replace-only') {
+            fn = xform_rule_replace_only_fn(node.what, node.with);
         } else {
             fn = xform_rule_identity;
         }
