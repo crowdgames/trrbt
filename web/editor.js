@@ -417,9 +417,9 @@ class TRRBTEditor {
 
     nodeCollapsed(node, stackNodes) {
         if (this.followStack) {
-            return !stackNodes.has(node);
+            return !stackNodes.has(node.dispid);
         } else {
-            return this.collapsedNodes.has(node);
+            return this.collapsedNodes.has(node.dispid);
         }
     }
 
@@ -431,7 +431,7 @@ class TRRBTEditor {
         let stackNodes = new Set();
         if (this.hasEngine() && this.engine.callStack !== null) {
             for (let frame of this.engine.callStack) {
-                stackNodes.add(frame.node);
+                stackNodes.add(frame.node.dispid);
             }
         }
         return stackNodes;
@@ -928,9 +928,9 @@ class TRRBTEditor {
     collapseNodes(node, recurse, collapse) {
         if (node.hasOwnProperty('children')) {
             if (collapse && node.children.length > 0) {
-                this.collapsedNodes.add(node);
+                this.collapsedNodes.add(node.dispid);
             } else {
-                this.collapsedNodes.delete(node);
+                this.collapsedNodes.delete(node.dispid);
             }
             if (recurse) {
                 for (let child of node.children) {
@@ -1370,12 +1370,12 @@ class TRRBTEditor {
         const isDouble = (this.mouseLastTime !== null && mouseTime - this.mouseLastTime <= DOUBLE_CLICK_TIME);
 
         if (this.mouseNode !== null) {
-            if (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node) {
+            if (this.propertyEditor === null || (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node)) {
                 if (isDouble) {
-                    this.collapseNodes(this.mouseNode, true, this.collapsedNodes.has(this.mouseNode));
+                    this.collapseNodes(this.mouseNode, true, this.collapsedNodes.has(this.mouseNode.dispid));
                     this.updatePositionsAndDraw(true);
                 } else {
-                    this.collapseNodes(this.mouseNode, false, !this.collapsedNodes.has(this.mouseNode));
+                    this.collapseNodes(this.mouseNode, false, !this.collapsedNodes.has(this.mouseNode.dispid));
                     this.updatePositionsAndDraw(false);
                 }
             }
