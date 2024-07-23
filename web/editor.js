@@ -47,6 +47,48 @@ const EDT_XNODE_PROTOTYPES = [
 
 
 
+function xformApplyToNode(node, xforms, nidToNode) {
+    let ret_nodes = [];
+
+    node = Object.assign({}, node);
+    console.log(node);
+    if (node.hasOwnProperty('comment')) {
+        delete node.comment;
+    }
+    if (node.hasOwnProperty('nid')) {
+        delete node.nid;
+    }
+
+    const ntype = node.type;
+
+    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only', 'x-set-player'].indexOf(ntype) >= 0) {
+        for (const child of node.children) {
+            const child_xformed = xformApplyToNode(child, xforms, nidToNode)
+            ret_nodes.push(...child_xformed);
+        }
+    } else if ('x-link' === ntype) {
+        //const target = nidToNode.get(node.target);
+        return [];
+    } else {
+        if (node.hasOwnProperty('children')) {
+            let new_children = []
+            for (const child of node.children) {
+                const child_xformed = xformApplyToNode(child, xforms, nidToNode)
+                new_children.push(...child_xformed);
+            }
+            node.children = new_children;
+        }
+
+        ret_nodes.push(node);
+    }
+
+    return ret_nodes;
+}
+
+function xformApplyToTree(tree) {
+    return xformApplyToNode(tree, [], new Map())[0];
+}
+
 class TRRBTEditor {
 
     constructor(game, canvasname, divname) {
@@ -58,6 +100,10 @@ class TRRBTEditor {
         this.ctx = null;
         this.propertyEditor = null;
         this.keysDown = new Set();
+
+        this.nidToNode = null;
+        this.dispidToNode = null;
+        this.dispidNext = null;
 
         this.nodeDrawTexts = null;
         this.nodeDrawPositions = null;
@@ -81,6 +127,8 @@ class TRRBTEditor {
         this.layout_horizontal = null;
 
         this.engine = null;
+
+        this.xform_editor = null;
     }
 
     nodeColor(type, sel) {
@@ -114,8 +162,11 @@ class TRRBTEditor {
         this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
 
+        this.nidToNode = new Map();
+        this.dispidToNode = new Map();
+        this.dispidNext = 0;
+
         this.nodeDrawTexts = new Map();
-        this.nodeDrawIds = new Map();
         this.nodeDrawPositions = new Map();
         this.nodeDrawPositionsDesired = new Map();
         this.nodeDrawPositionsWantUpdate = true;
@@ -146,6 +197,7 @@ class TRRBTEditor {
 
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
+        this.updateTreeStructure();
         this.updatePropertyEditor(this.mouseNode);
 
         window.requestAnimationFrame(bind0(this, 'onDraw'));
@@ -169,13 +221,13 @@ class TRRBTEditor {
 
         if (this.nodeDrawPositionsWantUpdate) {
             this.nodeDrawPositionsDesired = new Map();
-            this.updateDesiredPositionsTree(this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.nodeDrawIds, this.game.tree);
+            this.updateDesiredPositionsTree(this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.game.tree);
 
             let anyNodeMoved = false;
             if (this.nodeDrawLastTime !== null) {
-                anyNodeMoved = this.updateNodePositions(this.nodeDrawPositions, this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.nodeDrawIds, drawTime - this.nodeDrawLastTime);
+                anyNodeMoved = this.updateNodePositions(this.nodeDrawPositions, this.nodeDrawPositionsDesired, this.nodeDrawTexts, this.nodeDrawNids, drawTime - this.nodeDrawLastTime);
             } else {
-                this.nodeDrawPositions = this.nodeDrawPositionsDesired
+                this.nodeDrawPositions = this.nodeDrawPositionsDesired;
             }
 
             if (anyNodeMoved) {
@@ -185,9 +237,55 @@ class TRRBTEditor {
             }
         }
 
-        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.nodeDrawIds, this.game.tree);
+        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.nidToNode, this.game.tree);
 
         this.nodeDrawLastTime = drawTime;
+    }
+
+    updateXformedTreeStructure() {
+        if (this.xform_editor !== null) {
+            this.xform_editor.game.name = this.game.name;
+            this.xform_editor.game.sprites = this.game.sprites;
+            this.xform_editor.game.tree = xformApplyToTree(this.game.tree);
+        }
+    }
+
+    updateXformedTreeDraw(skipAnimate) {
+        if (this.xform_editor !== null) {
+            this.xform_editor.updatePositionsAndDraw(skipAnimate);
+        }
+    }
+
+    updateNodeIdsNode(node) {
+        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
+            this.nidToNode.set(node.nid, node);
+        }
+        if (!node.hasOwnProperty('dispid')) {
+            node.dispid = this.dispidNext;
+            ++ this.dispidNext;
+        }
+        this.dispidToNode.set(node.dispid, node);
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                this.updateNodeIdsNode(child);
+            }
+        }
+    }
+
+    updateNodeIds() {
+        this.nidToNode = new Map();
+        this.dispidToNode = new Map();
+        this.updateNodeIdsNode(this.game.tree);
+    }
+
+    updateTreeStructure() {
+        this.updateNodeIds();
+        this.updateXformedTreeStructure();
+    }
+
+    updateTreeStructureAndDraw(skipAnimate) {
+        this.updateTreeStructure();
+        this.updatePositionsAndDraw(skipAnimate);
     }
 
     updatePositionsAndDraw(skipAnimate) {
@@ -196,6 +294,7 @@ class TRRBTEditor {
         }
         this.nodeDrawPositionsWantUpdate = true;
         window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.updateXformedTreeDraw(skipAnimate);
     }
 
     nodeCollapsed(node, stackNodes) {
@@ -229,26 +328,25 @@ class TRRBTEditor {
         return 0.15 * (des - curr);
     }
 
-    updateNodePositions(nodePositions, nodePositionsDesired, nodeTexts, nodeIds, deltaTime) {
+    updateNodePositions(nodePositions, nodePositionsDesired, nodeTexts, deltaTime) {
         let anyMoved = false;
 
         let toDelete = [];
-        for (let node of nodePositions.keys()) {
-            if (!nodePositionsDesired.has(node)) {
-                toDelete.push(node);
+        for (const dispid of nodePositions.keys()) {
+            if (!nodePositionsDesired.has(dispid)) {
+                toDelete.push(dispid);
             }
         }
-        for (let node of toDelete) {
-            nodePositions.delete(node);
-            nodeTexts.delete(node);
-            nodeIds.delete(node);
+        for (const dispid of toDelete) {
+            nodePositions.delete(dispid);
+            nodeTexts.delete(dispid);
         }
 
-        for (let [node, desRect] of nodePositionsDesired.entries()) {
-            if (nodePositions.has(node)) {
-                let rect = nodePositions.get(node);
+        for (let [dispid, desRect] of nodePositionsDesired.entries()) {
+            if (nodePositions.has(dispid)) {
+                let rect = nodePositions.get(dispid);
                 if (this.rectClose(rect, desRect)) {
-                    nodePositions.set(node, desRect);
+                    nodePositions.set(dispid, desRect);
                 } else {
                     rect.x += this.rectValueUpdate(rect.x, desRect.x, deltaTime);
                     rect.y += this.rectValueUpdate(rect.y, desRect.y, deltaTime);
@@ -257,7 +355,7 @@ class TRRBTEditor {
                     anyMoved = true;
                 }
             } else {
-                nodePositions.set(node, desRect);
+                nodePositions.set(dispid, desRect);
             }
         }
 
@@ -292,15 +390,14 @@ class TRRBTEditor {
         return rowStr;
     }
 
-    updateDesiredPositionsTree(nodePositions, nodeTexts, nodeIds, tree) {
+    updateDesiredPositionsTree(nodePositions, nodeTexts, tree) {
         nodePositions.clear();
         nodeTexts.clear();
-        nodeIds.clear();
 
-        this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, nodeIds, this.getEngineStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
+        this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, this.getEngineStackNodes(), tree, EDT_NODE_SPACING, EDT_NODE_SPACING, null);
     }
 
-    updateDesiredPositionsTreeNode(nodePositions, nodeTexts, nodeIds, stackNodes, node, xpos, ypos, align) {
+    updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
         let texts = [];
         texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
         texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
@@ -440,19 +537,15 @@ class TRRBTEditor {
                     const child_xpos = this.layout_horizontal ? child_next_pos : (nx + nw + EDT_NODE_SPACING);
                     const child_ypos = this.layout_horizontal ? (ny + nh + EDT_NODE_SPACING) : child_next_pos;
 
-                    child_next_pos = this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, nodeIds, stackNodes, child, child_xpos, child_ypos, child_align);
+                    child_next_pos = this.updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, child, child_xpos, child_ypos, child_align);
                     child_align = null;
                 }
                 next_pos = Math.max(next_pos, child_next_pos);
             }
         }
 
-        nodePositions.set(node, {x:nx, y:ny, w:nw, h:nh})
-        nodeTexts.set(node, texts);
-
-        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-            nodeIds.set(node.nid, node);
-        }
+        nodePositions.set(node.dispid, {x:nx, y:ny, w:nw, h:nh})
+        nodeTexts.set(node.dispid, texts);
 
         return next_pos;
     }
@@ -460,12 +553,12 @@ class TRRBTEditor {
     drawTree(ctx, nodePositions, nodeTexts, nodeIds, tree) {
         const stackNodes = this.getEngineStackNodes();
         this.drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, tree);
-        this.drawTreeNode(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, tree);
+        this.drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, tree);
     }
 
     drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, node) {
         if (node.hasOwnProperty('target')) {
-            const nrect = nodePositions.get(node);
+            const nrect = nodePositions.get(node.dispid);
             const nx = nrect.x;
             const ny = nrect.y;
             const nw = nrect.w;
@@ -487,7 +580,7 @@ class TRRBTEditor {
             ctx.moveTo(x0, y0);
 
             if (target) {
-                const tnrect = nodePositions.get(target);
+                const tnrect = nodePositions.get(target.dispid);
                 const tnx = tnrect.x;
                 const tny = tnrect.y;
                 const tnw = tnrect.w;
@@ -510,8 +603,8 @@ class TRRBTEditor {
         }
     }
 
-    drawTreeNode(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, node) {
-        const nrect = nodePositions.get(node);
+    drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
+        const nrect = nodePositions.get(node.dispid);
         const nx = nrect.x;
         const ny = nrect.y;
         const nw = nrect.w;
@@ -554,7 +647,7 @@ class TRRBTEditor {
                 let stackEdges = [];
                 let nonStackEdges = [];
                 for (let child of node.children) {
-                    const cnrect = nodePositions.get(child);
+                    const cnrect = nodePositions.get(child.dispid);
                     const cnx = cnrect.x;
                     const cny = cnrect.y;
                     const cnw = cnrect.w;
@@ -601,7 +694,7 @@ class TRRBTEditor {
                 }
 
                 for (let child of node.children) {
-                    this.drawTreeNode(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, child);
+                    this.drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, child);
                 }
             }
         }
@@ -653,7 +746,7 @@ class TRRBTEditor {
         }
 
         let line = 0;
-        for (const text of nodeTexts.get(node)) {
+        for (const text of nodeTexts.get(node.dispid)) {
             if (text.type === EDT_TEXT_FONT) {
                 ctx.font = text.data;
             } else if (text.type === EDT_TEXT_COLOR) {
@@ -1066,7 +1159,7 @@ class TRRBTEditor {
         if (cut) {
             this.onNodeDelete(false);
         } else {
-            this.updatePositionsAndDraw();
+            this.updateTreeStructureAndDraw(false);
         }
     }
 
@@ -1075,7 +1168,7 @@ class TRRBTEditor {
 
         if (this.clipboard !== null) {
             node.children.push(deepcopyobj(this.clipboard));
-            this.updatePositionsAndDraw();
+            this.updateTreeStructureAndDraw(false);
         }
     }
 
@@ -1091,7 +1184,7 @@ class TRRBTEditor {
                 } else {
                     parent.children.splice(index, 1);
                 }
-                this.updatePositionsAndDraw();
+                this.updateTreeStructureAndDraw(false);
             }
         }
     }
@@ -1102,7 +1195,7 @@ class TRRBTEditor {
         node.children = [];
 
         this.collapseNodes(node, false);
-        this.updatePositionsAndDraw();
+        this.updateTreeStructureAndDraw(false);
     }
 
     getNodePrototype(type) {
@@ -1123,7 +1216,7 @@ class TRRBTEditor {
         let node = this.propertyNodes.node;
 
         node.children.push(deepcopyobj(this.getNodePrototype(type)));
-        this.updatePositionsAndDraw();
+        this.updateTreeStructureAndDraw(false);
     }
 
     onNodeShift(earlier) {
@@ -1136,11 +1229,11 @@ class TRRBTEditor {
                 if (earlier && index > 0) {
                     parent.children.splice(index, 1);
                     parent.children.splice(index - 1, 0, node);
-                    this.updatePositionsAndDraw();
+                    this.updateTreeStructureAndDraw(false);
                 } else if (!earlier && index + 1 < parent.children.length) {
                     parent.children.splice(index, 1);
                     parent.children.splice(index + 1, 0, node);
-                    this.updatePositionsAndDraw();
+                    this.updateTreeStructureAndDraw(false);
                 }
             }
         }
@@ -1216,9 +1309,9 @@ class TRRBTEditor {
                 mousePos = this.xformInv.transformPoint(mousePos_u);
             }
         } else {
-            for (let [node, rect] of this.nodeDrawPositions.entries()) {
+            for (let [dispid, rect] of this.nodeDrawPositions.entries()) {
                 if (rect.x < mousePos.x && rect.y < mousePos.y && rect.x + rect.w > mousePos.x && rect.y + rect.h > mousePos.y) {
-                    this.mouseNode = node;
+                    this.mouseNode = this.dispidToNode.get(dispid);
                     break;
                 }
             }

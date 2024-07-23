@@ -8,21 +8,36 @@
   </head>
   <body>
     <script>
-      var editor = new TRRBTEditor(GAME_SETUP, 'editorcanvas', 'editordiv');
-      window.addEventListener('load', bind0(editor, 'onLoad'), false);
+      var game_x = {tree:null};
+      var editor_u = new TRRBTEditor(GAME_SETUP, 'editorucanvas', 'editordiv');
+      var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
+      function onLoad() {
+          editor_u.onLoad();
+          editor_u.xform_editor = editor_x;
+          editor_u.updateTreeStructure();
+          editor_x.onLoad();
+      }
+      window.addEventListener('load', onLoad, false);
     </script>
     <center>
       <table>
         <tbody>
           <tr style="vertical-align:top">
             <td>
-              <canvas id="editorcanvas" width="1000px" height="800px" tabindex="1">
+              <canvas id="editorucanvas" width="1000px" height="350px" tabindex="1">
                 Browser does not support canvas.
               </canvas>
             </td>
-            <td>
-              <div id="editordiv" style="width:400px; height:800px" tabindex="2">
+            <td rowspan="2">
+              <div id="editordiv" style="width:400px; height:700px" tabindex="3">
               </div>
+            </td>
+          </tr>
+          <tr style="vertical-align:top">
+            <td>
+              <canvas id="editorxcanvas" width="1000px" height="350px" tabindex="2">
+                Browser does not support canvas.
+              </canvas>
             </td>
           </tr>
         </tbody>

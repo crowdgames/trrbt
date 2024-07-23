@@ -58,17 +58,17 @@ class TRRBTEngine {
     }
 
     undoPush() {
-        var callStackCopy = null;
+        let callStackCopy = null;
 
         if (this.callStack !== null) {
             callStackCopy = [];
-            for (var frame of this.callStack) {
-                var frameCopy = {node: frame.node, local: copymap(frame.local)};
+            for (let frame of this.callStack) {
+                let frameCopy = {node: frame.node, local: copymap(frame.local)};
                 callStackCopy.push(frameCopy);
             }
         }
 
-        var state = {};
+        let state = {};
 
         state.callStack = callStackCopy;
         state.callResult = this.callResult;
@@ -85,7 +85,7 @@ class TRRBTEngine {
         state.choiceWait = deepcopyobj(this.choiceWait);
 
         while (this.undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
-            var oldState = this.undoStackRecent.shift();
+            let oldState = this.undoStackRecent.shift();
             if (oldState.callStack !== null && oldState.callStack.length > 0 && oldState.callStack.at(-1).node.type === 'player' && oldState.choiceWait === true) {
                 while (this.undoStackPlayer.length >= ENG_UNDO_PLAYER_MAX) {
                     this.undoStackPlayer.shift();
@@ -97,7 +97,7 @@ class TRRBTEngine {
     }
 
     undoPop() {
-        var state = null;
+        let state = null;
         if (this.undoStackRecent.length > 0) {
             state = this.undoStackRecent.pop();
         } else if (this.undoStackPlayer.length > 0) {
@@ -150,7 +150,7 @@ class TRRBTEngine {
     }
 
     stepToInput() {
-        var stepped = false;
+        let stepped = false;
 
         if (this.loopCheck !== true) {
             this.loopCheck = 0;
@@ -205,7 +205,7 @@ class TRRBTEngine {
                 if (image_read_array === null) {
                     image_read_array = value;
                 } else {
-                    var merged_array = new Uint8Array(image_read_array.length + value.length);
+                    let merged_array = new Uint8Array(image_read_array.length + value.length);
                     merged_array.set(image_read_array);
                     merged_array.set(value, image_read_array.length);
                     image_read_array = merged_array;
@@ -554,7 +554,7 @@ class TRRBTEngine {
     }
 
     onKeyDown(evt) {
-        var key = evt.key;
+        let key = evt.key;
 
         if (!this.keysDown.has(key)) {
             this.keysDown.add(key);
@@ -598,7 +598,7 @@ class TRRBTEngine {
     }
 
     onKeyUp(evt) {
-        var key = evt.key;
+        let key = evt.key;
 
         this.keysDown.delete(key);
 
@@ -839,8 +839,9 @@ class TRRBTEngine {
                     if (this.callStack.length === 0) {
                         this.gameResult = {result:'stalemate'};
                     } else {
-                        var frame = this.callStack.at(-1);
-                        this.callResult = NODE_FN_MAP[frame.node.type](frame, this.callResult);
+                        let frame = this.callStack.at(-1);
+                        let fn = NODE_FN_MAP[frame.node.type];
+                        this.callResult = fn(frame, this.callResult);
 
                         if (this.callResult === true || this.callResult === false) {
                             this.callStack.pop();
@@ -850,10 +851,10 @@ class TRRBTEngine {
                     this.undoPush();
 
                     if (this.gameResult.result === 'win') {
-                        var player = this.gameResult.player;
+                        let player = this.gameResult.player;
                         setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 100);
                     } else if (this.gameResult.result === 'lose') {
-                        var player = this.gameResult.player;
+                        let player = this.gameResult.player;
                         setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 100);
                     } else if (this.gameResult.result === 'draw') {
                         setTimeout(() => { alert('Game over, draw!') }, 100);
@@ -924,8 +925,8 @@ class TRRBTEngine {
         this.localInit(frame, [['order', null]]);
 
         if (this.localEqual(frame, 'order', null)) {
-            var order = [];
-            for (var ii = 0; ii < frame.node.children.length; ++ ii) {
+            let order = [];
+            for (let ii = 0; ii < frame.node.children.length; ++ ii) {
                 order.push(ii);
             }
             order.sort((a, b) => 0.5 - Math.random());
