@@ -70,11 +70,11 @@ function xform_rule_apply(node, pattern_func, button_obj) {
     return node;
 }
 
-function xform_identity(node) {
+function xform_rule_identity(node) {
     return [node];
 }
 
-function xform_mirror(node) {
+function xform_rule_mirror(node) {
     function pattern_func(patt) {
         return patt.slice().map(row=>row.slice().reverse());
     }
@@ -82,11 +82,44 @@ function xform_mirror(node) {
     return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, button_obj)]
 }
 
-function xformApplyToNode(node, xforms, nidToNode) {
+function xform_rule_rotate(node) {
+    function pattern_func(patt) {
+        return patt[0].slice().map((val, index) => patt.slice().map(row => row.slice()[index]).reverse())
+    }
+    let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
+    return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, button_obj)]
+}
+
+function xform_rule_skew(node) {
+    function pattern_func(patt) {
+        const rows = patt.length;
+        const cols = patt[0].length;
+        let ret = [];
+        for (let rr = 0; rr < rows + cols - 1; ++ rr) {
+            let row = [];
+            for (let cc = 0; cc < cols; ++ cc) {
+                const skewed = rr - cc;
+                if (0 <= skewed && skewed < patt.length) {
+                    row.push(patt[skewed][cc]);
+                } else {
+                    row.push('.');
+                }
+            }
+            ret.push(row);
+        }
+        return ret;
+    }
+    return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, null)]
+}
+
+function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
     let ret_nodes = [];
 
     node = shallowcopyobj(node);
-    const node_dispid = node.dispid;
+
+    if (dispid_pref) {
+        node.dispid = dispid_pref + '_' + node.dispid;
+    }
 
     if (node.hasOwnProperty('comment')) {
         delete node.comment;
@@ -100,16 +133,20 @@ function xformApplyToNode(node, xforms, nidToNode) {
     if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only', 'x-set-player'].indexOf(ntype) >= 0) {
         let fn = null;
         if (ntype === 'x-ident') {
-            fn = xform_identity;
+            fn = xform_rule_identity;
         } else if (ntype === 'x-mirror') {
-            fn = xform_mirror;
+            fn = xform_rule_mirror;
+        } else if (ntype === 'x-rotate') {
+            fn = xform_rule_rotate;
+        } else if (ntype === 'x-skew') {
+            fn = xform_rule_skew;
         } else {
-            fn = xform_identity;
+            fn = xform_rule_identity;
         }
 
         for (const child of node.children) {
             let dispid_suff = 0;
-            const children_xformed = xformApplyToNode(child, [fn].concat(xforms), nidToNode)
+            const children_xformed = xformApplyToNode(child, [fn].concat(xforms), nidToNode, dispid_pref)
             for (let child_xformed of children_xformed) {
                 if (dispid_suff > 0) {
                     child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suff;
@@ -119,8 +156,11 @@ function xformApplyToNode(node, xforms, nidToNode) {
             }
         }
     } else if ('x-link' === ntype) {
-        //const target = nidToNode.get(node.target);
-        return [];
+        const target = nidToNode.get(node.target);
+        if (target) {
+            const linked = xformApplyToNode(deepcopyobj(target), xforms, nidToNode, node.dispid);
+            ret_nodes.push(...linked);
+        }
     } else {
         let xformed = [node];
         for (let xform of xforms) {
@@ -137,7 +177,7 @@ function xformApplyToNode(node, xforms, nidToNode) {
             if (ret_node.hasOwnProperty('children')) {
                 let new_children = []
                 for (const child of ret_node.children) {
-                    const child_xformed = xformApplyToNode(child, xforms, nidToNode)
+                    const child_xformed = xformApplyToNode(child, xforms, nidToNode, dispid_pref)
                     new_children.push(...child_xformed);
                 }
                 ret_node.children = new_children;
@@ -148,9 +188,11 @@ function xformApplyToNode(node, xforms, nidToNode) {
     return ret_nodes;
 }
 
-function xformApplyToTree(tree) {
-    return xformApplyToNode(tree, [xform_identity], new Map())[0];
+function xformApplyToTree(tree, nidToNode) {
+    return xformApplyToNode(tree, [xform_rule_identity], nidToNode)[0];
 }
+
+
 
 class TRRBTEditor {
 
@@ -307,7 +349,7 @@ class TRRBTEditor {
         if (this.xform_editor !== null) {
             this.xform_editor.game.name = this.game.name;
             this.xform_editor.game.sprites = this.game.sprites;
-            this.xform_editor.game.tree = xformApplyToTree(this.game.tree);
+            this.xform_editor.game.tree = xformApplyToTree(this.game.tree, this.nidToNode);
             this.xform_editor.updateTreeStructure();
         }
     }
@@ -479,6 +521,8 @@ class TRRBTEditor {
         texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
         texts.push({type:EDT_TEXT_LINE,  data:node.type});
         texts.push({type:EDT_TEXT_FONT,  data:'10px sans-serif'});
+
+        //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
 
         if (node.hasOwnProperty('nid')) {
             texts.push({type:EDT_TEXT_LINE,  data:'nid: ' + node.nid});
