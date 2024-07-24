@@ -2,16 +2,25 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <script src="games/ttt-text.js"></script>
+    <script src="games/unxform/ttt-text.js"></script>
+    <script src="games/unxform/connect4-text.js"></script>
+    <script src="games/unxform/soko-text.js"></script>
     <script src="common.js"></script>
+    <script src="selector.js"></script>
     <script src="editor.js"></script>
   </head>
   <body>
     <script>
-      var game_x = {tree:null};
-      var editor_u = new TRRBTEditor(GAME_SETUP, 'editorucanvas', 'editordiv');
+      var game_u = emptyGame();
+      var game_x = emptyGame();
+      var editor_u = new TRRBTEditor(game_u, 'editorucanvas', 'editordiv');
       var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
+      function onSelectGame(gameSelected) {
+          assignIntoGame(game_u, gameSelected);
+          editor_u.updateTreeStructureAndDraw(true);
+      }
       function onLoad() {
+          assignIntoGame(game_u, GAME_SETUP);
           editor_u.xform_editor = editor_x;
           editor_u.onLoad();
           editor_x.onLoad();
@@ -22,19 +31,23 @@
       <table>
         <tbody>
           <tr style="vertical-align:top">
+            <td rowspan="2">
+              <div id="selectordiv" style="width:200px; height:700px" tabindex="1">
+              </div>
+            </td>
             <td>
-              <canvas id="editorucanvas" width="1000px" height="350px" tabindex="1">
+              <canvas id="editorucanvas" width="1000px" height="350px" tabindex="2">
                 Browser does not support canvas.
               </canvas>
             </td>
             <td rowspan="2">
-              <div id="editordiv" style="width:400px; height:700px" tabindex="3">
+              <div id="editordiv" style="width:400px; height:700px" tabindex="4">
               </div>
             </td>
           </tr>
           <tr style="vertical-align:top">
             <td>
-              <canvas id="editorxcanvas" width="1000px" height="350px" tabindex="2">
+              <canvas id="editorxcanvas" width="1000px" height="350px" tabindex="3">
                 Browser does not support canvas.
               </canvas>
             </td>

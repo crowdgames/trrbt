@@ -16,9 +16,9 @@ class TRRBTEngine {
         this.ctx = null;
         this.engineEditor = null;
 
-        this.padding = 10;
-        this.cell_size = 50;
-        this.keysDown = new Set();
+        this.padding = null;
+        this.cell_size = null;
+        this.keysDown = null;
 
         this.spriteImages = null;
         this.spriteTiles = null;
@@ -200,6 +200,8 @@ class TRRBTEngine {
 
         let image_read_array = null;
 
+        let this_engine = this;
+
         image_reader.read().then(function process({ done, value }) {
             if (!done) {
                 if (image_read_array === null) {
@@ -212,9 +214,9 @@ class TRRBTEngine {
                 }
                 return image_reader.read().then(process);
             } else {
-                const image_data = this.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this.cell_size, this.cell_size);
+                const image_data = this_engine.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this_engine.cell_size, this_engine.cell_size);
                 let img_promise = createImageBitmap(image_data);
-                img_promise.then((img_loaded) => this.spriteImages.set(image_name, img_loaded));
+                img_promise.then((img_loaded) => this_engine.spriteImages.set(image_name, img_loaded));
             }
         });
     }
@@ -249,7 +251,38 @@ class TRRBTEngine {
         this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
         this.engineEditor = this.divname ? document.getElementById(this.divname) : null;
+
+        this.padding = 10;
+        this.cell_size = 50;
         this.keysDown = new Set();
+
+        this.spriteImages = null;
+        this.spriteTiles = null;
+        this.back = null;
+
+        this.player_id_colors = new Map();
+
+        this.undoStackPlayer = [];
+        this.undoStackRecent = [];
+
+        this.callStack = null;
+        this.callResult = null;
+        this.gameResult = null;
+        this.loopCheck = 0;
+
+        this.board = null;
+        this.rows = 0;
+        this.cols = 0;
+
+        this.choicesByRct = null;
+        this.choicesByBtn = null;
+        this.choicePlayer = null;
+        this.choiceWait = false;
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+        this.stepManual = false;
+        this.stepDelay = null;
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
         this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
