@@ -9,13 +9,20 @@
   </head>
   <body>
     <script>
-      var game = GAME_SETUP;
-      var editor = new TRRBTEditor(game, 'editorcanvas', 'editordiv');
-      var engine = new TRRBTEngine(game, 'enginecanvas', 'enginediv');
+      var game_u = GAME_SETUP;
+      var game_x = {tree:null};
+      var editor_u = new TRRBTEditor(game_u, 'editorucanvas', 'editorudiv');
+      var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
+      var engine = new TRRBTEngine(game_x, 'enginecanvas', 'enginediv');
       function onLoad() {
-          editor.engine = engine;
-          engine.editor = editor;
-          editor.onLoad();
+          editor_u.xform_editor = editor_x;
+          editor_u.updateTreeStructure();
+
+          editor_x.engine = engine;
+          engine.editor = editor_x;
+
+          editor_u.onLoad();
+          editor_x.onLoad();
           engine.onLoad();
       }
       window.addEventListener('load', onLoad, false);
@@ -25,18 +32,25 @@
         <tbody>
           <tr style="vertical-align:top">
             <td>
-              <canvas id="editorcanvas" width="600px" height="600px" tabindex="1">
+              <canvas id="editorucanvas" width="800px" height="350px" tabindex="1">
                 Browser does not support canvas.
               </canvas>
             </td>
-            <td>
-              <div id="enginediv" style="width:400px; height:120px" tabindex="2">
+            <td rowspan="2">
+              <div id="enginediv" style="width:400px; height:120px" tabindex="3">
               </div>
-              <div id="editordiv" style="width:400px; height:480px" tabindex="3">
+              <div id="editorudiv" style="width:400px; height:480px" tabindex="4">
               </div>
             </td>
+            <td rowspan="2">
+              <canvas id="enginecanvas" width="600px" height="600px" tabindex="5">
+                Browser does not support canvas.
+              </canvas>
+            </td>
+          </tr>
+          <tr style="vertical-align:top">
             <td>
-              <canvas id="enginecanvas" width="600px" height="600px" tabindex="4">
+              <canvas id="editorxcanvas" width="800px" height="350px" tabindex="2">
                 Browser does not support canvas.
               </canvas>
             </td>
