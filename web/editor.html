@@ -12,9 +12,8 @@
       var editor_u = new TRRBTEditor(GAME_SETUP, 'editorucanvas', 'editordiv');
       var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
       function onLoad() {
-          editor_u.onLoad();
           editor_u.xform_editor = editor_x;
-          editor_u.updateTreeStructure();
+          editor_u.onLoad();
           editor_x.onLoad();
       }
       window.addEventListener('load', onLoad, false);

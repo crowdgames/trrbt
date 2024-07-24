@@ -891,7 +891,7 @@ class TRRBTEditor {
 
                 let childOnStack = false;
                 for (let child of node.children) {
-                    if (stackNodes.has(child)) {
+                    if (stackNodes.has(child.dispid)) {
                         childOnStack = true;
                         break;
                     }
@@ -941,7 +941,7 @@ class TRRBTEditor {
                            midx, cny + cnh / 2,
                            cnx, cny + cnh / 2];
 
-                    if (stackNodes.has(child)) {
+                    if (stackNodes.has(child.dispid)) {
                         stackEdges.push(edge);
                     } else {
                         nonStackEdges.push(edge);
@@ -1036,7 +1036,7 @@ class TRRBTEditor {
             }
         }
 
-        if (stackNodes.has(node)) {
+        if (stackNodes.has(node.dispid)) {
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#222222';
             ctx.stroke();
