@@ -47,30 +47,44 @@ def get_sprite_data(sprites):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert game YAML to JSON.')
     parser.add_argument('filename', type=str, help='Filename to process.')
+    parser.add_argument('outfolder', type=str, help='Folder for writing out files.')
     parser.add_argument('outname', type=str, help='Name for writing out files.')
     parser.add_argument('--sprites', type=str, help='Sprite file.')
+    parser.add_argument('--xform', action='store_true', help='Apply xforms.')
     args = parser.parse_args()
 
-    game = util.yaml2bt(args.filename, False)
+    out_full = os.path.join(args.outfolder, args.outname)
+
+    game = util.yaml2bt(args.filename, args.xform)
 
     sprite_data = get_sprite_data(args.sprites) if args.sprites else None
 
-    with open(args.outname + '.js', 'wt') as f:
-        f.write('const GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
+    with open(out_full + '.js', 'wt') as f:
+        f.write('THIS_GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
+        f.write('if (typeof GAME_SETUPS === \'undefined\') { var GAME_SETUPS = {}; var GAME_SETUP = THIS_GAME_SETUP; }\n');
+        f.write('GAME_SETUPS[\'' + args.outname + '\'] = THIS_GAME_SETUP;\n')
 
-    with open(args.outname + '.html', 'wt') as f:
+    with open(out_full + '.html', 'wt') as f:
         f.write('<!DOCTYPE html>\n')
         f.write('<html>\n')
         f.write('  <head>\n')
         f.write('    <meta charset="UTF-8">\n')
-        f.write('    <script src="' + os.path.basename(args.outname) + '.js"></script>\n')
-        f.write('    <script src="../common.js"></script>\n')
-        f.write('    <script src="../engine.js"></script>\n')
+        f.write('    <script src="' + args.outname + '.js"></script>\n')
+        f.write('    <script src="../../common.js"></script>\n')
+        f.write('    <script src="../../engine.js"></script>\n')
         f.write('  </head>\n')
         f.write('  <body>\n')
         f.write('    <script>\n')
-        f.write('      var engine = new TRRBTEngine(GAME_SETUP, \'enginecanvas\', \'enginediv\');\n')
-        f.write('      window.addEventListener(\'load\', bind0(engine, \'onLoad\'), false);\n')
+        f.write('      var game = {tree:null};\n')
+        f.write('      var engine = new TRRBTEngine(game, \'enginecanvas\', \'enginediv\');\n')
+        f.write('      function onLoad() {\n')
+        if args.xform:
+            f.write('        assignIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
+        else :
+            f.write('        xformApplyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
+        f.write('        engine.onLoad();\n')
+        f.write('      }\n')
+        f.write('      window.addEventListener(\'load\', onLoad, false);\n')
         f.write('    </script>\n')
         f.write('    <center>\n')
         f.write('      <table>\n')

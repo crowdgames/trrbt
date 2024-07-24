@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="games/unxform/ttt-text.js"></script>
+    <script src="games/unxform/connect4-text.js"></script>
+    <script src="games/unxform/soko-text.js"></script>
+    <script src="games/unxform/soko.js"></script>
+    <script src="common.js"></script>
+    <script src="selector.js"></script>
+    <script src="engine.js"></script>
+  </head>
+  <body>
+    <script>
+      var game = {};
+      var engine = new TRRBTEngine(game, 'enginecanvas', 'enginediv');
+      function onSelectGame(gameSelected) {
+          xformApplyIntoGame(game, gameSelected);
+          engine.onLoad();
+      }
+      function onLoad() {
+          xformApplyIntoGame(game, GAME_SETUP);
+          engine.onLoad();
+      }
+      window.addEventListener('load', onLoad, false);
+    </script>
+    <center>
+      <table>
+        <tbody>
+          <tr style="vertical-align:top">
+            <td>
+              <div id="selectordiv" style="width:400px; height:200px" tabindex="1">
+              </div>
+              <div id="enginediv" style="width:400px; height:400px" tabindex="2">
+              </div>
+            </td>
+            <td>
+              <canvas id="enginecanvas" width="600px" height="600px" tabindex="3">
+                Browser does not support canvas.
+              </canvas>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </center>
+  </body>
+</html>
