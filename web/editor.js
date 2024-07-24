@@ -683,11 +683,11 @@ class TRRBTEditor {
             texts.push({type:EDT_TEXT_LINE,  data:'nid: ' + node.nid});
         }
 
-        if (node.hasOwnProperty('target') && node.target != '') {
+        if (node.hasOwnProperty('target')) {
             texts.push({type:EDT_TEXT_LINE,  data:'target: ' + node.target});
         }
 
-        if (node.hasOwnProperty('pid') && node.pid != '') {
+        if (node.hasOwnProperty('pid')) {
             texts.push({type:EDT_TEXT_LINE,  data:'pid: ' + node.pid});
         }
 
@@ -1113,6 +1113,11 @@ class TRRBTEditor {
         parent.appendChild(item);
     }
 
+    parseTextProperty(id) {
+        const value = document.getElementById(id).value;
+        return value;
+    }
+
     appendChoiceProperty(parent, id, name, value, values) {
         const item = document.createElement('li');
         appendText(item, name)
@@ -1380,22 +1385,22 @@ class TRRBTEditor {
         let node = this.propertyNodes.node;
 
         if (node.hasOwnProperty('nid')) {
-            node.nid = document.getElementById('prop_nid').value;
+            node.nid = this.parseTextProperty('prop_nid');
         }
         if (node.hasOwnProperty('target')) {
-            node.target = document.getElementById('prop_target').value;
+            node.target = this.parseTextProperty('prop_target');
         }
         if (node.hasOwnProperty('pid')) {
-            node.pid = document.getElementById('prop_pid').value;
+            node.pid = this.parseTextProperty('prop_pid');
         }
         if (node.hasOwnProperty('times')) {
-            node.times = document.getElementById('prop_times').value;
+            node.times = this.parseTextProperty('prop_times');
         }
         if (node.hasOwnProperty('what')) {
-            node.what = document.getElementById('prop_what').value;
+            node.what = this.parseTextProperty('prop_what');
         }
         if (node.hasOwnProperty('with')) {
-            node.with = document.getElementById('prop_with').value;
+            node.with = this.parseTextProperty('prop_with');
         }
         if (node.hasOwnProperty('button')) {
             node.button = this.parseChoiceProperty('prop_button', EDT_BUTTONS);
