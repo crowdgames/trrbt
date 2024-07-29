@@ -261,6 +261,11 @@ class TRRBTEditor {
     updateTreeStructure() {
         this.updateNodeIds();
         this.updateXformedTreeStructure();
+
+        if (this.hasEngine()) {
+            this.engine.onLoad();
+            this.engine.stepManual = true;
+        }
     }
 
     updateTreeStructureAndDraw(skipAnimate) {
