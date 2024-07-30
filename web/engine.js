@@ -329,6 +329,9 @@ class TRRBTEngine {
 
         ed.innerHTML = '';
 
+        appendText(ed, 'Engine', true, true);
+        appendBr(ed);
+
         appendButton(ed, 'Restart', bind0(this, 'onLoad'));
         appendBr(ed);
         appendBr(ed);
