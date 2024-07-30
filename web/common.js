@@ -414,10 +414,10 @@ function xformApplyIntoGame(game, fromGame) {
     game.tree = xformApplyToTree(fromGame.tree, nidToNode);
 }
 
-function assignIntoGame(game, fromGame) {
+function copyIntoGame(game, fromGame) {
     game.name = fromGame.name;
     game.sprites = fromGame.sprites;
-    game.tree = fromGame.tree;
+    game.tree = deepcopyobj(fromGame.tree);
 }
 
 function emptyGame() {

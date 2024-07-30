@@ -19,8 +19,8 @@
       var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
       var engine = new TRRBTEngine(game_x, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
-          assignIntoGame(game_u, gameSelected);
-          editor_u.updateTreeStructureAndDraw(true);
+          copyIntoGame(game_u, gameSelected);
+          editor_u.updateTreeStructureAndDraw(false, true);
       }
       function onLoad() {
           editor_u.xform_editor = editor_x;
@@ -29,10 +29,10 @@
           editor_x.engine = engine;
           engine.editor = editor_x;
 
-          editor_u.onLoad();
-          editor_x.onLoad();
           engine.onLoad();
           engine.stepManual = true;
+          editor_x.onLoad();
+          editor_u.onLoad();
       }
       window.addEventListener('load', onLoad, false);
     </script>
