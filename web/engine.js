@@ -336,12 +336,12 @@ class TRRBTEngine {
         appendButton(ed, 'Break/Resume', bind0(this, 'onBreakResume'));
         appendBr(ed);
 
-        appendButton(ed, 'Undo Step', bind1(this, 'onUndo', false));
         appendButton(ed, 'Undo Move', bind1(this, 'onUndo', true));
+        appendButton(ed, 'Undo Step', bind1(this, 'onUndo', false));
         appendBr(ed);
 
-        appendButton(ed, 'Next Step', bind1(this, 'onNext', false));
         appendButton(ed, 'Next Move', bind1(this, 'onNext', true));
+        appendButton(ed, 'Next Step', bind1(this, 'onNext', false));
         appendBr(ed);
     }
 

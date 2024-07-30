@@ -79,7 +79,7 @@ if __name__ == '__main__':
         f.write('      var engine = new TRRBTEngine(game, \'enginecanvas\', \'enginediv\');\n')
         f.write('      function onLoad() {\n')
         if args.xform:
-            f.write('        assignIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
+            f.write('        copyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
         else :
             f.write('        xformApplyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
         f.write('        engine.onLoad();\n')

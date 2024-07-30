@@ -1,3 +1,5 @@
+const EDT_UNDO_MAX = 25;
+
 const EDT_NODE_PADDING = 8;
 const EDT_NODE_SPACING = 25;
 
@@ -58,6 +60,9 @@ class TRRBTEditor {
         this.propertyEditor = null;
         this.keysDown = new Set();
 
+        this.undoStack = null;
+        this.undoStackPos = null;
+
         this.nidToNode = null;
         this.dispidToNode = null;
 
@@ -85,6 +90,67 @@ class TRRBTEditor {
         this.engine = null;
 
         this.xform_editor = null;
+    }
+
+    undoPush() {
+        let state = deepcopyobj(this.game);
+
+        while (this.undoStack.length > this.undoStackPos + 1) {
+            this.undoStack.pop();
+        }
+
+        while (this.undoStack.length >= EDT_UNDO_MAX) {
+            this.undoStack.shift();
+        }
+
+        this.undoStack.push(state);
+        this.undoStackPos = this.undoStack.length - 1;
+
+        //console.log('push <-', this.undoStackPos, this.undoStack.length, this.undoStack);
+    }
+
+    undoUndo() {
+        if (this.undoStackPos - 1 >= 0) {
+            this.undoStackPos -= 1;
+
+            let state = (this.undoStack.length > 0) ? this.undoStack[this.undoStackPos] : emptyGame();
+
+            copyIntoGame(this.game, state);
+
+            this.mousePan = null;
+            this.mouseZoom = null;
+
+            this.mouseNode = null;
+            this.mousePos_u = null;
+            this.mousePos = null;
+
+            this.updateTreeStructureAndDraw(true, true);
+            this.updatePropertyEditor(this.mouseNode);
+
+            //console.log('undo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
+        }
+    }
+
+    undoRedo() {
+        if (this.undoStackPos + 1 < this.undoStack.length) {
+            this.undoStackPos += 1;
+
+            let state = this.undoStack[this.undoStackPos];
+
+            copyIntoGame(this.game, state);
+
+            this.mousePan = null;
+            this.mouseZoom = null;
+
+            this.mouseNode = null;
+            this.mousePos_u = null;
+            this.mousePos = null;
+
+            this.updateTreeStructureAndDraw(true, true);
+            this.updatePropertyEditor(this.mouseNode);
+
+            //console.log('redo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
+        }
     }
 
     nodeColor(type, sel) {
@@ -117,6 +183,9 @@ class TRRBTEditor {
         this.ctx = this.canvas.getContext('2d');
         this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
+
+        this.undoStack = [];
+        this.undoStackPos = -1;
 
         this.nidToNode = new Map();
         this.dispidToNode = new Map();
@@ -152,11 +221,7 @@ class TRRBTEditor {
 
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
-        if (this.game.tree === null) {
-            this.game.tree = deepcopyobj(this.getNodePrototype('order'));
-        }
-
-        this.updateTreeStructure();
+        this.updateTreeStructure(false);
         this.updatePropertyEditor(this.mouseNode);
 
         window.requestAnimationFrame(bind0(this, 'onDraw'));
@@ -210,7 +275,7 @@ class TRRBTEditor {
             } else {
                 this.xform_editor.game.tree = xformApplyToTree(this.game.tree, this.nidToNode);
             }
-            this.xform_editor.updateTreeStructure();
+            this.xform_editor.updateTreeStructure(true);
         }
     }
 
@@ -258,7 +323,15 @@ class TRRBTEditor {
         }
     }
 
-    updateTreeStructure() {
+    updateTreeStructure(skipUndo) {
+        if (this.game.tree === null) {
+            this.game.tree = deepcopyobj(this.getNodePrototype('order'));
+        }
+
+        if (!skipUndo) {
+            this.undoPush();
+        }
+
         this.updateNodeIds();
         this.updateXformedTreeStructure();
 
@@ -268,8 +341,8 @@ class TRRBTEditor {
         }
     }
 
-    updateTreeStructureAndDraw(skipAnimate) {
-        this.updateTreeStructure();
+    updateTreeStructureAndDraw(skipUndo, skipAnimate) {
+        this.updateTreeStructure(skipUndo);
         this.updatePositionsAndDraw(skipAnimate);
     }
 
@@ -940,6 +1013,15 @@ class TRRBTEditor {
             return;
         }
 
+        const ed = this.propertyEditor;
+
+        ed.innerHTML = '';
+
+        appendButton(ed, 'Undo', bind0(this, 'onUndo'));
+        appendButton(ed, 'Redo', bind0(this, 'onRedo'));
+        appendBr(ed);
+        appendBr(ed);
+
         if (this.propertyNodes === null || node !== this.propertyNodes.node) {
             this.propertyNodes = (node !== null) ? { node:node, parent:this.findNodeParent(this.game.tree, node) } : null;
             if (this.propertyNodes) {
@@ -953,10 +1035,6 @@ class TRRBTEditor {
                         }
                     }
                 }
-
-                const ed = this.propertyEditor;
-
-                ed.innerHTML = '';
 
                 appendText(ed, node.type, true);
                 appendBr(ed);
@@ -1087,8 +1165,6 @@ class TRRBTEditor {
                         }
                     }
                 }
-            } else {
-                this.propertyEditor.innerHTML = '';
             }
         }
     }
@@ -1127,7 +1203,7 @@ class TRRBTEditor {
             node.rhs = this.parsePatternProperty('prop_rhs');
         }
 
-        this.updateTreeStructureAndDraw(false);
+        this.updateTreeStructureAndDraw(false, false);
     }
 
     findNodeParent(from, node) {
@@ -1154,7 +1230,7 @@ class TRRBTEditor {
         if (cut) {
             this.onNodeDelete(false);
         } else {
-            this.updateTreeStructureAndDraw(false);
+            this.updateTreeStructureAndDraw(false, false);
         }
     }
 
@@ -1163,7 +1239,7 @@ class TRRBTEditor {
 
         if (this.clipboard !== null) {
             node.children.push(deepcopyobj(this.clipboard));
-            this.updateTreeStructureAndDraw(false);
+            this.updateTreeStructureAndDraw(false, false);
         }
     }
 
@@ -1179,7 +1255,7 @@ class TRRBTEditor {
                 } else {
                     parent.children.splice(index, 1);
                 }
-                this.updateTreeStructureAndDraw(false);
+                this.updateTreeStructureAndDraw(false, false);
             }
         }
     }
@@ -1190,7 +1266,7 @@ class TRRBTEditor {
         node.children = [];
 
         this.collapseNodes(node, false);
-        this.updateTreeStructureAndDraw(false);
+        this.updateTreeStructureAndDraw(false, false);
     }
 
     getNodePrototype(type) {
@@ -1211,7 +1287,7 @@ class TRRBTEditor {
         let node = this.propertyNodes.node;
 
         node.children.push(deepcopyobj(this.getNodePrototype(type)));
-        this.updateTreeStructureAndDraw(false);
+        this.updateTreeStructureAndDraw(false, false);
     }
 
     onNodeShift(earlier) {
@@ -1224,14 +1300,22 @@ class TRRBTEditor {
                 if (earlier && index > 0) {
                     parent.children.splice(index, 1);
                     parent.children.splice(index - 1, 0, node);
-                    this.updateTreeStructureAndDraw(false);
+                    this.updateTreeStructureAndDraw(false, false);
                 } else if (!earlier && index + 1 < parent.children.length) {
                     parent.children.splice(index, 1);
                     parent.children.splice(index + 1, 0, node);
-                    this.updateTreeStructureAndDraw(false);
+                    this.updateTreeStructureAndDraw(false, false);
                 }
             }
         }
+    }
+
+    onUndo() {
+        this.undoUndo();
+    }
+
+    onRedo() {
+        this.undoRedo();
     }
 
     onMouseDown(evt) {

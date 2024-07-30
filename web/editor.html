@@ -16,14 +16,14 @@
       var editor_u = new TRRBTEditor(game_u, 'editorucanvas', 'editordiv');
       var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
       function onSelectGame(gameSelected) {
-          assignIntoGame(game_u, gameSelected);
-          editor_u.updateTreeStructureAndDraw(true);
+          copyIntoGame(game_u, gameSelected);
+          editor_u.updateTreeStructureAndDraw(false, true);
       }
       function onLoad() {
-          assignIntoGame(game_u, GAME_SETUP);
+          copyIntoGame(game_u, GAME_SETUP);
           editor_u.xform_editor = editor_x;
-          editor_u.onLoad();
           editor_x.onLoad();
+          editor_u.onLoad();
       }
       window.addEventListener('load', onLoad, false);
     </script>
