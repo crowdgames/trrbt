@@ -54,15 +54,19 @@ function bind1(obj, fn, arg1) {
 
 
 
-function appendText(parent, text, bold) {
-    const elem = document.createTextNode(text);
+function appendText(parent, text, bold, underline) {
+    let elem = document.createTextNode(text);
     if (bold) {
         const elem_b = document.createElement('b');
         elem_b.appendChild(elem);
-        parent.appendChild(elem_b)
-    } else {
-        parent.appendChild(elem);
+        elem = elem_b;
     }
+    if (underline) {
+        const elem_u = document.createElement('u');
+        elem_u.appendChild(elem);
+        elem = elem_u;
+    }
+    parent.appendChild(elem);
 }
 
 function appendButton(parent, text, callback, color) {

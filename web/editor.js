@@ -891,10 +891,10 @@ class TRRBTEditor {
         input.type = 'text';
         input.value = value;
 
-        item.appendChild(label)
-        appendBr(item)
-        item.appendChild(input)
-        appendBr(item)
+        item.appendChild(label);
+        appendBr(item);
+        item.appendChild(input);
+        appendBr(item);
         parent.appendChild(item);
     }
 
@@ -905,8 +905,8 @@ class TRRBTEditor {
 
     appendChoiceProperty(parent, id, name, value, values) {
         const item = document.createElement('li');
-        appendText(item, name)
-        appendBr(item)
+        appendText(item, name);
+        appendBr(item);
         for (const choice_value of values) {
             const choice_text = (choice_value === '') ? 'none' : choice_value;
             const choice_id = id + '_' + choice_value;
@@ -1016,6 +1016,9 @@ class TRRBTEditor {
         const ed = this.propertyEditor;
 
         ed.innerHTML = '';
+
+        appendText(ed, 'Editor', true, true);
+        appendBr(ed);
 
         appendButton(ed, 'Undo', bind0(this, 'onUndo'));
         appendButton(ed, 'Redo', bind0(this, 'onRedo'));
