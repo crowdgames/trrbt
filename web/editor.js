@@ -1019,6 +1019,8 @@ class TRRBTEditor {
 
         appendButton(ed, 'Undo', bind0(this, 'onUndo'));
         appendButton(ed, 'Redo', bind0(this, 'onRedo'));
+        appendButton(ed, 'Import', bind0(this, 'onImport'));
+        appendButton(ed, 'Export', bind0(this, 'onExport'));
         appendBr(ed);
         appendBr(ed);
 
@@ -1316,6 +1318,44 @@ class TRRBTEditor {
 
     onRedo() {
         this.undoRedo();
+    }
+
+    onImport() {
+        if (!navigator.clipboard) {
+            alert('ERROR: Cannot find clipboard.');
+        } else {
+            let this_editor = this;
+            navigator.clipboard.readText().then(function(text) {
+                copyIntoGame(this_editor.game, JSON.parse(text));
+
+                this_editor.mousePan = null;
+                this_editor.mouseZoom = null;
+
+                this_editor.mouseNode = null;
+                this_editor.mousePos_u = null;
+                this_editor.mousePos = null;
+
+                this_editor.updateTreeStructureAndDraw(false, true);
+                this_editor.updatePropertyEditor(this_editor.mouseNode);
+
+                alert('Game imported from clipboard.');
+            }, function(err) {
+                alert('ERROR: Could not import game from clipboard.');
+            });
+        }
+    }
+
+    onExport() {
+        if (!navigator.clipboard) {
+            alert('ERROR: Cannot find clipboard.');
+        } else {
+            const text = JSON.stringify(this.game);
+            navigator.clipboard.writeText(text).then(function() {
+                alert('Game exported to clipboard.');
+            }, function(err) {
+                alert('ERROR: Could not export game to clipboard.');
+            });
+        }
     }
 
     onMouseDown(evt) {
