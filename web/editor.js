@@ -7,9 +7,11 @@ const EDT_FONT_SIZE = 10;
 const EDT_FONT_CHAR_SIZE = 6;
 const EDT_FONT_LINE_SIZE = 12;
 
-const EDT_TEXT_FONT  = 0;
-const EDT_TEXT_COLOR = 1;
-const EDT_TEXT_LINE  = 2;
+const EDT_TEXT_FONT        = 0;
+const EDT_TEXT_COLOR       = 1;
+const EDT_TEXT_LINE        = 2;
+const EDT_TEXT_RECT_BEGIN  = 3;
+const EDT_TEXT_RECT_END    = 4;
 
 const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
@@ -510,7 +512,14 @@ class TRRBTEditor {
                 texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
 
                 for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
-                    texts.push({type:EDT_TEXT_LINE, data:this.joinRow(node.pattern[layer][ii], tileSize, false)});
+                    const row_text = this.joinRow(node.pattern[layer][ii], tileSize, false);
+                    if (ii === 0) {
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:row_text.length, len:row_text.length});
+                    }
+                    texts.push({type:EDT_TEXT_LINE, data:row_text});
+                }
+                if (node.pattern[layer].length > 0) {
+                    texts.push({type:EDT_TEXT_RECT_END});
                 }
             }
         }
@@ -559,7 +568,15 @@ class TRRBTEditor {
                     let rhs = node.rhs.hasOwnProperty(layer) ? this.joinRow(node.rhs[layer][ii], tileSize, true) : null;
                     lhs = (lhs !== null) ? lhs : ' '.repeat(rhs.length);
                     rhs = (rhs !== null) ? rhs : ' '.repeat(lhs.length);
+                    if (ii === 0) {
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:lhs.length, len:lhs.length + 3 + rhs.length});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:lhs.length + 3, to:lhs.length + 3 + rhs.length, len:lhs.length + 3 + rhs.length});
+                    }
                     texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
+                }
+                if (length > 0) {
+                    texts.push({type:EDT_TEXT_RECT_END});
+                    texts.push({type:EDT_TEXT_RECT_END});
                 }
             }
         }
@@ -806,7 +823,11 @@ class TRRBTEditor {
             ctx.fill();
         }
 
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = '#779999';
+
         let line = 0;
+        let rects = [];
         for (const text of nodeTexts.get(node.dispid)) {
             if (text.type === EDT_TEXT_FONT) {
                 ctx.font = text.data;
@@ -814,11 +835,23 @@ class TRRBTEditor {
                 ctx.fillStyle = text.data;
             } else {
                 const texty = EDT_FONT_LINE_SIZE * line + EDT_FONT_LINE_SIZE / 2 + EDT_NODE_PADDING;
-                if (texty + EDT_FONT_LINE_SIZE / 2 - 1 > nh) {
-                    break;
+                if (text.type === EDT_TEXT_LINE) {
+                    if (texty + EDT_FONT_LINE_SIZE / 2 - 1 > nh) {
+                        continue;
+                    }
+                    ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
+                    ++ line;
+                } else if (text.type === EDT_TEXT_RECT_BEGIN) {
+                    rects.push({from:text.from, to:text.to, len:text.len, texty:texty});
+                } else if (text.type == EDT_TEXT_RECT_END) {
+                    const rect = rects.pop();
+                    const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
+                    const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
+                    ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
+                                   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+                                   width,
+                                   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
-                ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
-                ++ line;
             }
         }
 
