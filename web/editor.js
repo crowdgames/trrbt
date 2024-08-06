@@ -30,6 +30,7 @@ const EDT_NODE_PROTOTYPES = [
 
     { type:'rewrite', nid:'', button:'', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
     { type:'set-board', nid:'', pattern:EDT_EMPTY_PATTERN },
+    { type:'layer-template', nid:'', what:'', with:'' },
 
     { type:'match', pattern:EDT_EMPTY_PATTERN },
 ];
@@ -1329,7 +1330,9 @@ class TRRBTEditor {
         } else {
             let this_editor = this;
             navigator.clipboard.readText().then(function(text) {
-                copyIntoGame(this_editor.game, JSON.parse(text));
+                let gameImport = JSON.parse(text);
+                this_editor.clearNodeDispid(gameImport.tree);
+                copyIntoGame(this_editor.game, gameImport);
 
                 this_editor.mousePan = null;
                 this_editor.mouseZoom = null;
@@ -1352,7 +1355,9 @@ class TRRBTEditor {
         if (!navigator.clipboard) {
             alert('ERROR: Cannot find clipboard.');
         } else {
-            const text = JSON.stringify(this.game);
+            let gameExport = deepcopyobj(this.game);
+            this.clearNodeDispid(gameExport.tree);
+            const text = JSON.stringify(gameExport);
             navigator.clipboard.writeText(text).then(function() {
                 alert('Game exported to clipboard.');
             }, function(err) {
