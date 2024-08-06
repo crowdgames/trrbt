@@ -4,6 +4,8 @@ sprites:
   '@': crate_04
   X: block_08
   O: crate_29
+  '*': environment_07_edit
+  '~': crate_19
   _: .
   B: ground_01
 back: B
