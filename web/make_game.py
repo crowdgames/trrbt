@@ -60,22 +60,21 @@ if __name__ == '__main__':
     sprite_data = get_sprite_data(args.sprites) if args.sprites else None
 
     with open(out_full + '.js', 'wt') as f:
-        f.write('THIS_GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
-        f.write('if (typeof GAME_SETUPS === \'undefined\') { var GAME_SETUPS = {}; var GAME_SETUP = THIS_GAME_SETUP; }\n');
-        f.write('GAME_SETUPS[\'' + args.outname + '\'] = THIS_GAME_SETUP;\n')
+        f.write('GAME_SETUPS[\'' + args.outname + '\'] = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
 
     with open(out_full + '.html', 'wt') as f:
         f.write('<!DOCTYPE html>\n')
         f.write('<html>\n')
         f.write('  <head>\n')
         f.write('    <meta charset="UTF-8">\n')
-        f.write('    <script src="' + args.outname + '.js"></script>\n')
+        f.write('    <script>var GAME_SETUPS = {};</script>\n')
         f.write('    <script src="../../common.js"></script>\n')
         f.write('    <script src="../../engine.js"></script>\n')
+        f.write('    <script src="' + args.outname + '.js"></script>\n')
         f.write('  </head>\n')
         f.write('  <body>\n')
         f.write('    <script>\n')
-        f.write('      var game = {tree:null};\n')
+        f.write('      var game = emptyGame();\n')
         f.write('      var engine = new TRRBTEngine(game, \'enginecanvas\', \'enginediv\');\n')
         f.write('      function onLoad() {\n')
         if args.xform:
