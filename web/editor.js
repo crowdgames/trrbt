@@ -932,9 +932,17 @@ class TRRBTEditor {
         parent.appendChild(item);
     }
 
-    parseTextProperty(id) {
+    parseTextProperty(id, intOnly) {
         const value = document.getElementById(id).value;
-        return value;
+        if (intOnly && value != '') {
+            const asInt = parseInt(value, 10);
+            if (isNaN(asInt) || asInt < 1 || asInt > 100) {
+                return {ok:false, error:"Must be an integer between 1 and 100"};
+            }
+            return {ok:true, value:asInt};
+        } else {
+            return {ok:true, value:value};
+        }
     }
 
     appendChoiceProperty(parent, id, name, value, values) {
@@ -966,14 +974,10 @@ class TRRBTEditor {
         for (const choice_value of values) {
             let elem = document.getElementById(id + '_' + choice_value);
             if (elem.checked) {
-                if (choice_value === null) {
-                    return null;
-                } else {
-                    return elem.value;
-                }
+                return {ok:true, value:elem.value};
             }
         }
-        return null;
+        return {ok:false, error:'An unknown choice was selected.'};
     }
 
     appendPatternProperty(parent, id, name, value, tileSize) {
@@ -1039,7 +1043,28 @@ class TRRBTEditor {
                 pattern[layer].push(row);
             }
         }
-        return pattern;
+
+        let rows = null;
+        let cols = null;
+
+        for (const layer of Object.getOwnPropertyNames(pattern)) {
+            if (rows === null) {
+                rows = pattern[layer].length;
+            }
+            if (rows != pattern[layer].length) {
+                return {ok:false, error:'Layer row count mismatch.'};
+            }
+            for (const row of pattern[layer]) {
+                if (cols === null) {
+                    cols = row.length;
+                }
+                if (cols != row.length) {
+                    return {ok:false, error:'Layer column count mismatch.'};
+                }
+            }
+        }
+
+        return {ok:true, value:pattern};
     }
 
     updatePropertyEditor(node) {
@@ -1209,37 +1234,34 @@ class TRRBTEditor {
     }
 
     onNodeSaveProperties() {
+        const SAVE_PROPS = [['nid', this.parseTextProperty, false],
+                            ['target', this.parseTextProperty, false],
+                            ['pid', this.parseTextProperty, false],
+                            ['times', this.parseTextProperty, true],
+                            ['what', this.parseTextProperty, false],
+                            ['with', this.parseTextProperty, false],
+                            ['button', this.parseChoiceProperty, EDT_BUTTONS],
+                            ['pattern', this.parsePatternProperty, undefined],
+                            ['lhs', this.parsePatternProperty, undefined],
+                            ['rhs', this.parsePatternProperty, undefined]];
+
         let node = this.propertyNodes.node;
 
-        if (node.hasOwnProperty('nid')) {
-            node.nid = this.parseTextProperty('prop_nid');
+        let new_props = new Map();
+
+        for (let [propid, propfn, proparg] of SAVE_PROPS) {
+            if (node.hasOwnProperty(propid)) {
+                let result = propfn('prop_' + propid, proparg);
+                if (!result.ok) {
+                    alert('Error saving ' + propid + '.\n' + result.error);
+                    return;
+                }
+                new_props.set(propid, result.value);
+            }
         }
-        if (node.hasOwnProperty('target')) {
-            node.target = this.parseTextProperty('prop_target');
-        }
-        if (node.hasOwnProperty('pid')) {
-            node.pid = this.parseTextProperty('prop_pid');
-        }
-        if (node.hasOwnProperty('times')) {
-            node.times = this.parseTextProperty('prop_times');
-        }
-        if (node.hasOwnProperty('what')) {
-            node.what = this.parseTextProperty('prop_what');
-        }
-        if (node.hasOwnProperty('with')) {
-            node.with = this.parseTextProperty('prop_with');
-        }
-        if (node.hasOwnProperty('button')) {
-            node.button = this.parseChoiceProperty('prop_button', EDT_BUTTONS);
-        }
-        if (node.hasOwnProperty('pattern')) {
-            node.pattern = this.parsePatternProperty('prop_pattern');
-        }
-        if (node.hasOwnProperty('lhs')) {
-            node.lhs = this.parsePatternProperty('prop_lhs');
-        }
-        if (node.hasOwnProperty('rhs')) {
-            node.rhs = this.parsePatternProperty('prop_rhs');
+
+        for (let [propid, value] of new_props.entries()) {
+            node[propid] = value;
         }
 
         this.updateTreeStructureAndDraw(false, false);
