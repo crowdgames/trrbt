@@ -390,24 +390,27 @@ class TRRBTEngine {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
-        if (this.back !== null) {
-            const brows = this.back.length;
-            const bcols = this.back[0].length;
-
-            for (let rr = 0; rr < this.rows; rr += 1) {
-                for (let cc = 0; cc < this.cols; cc += 1) {
-                    let all_invis = true;
-                    for (const [layer, pattern] of Object.entries(this.board)) {
-                        if (pattern[rr][cc] !== '.') {
-                            all_invis = false;
-                        }
+        for (let rr = 0; rr < this.rows; rr += 1) {
+            for (let cc = 0; cc < this.cols; cc += 1) {
+                let all_invis = true;
+                for (const [layer, pattern] of Object.entries(this.board)) {
+                    if (pattern[rr][cc] !== '.') {
+                        all_invis = false;
                     }
-                    if (!all_invis) {
+                }
+                if (!all_invis) {
+                    if (this.back !== null) {
+                        const brows = this.back.length;
+                        const bcols = this.back[0].length;
+
                         const back_tile = this.back[rr % brows][cc % bcols];
                         if (this.spriteTiles !== null && this.spriteTiles.has(back_tile)) {
                             const img = this.spriteImages.get(this.spriteTiles.get(back_tile));
                             this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                         }
+                    } else {
+                        this.ctx.fillStyle = '#cccccc';
+                        this.ctx.fillRect(this.tocvsx(cc), this.tocvsy(rr), this.cell_size, this.cell_size);
                     }
                 }
             }
