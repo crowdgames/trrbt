@@ -284,13 +284,7 @@ class TRRBTEditor {
 
     updateXformedTreeStructure() {
         if (this.xform_editor !== null) {
-            this.xform_editor.game.name = this.game.name;
-            this.xform_editor.game.sprites = this.game.sprites;
-            if (this.game.tree === null) {
-                this.xform_editor.game.tree = null;
-            } else {
-                this.xform_editor.game.tree = xformApplyToTree(this.game.tree, this.nidToNode);
-            }
+            xformApplyIntoGame(this.xform_editor.game, this.game);
             this.xform_editor.updateTreeStructure(true);
         }
     }
