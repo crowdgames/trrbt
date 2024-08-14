@@ -23,6 +23,7 @@ class TRRBTEngine {
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
+        this.hideText = null;
 
         this.player_id_colors = new Map();
 
@@ -259,6 +260,7 @@ class TRRBTEngine {
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
+        this.hideText = null;
 
         this.player_id_colors = new Map();
 
@@ -293,14 +295,18 @@ class TRRBTEngine {
         this.canvas.focus();
 
         if (this.game.sprites !== null) {
-            this.spriteImages = new Map();
-            for (let imageName in this.game.sprites.images) {
-                const image_info = this.game.sprites.images[imageName];
-                this.loadSpriteImage(imageName, image_info)
+            if (this.game.sprites.images !== undefined) {
+                this.spriteImages = new Map();
+                for (let imageName in this.game.sprites.images) {
+                    const image_info = this.game.sprites.images[imageName];
+                    this.loadSpriteImage(imageName, image_info)
+                }
             }
-            this.spriteTiles = new Map();
-            for (let tile in this.game.sprites.tiles) {
-                this.spriteTiles.set(tile, this.game.sprites.tiles[tile]);
+            if (this.game.sprites.tiles !== undefined) {
+                this.spriteTiles = new Map();
+                for (let tile in this.game.sprites.tiles) {
+                    this.spriteTiles.set(tile, this.game.sprites.tiles[tile]);
+                }
             }
             if (this.game.sprites.players !== undefined) {
                 for (let pid in this.game.sprites.players) {
@@ -309,6 +315,9 @@ class TRRBTEngine {
             }
             if (this.game.sprites.back !== undefined) {
                 this.back = this.game.sprites.back;
+            }
+            if (this.game.sprites.hidetext !== undefined) {
+                this.hideText = this.game.sprites.hidetext;
             }
         }
 
@@ -457,8 +466,12 @@ class TRRBTEngine {
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
-                            this.ctx.font = (this.cell_size / tile.length) + ENG_FONTNAME;
-                            this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
+                            if (this.hideText !== null && this.hideText === tile) {
+                                // pass
+                            } else {
+                                this.ctx.font = (this.cell_size / tile.length) + ENG_FONTNAME;
+                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
+                            }
                         }
                     }
                 }

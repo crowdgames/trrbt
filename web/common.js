@@ -400,22 +400,26 @@ function xformApplyIntoGame(game, fromGame) {
     game.name = fromGame.name;
     game.sprites = fromGame.sprites;
 
-    let nidToNode = new Map();
+    if (fromGame.tree === null) {
+        game.tree = null;
+    } else {
+        let nidToNode = new Map();
 
-    function findNodeIds(node) {
-        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-            nidToNode.set(node.nid, node);
-        }
-        if (node.hasOwnProperty('children')) {
-            for (let child of node.children) {
-                findNodeIds(child);
+        function findNodeIds(node) {
+            if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
+                nidToNode.set(node.nid, node);
+            }
+            if (node.hasOwnProperty('children')) {
+                for (let child of node.children) {
+                    findNodeIds(child);
+                }
             }
         }
+
+        findNodeIds(fromGame.tree);
+
+        game.tree = xformApplyToTree(fromGame.tree, nidToNode);
     }
-
-    findNodeIds(fromGame.tree);
-
-    game.tree = xformApplyToTree(fromGame.tree, nidToNode);
 }
 
 function copyIntoGame(game, fromGame) {
@@ -425,5 +429,5 @@ function copyIntoGame(game, fromGame) {
 }
 
 function emptyGame() {
-    return {name:'empty', tree:null, sprites:null};
+    return {name:'empty', sprites:null, tree:null};
 }
