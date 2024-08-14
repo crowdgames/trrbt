@@ -1057,27 +1057,37 @@ class TRRBTEditor {
             }
         }
 
+        return this.checkPatterns([pattern]);
+    }
+
+    checkPatterns(patterns) {
         let rows = null;
         let cols = null;
 
-        for (const layer of Object.getOwnPropertyNames(pattern)) {
-            if (rows === null) {
-                rows = pattern[layer].length;
-            }
-            if (rows != pattern[layer].length) {
-                return {ok:false, error:'Layer row count mismatch.'};
-            }
-            for (const row of pattern[layer]) {
-                if (cols === null) {
-                    cols = row.length;
+        for (const pattern of patterns) {
+            for (const layer of Object.getOwnPropertyNames(pattern)) {
+                if (rows === null) {
+                    rows = pattern[layer].length;
                 }
-                if (cols != row.length) {
-                    return {ok:false, error:'Layer column count mismatch.'};
+                if (rows !== pattern[layer].length) {
+                    return {ok:false, error:'Layer row count mismatch.'};
+                }
+                for (const row of pattern[layer]) {
+                    if (cols === null) {
+                        cols = row.length;
+                    }
+                    if (cols !== row.length) {
+                        return {ok:false, error:'Layer column count mismatch.'};
+                    }
                 }
             }
         }
 
-        return {ok:true, value:pattern};
+        if (patterns.length === 1) {
+            return {ok:true, value:patterns[0]};
+        } else {
+            return {ok:true, value:patterns};
+        }
     }
 
     updatePropertyEditor(node) {
@@ -1247,16 +1257,16 @@ class TRRBTEditor {
     }
 
     onNodeSaveProperties() {
-        const SAVE_PROPS = [['nid', this.parseTextProperty, false],
-                            ['target', this.parseTextProperty, false],
-                            ['pid', this.parseTextProperty, false],
-                            ['times', this.parseTextProperty, true],
-                            ['what', this.parseTextProperty, false],
-                            ['with', this.parseTextProperty, false],
-                            ['button', this.parseChoiceProperty, EDT_BUTTONS],
-                            ['pattern', this.parsePatternProperty, undefined],
-                            ['lhs', this.parsePatternProperty, undefined],
-                            ['rhs', this.parsePatternProperty, undefined]];
+        const SAVE_PROPS = [['nid', bind0(this, 'parseTextProperty'), false],
+                            ['target', bind0(this, 'parseTextProperty'), false],
+                            ['pid', bind0(this, 'parseTextProperty'), false],
+                            ['times', bind0(this, 'parseTextProperty'), true],
+                            ['what', bind0(this, 'parseTextProperty'), false],
+                            ['with', bind0(this, 'parseTextProperty'), false],
+                            ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                            ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                            ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                            ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
 
         let node = this.propertyNodes.node;
 
@@ -1270,6 +1280,18 @@ class TRRBTEditor {
                     return;
                 }
                 new_props.set(propid, result.value);
+            }
+        }
+
+        if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
+            if (!new_props.has('lhs') && new_props.has('rhs')) {
+                alert('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + 'Missing one.');
+                return;
+            }
+            let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
+            if (!result.ok) {
+                alert('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
+                return;
             }
         }
 
