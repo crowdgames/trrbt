@@ -850,10 +850,14 @@ class TRRBTEditor {
                         ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
                     } else {
                         const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * charlength(text.data) / 2);
+                        const width = nw - EDT_NODE_PADDING;
                         let ii = 0;
                         for (const ch of text.data) {
                             const cx = lox + (ii + 0.5) * EDT_FONT_CHAR_SIZE;
                             const cy = ny + texty;
+                            if (cx - lox + 0.9 * EDT_FONT_CHAR_SIZE > width) {
+                                break;
+                            }
                             ctx.fillText(ch, cx, cy);
                             ++ ii;
                         }
