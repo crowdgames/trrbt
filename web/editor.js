@@ -4,7 +4,7 @@ const EDT_NODE_PADDING = 8;
 const EDT_NODE_SPACING = 25;
 
 const EDT_FONT_SIZE = 10;
-const EDT_FONT_CHAR_SIZE = 6;
+const EDT_FONT_CHAR_SIZE = 7;
 const EDT_FONT_LINE_SIZE = 12;
 
 const EDT_TEXT_FONT        = 0;
@@ -436,7 +436,7 @@ class TRRBTEditor {
             for (const layer of Object.getOwnPropertyNames(pattern)) {
                 for (const row of pattern[layer]) {
                     for (const tile of row) {
-                        size = Math.max(size, tile.length);
+                        size = Math.max(size, charlength(tile));
                     }
                 }
             }
@@ -521,7 +521,7 @@ class TRRBTEditor {
                 for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
                     const row_text = this.joinRow(node.pattern[layer][ii], tileSize, false);
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:row_text.length, len:row_text.length});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charlength(row_text), len:charlength(row_text)});
                     }
                     texts.push({type:EDT_TEXT_LINE, data:row_text});
                 }
@@ -568,16 +568,16 @@ class TRRBTEditor {
                 texts.push({type:EDT_TEXT_FONT,  data:'10px Courier New'});
                 texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
 
-                const length = node.lhs.hasOwnProperty(layer) ? node.lhs[layer].length : node.rhs[layer].length;
+                const length = node.lhs.hasOwnProperty(layer) ? charlength(node.lhs[layer]) : charlength(node.rhs[layer]);
                 for (let ii = 0; ii < length; ++ ii) {
                     const connect = (ii === 0) ? ' → ' : '   ';
                     let lhs = node.lhs.hasOwnProperty(layer) ? this.joinRow(node.lhs[layer][ii], tileSize, true) : null;
                     let rhs = node.rhs.hasOwnProperty(layer) ? this.joinRow(node.rhs[layer][ii], tileSize, true) : null;
-                    lhs = (lhs !== null) ? lhs : ' '.repeat(rhs.length);
-                    rhs = (rhs !== null) ? rhs : ' '.repeat(lhs.length);
+                    lhs = (lhs !== null) ? lhs : ' '.repeat(charlength(rhs));
+                    rhs = (rhs !== null) ? rhs : ' '.repeat(charlength(length));
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:lhs.length, len:lhs.length + 3 + rhs.length});
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:lhs.length + 3, to:lhs.length + 3 + rhs.length, len:lhs.length + 3 + rhs.length});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charlength(lhs), len:charlength(lhs) + 3 + charlength(rhs)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:charlength(lhs) + 3, to:charlength(lhs) + 3 + charlength(rhs), len:charlength(lhs) + 3 + charlength(rhs)});
                     }
                     texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
                 }
@@ -596,7 +596,7 @@ class TRRBTEditor {
 
         for (const text of texts) {
             if (text.type === EDT_TEXT_LINE) {
-                nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * text.data.length);
+                nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * charlength(text.data));
                 nh += EDT_FONT_LINE_SIZE;
             }
         }
@@ -846,7 +846,18 @@ class TRRBTEditor {
                     if (texty + EDT_FONT_LINE_SIZE / 2 - 1 > nh) {
                         continue;
                     }
-                    ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
+                    if (rects.length == 0) {
+                        ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
+                    } else {
+                        const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * charlength(text.data) / 2);
+                        let ii = 0;
+                        for (const ch of text.data) {
+                            const cx = lox + (ii + 0.5) * EDT_FONT_CHAR_SIZE;
+                            const cy = ny + texty;
+                            ctx.fillText(ch, cx, cy);
+                            ++ ii;
+                        }
+                    }
                     ++ line;
                 } else if (text.type === EDT_TEXT_RECT_BEGIN) {
                     rects.push({from:text.from, to:text.to, len:text.len, texty:texty});

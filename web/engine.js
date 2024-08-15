@@ -472,11 +472,7 @@ class TRRBTEngine {
                             if (this.hideText !== null && this.hideText === tile) {
                                 // pass
                             } else {
-                                let char_length = 0;
-                                for (const char of tile) {
-                                    ++ char_length;
-                                }
-                                this.ctx.font = (this.cell_size / char_length) + ENG_FONTNAME;
+                                this.ctx.font = (this.cell_size / charlength(tile)) + ENG_FONTNAME;
                                 this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
                             }
                         }
