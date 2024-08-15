@@ -1014,18 +1014,16 @@ class TRRBTEditor {
             } else {
                 text += ' ' + layer + '\n';
                 rows += 1;
-                cols = Math.max(cols, layer.length + 1);
+                cols = Math.max(cols, charlength(layer) + 1);
             }
 
             for (const row of value[layer]) {
                 const rowText = this.joinRow(row, tileSize, false);
                 text += rowText + '\n';
                 rows += 1;
-                cols = Math.max(cols, rowText.length);
+                cols = Math.max(cols, charlength(rowText));
             }
         }
-        rows = Math.max(4, rows + 2);
-        cols = Math.max(8, cols + 2);
 
         const item = document.createElement('li');
         const label = document.createElement('label');
@@ -1035,8 +1033,7 @@ class TRRBTEditor {
         input.id = id;
         input.name = id;
         input.innerHTML = text;
-        input.rows = rows;
-        input.cols = cols;
+        input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
 
         item.appendChild(label)
         appendBr(item)
