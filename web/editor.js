@@ -883,10 +883,18 @@ class TRRBTEditor {
             ctx.stroke();
         }
 
-        if (this.propertyNodes !== null && node === this.propertyNodes.node) {
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = '#880088';
-            ctx.stroke();
+        if (this.propertyEditor !== null) {
+            if (this.mouseNode !== null && node === this.mouseNode) {
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = '#880088';
+                ctx.stroke();
+            }
+
+            if (this.propertyNodes !== null && node === this.propertyNodes.node) {
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#880088';
+                ctx.stroke();
+            }
         }
     }
 
