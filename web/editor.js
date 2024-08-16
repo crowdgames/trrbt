@@ -1123,21 +1123,25 @@ class TRRBTEditor {
             return;
         }
 
-        const ed = this.propertyEditor;
+        const changed =
+              (this.propertyNodes === null && node !== null) ||
+              (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
-        ed.innerHTML = '';
+        if (changed) {
+            const ed = this.propertyEditor;
 
-        appendText(ed, 'Editor', true, true);
-        appendBr(ed);
+            ed.innerHTML = '';
 
-        appendButton(ed, 'Undo', bind0(this, 'onUndo'));
-        appendButton(ed, 'Redo', bind0(this, 'onRedo'));
-        appendButton(ed, 'Import', bind0(this, 'onImport'));
-        appendButton(ed, 'Export', bind0(this, 'onExport'));
-        appendBr(ed);
-        appendBr(ed);
+            appendText(ed, 'Editor', true, true);
+            appendBr(ed);
 
-        if (this.propertyNodes === null || node !== this.propertyNodes.node) {
+            appendButton(ed, 'Undo', bind0(this, 'onUndo'));
+            appendButton(ed, 'Redo', bind0(this, 'onRedo'));
+            appendButton(ed, 'Import', bind0(this, 'onImport'));
+            appendButton(ed, 'Export', bind0(this, 'onExport'));
+            appendBr(ed);
+            appendBr(ed);
+
             this.propertyNodes = (node !== null) ? { node:node, parent:this.findNodeParent(this.game.tree, node) } : null;
             if (this.propertyNodes) {
                 const parent = this.propertyNodes.parent;
