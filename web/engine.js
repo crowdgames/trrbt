@@ -472,7 +472,7 @@ class TRRBTEngine {
                             if (this.hideText !== null && this.hideText.indexOf(tile) >= 0) {
                                 // pass
                             } else {
-                                this.ctx.font = (this.cell_size / charlength(tile)) + ENG_FONTNAME;
+                                this.ctx.font = (this.cell_size / charLength(tile)) + ENG_FONTNAME;
                                 this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
                             }
                         }
