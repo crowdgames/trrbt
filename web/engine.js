@@ -469,7 +469,7 @@ class TRRBTEngine {
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
-                            if (this.hideText !== null && this.hideText === tile) {
+                            if (this.hideText !== null && this.hideText.indexOf(tile) >= 0) {
                                 // pass
                             } else {
                                 this.ctx.font = (this.cell_size / charlength(tile)) + ENG_FONTNAME;
