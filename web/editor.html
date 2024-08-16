@@ -25,6 +25,7 @@
       function onSelectGame(gameSelected) {
           copyIntoGame(game_u, gameSelected);
           editor_u.updateTreeStructureAndDraw(false, true);
+          editor_u.updatePropertyEditor(null);
       }
       function onLoad() {
           copyIntoGame(game_u, SEL_startingGame(true));

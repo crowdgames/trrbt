@@ -5,6 +5,8 @@ const DOUBLE_CLICK_TIME = 300;
 
 const TAU = 2 * Math.PI;
 
+const SEGMENTER = new Intl.Segmenter();
+
 let G_nextId = 0;
 
 function getNextId() {
@@ -52,12 +54,13 @@ function bind1(obj, fn, arg1) {
     return obj[fn].bind(obj, arg1);
 }
 
-function charlength(str) {
-    let ret = 0;
-    for (const ch of str) {
-        ++ ret;
-    }
-    return ret;
+function splitGraphemes(str) {
+    return [...SEGMENTER.segment(str)].map(x => x.segment);
+}
+
+function charLength(str) {
+    const graphemes = splitGraphemes(str);
+    return graphemes.length;
 }
 
 

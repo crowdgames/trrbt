@@ -1,17 +1,17 @@
 const EDT_UNDO_MAX = 25;
 
-const EDT_NODE_PADDING = 8;
+const EDT_NODE_PADDING =  8;
 const EDT_NODE_SPACING = 25;
 
-const EDT_FONT_SIZE = 10;
-const EDT_FONT_CHAR_SIZE = 7;
+const EDT_FONT_SIZE      = 10;
+const EDT_FONT_CHAR_SIZE =  7;
 const EDT_FONT_LINE_SIZE = 12;
 
-const EDT_TEXT_FONT        = 0;
-const EDT_TEXT_COLOR       = 1;
-const EDT_TEXT_LINE        = 2;
-const EDT_TEXT_RECT_BEGIN  = 3;
-const EDT_TEXT_RECT_END    = 4;
+const EDT_TEXT_FONT       = 0;
+const EDT_TEXT_COLOR      = 1;
+const EDT_TEXT_LINE       = 2;
+const EDT_TEXT_RECT_BEGIN = 3;
+const EDT_TEXT_RECT_END   = 4;
 
 const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
@@ -141,7 +141,7 @@ class TRRBTEditor {
             this.mousePos = null;
 
             this.updateTreeStructureAndDraw(true, true);
-            this.updatePropertyEditor(this.mouseNode);
+            this.updatePropertyEditor(this.mouseNode, false);
 
             //console.log('undo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
         }
@@ -163,7 +163,7 @@ class TRRBTEditor {
             this.mousePos = null;
 
             this.updateTreeStructureAndDraw(true, true);
-            this.updatePropertyEditor(this.mouseNode);
+            this.updatePropertyEditor(this.mouseNode, false);
 
             //console.log('redo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
         }
@@ -238,7 +238,7 @@ class TRRBTEditor {
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
         this.updateTreeStructure(false);
-        this.updatePropertyEditor(this.mouseNode);
+        this.updatePropertyEditor(null, true);
 
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
@@ -436,7 +436,7 @@ class TRRBTEditor {
             for (const layer of Object.getOwnPropertyNames(pattern)) {
                 for (const row of pattern[layer]) {
                     for (const tile of row) {
-                        size = Math.max(size, charlength(tile));
+                        size = Math.max(size, charLength(tile));
                     }
                 }
             }
@@ -444,31 +444,27 @@ class TRRBTEditor {
         return size;
     }
 
-    padEnd(str, len) {
-        let ret = '';
-        let ret_len = 0;
-        for (const ch of str) {
-            ret += ch;
-            ++ ret_len;
-        }
-        while (ret_len < len) {
-            ret += ' ';
-            ++ ret_len;
-        }
-        return ret;
-    }
-
     joinRow(row, tileSize, alwaysPad) {
         let rowStr = '';
+
         for (let ii = 0; ii < row.length; ++ ii) {
+            const graphemes = splitGraphemes(row[ii]);
+
+            for (const ch of graphemes) {
+                rowStr += ch;
+            }
+
+            if (ii + 1 < row.length || alwaysPad) {
+                for (let jj = graphemes.length; jj < tileSize; ++ jj) {
+                    rowStr += ' ';
+                }
+            }
+
             if (ii + 1 < row.length) {
-                rowStr += this.padEnd(row[ii], tileSize) + ' ';
-            } else if (alwaysPad) {
-                rowStr += this.padEnd(row[ii], tileSize);
-            } else {
-                rowStr += row[ii];
+                rowStr += ' ';
             }
         }
+
         return rowStr;
     }
 
@@ -535,7 +531,7 @@ class TRRBTEditor {
                 for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
                     const row_text = this.joinRow(node.pattern[layer][ii], tileSize, false);
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charlength(row_text), len:charlength(row_text)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charLength(row_text), len:charLength(row_text)});
                     }
                     texts.push({type:EDT_TEXT_LINE, data:row_text});
                 }
@@ -582,16 +578,16 @@ class TRRBTEditor {
                 texts.push({type:EDT_TEXT_FONT,  data:'10px Courier New'});
                 texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
 
-                const length = node.lhs.hasOwnProperty(layer) ? charlength(node.lhs[layer]) : charlength(node.rhs[layer]);
+                const length = node.lhs.hasOwnProperty(layer) ? node.lhs[layer].length : node.rhs[layer].length;
                 for (let ii = 0; ii < length; ++ ii) {
                     const connect = (ii === 0) ? ' → ' : '   ';
                     let lhs = node.lhs.hasOwnProperty(layer) ? this.joinRow(node.lhs[layer][ii], tileSize, true) : null;
                     let rhs = node.rhs.hasOwnProperty(layer) ? this.joinRow(node.rhs[layer][ii], tileSize, true) : null;
-                    lhs = (lhs !== null) ? lhs : ' '.repeat(charlength(rhs));
-                    rhs = (rhs !== null) ? rhs : ' '.repeat(charlength(length));
+                    lhs = (lhs !== null) ? lhs : ' '.repeat(charLength(rhs));
+                    rhs = (rhs !== null) ? rhs : ' '.repeat(charLength(length));
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charlength(lhs), len:charlength(lhs) + 3 + charlength(rhs)});
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:charlength(lhs) + 3, to:charlength(lhs) + 3 + charlength(rhs), len:charlength(lhs) + 3 + charlength(rhs)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charLength(lhs), len:charLength(lhs) + 3 + charLength(rhs)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:charLength(lhs) + 3, to:charLength(lhs) + 3 + charLength(rhs), len:charLength(lhs) + 3 + charLength(rhs)});
                     }
                     texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
                 }
@@ -610,7 +606,7 @@ class TRRBTEditor {
 
         for (const text of texts) {
             if (text.type === EDT_TEXT_LINE) {
-                nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * charlength(text.data));
+                nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * charLength(text.data));
                 nh += EDT_FONT_LINE_SIZE;
             }
         }
@@ -863,10 +859,11 @@ class TRRBTEditor {
                     if (rects.length == 0) {
                         ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
                     } else {
-                        const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * charlength(text.data) / 2);
+                        const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * charLength(text.data) / 2);
                         const width = nw - EDT_NODE_PADDING;
                         let ii = 0;
-                        for (const ch of text.data) {
+                        const graphemes = splitGraphemes(text.data);
+                        for (const ch of graphemes) {
                             const cx = lox + (ii + 0.5) * EDT_FONT_CHAR_SIZE;
                             const cy = ny + texty;
                             if (cx - lox + 0.9 * EDT_FONT_CHAR_SIZE > width) {
@@ -1036,14 +1033,14 @@ class TRRBTEditor {
             } else {
                 text += ' ' + layer + '\n';
                 rows += 1;
-                cols = Math.max(cols, charlength(layer) + 1);
+                cols = Math.max(cols, charLength(layer) + 1);
             }
 
             for (const row of value[layer]) {
                 const row_text = this.joinRow(row, tileSize, false);
                 text += row_text + '\n';
                 rows += 1;
-                cols = Math.max(cols, charlength(row_text));
+                cols = Math.max(cols, charLength(row_text));
             }
         }
 
@@ -1118,12 +1115,13 @@ class TRRBTEditor {
         }
     }
 
-    updatePropertyEditor(node) {
+    updatePropertyEditor(node, force) {
         if (this.propertyEditor === null) {
             return;
         }
 
         const changed =
+              force ||
               (this.propertyNodes === null && node !== null) ||
               (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
@@ -1464,7 +1462,7 @@ class TRRBTEditor {
                 this_editor.mousePos = null;
 
                 this_editor.updateTreeStructureAndDraw(false, true);
-                this_editor.updatePropertyEditor(this_editor.mouseNode);
+                this_editor.updatePropertyEditor(this_editor.mouseNode, false);
 
                 alert('Game imported from clipboard.');
             }, function(err) {
@@ -1508,7 +1506,7 @@ class TRRBTEditor {
                 }
             }
 
-            this.updatePropertyEditor(this.mouseNode);
+            this.updatePropertyEditor(this.mouseNode, false);
         } else {
             if (isDouble) {
                 this.resetXform();
@@ -1520,7 +1518,7 @@ class TRRBTEditor {
                 }
             }
 
-            this.updatePropertyEditor(null);
+            this.updatePropertyEditor(null, false);
         }
 
         this.mouseLastTime = mouseTime;
