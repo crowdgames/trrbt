@@ -444,13 +444,27 @@ class TRRBTEditor {
         return size;
     }
 
+    padEnd(str, len) {
+        let ret = '';
+        let ret_len = 0;
+        for (const ch of str) {
+            ret += ch;
+            ++ ret_len;
+        }
+        while (ret_len < len) {
+            ret += ' ';
+            ++ ret_len;
+        }
+        return ret;
+    }
+
     joinRow(row, tileSize, alwaysPad) {
         let rowStr = '';
         for (let ii = 0; ii < row.length; ++ ii) {
             if (ii + 1 < row.length) {
-                rowStr += row[ii].padEnd(tileSize) + ' ';
+                rowStr += this.padEnd(row[ii], tileSize) + ' ';
             } else if (alwaysPad) {
-                rowStr += row[ii].padEnd(tileSize);
+                rowStr += this.padEnd(row[ii], tileSize);
             } else {
                 rowStr += row[ii];
             }
@@ -1026,10 +1040,10 @@ class TRRBTEditor {
             }
 
             for (const row of value[layer]) {
-                const rowText = this.joinRow(row, tileSize, false);
-                text += rowText + '\n';
+                const row_text = this.joinRow(row, tileSize, false);
+                text += row_text + '\n';
                 rows += 1;
-                cols = Math.max(cols, charlength(rowText));
+                cols = Math.max(cols, charlength(row_text));
             }
         }
 
