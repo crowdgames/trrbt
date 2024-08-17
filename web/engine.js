@@ -630,7 +630,9 @@ class TRRBTEngine {
                 } else if (key === 'ArrowDown') {
                     keyp = 'down';
                 } else if (key === 'z') {
-                    keyp = 'z';
+                    keyp = 'action1';
+                } else if (key === 'x') {
+                    keyp = 'action2';
                 }
                 if (keyp !== null && this.choicesByBtn.has(keyp)) {
                     this.stepGameTree();

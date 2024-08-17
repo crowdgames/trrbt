@@ -106,7 +106,8 @@ class GameFrame(tkinter.Frame):
         self.bind_all('<Right>', lambda evt: self.on_button(evt, 'right'))
         self.bind_all('<Up>',    lambda evt: self.on_button(evt, 'up'))
         self.bind_all('<Down>',  lambda evt: self.on_button(evt, 'down'))
-        self.bind_all('<KeyPress-z>',  lambda evt: self.on_button(evt, 'z'))
+        self.bind_all('<KeyPress-z>',  lambda evt: self.on_button(evt, 'action1'))
+        self.bind_all('<KeyPress-x>',  lambda evt: self.on_button(evt, 'action2'))
 
         self._game_proc = game_proc
         self._game_thread = game_thread
