@@ -37,12 +37,9 @@ tree:
             children:
             - type: match
               pattern: R R R R
-    - type: x-set-player
-      pid: Y
+    - type: x-swap-only
+      what: R
+      with: Y
       children:
-      - type: x-swap-only
-        what: R
-        with: Y
-        children:
-        - type: x-link
-          target: ply
+      - type: x-link
+        target: ply
