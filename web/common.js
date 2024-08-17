@@ -346,7 +346,7 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
 
     const ntype = node.type;
 
-    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only'].indexOf(ntype) >= 0 || (ntype.startsWith('x-') && ntype !== 'x-link')) {
+    if (['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only', 'x-file'].indexOf(ntype) >= 0) {
         let fn = null;
         if (ntype === 'x-ident') {
             fn = xform_rule_identity;
@@ -364,7 +364,7 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
             fn = xform_rule_swap_only_fn(node.what, node.with);
         } else if (ntype === 'x-replace-only') {
             fn = xform_rule_replace_only_fn(node.what, node.withs);
-        } else {
+        } else if ('x-file' === ntype) {
             fn = xform_rule_identity;
         }
 
@@ -385,6 +385,8 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
             const linked = xformApplyToNode(deepcopyobj(target), xforms, nidToNode, node.dispid);
             ret_nodes.push(...linked);
         }
+    } else if (ntype.startsWith('x-')) {
+        alert('unrecognized transform node ' + ntype);
     } else {
         let xformed = [node];
         for (let xform of xforms) {
