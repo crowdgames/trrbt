@@ -245,13 +245,13 @@ function xform_rule_swap_only_fn(wht, wth) {
             let ret_row = [];
             for (let tile of row) {
                 let ret_tile = '';
-                for (let char of tile) {
-                    if (char === wht) {
-                        char = wth;
-                    } else if (char === wth) {
-                        char = wht;
+                for (let ch of splitGraphemes(tile)) {
+                    if (ch === wht) {
+                        ch = wth;
+                    } else if (ch === wth) {
+                        ch = wht;
                     }
-                    ret_tile += char;
+                    ret_tile += ch;
                 }
                 ret_row.push(ret_tile);
             }
@@ -262,13 +262,13 @@ function xform_rule_swap_only_fn(wht, wth) {
 
     function pid_func(pid) {
         let ret = '';
-        for (let char of pid) {
-            if (char === wht) {
-                char = wth;
-            } else if (char === wth) {
-                char = wht;
+        for (let ch of splitGraphemes(pid)) {
+            if (ch === wht) {
+                ch = wth;
+            } else if (ch === wth) {
+                ch = wht;
             }
-            ret += char;
+            ret += ch;
         }
         return ret;
     }
@@ -288,11 +288,11 @@ function xform_rule_replace_only_fn(wht, wths) {
                 let ret_row = [];
                 for (let tile of row) {
                     let ret_tile = '';
-                    for (let char of tile) {
-                        if (char === wht) {
-                            char = which;
+                    for (let ch of splitGraphemes(tile)) {
+                        if (ch === wht) {
+                            ch = which;
                         }
-                        ret_tile += char;
+                        ret_tile += ch;
                     }
                     ret_row.push(ret_tile);
                 }
@@ -306,11 +306,11 @@ function xform_rule_replace_only_fn(wht, wths) {
     function pid_func_fn(which) {
         function pid_func(pid) {
             let ret = '';
-            for (let char of pid) {
-                if (char === wht) {
-                    char = which;
+            for (let ch of splitGraphemes(pid)) {
+                if (ch === wht) {
+                    ch = which;
                 }
-                ret += char;
+                ret += ch;
             }
             return ret;
         }
