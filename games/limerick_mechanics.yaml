@@ -16,7 +16,7 @@ tree:
       - type: x-replace-only
         comment: head
         what: H!
-        with:
+        withs:
         - H1
         - H2
         - H3
@@ -25,7 +25,7 @@ tree:
         - type: x-replace-only
           comment: takeable objects (key, apple)
           what: O
-          with:
+          withs:
           - K
           - A
           children:
@@ -180,7 +180,7 @@ tree:
                   - type: x-replace-only
                     comment: body
                     what: B
-                    with:
+                    withs:
                     - Bv
                     - Bh
                     children:

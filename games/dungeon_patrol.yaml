@@ -32,7 +32,7 @@ tree:
         children:
         - type: x-replace-only
           what: w
-          with:
+          withs:
           - X
           - D
           - K

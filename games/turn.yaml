@@ -20,13 +20,13 @@ tree:
                  _  _  X  _  _  PRS _ _  _  _  X  X  X  X  X  X  X  _  _  X  _  _  VL _  _  X  _  O  _  _;
                  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X  X;
     - type: layer-template
-      what: stmv
+      layer: stmv
       with: _
     - type: layer-template
-      what: stld
+      layer: stld
       with: _
     - type: layer-template
-      what: ladd
+      layer: ladd
       with: _
     - type: loop-until-all
       children:
@@ -39,20 +39,20 @@ tree:
           ladd: '='
   - type: x-replace-only
     what: d
-    with:
+    withs:
     - L
     - R
     children:
     - type: x-replace-only
       what: a
-      with:
+      withs:
       - J
       - C
       - S
       children:
       - type: x-replace-only
         what: b
-        with:
+        withs:
         - R
         - J
         - C
@@ -60,7 +60,7 @@ tree:
         children:
         - type: x-replace-only
           what: s
-          with:
+          withs:
           - '->'
           - '<-'
           children:

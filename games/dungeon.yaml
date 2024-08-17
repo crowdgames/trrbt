@@ -17,7 +17,7 @@ tree:
     - type: x-replace-only
       comment: player inventory is nothing or key
       what: i
-      with:
+      withs:
       - N
       - K
       children:

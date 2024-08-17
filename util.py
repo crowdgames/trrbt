@@ -58,9 +58,11 @@ NKEY_RHS           = 'rhs'
 NKEY_LAYER         = 'layer'
 
 NKEY_PID           = 'pid'
+NKEY_LAYER         = 'layer'
 NKEY_TIMES         = 'times'
 NKEY_WHAT          = 'what'
 NKEY_WITH          = 'with'
+NKEY_WITHS         = 'withs'
 NKEY_FILE          = 'file'
 NKEY_TARGET        = 'target'
 NKEY_DESC          = 'desc'
@@ -365,7 +367,7 @@ def xform_rule_replace_only_fn(wht, wth):
     def rule_replace(node):
         if node[NKEY_TYPE] == NDX_UNROLL_REPLACE:
             if node[NKEY_WHAT] == wht:
-                return [{NKEY_TYPE:ND_ORDER, NKEY_CHILDREN:[{NKEY_TYPE:NDX_REPLACE_ONLY, NKEY_WHAT:node[NKEY_WHAT], NKEY_WITH:[wthi], NKEY_CHILDREN:copy.deepcopy(node[NKEY_CHILDREN])} for wthi in wth]}]
+                return [{NKEY_TYPE:ND_ORDER, NKEY_CHILDREN:[{NKEY_TYPE:NDX_REPLACE_ONLY, NKEY_WHAT:node[NKEY_WHAT], NKEY_WITHS:[wthi], NKEY_CHILDREN:copy.deepcopy(node[NKEY_CHILDREN])} for wthi in wth]}]
             else:
                 return [node]
         else:
@@ -412,7 +414,7 @@ def node_apply_xforms(node, xforms, nid_to_node):
         elif ntype == NDX_SWAP_ONLY:
             fn = xform_rule_swap_only_fn(node[NKEY_WHAT], node[NKEY_WITH])
         elif ntype == NDX_REPLACE_ONLY:
-            fn = xform_rule_replace_only_fn(node[NKEY_WHAT], node[NKEY_WITH])
+            fn = xform_rule_replace_only_fn(node[NKEY_WHAT], node[NKEY_WITHS])
 
         for child in node[NKEY_CHILDREN]:
             ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
@@ -534,7 +536,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         elif ntype == ND_LAYER_TEMPLATE:
             nlabel += '<TR><TD COLSPAN="3">'
             nlabel += GVLAYERBGN
-            nlabel += gv_filter_string(node[NKEY_WHAT])
+            nlabel += gv_filter_string(node[NKEY_LAYER])
             nlabel += GVLAYEREND
             nlabel += ' with '
             nlabel += GVTILEBGN
@@ -622,7 +624,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += GVTILEEND
             nlabel += ' with '
             nlabel += GVTILEBGN
-            nlabel += (GVTILEEND + ', ' + GVTILEBGN).join([gv_filter_string(str(ee)) for ee in node[NKEY_WITH]])
+            nlabel += (GVTILEEND + ', ' + GVTILEBGN).join([gv_filter_string(str(ee)) for ee in node[NKEY_WITHS]])
             nlabel += GVTILEEND
 
         if NKEY_NID in node.keys():

@@ -31,13 +31,13 @@ tree:
     children:
     - type: x-replace-only
       what: a
-      with:
+      withs:
       - _
       - E
       children:
       - type: x-replace-only
         what: b
-        with:
+        withs:
         - _
         - E
         children:
