@@ -189,13 +189,13 @@ tree:
                       rhs: W   _
 
                     - type: rewrite
-                      button: z
+                      button: action1
                       lhs: PLa
                       rhs:
                         main: 'PLR'
                         stmv: '<<'
                     - type: rewrite
-                      button: z
+                      button: action1
                       lhs: PRa
                       rhs:
                         main: 'PRR'
