@@ -18,7 +18,6 @@ NDX_SPIN           = 'x-spin'
 NDX_FLIP_ONLY      = 'x-flip-only'
 NDX_SWAP_ONLY      = 'x-swap-only'
 NDX_REPLACE_ONLY   = 'x-replace-only'
-NDX_SET_PLAYER     = 'x-set-player'
 
 NDX_UNROLL_REPLACE = 'x-unroll-replace'
 NDX_LINK           = 'x-link'
@@ -274,11 +273,15 @@ def unique(nodes):
 
     return ret
 
-def rule_apply(node, pattern_func, button_dict):
+def rule_apply(node, pattern_func, pid_func, button_dict):
     if pattern_func is not None:
         for key in [NKEY_LHS, NKEY_RHS, NKEY_PATTERN]:
             if key in node.keys():
                 node[key] = { layer: pattern_func(patt) for layer, patt in node[key].items() }
+
+    if pid_func is not None:
+        if NKEY_PID in node:
+            node[NKEY_PID] = pid_func(str(node[NKEY_PID]))
 
     if button_dict is not None:
         if NKEY_BUTTON in node:
@@ -295,7 +298,7 @@ def xform_prune(node):
 def xform_rule_mirror(node):
     pattern_func = lambda x: tuplify([row[::-1] for row in x])
     button_dict = {'left':'right', 'right':'left'}
-    return unique([node, rule_apply(node.copy(), pattern_func, button_dict)])
+    return unique([node, rule_apply(node.copy(), pattern_func, None, button_dict)])
 
 def xform_rule_skew(node):
     def rule_skew(hs):
@@ -306,18 +309,18 @@ def xform_rule_skew(node):
             for col in range(cols):
                 ret[row + col][col] = hs[row][col]
         return tuplify(ret)
-    return unique([node, rule_apply(node.copy(), rule_skew, None)])
+    return unique([node, rule_apply(node.copy(), rule_skew, None, None)])
 
 def xform_rule_fliponly(node):
     pattern_func = lambda x: tuplify(x[::-1])
     button_dict = {'up':'down', 'down':'up'}
-    return unique([rule_apply(node.copy(), pattern_func, button_dict)])
+    return unique([rule_apply(node.copy(), pattern_func, None, button_dict)])
 
 def xform_rule_rotate(node):
     pattern_func = lambda x: tuplify(zip(*x[::-1]))
     button_dict = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
     ret = [node]
-    ret.append(rule_apply(ret[-1].copy(), pattern_func, button_dict))
+    ret.append(rule_apply(ret[-1].copy(), pattern_func, None, button_dict))
     return unique(ret)
 
 def xform_rule_spin(node):
@@ -325,11 +328,11 @@ def xform_rule_spin(node):
     button_dict = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
     ret = [node]
     while len(ret) < 4:
-        ret.append(rule_apply(ret[-1].copy(), pattern_func, button_dict))
+        ret.append(rule_apply(ret[-1].copy(), pattern_func, None, button_dict))
     return unique(ret)
 
 def xform_rule_swap_only_fn(wht, wth):
-    def rule_swap_side(hs):
+    def rule_swap_pattern(hs):
         ret_hs = ()
         for row in hs:
             ret_row = ()
@@ -345,8 +348,18 @@ def xform_rule_swap_only_fn(wht, wth):
             ret_hs += (ret_row,)
         return ret_hs
 
+    def rule_swap_player(pid):
+        ret_pid = ''
+        for char in pid:
+            if char == wht:
+                char = wth
+            elif char == wth:
+                char = wht
+            ret_pid += char
+        return ret_pid
+
     def rule_swaponly(node):
-        return unique([rule_apply(node.copy(), lambda x: rule_swap_side(x), None)])
+        return unique([rule_apply(node.copy(), rule_swap_pattern, rule_swap_player, None)])
 
     return rule_swaponly
 
@@ -354,7 +367,7 @@ def xform_rule_replace_only_fn(wht, wth):
     if type(wth) != list:
         raise RuntimeError(f'replace with must be list')
 
-    def rule_replace_side(hs, wthi):
+    def rule_replace_pattern(hs, wthi):
         ret_hs = ()
         for row in hs:
             ret_row = ()
@@ -364,6 +377,9 @@ def xform_rule_replace_only_fn(wht, wth):
             ret_hs += (ret_row,)
         return ret_hs
 
+    def rule_replace_player(pid, wthi):
+        return pid.replace(wht, wthi)
+
     def rule_replace(node):
         if node[NKEY_TYPE] == NDX_UNROLL_REPLACE:
             if node[NKEY_WHAT] == wht:
@@ -371,7 +387,7 @@ def xform_rule_replace_only_fn(wht, wth):
             else:
                 return [node]
         else:
-            return unique([rule_apply(node.copy(), lambda x: rule_replace_side(x, str(wthi)), None) for wthi in wth])
+            return unique([rule_apply(node.copy(), lambda x: rule_replace_pattern(x, str(wthi)), lambda x: rule_replace_player(x, str(wthi)), None) for wthi in wth])
 
     return rule_replace
 
@@ -423,10 +439,6 @@ def node_apply_xforms(node, xforms, nid_to_node):
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
             ret_nodes += node_apply_xforms(copy.deepcopy(nid_to_node[nid_target]), xforms, nid_to_node)
-
-    elif ntype == NDX_SET_PLAYER:
-        for child in node[NKEY_CHILDREN]:
-            ret_nodes += node_apply_xforms(child, [xform_player_new_fn(node[NKEY_PID])] + xforms, nid_to_node)
 
     elif ntype in [NDX_UNROLL_REPLACE, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_DISPLAY_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
         xformed = [node.copy()]
@@ -571,7 +583,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         nlabel += '</TABLE>'
 
     else:
-        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, NDX_SET_PLAYER]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY]:
             nshape = 'hexagon'
             nfill = f'#{lt}{dk}{lt}'
         elif ntype in [NDX_UNROLL_REPLACE]:
@@ -597,7 +609,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
 
         nlabel += ntype
 
-        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE, NDX_SET_PLAYER]:
+        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
             nlabel += ':' + str(node[NKEY_PID])
         elif ntype in [ND_LOOP_TIMES]:
             nlabel += ':' + str(node[NKEY_TIMES])

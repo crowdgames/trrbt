@@ -106,14 +106,11 @@ tree:
                  children:
                  - type: match
                    pattern: Ra
-          - type: x-set-player
-            pid: R
+          - type: x-swap-only
+            what: B
+            with: R
             children:
-            - type: x-swap-only
-              what: B
-              with: R
+            - type: x-flip-only
               children:
-              - type: x-flip-only
-                children:
-                - type: x-link
-                  target: ply
+              - type: x-link
+                target: ply
