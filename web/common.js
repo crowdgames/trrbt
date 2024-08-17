@@ -104,25 +104,34 @@ function appendList(parent) {
 
 
 
+function xform_node_equal(node1, node2) {
+    const props1 = Object.getOwnPropertyNames(node1);
+    const props2 = Object.getOwnPropertyNames(node2);
+    if (props1.length !== props2.length) {
+        return false;
+    }
+    for (const prop1 of props1) {
+        if (prop1 === 'children') {
+            continue;
+        }
+        if (!node2.hasOwnProperty(prop1)) {
+            return false;
+        }
+        if (JSON.stringify(node1[prop1]) !== JSON.stringify(node2[prop1])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function xform_unique(nodes) {
     let ret = [];
     for (const node of nodes) {
         let unique = true;
         for (const rnode of ret) {
-            let same = true;
-            for (const key of ['pattern', 'lhs', 'rhs', 'pid', 'button']) {
-                if (node.hasOwnProperty(key) != rnode.hasOwnProperty(key)) {
-                    same = false;
-                    break;
-                } else if (node.hasOwnProperty(key) && rnode.hasOwnProperty(key)) {
-                    if (JSON.stringify(node[key]) != JSON.stringify(rnode[key])) {
-                        same = false;
-                        break;
-                    }
-                }
-            }
-            if (same) {
+            if (xform_node_equal(node, rnode)) {
                 unique = false;
+                break;
             }
         }
         if (unique) {
@@ -172,7 +181,7 @@ function xform_rule_mirror(node) {
     }
     let button_obj = {'left':'right', 'right':'left'};
 
-    return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)];
+    return xform_unique([node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)]);
 }
 
 function xform_rule_rotate(node) {
@@ -181,7 +190,7 @@ function xform_rule_rotate(node) {
     }
     let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'};
 
-    return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)];
+    return xform_unique([node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)]);
 }
 
 function xform_rule_spin(node) {
@@ -194,7 +203,7 @@ function xform_rule_spin(node) {
     for (let ii = 0; ii < 3; ++ ii) {
         ret.push(xform_rule_apply(shallowcopyobj(ret.at(-1)), pattern_func, null, button_obj));
     }
-    return ret;
+    return xform_unique(ret);
 }
 
 function xform_rule_skew(node) {
@@ -217,7 +226,7 @@ function xform_rule_skew(node) {
         return ret;
     }
 
-    return [node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, null)];
+    return xform_unique([node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, null)]);
 }
 
 function xform_rule_flip_only(node) {
@@ -226,7 +235,7 @@ function xform_rule_flip_only(node) {
     }
     let button_obj = {'up':'down', 'down':'up'};
 
-    return [xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)];
+    return xform_unique([xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)]);
 }
 
 function xform_rule_swap_only_fn(wht, wth) {
@@ -265,7 +274,7 @@ function xform_rule_swap_only_fn(wht, wth) {
     }
 
     function rule_swap_only(node) {
-        return [xform_rule_apply(shallowcopyobj(node), pattern_func, pid_func, null)];
+        return xform_unique([xform_rule_apply(shallowcopyobj(node), pattern_func, pid_func, null)]);
     }
 
     return rule_swap_only;
