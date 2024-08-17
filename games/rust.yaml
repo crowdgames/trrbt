@@ -3,7 +3,7 @@ name: rust-layer
 tree:
   type: x-replace-only
   what: n
-  with:
+  withs:
   - 1
   - 2
   - 3
@@ -111,16 +111,16 @@ tree:
                    X   _   _   _   _   .   .   .   _   _   _   _   X;
                    X   X   X   X   X   X   .   X   X   X   X   X   X;
       - type: layer-template
-        what: path
+        layer: path
         with: _
       - type: layer-template
-        what: swch
+        layer: swch
         with: _
       - type: loop-until-all
         children:
         - type: x-replace-only
           what: t
-          with:
+          withs:
           - Sn
           - SSn
           - Tn
@@ -144,20 +144,20 @@ tree:
       children:
       - type: x-replace-only
         what: s
-        with:
+        withs:
         - X
         - B
         - SDn
         children:
         - type: x-replace-only
           what: e
-          with:
+          withs:
           - E
           - G
           children:
           - type: x-replace-only
             what: d
-            with:
+            withs:
             - '<'
             - '>'
             - ^

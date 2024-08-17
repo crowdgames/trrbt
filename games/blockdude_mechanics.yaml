@@ -11,7 +11,7 @@ tree:
       comment: set up facing layer
       children:
       - type: layer-template
-        what: face
+        layer: face
         with: _
       - type: rewrite
         comment: start player facing left if unset
@@ -54,14 +54,14 @@ tree:
           - type: x-replace-only
             comment: player
             what: P
-            with:
+            withs:
             - P>
             - <P
             children:
             - type: x-replace-only
               comment: solid tiles
               what: S
-              with:
+              withs:
               - B
               - Bf
               - W
@@ -69,7 +69,7 @@ tree:
               - type: x-replace-only
                 comment: not holding a block
                 what: X
-                with:
+                withs:
                 - W
                 - _
                 - Bf
@@ -154,7 +154,7 @@ tree:
                     - type: x-replace-only
                       comment: block-agnostic
                       what: B
-                      with:
+                      withs:
                       - B
                       - Bf
                       children:

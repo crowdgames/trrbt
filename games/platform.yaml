@@ -13,7 +13,7 @@ tree:
              X   X   X   X   X   X   X   X   X   X   X   X;
   - type: x-replace-only
     what: a
-    with:
+    withs:
     - 0
     - 1
     - 2

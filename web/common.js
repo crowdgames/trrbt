@@ -271,7 +271,7 @@ function xform_rule_swap_only_fn(wht, wth) {
     return rule_swap_only;
 }
 
-function xform_rule_replace_only_fn(wht, wth) {
+function xform_rule_replace_only_fn(wht, wths) {
     function pattern_func_fn(which) {
         function pattern_func(patt) {
             let ret = [];
@@ -310,7 +310,7 @@ function xform_rule_replace_only_fn(wht, wth) {
 
     function rule_replace_only(node) {
         let ret = [];
-        for (const which of wth.split(/\s+/)) {
+        for (const which of wths) {
             ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
         }
         return xform_unique(ret);
@@ -354,7 +354,7 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
         } else if (ntype === 'x-swap-only') {
             fn = xform_rule_swap_only_fn(node.what, node.with);
         } else if (ntype === 'x-replace-only') {
-            fn = xform_rule_replace_only_fn(node.what, node.with);
+            fn = xform_rule_replace_only_fn(node.what, node.withs);
         } else {
             fn = xform_rule_identity;
         }

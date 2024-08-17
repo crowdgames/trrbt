@@ -21,13 +21,13 @@ tree:
       children:
       - type: x-replace-only
         what: a
-        with:
+        withs:
         - K
         - P
         children:
         - type: x-replace-only
           what: b
-          with:
+          withs:
           - K
           - P
           children:

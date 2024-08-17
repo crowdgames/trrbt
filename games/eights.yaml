@@ -23,7 +23,7 @@ tree:
       - type: x-replace-only
         what: a
         nid: move
-        with:
+        withs:
         - 1
         - 2
         - 3

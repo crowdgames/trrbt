@@ -32,7 +32,7 @@ const EDT_NODE_PROTOTYPES = [
 
     { type:'rewrite', nid:'', button:'', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
     { type:'set-board', nid:'', pattern:EDT_EMPTY_PATTERN },
-    { type:'layer-template', nid:'', what:'', with:'' },
+    { type:'layer-template', nid:'', layer:'', with:'' },
 
     { type:'match', pattern:EDT_EMPTY_PATTERN },
 ];
@@ -45,7 +45,7 @@ const EDT_XNODE_PROTOTYPES = [
     { type:'x-spin', nid:'', children:[] },
     { type:'x-flip-only', nid:'', children:[] },
     { type:'x-swap-only', nid:'', children:[], what:'', with:'' },
-    { type:'x-replace-only', nid:'', children:[], what:'', with:'' },
+    { type:'x-replace-only', nid:'', children:[], what:'', withs:'' },
     { type:'x-link', nid:'', target:'' },
 ];
 
@@ -53,9 +53,11 @@ const EDT_PROP_NAMES = {
     nid: 'node id',
     target: 'target id',
     pid: 'player',
+    layer: 'layer',
     times: 'times',
     what: 'what',
     with: 'with',
+    withs: 'withs',
     button: 'button',
     pattern: 'pattern',
     lhs: 'LHS',
@@ -496,6 +498,10 @@ class TRRBTEditor {
             texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['pid'] + ': ' + node.pid});
         }
 
+        if (node.hasOwnProperty('layer')) {
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['layer'] + ': ' + node.layer});
+        }
+
         if (node.hasOwnProperty('times')) {
             texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['times'] + ': ' + node.times});
         }
@@ -506,6 +512,10 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('with')) {
             texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['with'] + ': ' + node.with});
+        }
+
+        if (node.hasOwnProperty('withs')) {
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['withs'] + ': ' + node.withs.join(' ')});
         }
 
         if (node.hasOwnProperty('button') && node.button !== '') {
@@ -1021,6 +1031,19 @@ class TRRBTEditor {
         return {ok:false, error:'An unknown choice was selected.'};
     }
 
+    appendListProperty(parent, id, name, value) {
+        this.appendTextProperty(parent, id, name, value.join(' '));
+    }
+    
+    parseListProperty(id) {
+        const result = this.parseTextProperty(id, false);
+        if (!result.ok) {
+            return result;
+        } else {
+            return {ok:true, value:result.value.split(/\s+/)};
+        }
+    }
+    
     appendPatternProperty(parent, id, name, value, tileSize) {
         let rows = 0;
         let cols = 0;
@@ -1207,6 +1230,10 @@ class TRRBTEditor {
                     this.appendTextProperty(list, 'prop_pid', EDT_PROP_NAMES['pid'], node.pid);
                     anyProperties = true;
                 }
+                if (node.hasOwnProperty('layer')) {
+                    this.appendTextProperty(list, 'prop_layer', EDT_PROP_NAMES['layer'], node.layer);
+                    anyProperties = true;
+                }
                 if (node.hasOwnProperty('times')) {
                     this.appendTextProperty(list, 'prop_times', EDT_PROP_NAMES['times'], node.times);
                     anyProperties = true;
@@ -1219,7 +1246,10 @@ class TRRBTEditor {
                     this.appendTextProperty(list, 'prop_with', EDT_PROP_NAMES['with'], node.with);
                     anyProperties = true;
                 }
-
+                if (node.hasOwnProperty('withs')) {
+                    this.appendListProperty(list, 'prop_withs', EDT_PROP_NAMES['withs'], node.withs);
+                    anyProperties = true;
+                }
                 if (node.hasOwnProperty('button')) {
                     this.appendChoiceProperty(list, 'prop_button', EDT_PROP_NAMES['button'], node.button, EDT_BUTTONS);
                     anyProperties = true;
@@ -1290,9 +1320,11 @@ class TRRBTEditor {
         const SAVE_PROPS = [['nid', bind0(this, 'parseTextProperty'), false],
                             ['target', bind0(this, 'parseTextProperty'), false],
                             ['pid', bind0(this, 'parseTextProperty'), false],
+                            ['layer', bind0(this, 'parseTextProperty'), false],
                             ['times', bind0(this, 'parseTextProperty'), true],
                             ['what', bind0(this, 'parseTextProperty'), false],
                             ['with', bind0(this, 'parseTextProperty'), false],
+                            ['withs', bind0(this, 'parseListProperty'), false],
                             ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
                             ['pattern', bind0(this, 'parsePatternProperty'), undefined],
                             ['lhs', bind0(this, 'parsePatternProperty'), undefined],

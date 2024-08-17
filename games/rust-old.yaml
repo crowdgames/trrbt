@@ -56,7 +56,7 @@ tree:
     children:
     - type: x-replace-only
       what: p
-      with:
+      withs:
       - P
       - P:A1
       - P:A2
@@ -64,7 +64,7 @@ tree:
       children:
       - type: x-replace-only
         what: a
-        with:
+        withs:
         - _
         - A1
         - A2
@@ -75,7 +75,7 @@ tree:
         children:
         - type: x-replace-only
           what: b
-          with:
+          withs:
           - _
           - A1
           - A2
@@ -86,7 +86,7 @@ tree:
           children:
           - type: x-replace-only
             what: d
-            with:
+            withs:
             - '<'
             - '>'
             - ^

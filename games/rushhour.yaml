@@ -41,7 +41,7 @@ tree:
         - type: x-replace-only
           comment: cars and trucks move
           what: a
-          with:
+          withs:
           - 1
           - 2
           - 3

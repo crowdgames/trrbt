@@ -129,7 +129,7 @@ class GameProcessor:
         """
         old_layer = self.board[util.DEFAULT_LAYER]
         new_layer = [[('.' if tile == '.' else node[util.NKEY_WITH]) for tile in row] for row in old_layer]
-        self.board[node[util.NKEY_WHAT]] = new_layer
+        self.board[node[util.NKEY_LAYER]] = new_layer
         return True
 
     def execute_appendrows_node(self, node):

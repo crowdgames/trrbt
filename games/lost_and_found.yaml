@@ -1,6 +1,6 @@
 ---
 name: lost and found
-tree: 
+tree:
   type: order
   children:
   - type: set-board
@@ -45,7 +45,7 @@ tree:
         - type: x-replace-only
           comment: DEVNOTE Why isn't there a token to just represent "I don't care WHAT it is, but I want to move whatever it is around the board" - like an inverse "." where I don't care what "." is and I don't want to affect it. Another issue is that x-replace only replaces all instances of the token with the same token only - not any combo. This is why I am forced to use "ANY_ACTION" and "ANY_THING" instead of just one "ANY".
           what: ANY_ACTION
-          with:
+          withs:
           - TAKE
           - EX
           - GO
@@ -53,7 +53,7 @@ tree:
           - type: x-replace-only
             comment: DEVNOTE These nested x-replace-onlys are a PAIN
             what: ANY_DIR
-            with:
+            withs:
             - NORTH
             - SOUTH
             - EAST
@@ -61,14 +61,14 @@ tree:
             children:
             - type: x-replace-only
               what: ANY_ROOM
-              with: 
+              withs:
               - LOST_AND_FOUND
               - HALLWAY
               children:
               - type: x-replace-only
                 comment: DEVNOTE Why can I add ANY_DIR here and it works for the direction, but if I add ANY_ROOM it's a nogo? I want to be able to compose x-replace only lists
                 what: ANY_THING
-                with:
+                withs:
                 - COAT
                 - SHOE
                 - CARD
@@ -82,26 +82,26 @@ tree:
                   comment: move active action to NOW
                   children:
                   - type: rewrite
-                    comment: Move action left until you hit the R DEVNOTE there's currently no way to say "anything EXCEPT R" so I accomplish this with the "." and the knowledge that the start of the row is R. So what we are actually doing is lhs "R .* DO ANY_ACTION ANY_THING .*" to rhs "R DO ANY_ACTION ANY_THING _*" (* being repeat-as-needed). For that matter, I don't care how many .s are between R and DO or how many are after ANY_THING. I just want to move it to the front of the line so I can then process it down to NOW for action processing. 
+                    comment: Move action left until you hit the R DEVNOTE there's currently no way to say "anything EXCEPT R" so I accomplish this with the "." and the knowledge that the start of the row is R. So what we are actually doing is lhs "R .* DO ANY_ACTION ANY_THING .*" to rhs "R DO ANY_ACTION ANY_THING _*" (* being repeat-as-needed). For that matter, I don't care how many .s are between R and DO or how many are after ANY_THING. I just want to move it to the front of the line so I can then process it down to NOW for action processing.
                     lhs: . . DO ANY_ACTION ANY_THING
                     rhs: . DO ANY_ACTION ANY_THING _
                   - type: rewrite
-                    lhs:  R DO ANY_ACTION ANY_THING ; 
-                          R . . .    
-                    rhs:  R _ _ _ ; 
+                    lhs:  R DO ANY_ACTION ANY_THING ;
+                          R . . .
+                    rhs:  R _ _ _ ;
                           R DO ANY_ACTION ANY_THING
                   - type: rewrite
-                    lhs:  R DO ANY_ACTION ANY_THING ; 
-                          NOW . . 
-                    rhs:  R _ _ _ ; 
+                    lhs:  R DO ANY_ACTION ANY_THING ;
+                          NOW . .
+                    rhs:  R _ _ _ ;
                           NOW ANY_ACTION ANY_THING
                 - type: loop-until-all
                   comment: delete results
                   children:
                   - type: rewrite
                     comment: DEVNOTE Again, saying R .* to _* would be useful here. I don't actually care about the line length.
-                    lhs: R . . . . . . . . 
-                    rhs: R' _ _ _ _ _ _ _ _ 
+                    lhs: R . . . . . . . .
+                    rhs: R' _ _ _ _ _ _ _ _
                 - type: loop-until-all
                   comment: initialize output
                   children:
@@ -110,7 +110,7 @@ tree:
                     rhs: R
                 - type: rewrite
                   comment: set next line of output
-                  lhs: = ; R _ 
+                  lhs: = ; R _
                   rhs: = ; R T
                 - type: x-unroll-replace
                   comment: actions on items
@@ -178,7 +178,7 @@ tree:
                             pattern: ITEM ANY_THING
                       - type: rewrite
                         lhs: ACT TAKE ANY_THING
-                        rhs: _ _ _ 
+                        rhs: _ _ _
                 - type: x-unroll-replace
                   comment: direction handling
                   what: ANY_DIR
@@ -224,8 +224,8 @@ tree:
                 - type: x-unroll-replace
                   what: ANY_ROOM
                   comment: add direction and look actions
-                  children: 
-                  - type: all 
+                  children:
+                  - type: all
                     comment: DEVNOTE "all" used as "if"
                     children:
                     - type: match

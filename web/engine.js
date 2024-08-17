@@ -1095,7 +1095,7 @@ class TRRBTEngine {
             newLayer.push(newRow);
         }
 
-        this.board[frame.node.what] = newLayer;
+        this.board[frame.node.layer] = newLayer;
 
         return true;
     }

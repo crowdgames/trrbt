@@ -28,21 +28,21 @@ tree:
     children:
     - type: x-replace-only
       what: a
-      with:
+      withs:
       - _
       - E
       - F
       children:
       - type: x-replace-only
         what: b
-        with:
+        withs:
         - _
         - E
         - F
         children:
         - type: x-replace-only
           what: d
-          with:
+          withs:
           - '<'
           - '>'
           - ^
