@@ -872,8 +872,7 @@ class TRRBTEditor {
                         const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * charLength(text.data) / 2);
                         const width = nw - EDT_NODE_PADDING;
                         let ii = 0;
-                        const graphemes = splitGraphemes(text.data);
-                        for (const ch of graphemes) {
+                        for (const ch of splitGraphemes(text.data)) {
                             const cx = lox + (ii + 0.5) * EDT_FONT_CHAR_SIZE;
                             const cy = ny + texty;
                             if (cx - lox + 0.9 * EDT_FONT_CHAR_SIZE > width) {
@@ -1034,7 +1033,7 @@ class TRRBTEditor {
     appendListProperty(parent, id, name, value) {
         this.appendTextProperty(parent, id, name, value.join(' '));
     }
-    
+
     parseListProperty(id) {
         const result = this.parseTextProperty(id, false);
         if (!result.ok) {
@@ -1043,7 +1042,7 @@ class TRRBTEditor {
             return {ok:true, value:result.value.split(/\s+/)};
         }
     }
-    
+
     appendPatternProperty(parent, id, name, value, tileSize) {
         let rows = 0;
         let cols = 0;
