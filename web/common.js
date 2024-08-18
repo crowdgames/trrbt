@@ -1,6 +1,6 @@
 const BUTTON_LEFT = 0;
 const BUTTON_RIGHT = 2;
-const PIXEL_RATIO = window.devicePixelRatio;
+const PIXEL_RATIO = (typeof(window) === 'undefined') ? 1 : window.devicePixelRatio;
 const DOUBLE_CLICK_TIME = 300;
 
 const TAU = 2 * Math.PI;
@@ -104,7 +104,7 @@ function appendList(parent) {
 
 
 
-function xform_node_equal(node1, node2) {
+function xform_node_shallowequal(node1, node2) {
     const props1 = Object.getOwnPropertyNames(node1);
     const props2 = Object.getOwnPropertyNames(node2);
     if (props1.length !== props2.length) {
@@ -129,7 +129,7 @@ function xform_unique(nodes) {
     for (const node of nodes) {
         let unique = true;
         for (const rnode of ret) {
-            if (xform_node_equal(node, rnode)) {
+            if (xform_node_shallowequal(node, rnode)) {
                 unique = false;
                 break;
             }
@@ -177,7 +177,7 @@ function xform_rule_identity(node) {
 
 function xform_rule_mirror(node) {
     function pattern_func(patt) {
-        return patt.slice().map(row=>row.slice().reverse());
+        return patt.slice(0).map(row=>row.slice(0).reverse());
     }
     let button_obj = {'left':'right', 'right':'left'};
 
@@ -186,7 +186,7 @@ function xform_rule_mirror(node) {
 
 function xform_rule_rotate(node) {
     function pattern_func(patt) {
-        return patt[0].slice().map((val, index) => patt.slice().map(row => row.slice()[index]).reverse());
+        return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
     }
     let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'};
 
@@ -195,7 +195,7 @@ function xform_rule_rotate(node) {
 
 function xform_rule_spin(node) {
     function pattern_func(patt) {
-        return patt[0].slice().map((val, index) => patt.slice().map(row => row.slice()[index]).reverse());
+        return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
     }
     let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'};
 
@@ -231,7 +231,7 @@ function xform_rule_skew(node) {
 
 function xform_rule_flip_only(node) {
     function pattern_func(patt) {
-        return patt.slice().reverse();
+        return patt.slice(0).reverse();
     }
     let button_obj = {'up':'down', 'down':'up'};
 
@@ -328,12 +328,12 @@ function xform_rule_replace_only_fn(wht, wths) {
     return rule_replace_only;
 }
 
-function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
+function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) {
     let ret_nodes = [];
 
     node = shallowcopyobj(node);
 
-    if (dispid_pref) {
+    if (use_dispids && dispid_pref !== null && dispid_pref !== undefined) {
         node.dispid = dispid_pref + '_' + node.dispid;
     }
 
@@ -370,19 +370,21 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
 
         for (const child of node.children) {
             let dispid_suff = 0;
-            const children_xformed = xformApplyToNode(child, [fn].concat(xforms), nidToNode, dispid_pref)
+            const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), nidToNode, use_dispids, dispid_pref)
             for (let child_xformed of children_xformed) {
-                if (dispid_suff > 0) {
-                    child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suff;
+                if (use_dispids) {
+                    if (dispid_suff > 0) {
+                        child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suff;
+                    }
+                    ++ dispid_suff;
                 }
-                ++ dispid_suff;
                 ret_nodes.push(child_xformed);
             }
         }
     } else if ('x-link' === ntype) {
         const target = nidToNode.get(node.target);
         if (target) {
-            const linked = xformApplyToNode(deepcopyobj(target), xforms, nidToNode, node.dispid);
+            const linked = xform_apply_to_node(deepcopyobj(target), xforms, nidToNode, use_dispids, node.dispid);
             ret_nodes.push(...linked);
         }
     } else if (ntype.startsWith('x-')) {
@@ -403,7 +405,7 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
             if (ret_node.hasOwnProperty('children')) {
                 let new_children = []
                 for (const child of ret_node.children) {
-                    const child_xformed = xformApplyToNode(child, xforms, nidToNode, dispid_pref)
+                    const child_xformed = xform_apply_to_node(child, xforms, nidToNode, use_dispids, dispid_pref)
                     new_children.push(...child_xformed);
                 }
                 ret_node.children = new_children;
@@ -414,9 +416,26 @@ function xformApplyToNode(node, xforms, nidToNode, dispid_pref) {
     return ret_nodes;
 }
 
-function xformApplyToTree(tree, nidToNode) {
-    return xformApplyToNode(tree, [xform_rule_identity], nidToNode)[0];
+function xform_apply_to_tree(tree, use_dispids) {
+    let nidToNode = new Map();
+
+    function findNodeIds(node) {
+        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
+            nidToNode.set(node.nid, node);
+        }
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                findNodeIds(child);
+            }
+        }
+    }
+
+    findNodeIds(tree);
+
+    return xform_apply_to_node(tree, [xform_rule_identity], nidToNode, use_dispids, null)[0];
 }
+
+
 
 function xformApplyIntoGame(game, fromGame) {
     game.name = fromGame.name;
@@ -425,22 +444,7 @@ function xformApplyIntoGame(game, fromGame) {
     if (fromGame.tree === null) {
         game.tree = null;
     } else {
-        let nidToNode = new Map();
-
-        function findNodeIds(node) {
-            if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-                nidToNode.set(node.nid, node);
-            }
-            if (node.hasOwnProperty('children')) {
-                for (let child of node.children) {
-                    findNodeIds(child);
-                }
-            }
-        }
-
-        findNodeIds(fromGame.tree);
-
-        game.tree = xformApplyToTree(fromGame.tree, nidToNode);
+        game.tree = xform_apply_to_tree(fromGame.tree, true);
     }
 }
 
