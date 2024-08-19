@@ -319,8 +319,20 @@ function xform_rule_replace_only_fn(wht, wths) {
 
     function rule_replace_only(node) {
         let ret = [];
-        for (const which of wths) {
-            ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
+        if (node.type === 'x-unroll-replace') {
+            if (node.what === wht) {
+                let new_node = {type:'order', children:[]};
+                for (const which of wths) {
+                    new_node.children.push({type:'x-replace-only', what:node.what, withs:[which], children:deepcopyobj(node.children)});
+                }
+                ret.push(new_node);
+            } else {
+                ret.push(node);
+            }
+        } else {
+            for (const which of wths) {
+                ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
+            }
         }
         return xform_unique(ret);
     }
@@ -387,9 +399,7 @@ function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) 
             const linked = xform_apply_to_node(deepcopyobj(target), xforms, nidToNode, use_dispids, node.dispid);
             ret_nodes.push(...linked);
         }
-    } else if (ntype.startsWith('x-')) {
-        alert('unrecognized transform node ' + ntype);
-    } else {
+    } else if (['x-unroll-replace', 'player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'layer-template', 'match', 'display-board'].indexOf(ntype) >= 0) {
         let xformed = [node];
         for (let xform of xforms) {
             let new_xformed = [];
@@ -411,6 +421,8 @@ function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) 
                 ret_node.children = new_children;
             }
         }
+    } else {
+        alert('unrecognized transform node ' + ntype);
     }
 
     return ret_nodes;
