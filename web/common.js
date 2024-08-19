@@ -340,13 +340,13 @@ function xform_rule_replace_only_fn(wht, wths) {
     return rule_replace_only;
 }
 
-function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) {
+function xform_apply_to_node(node, xforms, nidToNode, dispid_use_or_prefix) {
     let ret_nodes = [];
 
     node = shallowcopyobj(node);
 
-    if (use_dispids && dispid_pref !== null && dispid_pref !== undefined) {
-        node.dispid = dispid_pref + '_' + node.dispid;
+    if (dispid_use_or_prefix !== undefined && dispid_use_or_prefix !== null) {
+        node.dispid = dispid_use_or_prefix + '_' + node.dispid;
     }
 
     if (node.hasOwnProperty('comment')) {
@@ -381,14 +381,14 @@ function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) 
         }
 
         for (const child of node.children) {
-            let dispid_suff = 0;
-            const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), nidToNode, use_dispids, dispid_pref)
+            let dispid_suffix = 0;
+            const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), nidToNode, dispid_use_or_prefix)
             for (let child_xformed of children_xformed) {
-                if (use_dispids) {
-                    if (dispid_suff > 0) {
-                        child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suff;
+                if (dispid_use_or_prefix !== undefined) {
+                    if (dispid_suffix > 0) {
+                        child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suffix;
                     }
-                    ++ dispid_suff;
+                    ++ dispid_suffix;
                 }
                 ret_nodes.push(child_xformed);
             }
@@ -396,7 +396,8 @@ function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) 
     } else if ('x-link' === ntype) {
         const target = nidToNode.get(node.target);
         if (target) {
-            const linked = xform_apply_to_node(deepcopyobj(target), xforms, nidToNode, use_dispids, node.dispid);
+            const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node.dispid : undefined;
+            const linked = xform_apply_to_node(deepcopyobj(target), xforms, nidToNode, linked_dispid_suffix);
             ret_nodes.push(...linked);
         }
     } else if (['x-unroll-replace', 'player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'layer-template', 'match', 'display-board'].indexOf(ntype) >= 0) {
@@ -415,7 +416,7 @@ function xform_apply_to_node(node, xforms, nidToNode, use_dispids, dispid_pref) 
             if (ret_node.hasOwnProperty('children')) {
                 let new_children = []
                 for (const child of ret_node.children) {
-                    const child_xformed = xform_apply_to_node(child, xforms, nidToNode, use_dispids, dispid_pref)
+                    const child_xformed = xform_apply_to_node(child, xforms, nidToNode, dispid_use_or_prefix)
                     new_children.push(...child_xformed);
                 }
                 ret_node.children = new_children;
@@ -444,7 +445,7 @@ function xform_apply_to_tree(tree, use_dispids) {
 
     findNodeIds(tree);
 
-    return xform_apply_to_node(tree, [xform_rule_identity], nidToNode, use_dispids, null)[0];
+    return xform_apply_to_node(tree, [xform_rule_identity], nidToNode, use_dispids ? null : undefined)[0];
 }
 
 
