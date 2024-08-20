@@ -119,9 +119,10 @@ function find_file_node_ids(file, node, file_to_game, file_to_nid_to_node) {
         }
     }
     if (node.hasOwnProperty('file') && node.hasOwnProperty('target')) {
-        if (file_to_game.hasOwnProperty(node.file)) {
-            if (!file_to_nid_to_node.has(node.file)) {
-                find_file_node_ids(node.file, file_to_game[node.file].tree, file_to_game, file_to_nid_to_node);
+        if (!file_to_nid_to_node.has(node.file)) {
+            const game_tree = file_to_game(node.file)
+            if (game_tree) {
+                find_file_node_ids(node.file, game_tree, file_to_game, file_to_nid_to_node);
             }
         }
     }
