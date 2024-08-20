@@ -5,12 +5,36 @@ var GAME_SETUPS = {}
 function SEL_onLoad() {
     let div = document.getElementById('selectordiv');
 
-    appendText(div, 'Select Game', true, true);
-    appendBr(div);
-
     if (typeof onSelectGame !== 'undefined' && div) {
-        for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
-            appendButton(div, game, function() {onSelectGame(GAME_SETUPS[game]);});
+        appendText(div, 'Select Game', true, true);
+        appendBr(div);
+
+        if (false) {
+            for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
+                appendButton(div, game, function() {onSelectGame(GAME_SETUPS[game]);});
+            }
+        } else {
+            const select = document.createElement('select');
+            select.type = 'select';
+            select.onchange = function() {
+                const game = select.options[select.selectedIndex].value;
+                select.selectedIndex = 0;
+                onSelectGame(GAME_SETUPS[game]);
+            };
+            div.appendChild(select);
+            console.log(select);
+
+            var option = document.createElement('option');
+            option.value = '';
+            option.innerHTML = '--';
+            select.add(option);
+
+            for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
+                var option = document.createElement('option');
+                option.value = game;
+                option.innerHTML = game;
+                select.add(option);
+            }
         }
     }
 }
