@@ -27,3 +27,10 @@ function SEL_startingGame(useDefault) {
     }
     return emptyGame();
 }
+
+function SEL_getGameTree(game) {
+    if (GAME_SETUPS.hasOwnProperty(game)) {
+        return GAME_SETUPS[game].tree;
+    }
+    return null;
+}
