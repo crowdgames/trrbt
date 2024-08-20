@@ -432,8 +432,11 @@ def node_apply_xforms(node, xforms, nid_to_node):
         elif ntype == NDX_REPLACE_ONLY:
             fn = xform_rule_replace_only_fn(node[NKEY_WHAT], node[NKEY_WITHS])
 
-        for child in node[NKEY_CHILDREN]:
-            ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
+        if ntype == NDX_FILE and NKEY_CHILDREN not in node:
+            pass
+        else:
+            for child in node[NKEY_CHILDREN]:
+                ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
 
     elif ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
@@ -739,7 +742,7 @@ def resolve_file_links(folder, node):
         node[NKEY_CHILDREN] = new_children
     return node
 
-def yaml2bt(filename, xform):
+def yaml2bt(filename, resolve, xform):
     data = yamlload(filename)
 
     name = data[FKEY_NAME]
@@ -748,9 +751,10 @@ def yaml2bt(filename, xform):
 
     node_check(root, False, False)
 
-    root = resolve_file_links(os.path.dirname(filename), root)
+    if resolve:
+        root = resolve_file_links(os.path.dirname(filename), root)
 
-    node_check(root, True, False)
+        node_check(root, True, False)
 
     root = node_reshape_tiles(root)
 

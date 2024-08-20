@@ -50,12 +50,13 @@ if __name__ == '__main__':
     parser.add_argument('outfolder', type=str, help='Folder for writing out files.')
     parser.add_argument('outname', type=str, help='Name for writing out files.')
     parser.add_argument('--sprites', type=str, help='Sprite file.')
+    parser.add_argument('--resolve', action='store_true', help='Resolve file nodes.')
     parser.add_argument('--xform', action='store_true', help='Apply xforms.')
     args = parser.parse_args()
 
     out_full = os.path.join(args.outfolder, args.outname)
 
-    game = util.yaml2bt(args.filename, args.xform)
+    game = util.yaml2bt(args.filename, args.resolve, args.xform)
 
     sprite_data = get_sprite_data(args.sprites) if args.sprites else None
 
@@ -80,7 +81,7 @@ if __name__ == '__main__':
         if args.xform:
             f.write('        copyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
         else :
-            f.write('        xformApplyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
+            f.write('        xformApplyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\'], GAME_SETUPS);\n')
         f.write('        engine.onLoad();\n')
         f.write('      }\n')
         f.write('      window.addEventListener(\'load\', onLoad, false);\n')

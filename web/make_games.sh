@@ -44,3 +44,6 @@ python make_game.py ../games/rust.yaml games/unxform rust --sprites ../games/spr
 python make_game.py ../games/turn.yaml games/unxform turn-text
 python make_game.py ../games/turn.yaml games/unxform turn --sprites ../games/sprites/turn/turn.yaml
 python make_game.py ../games/loop.yaml games/unxform loop-text
+python make_game.py ../games/dungeon.yaml games/unxform dungeon
+python make_game.py ../games/dungeon_patrol.yaml games/unxform dungeon_patrol
+python make_game.py ../games/dungeon_chase.yaml games/unxform dungeon_chase

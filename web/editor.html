@@ -20,8 +20,8 @@
     <script>
       var game_u = emptyGame();
       var game_x = emptyGame();
-      var editor_u = new TRRBTEditor(game_u, 'editorucanvas', 'editordiv');
-      var editor_x = new TRRBTEditor(game_x, 'editorxcanvas', null);
+      var editor_u = new TRRBTEditor(game_u, GAME_SETUPS, 'editorucanvas', 'editordiv');
+      var editor_x = new TRRBTEditor(game_x, GAME_SETUPS, 'editorxcanvas', null);
       function onSelectGame(gameSelected) {
           copyIntoGame(game_u, gameSelected);
           editor_u.updateTreeStructureAndDraw(false, true);
