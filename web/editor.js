@@ -51,6 +51,7 @@ const EDT_XNODE_PROTOTYPES = [
 
 const EDT_PROP_NAMES = {
     nid: 'node id',
+    file: 'file name',
     target: 'target id',
     pid: 'player',
     layer: 'layer',
@@ -68,8 +69,9 @@ const EDT_PROP_NAMES = {
 
 class TRRBTEditor {
 
-    constructor(game, canvasname, divname) {
+    constructor(game, file_to_game, canvasname, divname) {
         this.game = game;
+        this.file_to_game = file_to_game;
         this.canvasname = canvasname;
         this.divname = divname;
 
@@ -81,7 +83,7 @@ class TRRBTEditor {
         this.undoStack = null;
         this.undoStackPos = null;
 
-        this.nidToNode = null;
+        this.fileToNidToNode = null;
         this.dispidToNode = null;
 
         this.nodeDrawTexts = null;
@@ -205,7 +207,7 @@ class TRRBTEditor {
         this.undoStack = [];
         this.undoStackPos = -1;
 
-        this.nidToNode = new Map();
+        this.fileToNidToNode = new Map();
         this.dispidToNode = new Map();
 
         this.nodeDrawTexts = new Map();
@@ -279,14 +281,14 @@ class TRRBTEditor {
             }
         }
 
-        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.nidToNode, this.game.tree);
+        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.fileToNidToNode, this.game.tree);
 
         this.nodeDrawLastTime = drawTime;
     }
 
     updateXformedTreeStructure() {
         if (this.xform_editor !== null) {
-            xformApplyIntoGame(this.xform_editor.game, this.game);
+            xformApplyIntoGame(this.xform_editor.game, this.game, this.file_to_game);
             this.xform_editor.updateTreeStructure(true);
         }
     }
@@ -308,10 +310,7 @@ class TRRBTEditor {
         }
     }
 
-    updateNodeIdsNode(node) {
-        if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-            this.nidToNode.set(node.nid, node);
-        }
+    updateDispids(node) {
         if (node.hasOwnProperty('dispid')) {
             if (this.dispidToNode.has(node.dispid)) {
                 node.dispid = getNextId();
@@ -322,16 +321,17 @@ class TRRBTEditor {
         this.dispidToNode.set(node.dispid, node);
         if (node.hasOwnProperty('children')) {
             for (let child of node.children) {
-                this.updateNodeIdsNode(child);
+                this.updateDispids(child);
             }
         }
     }
 
     updateNodeIds() {
-        this.nidToNode = new Map();
+        this.fileToNidToNode = new Map();
         this.dispidToNode = new Map();
         if (this.game.tree !== null) {
-            this.updateNodeIdsNode(this.game.tree);
+            this.updateDispids(this.game.tree);
+            find_file_node_ids(null, this.game.tree, this.file_to_game, this.fileToNidToNode);
         }
     }
 
@@ -488,6 +488,10 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('nid') && node.nid != '') {
             texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['nid'] + ': ' + node.nid});
+        }
+
+        if (node.hasOwnProperty('file')) {
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['file'] + ': ' + node.file});
         }
 
         if (node.hasOwnProperty('target')) {
@@ -662,14 +666,12 @@ class TRRBTEditor {
     }
 
     drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, node) {
-        if (node.hasOwnProperty('target')) {
+        if (node.hasOwnProperty('file') || node.hasOwnProperty('target')) {
             const nrect = nodePositions.get(node.dispid);
             const nx = nrect.x;
             const ny = nrect.y;
             const nw = nrect.w;
             const nh = nrect.h;
-
-            const target = nodeIds.get(node.target);
 
             const x0 = this.layout_horizontal ? (nx + 0.5 * nw) : (nx + 1.0 * nw);
             const y0 = this.layout_horizontal ? (ny + 1.0 * nh) : (ny + 0.5 * nh);
@@ -677,25 +679,61 @@ class TRRBTEditor {
             const dx = this.layout_horizontal ? (0.0) : (EDT_NODE_SPACING);
             const dy = this.layout_horizontal ? (EDT_NODE_SPACING) : (0.0);
 
+            let found_target = false;
+
             ctx.lineWidth = 4;
+            ctx.fillStyle = '#ccccff';
             ctx.strokeStyle = '#ccccff';
 
-            ctx.setLineDash([8, 4]);
             ctx.beginPath();
             ctx.moveTo(x0, y0);
-
-            if (target) {
-                const tnrect = nodePositions.get(target.dispid);
-                const tnx = tnrect.x;
-                const tny = tnrect.y;
-                const tnw = tnrect.w;
-                const tnh = tnrect.h;
-                ctx.bezierCurveTo(x0 + 0.5 * dx, y0 + 0.5 * dy, x0 + 1.5 * dx, y0 + 1.5 * dy, tnx + 0.5 * tnw, tny + 0.5 * tnh);
-            } else {
-                ctx.lineTo(x0 + 0.5 * dx, y0 + 0.5 * dy);
-            }
+            ctx.lineTo(x0 + 0.5 * dx, y0 + 0.5 * dy);
             ctx.stroke();
-            ctx.setLineDash([]);
+
+            let file = null;
+            if (node.hasOwnProperty('file')) {
+                file = node.file;
+            }
+
+            if (node.hasOwnProperty('target')) {
+                let target = null;
+                const nid_to_node = nodeIds.get(file);
+                if (nid_to_node) {
+                    target = nid_to_node.get(node.target);
+                }
+
+                if (target) {
+                    found_target = true;
+
+                    if (file === null) {
+                        const tnrect = nodePositions.get(target.dispid);
+                        const tnx = tnrect.x;
+                        const tny = tnrect.y;
+                        const tnw = tnrect.w;
+                        const tnh = tnrect.h;
+                        ctx.setLineDash([8, 4]);
+                        ctx.beginPath();
+                        ctx.moveTo(x0 + 0.5 * dx, y0 + 0.5 * dy);
+                        ctx.bezierCurveTo(x0 + 1.0 * dx, y0 + 1.0 * dy, x0 + 1.0 * dx, y0 + 1.0 * dy, tnx + 0.5 * tnw, tny + 0.5 * tnh);
+                        ctx.stroke();
+                        ctx.setLineDash([]);
+                    } else {
+                        ctx.beginPath();
+                        ctx.ellipse(x0 + 0.5 * dx, y0 + 0.5 * dy, EDT_NODE_SPACING / 4, EDT_NODE_SPACING / 4, 0, 0, TAU);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            if (!found_target) {
+                ctx.strokeStyle = '#ffcccc';
+                ctx.beginPath();
+                ctx.moveTo(x0 + 0.5 * dx + EDT_NODE_SPACING / 4, y0 + 0.5 * dy - EDT_NODE_SPACING / 4);
+                ctx.lineTo(x0 + 0.5 * dx - EDT_NODE_SPACING / 4, y0 + 0.5 * dy + EDT_NODE_SPACING / 4);
+                ctx.moveTo(x0 + 0.5 * dx - EDT_NODE_SPACING / 4, y0 + 0.5 * dy - EDT_NODE_SPACING / 4);
+                ctx.lineTo(x0 + 0.5 * dx + EDT_NODE_SPACING / 4, y0 + 0.5 * dy + EDT_NODE_SPACING / 4);
+                ctx.stroke();
+            }
         }
 
         if (node.hasOwnProperty('children')) {
@@ -1221,6 +1259,10 @@ class TRRBTEditor {
                     this.appendTextProperty(list, 'prop_nid', EDT_PROP_NAMES['nid'], node.nid);
                     anyProperties = true;
                 }
+                if (node.hasOwnProperty('file')) {
+                    this.appendTextProperty(list, 'prop_file', EDT_PROP_NAMES['file'], node.file);
+                    anyProperties = true;
+                }
                 if (node.hasOwnProperty('target')) {
                     this.appendTextProperty(list, 'prop_target', EDT_PROP_NAMES['target'], node.target);
                     anyProperties = true;
@@ -1317,6 +1359,7 @@ class TRRBTEditor {
 
     onNodeSaveProperties() {
         const SAVE_PROPS = [['nid', bind0(this, 'parseTextProperty'), false],
+                            ['file', bind0(this, 'parseTextProperty'), false],
                             ['target', bind0(this, 'parseTextProperty'), false],
                             ['pid', bind0(this, 'parseTextProperty'), false],
                             ['layer', bind0(this, 'parseTextProperty'), false],

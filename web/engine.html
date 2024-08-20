@@ -21,11 +21,11 @@
       var game = {};
       var engine = new TRRBTEngine(game, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
-          xformApplyIntoGame(game, gameSelected);
+          xformApplyIntoGame(game, gameSelected, GAME_SETUPS);
           engine.onLoad();
       }
       function onLoad() {
-          xformApplyIntoGame(game, SEL_startingGame(true));
+          xformApplyIntoGame(game, SEL_startingGame(true), GAME_SETUPS);
           engine.onLoad();
       }
       window.addEventListener('load', onLoad, false);
