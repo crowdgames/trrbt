@@ -1,4 +1,3 @@
-GAME_SETUPS['tutorial-complete'] =
 {
     "name": "empty",
     "sprites": null,
@@ -913,4 +912,3 @@ GAME_SETUPS['tutorial-complete'] =
         ]
     }
 }
-;
