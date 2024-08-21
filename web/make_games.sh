@@ -3,11 +3,11 @@ set -e
 rm -rf games
 mkdir -p games
 
-cat games_web/connect4-emoji.js      >> games/games.js
-cat games_web/soko-emoji.js          >> games/games.js
-cat games_web/soko2.js               >> games/games.js
-cat games_web/tutorial-complete.js   >> games/games.js
-cat games_web/tutorial-incomplete.js >> games/games.js
+python copy_game.py games/games.js games_web connect4-emoji.js
+python copy_game.py games/games.js games_web soko-emoji.js
+python copy_game.py games/games.js games_web soko2.js
+python copy_game.py games/games.js games_web tutorial-complete.js
+python copy_game.py games/games.js games_web tutorial-incomplete.js
 
 python make_game.py games/games.js ../games ttt.yaml
 python make_game.py games/games.js ../games connect4.yaml
