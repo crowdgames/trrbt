@@ -6,15 +6,7 @@
     <script src="selector.js"></script>
     <script src="editor.js"></script>
 
-    <script src="games/ttt-text.js"></script>
-    <script src="games/connect4-text.js"></script>
-    <script src="games_web/connect4-emoji.js"></script>
-    <script src="games/soko-text.js"></script>
-    <script src="games/soko.js"></script>
-    <script src="games_web/soko-emoji.js"></script>
-    <script src="games_web/soko2.js"></script>
-    <script src="games_web/tutorial-complete.js"></script>
-    <script src="games_web/tutorial-incomplete.js"></script>
+    <script src="games/games.js"></script>
   </head>
   <body>
     <script>
@@ -28,7 +20,7 @@
           editor_u.updatePropertyEditor(null);
       }
       function onLoad() {
-          copyIntoGame(game_u, SEL_startingGame(true));
+          copyIntoGame(game_u, SEL_startingGame());
           editor_u.xform_editor = editor_x;
           editor_x.onLoad();
           editor_u.onLoad();

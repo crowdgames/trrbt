@@ -6,15 +6,7 @@
     <script src="selector.js"></script>
 
     <script src="engine.js"></script>
-    <script src="games/ttt-text.js"></script>
-    <script src="games/connect4-text.js"></script>
-    <script src="games_web/connect4-emoji.js"></script>
-    <script src="games/soko-text.js"></script>
-    <script src="games/soko.js"></script>
-    <script src="games_web/soko-emoji.js"></script>
-    <script src="games_web/soko2.js"></script>
-    <script src="games_web/tutorial-complete.js"></script>
-    <script src="games_web/tutorial-incomplete.js"></script>
+    <script src="games/games.js"></script>
   </head>
   <body>
     <script>
@@ -25,7 +17,7 @@
           engine.onLoad();
       }
       function onLoad() {
-          xformApplyIntoGame(game, SEL_startingGame(true), SEL_getGameTree);
+          xformApplyIntoGame(game, SEL_startingGame(), SEL_getGameTree);
           engine.onLoad();
       }
       window.addEventListener('load', onLoad, false);

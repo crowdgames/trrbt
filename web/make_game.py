@@ -46,62 +46,21 @@ def get_sprite_data(sprites):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert game YAML to JSON.')
+    parser.add_argument('appendfile', type=str, help='File to append game to.')
+    parser.add_argument('gamefolder', type=str, help='Folder with game files.')
     parser.add_argument('filename', type=str, help='Filename to process.')
-    parser.add_argument('outfolder', type=str, help='Folder for writing out files.')
-    parser.add_argument('outname', type=str, help='Name for writing out files.')
     parser.add_argument('--sprites', type=str, help='Sprite file.')
     parser.add_argument('--resolve', action='store_true', help='Resolve file nodes.')
     parser.add_argument('--xform', action='store_true', help='Apply xforms.')
     args = parser.parse_args()
 
-    out_full = os.path.join(args.outfolder, args.outname)
+    game = util.yaml2bt(os.path.join(args.gamefolder, args.filename), args.resolve, args.xform)
 
-    game = util.yaml2bt(args.filename, args.resolve, args.xform)
+    sprite_data = get_sprite_data(os.path.join(args.gamefolder, args.sprites)) if args.sprites else None
 
-    sprite_data = get_sprite_data(args.sprites) if args.sprites else None
+    game_file = os.path.splitext(args.filename)[0]
+    game_json = json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data})
+    game_entry = 'GAME_SETUPS[\'' + game_file + '\'] = ' + game_json + ';\n'
 
-    with open(out_full + '.js', 'wt') as f:
-        f.write('GAME_SETUPS[\'' + args.outname + '\'] = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
-
-    with open(out_full + '.html', 'wt') as f:
-        f.write('<!DOCTYPE html>\n')
-        f.write('<html>\n')
-        f.write('  <head>\n')
-        f.write('    <meta charset="UTF-8">\n')
-        f.write('    <script>var GAME_SETUPS = {};</script>\n')
-        f.write('    <script src="../../common.js"></script>\n')
-        f.write('    <script src="../../engine.js"></script>\n')
-        f.write('    <script src="' + args.outname + '.js"></script>\n')
-        f.write('  </head>\n')
-        f.write('  <body>\n')
-        f.write('    <script>\n')
-        f.write('      var game = emptyGame();\n')
-        f.write('      var engine = new TRRBTEngine(game, \'enginecanvas\', \'enginediv\');\n')
-        f.write('      function onLoad() {\n')
-        if args.xform:
-            f.write('        copyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\']);\n')
-        else :
-            f.write('        xformApplyIntoGame(game, GAME_SETUPS[\'' + args.outname + '\'], GAME_SETUPS);\n')
-        f.write('        engine.onLoad();\n')
-        f.write('      }\n')
-        f.write('      window.addEventListener(\'load\', onLoad, false);\n')
-        f.write('    </script>\n')
-        f.write('    <center>\n')
-        f.write('      <table>\n')
-        f.write('        <tbody>\n')
-        f.write('          <tr style="vertical-align:top">\n')
-        f.write('            <td>\n')
-        f.write('              <div id="enginediv" style="width:400px; height:600px" tabindex="1">\n')
-        f.write('              </div>\n')
-        f.write('            </td>\n')
-        f.write('            <td>\n')
-        f.write('              <canvas id="enginecanvas" width="600px" height="600px" tabindex="2">\n')
-        f.write('                Browser does not support canvas.\n')
-        f.write('              </canvas>\n')
-        f.write('            </td>\n')
-        f.write('          </tr>\n')
-        f.write('        </tbody>\n')
-        f.write('      </table>\n')
-        f.write('    </center>\n')
-        f.write('  </body>\n')
-        f.write('</html>\n')
+    with open(args.appendfile, 'at') as f:
+        f.write(game_entry);
