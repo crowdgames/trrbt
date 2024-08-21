@@ -269,21 +269,15 @@ function xform_rule_flip_only(node) {
 }
 
 function xform_rule_swap_only_fn(wht, wth) {
+    const swap_regex = new RegExp('(' + wht + '|' + wth + ')', 'g');
+    const swap_fn = function(mm) { return mm === wht ? wth : wht; };
+
     function pattern_func(patt) {
         let ret = [];
         for (let row of patt) {
             let ret_row = [];
             for (let tile of row) {
-                let ret_tile = '';
-                for (let ch of splitGraphemes(tile)) {
-                    if (ch === wht) {
-                        ch = wth;
-                    } else if (ch === wth) {
-                        ch = wht;
-                    }
-                    ret_tile += ch;
-                }
-                ret_row.push(ret_tile);
+                ret_row.push(tile.replace(swap_regex, swap_fn));
             }
             ret.push(ret_row);
         }
@@ -291,16 +285,7 @@ function xform_rule_swap_only_fn(wht, wth) {
     }
 
     function pid_func(pid) {
-        let ret = '';
-        for (let ch of splitGraphemes(pid)) {
-            if (ch === wht) {
-                ch = wth;
-            } else if (ch === wth) {
-                ch = wht;
-            }
-            ret += ch;
-        }
-        return ret;
+        return pid.replace(swap_regex, swap_fn);
     }
 
     function rule_swap_only(node) {
@@ -317,8 +302,7 @@ function xform_rule_replace_only_fn(wht, wths) {
             for (let row of patt) {
                 let ret_row = [];
                 for (let tile of row) {
-                    let ret_tile = tile.replaceAll(wht, which);
-                    ret_row.push(ret_tile);
+                    ret_row.push(tile.replaceAll(wht, which));
                 }
                 ret.push(ret_row);
             }
