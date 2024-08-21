@@ -317,13 +317,7 @@ function xform_rule_replace_only_fn(wht, wths) {
             for (let row of patt) {
                 let ret_row = [];
                 for (let tile of row) {
-                    let ret_tile = '';
-                    for (let ch of splitGraphemes(tile)) {
-                        if (ch === wht) {
-                            ch = which;
-                        }
-                        ret_tile += ch;
-                    }
+                    let ret_tile = tile.replaceAll(wht, which);
                     ret_row.push(ret_tile);
                 }
                 ret.push(ret_row);
@@ -335,14 +329,7 @@ function xform_rule_replace_only_fn(wht, wths) {
 
     function pid_func_fn(which) {
         function pid_func(pid) {
-            let ret = '';
-            for (let ch of splitGraphemes(pid)) {
-                if (ch === wht) {
-                    ch = which;
-                }
-                ret += ch;
-            }
-            return ret;
+            return pid.replaceAll(wht, which);
         }
         return pid_func;
     }
