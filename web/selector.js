@@ -22,7 +22,6 @@ function SEL_onLoad() {
                 onSelectGame(GAME_SETUPS[game]);
             };
             div.appendChild(select);
-            console.log(select);
 
             var option = document.createElement('option');
             option.value = '';
