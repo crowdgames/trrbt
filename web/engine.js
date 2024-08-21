@@ -147,7 +147,7 @@ class TRRBTEngine {
     }
 
     shouldStepToInput() {
-        return this.gameResult !== true && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
+        return this.game.tree !== null && this.gameResult !== true && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
     }
 
     stepToInput() {
@@ -878,6 +878,10 @@ class TRRBTEngine {
             'rewrite': bind0(this, 'stepNodeRewrite'),
             'player': bind0(this, 'stepNodePlayer'),
         };
+
+        if (this.game.tree === null) {
+            return false;
+        }
 
         if (this.loopCheck !== true && this.stepDelay === null) {
             if (this.callStack === null) {

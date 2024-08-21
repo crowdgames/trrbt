@@ -38,15 +38,10 @@ function SEL_onLoad() {
     }
 }
 
-function SEL_startingGame(useDefault) {
+function SEL_startingGame() {
     const hash = window.location.hash.substring(1);
     if (hash !== '' && GAME_SETUPS.hasOwnProperty(hash)) {
         return GAME_SETUPS[hash];
-    }
-    if (useDefault) {
-        for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
-            return GAME_SETUPS[game];
-        }
     }
     return emptyGame();
 }
