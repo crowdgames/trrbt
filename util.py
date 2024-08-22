@@ -97,8 +97,32 @@ GVBUTTONEND = ']</I></FONT>'
 GVDESCBGN   = '<FONT POINT-SIZE="9">('
 GVDESCEND   = ')</FONT>'
 
-def gv_filter_string(s):
-    return s.replace('<', '&lt;').replace('>', '&gt;')
+NKEY_GVID   = '__GVID'
+
+
+
+_js_common = None
+
+def require_js():
+    global _js_common
+
+    if _js_common is None:
+        import pythonmonkey
+        dirname = os.path.dirname(os.path.realpath(__file__))
+
+        js = ''
+        js += open(os.path.join(dirname, 'web/common.js')).read() + '\n'
+        js += '() => { return { '
+        js += 'xform_apply_to_tree:xform_apply_to_tree'
+        js += ' } };\n'
+
+        _js_common = pythonmonkey.eval(js)()
+
+def xform_apply_to_tree(tree, file_to_game, use_dispids):
+    global _js_common
+    require_js()
+
+    return _js_common['xform_apply_to_tree'](tree, file_to_game, use_dispids)
 
 
 
@@ -169,7 +193,7 @@ def pad_pattern(patt):
     return [row + (['.'] * (max_row_len - len(row))) for row in patt]
 
 def string_to_pattern(s):
-    return tuplify(pad_pattern([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != '']))
+    return pad_pattern([[tile.strip() for tile in row.split()] for row in s.split(';') if row.strip() != ''])
 
 def entry_to_layer_pattern(e, default):
     if type(e) == dict:
@@ -243,229 +267,10 @@ def node_max_tile_width(node):
 
     return tile_len
 
-def node_find_nids(node, nid_to_node, pid_to_nid):
-    if NKEY_NID in node.keys(): # TODO: move after xform?
-        nid = node[NKEY_NID]
-        if len(nid) == 0 or nid[0] == '_':
-            raise RuntimeError(f'invalid node id {nid}')
-    else:
-        nid = ('_%04d' % len(nid_to_node))
+def gv_filter_string(s):
+    return s.replace('<', '&lt;').replace('>', '&gt;')
 
-    if nid in nid_to_node:
-        raise RuntimeError(f'duplicate node id {nid}')
-
-    nid_to_node[nid] = node
-    pid_to_nid[id(node)] = nid
-
-    if NKEY_CHILDREN in node.keys():
-        for child in node[NKEY_CHILDREN]:
-            node_find_nids(child, nid_to_node, pid_to_nid)
-
-def unique(nodes):
-    ret = []
-    for node in nodes:
-        uniq = True
-        for rnode in ret:
-            if node == rnode: #TODO: compare all keys but NKEY_CHILDREN?
-                uniq = False
-        if uniq:
-            ret.append(node)
-
-    return ret
-
-def rule_apply(node, pattern_func, pid_func, button_dict):
-    if pattern_func is not None:
-        for key in [NKEY_LHS, NKEY_RHS, NKEY_PATTERN]:
-            if key in node.keys():
-                node[key] = { layer: pattern_func(patt) for layer, patt in node[key].items() }
-
-    if pid_func is not None:
-        if NKEY_PID in node:
-            node[NKEY_PID] = pid_func(str(node[NKEY_PID]))
-
-    if button_dict is not None:
-        if NKEY_BUTTON in node:
-            node[NKEY_BUTTON] = button_dict.get(node[NKEY_BUTTON], node[NKEY_BUTTON])
-
-    return node
-
-def xform_identity(node):
-    return [node]
-
-def xform_prune(node):
-    return []
-
-def xform_rule_mirror(node):
-    pattern_func = lambda x: tuplify([row[::-1] for row in x])
-    button_dict = {'left':'right', 'right':'left'}
-    return unique([node, rule_apply(node.copy(), pattern_func, None, button_dict)])
-
-def xform_rule_skew(node):
-    def rule_skew(hs):
-        rows = len(hs)
-        cols = len(hs[0])
-        ret = [['.' for ci in range(cols)] for ri in range(rows + cols - 1)]
-        for row in range(rows):
-            for col in range(cols):
-                ret[row + col][col] = hs[row][col]
-        return tuplify(ret)
-    return unique([node, rule_apply(node.copy(), rule_skew, None, None)])
-
-def xform_rule_fliponly(node):
-    pattern_func = lambda x: tuplify(x[::-1])
-    button_dict = {'up':'down', 'down':'up'}
-    return unique([rule_apply(node.copy(), pattern_func, None, button_dict)])
-
-def xform_rule_rotate(node):
-    pattern_func = lambda x: tuplify(zip(*x[::-1]))
-    button_dict = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
-    ret = [node]
-    ret.append(rule_apply(ret[-1].copy(), pattern_func, None, button_dict))
-    return unique(ret)
-
-def xform_rule_spin(node):
-    pattern_func = lambda x: tuplify(zip(*x[::-1]))
-    button_dict = {'left':'up', 'up':'right', 'right':'down', 'down':'left'}
-    ret = [node]
-    while len(ret) < 4:
-        ret.append(rule_apply(ret[-1].copy(), pattern_func, None, button_dict))
-    return unique(ret)
-
-def xform_rule_swap_only_fn(wht, wth):
-    def rule_swap_pattern(hs):
-        ret_hs = ()
-        for row in hs:
-            ret_row = ()
-            for tile in row:
-                ret_tile = ''
-                for char in tile:
-                    if char == wht:
-                        char = wth
-                    elif char == wth:
-                        char = wht
-                    ret_tile += char
-                ret_row += (ret_tile,)
-            ret_hs += (ret_row,)
-        return ret_hs
-
-    def rule_swap_player(pid):
-        ret_pid = ''
-        for char in pid:
-            if char == wht:
-                char = wth
-            elif char == wth:
-                char = wht
-            ret_pid += char
-        return ret_pid
-
-    def rule_swaponly(node):
-        return unique([rule_apply(node.copy(), rule_swap_pattern, rule_swap_player, None)])
-
-    return rule_swaponly
-
-def xform_rule_replace_only_fn(wht, wth):
-    if type(wth) != list:
-        raise RuntimeError(f'replace with must be list')
-
-    def rule_replace_pattern(hs, wthi):
-        ret_hs = ()
-        for row in hs:
-            ret_row = ()
-            for tile in row:
-                ret_tile = tile.replace(wht, wthi)
-                ret_row += (ret_tile,)
-            ret_hs += (ret_row,)
-        return ret_hs
-
-    def rule_replace_player(pid, wthi):
-        return pid.replace(wht, wthi)
-
-    def rule_replace(node):
-        if node[NKEY_TYPE] == NDX_UNROLL_REPLACE:
-            if node[NKEY_WHAT] == wht:
-                return [{NKEY_TYPE:ND_ORDER, NKEY_CHILDREN:[{NKEY_TYPE:NDX_REPLACE_ONLY, NKEY_WHAT:node[NKEY_WHAT], NKEY_WITHS:[wthi], NKEY_CHILDREN:copy.deepcopy(node[NKEY_CHILDREN])} for wthi in wth]}]
-            else:
-                return [node]
-        else:
-            return unique([rule_apply(node.copy(), lambda x: rule_replace_pattern(x, str(wthi)), lambda x: rule_replace_player(x, str(wthi)), None) for wthi in wth])
-
-    return rule_replace
-
-def xform_player_new_fn(new_pid):
-    def player_new(node):
-        if NKEY_PID in node.keys():
-            node = node.copy()
-            node[NKEY_PID] = new_pid
-        return [node]
-
-    return player_new
-
-def node_apply_xforms(node, xforms, nid_to_node):
-    ret_nodes = []
-
-    node = node.copy()
-    if NKEY_COMMENT in node:
-        del node[NKEY_COMMENT]
-    if NKEY_NID in node:
-        del node[NKEY_NID]
-
-    ntype = node[NKEY_TYPE]
-
-    if ntype in [NDX_FILE, NDX_IDENT, NDX_PRUNE, NDX_ROTATE, NDX_SPIN, NDX_MIRROR, NDX_SKEW, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY]:
-        fn = None
-        if ntype in [NDX_FILE, NDX_IDENT]:
-            fn = xform_identity
-        elif ntype in [NDX_PRUNE]:
-            fn = xform_prune
-        elif ntype == NDX_ROTATE:
-            fn = xform_rule_rotate
-        elif ntype == NDX_SPIN:
-            fn = xform_rule_spin
-        elif ntype == NDX_MIRROR:
-            fn = xform_rule_mirror
-        elif ntype == NDX_SKEW:
-            fn = xform_rule_skew
-        elif ntype == NDX_FLIP_ONLY:
-            fn = xform_rule_fliponly
-        elif ntype == NDX_SWAP_ONLY:
-            fn = xform_rule_swap_only_fn(node[NKEY_WHAT], node[NKEY_WITH])
-        elif ntype == NDX_REPLACE_ONLY:
-            fn = xform_rule_replace_only_fn(node[NKEY_WHAT], node[NKEY_WITHS])
-
-        if ntype == NDX_FILE and NKEY_CHILDREN not in node:
-            pass
-        else:
-            for child in node[NKEY_CHILDREN]:
-                ret_nodes += node_apply_xforms(child, [fn] + xforms, nid_to_node)
-
-    elif ntype == NDX_LINK:
-        nid_target = node[NKEY_TARGET]
-        if nid_target in nid_to_node:
-            ret_nodes += node_apply_xforms(copy.deepcopy(nid_to_node[nid_target]), xforms, nid_to_node)
-
-    elif ntype in [NDX_UNROLL_REPLACE, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_PLAYER, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_DISPLAY_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_WIN, ND_LOSE, ND_DRAW, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES]:
-        xformed = [node.copy()]
-        for xform in xforms:
-            new_xformed = []
-            for xformed_node in xformed:
-                new_xformed += xform(xformed_node)
-            xformed = new_xformed
-        ret_nodes = xformed
-
-        for node in ret_nodes:
-            if NKEY_CHILDREN in node.keys():
-                children = node[NKEY_CHILDREN]
-                new_children = []
-                for child in children:
-                    new_children += node_apply_xforms(child, xforms, nid_to_node)
-                node[NKEY_CHILDREN] = new_children
-
-    else:
-        raise RuntimeError(f'unrecognized node type {ntype}')
-
-    return ret_nodes
-
-def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
+def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
     ntype = node[NKEY_TYPE]
     nlabel = ''
     nstyle = 'filled'
@@ -615,7 +420,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
             nlabel += ':' + str(node[NKEY_PID])
         elif ntype in [ND_LOOP_TIMES]:
-            nlabel += ':' + str(node[NKEY_TIMES])
+            nlabel += ':' + str(int(node[NKEY_TIMES]))
         elif ntype in [NDX_UNROLL_REPLACE]:
             nlabel += GVNEWLINE
             nlabel += gv_filter_string(node[NKEY_WHAT])
@@ -655,17 +460,14 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
             nlabel += gv_filter_string(node[NKEY_COMMENT])
             nlabel += GVCOMMEND
 
-    def gvid(_node_id):
-        return _node_id if _node_id.startswith('_') else '__' + _node_id
-
     def indent(_depth):
         return '  ' * (_depth + 1)
 
-    nid_gv = gvid(pid_to_nid[id(node)])
+    nid_gv = node[NKEY_GVID]
 
     ind = indent(depth)
 
-    node_lines.append(f'{ind}"{nid_gv}" [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
+    node_lines.append(f'{ind}{nid_gv} [shape="{nshape}", fillcolor="{nfill}", style="{nstyle}", label=<{nlabel}>];')
 
     if ntype == NDX_FILE:
         node_lines.append(f'{ind}subgraph cluster_{nid_gv} {{')
@@ -674,11 +476,10 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
         node_lines.append(f'{ind}graph [margin="8", bgcolor="#f4f4f4"];')
 
     if NKEY_CHILDREN in node.keys():
-        children = node[NKEY_CHILDREN]
-        for child in children:
-            node_print_gv(node_lines, edge_lines, child, depth, nid_to_node, pid_to_nid)
-            child_nid_gv = gvid(pid_to_nid[id(child)])
-            edge_lines.append(f'  "{nid_gv}" -> "{child_nid_gv}";')
+        for child in node[NKEY_CHILDREN]:
+            node_print_gv(node_lines, edge_lines, child, depth, nid_to_node)
+            child_nid_gv = child[NKEY_GVID]
+            edge_lines.append(f'  {nid_gv} -> {child_nid_gv};')
 
     if ntype == NDX_FILE:
         depth -= 1
@@ -688,19 +489,48 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node, pid_to_nid):
     if ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
-            target_id = pid_to_nid[id(nid_to_node[nid_target])]
-            edge_lines.append(f'  "{nid_gv}" -> "__{target_id}" [style="dotted", constraint="false"];')
+            target_id = nid_to_node[nid_target][NKEY_GVID]
+            edge_lines.append(f'  {nid_gv} -> {target_id} [style="dotted", constraint="false"];')
         else:
             target_id = f'_TARGET_MISSING_{nid_gv}'
             node_lines.append(f'{ind}"{target_id}" [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="#aaaaaa"];')
-            edge_lines.append(f'  "{nid_gv}" -> "{target_id}" [style="dotted"];')
+            edge_lines.append(f'  {nid_gv} -> {target_id} [style="dotted"];')
 
 def game_print_gv(game):
-    nid_to_node, pid_to_nid = {}, {}
-    node_find_nids(game.tree, nid_to_node, pid_to_nid)
+    nid_to_node = {}
+    next_gvid = 1000000
+
+    def node_find_ids(node):
+        nonlocal nid_to_node, next_gvid
+
+        node[NKEY_GVID] = next_gvid
+        next_gvid += 1
+
+        if NKEY_NID in node.keys():
+            nid = node[NKEY_NID]
+            if nid in nid_to_node:
+                raise RuntimeError(f'duplicate node id {nid}')
+            nid_to_node[nid] = node
+
+        if NKEY_CHILDREN in node.keys():
+            for child in node[NKEY_CHILDREN]:
+                node_find_ids(child)
+
+    def node_clear_ids(node):
+        nonlocal nid_to_node, next_gvid
+
+        del node[NKEY_GVID]
+
+        if NKEY_CHILDREN in node.keys():
+            for child in node[NKEY_CHILDREN]:
+                node_clear_ids(child)
+
+    node_find_ids(game.tree)
 
     node_lines, edge_lines = [], []
-    node_print_gv(node_lines, edge_lines, game.tree, 0, nid_to_node, pid_to_nid)
+    node_print_gv(node_lines, edge_lines, game.tree, 0, nid_to_node)
+
+    node_clear_ids(game.tree)
 
     print('digraph G {')
     print(f'  graph [ordering="out", margin="0"];')
@@ -716,58 +546,40 @@ def game_print_json(game):
 
 def yamlload(filename):
     with open(filename, 'rt') as f:
-        return yaml.safe_load(f)
+        data = yaml.safe_load(f)
+        data[FKEY_TREE] = node_reshape_tiles(data[FKEY_TREE])
+        return data
 
-def resolve_file_links(folder, node):
-    if NKEY_CHILDREN in node.keys():
-        new_children = []
-        for child in node[NKEY_CHILDREN]:
-            if child[NKEY_TYPE] == NDX_FILE:
-                filename = child[NKEY_FILE]
-                target = child[NKEY_TARGET]
 
-                filename = f'{folder}/{filename}.yaml'
+
+_file_to_game = {}
+def file_to_game_in_folder(folder):
+    def file_to_game(filename):
+        global _file_to_game
+
+        if filename not in _file_to_game:
+            filename = f'{folder}/{filename}.yaml'
+            if os.path.exists(filename):
                 data = yamlload(filename)
+                _file_to_game[filename] = data[FKEY_TREE]
+            else:
+                _file_to_game[filename] = None
 
-                fileroot = data[FKEY_TREE]
-                nid_to_node, pid_to_nid = {}, {}
-                node_find_nids(fileroot, nid_to_node, pid_to_nid)
+        return _file_to_game[filename]
 
-                if target not in nid_to_node:
-                    raise RuntimeError(f'missing target node {target} in file {filename}')
-
-                child[NKEY_CHILDREN] = [nid_to_node[target]]
-
-            new_children.append(resolve_file_links(folder, child))
-        node[NKEY_CHILDREN] = new_children
-    return node
+    return file_to_game
 
 def yaml2bt(filename, resolve, xform):
     data = yamlload(filename)
 
     name = data[FKEY_NAME]
-
     root = data[FKEY_TREE]
 
     node_check(root, False, False)
 
-    if resolve:
-        root = resolve_file_links(os.path.dirname(filename), root)
-
-        node_check(root, True, False)
-
-    root = node_reshape_tiles(root)
-
     if xform:
-        nid_to_node, pid_to_nid = {}, {}
-        node_find_nids(root, nid_to_node, pid_to_nid)
-        root = node_apply_xforms(root, [xform_identity], nid_to_node)
-
-        if len(root) == 0:
-            raise RuntimeError('xformed tree has no root')
-        if len(root) > 1:
-            raise RuntimeError('xformed tree has multiple roots')
-        root = root[0]
+        file_to_game = file_to_game_in_folder(os.path.dirname(filename))
+        root = xform_apply_to_tree(root, file_to_game, False)
 
         node_check(root, True, True)
 

@@ -119,7 +119,7 @@ function find_file_node_ids(file, node, file_to_game, file_to_nid_to_node) {
         }
     }
     if (node.hasOwnProperty('file') && node.hasOwnProperty('target')) {
-        if (!file_to_nid_to_node.has(node.file)) {
+        if (file_to_game != null && !file_to_nid_to_node.has(node.file)) {
             const game_tree = file_to_game(node.file)
             if (game_tree) {
                 find_file_node_ids(node.file, game_tree, file_to_game, file_to_nid_to_node);
@@ -417,7 +417,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, file_to_game, al
                 }
             }
         }
-    } else if (['x-unroll-replace', 'player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'layer-template', 'match', 'display-board'].indexOf(ntype) >= 0) {
+    } else if (['x-unroll-replace', 'player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'display-board'].indexOf(ntype) >= 0) {
         let xformed = [node];
         for (let xform of xforms) {
             let new_xformed = [];
