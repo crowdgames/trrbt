@@ -118,11 +118,11 @@ def require_js():
 
         _js_common = pythonmonkey.eval(js)()
 
-def xform_apply_to_tree(tree, file_to_game, use_dispids):
+def xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispids):
     global _js_common
     require_js()
 
-    return _js_common['xform_apply_to_tree'](tree, file_to_game, use_dispids)
+    return _js_common['xform_apply_to_tree'](tree, resolve_file_to_game, apply_xform, use_dispids)
 
 
 
@@ -266,6 +266,12 @@ def node_max_tile_width(node):
             tile_len = max(tile_len, node_max_tile_width(child))
 
     return tile_len
+
+def gv_int(s):
+    if type(s) == float and int(s) == s:
+        return int(s)
+    else:
+        return s
 
 def gv_filter_string(s):
     return s.replace('<', '&lt;').replace('>', '&gt;')
@@ -418,9 +424,9 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
         nlabel += ntype
 
         if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
-            nlabel += ':' + str(node[NKEY_PID])
+            nlabel += ':' + str(gv_int(node[NKEY_PID]))
         elif ntype in [ND_LOOP_TIMES]:
-            nlabel += ':' + str(int(node[NKEY_TIMES]))
+            nlabel += ':' + str(gv_int(node[NKEY_TIMES]))
         elif ntype in [NDX_UNROLL_REPLACE]:
             nlabel += GVNEWLINE
             nlabel += gv_filter_string(node[NKEY_WHAT])
@@ -463,7 +469,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
     def indent(_depth):
         return '  ' * (_depth + 1)
 
-    nid_gv = node[NKEY_GVID]
+    nid_gv = int(node[NKEY_GVID])
 
     ind = indent(depth)
 
@@ -478,7 +484,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
     if NKEY_CHILDREN in node.keys():
         for child in node[NKEY_CHILDREN]:
             node_print_gv(node_lines, edge_lines, child, depth, nid_to_node)
-            child_nid_gv = child[NKEY_GVID]
+            child_nid_gv = int(child[NKEY_GVID])
             edge_lines.append(f'  {nid_gv} -> {child_nid_gv};')
 
     if ntype == NDX_FILE:
@@ -489,7 +495,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
     if ntype == NDX_LINK:
         nid_target = node[NKEY_TARGET]
         if nid_target in nid_to_node:
-            target_id = nid_to_node[nid_target][NKEY_GVID]
+            target_id = int(nid_to_node[nid_target][NKEY_GVID])
             edge_lines.append(f'  {nid_gv} -> {target_id} [style="dotted", constraint="false"];')
         else:
             target_id = f'_TARGET_MISSING_{nid_gv}'
@@ -577,10 +583,14 @@ def yaml2bt(filename, resolve, xform):
 
     node_check(root, False, False)
 
-    if xform:
-        file_to_game = file_to_game_in_folder(os.path.dirname(filename))
-        root = xform_apply_to_tree(root, file_to_game, False)
+    if resolve or xform:
+        if resolve:
+            resolve_file_to_game = file_to_game_in_folder(os.path.dirname(filename))
+        else:
+            resolve_file_to_game = None
 
-        node_check(root, True, True)
+        root = xform_apply_to_tree(root, resolve_file_to_game, xform, False)
+
+        node_check(root, resolve, xform)
 
     return Game(name, root)
