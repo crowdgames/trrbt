@@ -1551,7 +1551,10 @@ class TRRBTEditor {
         } else {
             let gameExport = deepcopyobj(this.game);
             this.clearNodeDispid(gameExport.tree);
-            const text = JSON.stringify(gameExport);
+            let text = JSON.stringify(gameExport);
+            text = text.replace(/[\u007F-\uFFFF]/g, function(chr) {
+                return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
+            });
             navigator.clipboard.writeText(text).then(function() {
                 alert('Game exported to clipboard.');
             }, function(err) {
