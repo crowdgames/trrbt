@@ -49,6 +49,41 @@ const EDT_XNODE_PROTOTYPES = [
     { type:'x-link', nid:'', target:'' },
 ];
 
+const EDT_NODE_HELP = {
+    'player': {color:[0,0,1], help:'If any LHS of any child matches, given player can choose which RHS rewrite to apply. Succeeds if there were any matches, otherwise, fails.'},
+
+    'win': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+    'lose': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+    'draw': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+
+    'order': {color:[1,1,0], help:'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.'},
+    'all': {color:[1,1,0], help:'Runs children in order, until any child fails. Fails if any child fails, otherwise succeeds.'},
+    'none': {color:[1,1,0], help:'Runs children in order, until any child succeeds. Fails if any child succeeds, otherwise succeeds.'},
+    'random-try': {color:[1,1,0], help:'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.'},
+    'loop-until-all': {color:[1,1,0], help:'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.'},
+    'loop-times': {color:[1,1,0], help:'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.'},
+
+    'rewrite': {color:[0,1,0], help:'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.'},
+    'set-board': {color:[0,1,0], help:'Sets the board. Always succeeds.'},
+    'append-rows': {color:[0,1,0], help:'Appends a new row to the board. Always succeeds.'},
+    'append-cols': {color:[0,1,0], help:'Appends a new column the board. Always succeeds.'},
+    'layer-template': {color:[0,1,0], help:'Creates a new layer with the given name filled with the given tile. Always succeeds.'},
+
+    'match': {color:[0,1,1], help:'Succeeds if pattern matches current board, otherwise fails.'},
+
+    'x-ident': {color:[1,1,1], help:''},
+    'x-mirror': {color:[1,1,1], help:''},
+    'x-skew': {color:[1,1,1], help:''},
+    'x-rotate': {color:[1,1,1], help:''},
+    'x-spin': {color:[1,1,1], help:''},
+    'x-flip-only': {color:[1,1,1], help:''},
+    'x-swap-only': {color:[1,1,1], help:''},
+    'x-replace-only': {color:[1,1,1], help:''},
+
+    'x-link': {color:[1,1,1], help:''},
+    'x-file': {color:[1,1,1], help:''}
+}
+
 const EDT_PROP_NAMES = {
     nid: 'node id',
     file: 'file name',
@@ -177,21 +212,10 @@ class TRRBTEditor {
         const lt = sel ? 'dd' : 'cc';
         const dk = sel ? 'bb' : 'aa';
 
-        if (type === 'player') {
-            return '#' + dk + dk + lt;
-        } else if (['win', 'lose', 'draw'].indexOf(type) >= 0) {
-            return '#' + lt + dk + dk;
-        } else if (['rewrite', 'set-board', 'layer-template', 'append-rows', 'append-cols'].indexOf(type) >= 0) {
-            return '#' + dk + lt + dk;
-        } else if (['match'].indexOf(type) >= 0) {
-            return '#' + dk + lt + lt;
-        } else if (['display-board'].indexOf(type) >= 0) {
-            return '#' + dk + dk + dk;
-        } else if (type.startsWith('x-')) {
-            return '#' + lt + lt + lt;
-        } else {
-            return '#' + lt + lt + dk;
-        }
+        const help = EDT_NODE_HELP[type];
+        const clr = help.color;
+
+        return '#' + (clr[0] ? lt : dk) + (clr[1] ? lt : dk) + (clr[2] ? lt : dk);
     }
 
     onLoad() {
@@ -1195,6 +1219,9 @@ class TRRBTEditor {
 
             appendButton(ed, 'Undo', bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', bind0(this, 'onRedo'));
+            appendText(ed, ' ', false, false);
+            appendButton(ed, 'Hrz/Vrt', bind0(this, 'onHrzVrt'));
+            appendText(ed, ' ', false, false);
             appendButton(ed, 'Import', bind0(this, 'onImport'));
             appendButton(ed, 'Export', bind0(this, 'onExport'));
             appendBr(ed);
@@ -1342,12 +1369,18 @@ class TRRBTEditor {
                             if (node.type === 'player' && proto.type !== 'rewrite') {
                                 // pass
                             } else {
-                                appendButton(td1, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                                const clr = this.nodeColor(proto.type, false);
+                                const help_str = EDT_NODE_HELP[proto.type].help;
+                                appendButton(td1, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
+                                appendButton(td1, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), clr)
                                 appendBr(td1);
                             }
                         }
                         if (ii < EDT_XNODE_PROTOTYPES.length) {
                             const proto = EDT_XNODE_PROTOTYPES[ii];
+                            const clr = this.nodeColor(proto.type, false);
+                            const help_str = EDT_NODE_HELP[proto.type].help;
+                            appendButton(td2, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
                             appendButton(td2, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
                             appendBr(td2);
                         }
@@ -1516,6 +1549,16 @@ class TRRBTEditor {
 
     onRedo() {
         this.undoRedo();
+    }
+
+    onHrzVrt() {
+        this.layout_horizontal = !this.layout_horizontal;
+        this.updatePositionsAndDraw(false);
+
+        if (this.xform_editor !== null) {
+            this.xform_editor.layout_horizontal = this.layout_horizontal;
+            this.xform_editor.updatePositionsAndDraw(false);
+        }
     }
 
     onImport() {
