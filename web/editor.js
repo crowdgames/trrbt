@@ -371,6 +371,10 @@ class TRRBTEditor {
         this.updateNodeIds();
         this.updateXformedTreeStructure();
 
+        if (this.propertyNodes !== null) {
+            this.updatePropertyEditor(this.propertyNodes.node, true);
+        }
+
         if (this.hasEngine()) {
             this.engine.onLoad();
             this.engine.stepManual = true;
@@ -1036,6 +1040,7 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'text';
         input.value = value;
+        input.oninput = ()=>{input.style.backgroundColor = '#ffffdd';};
 
         item.appendChild(label);
         appendBr(item);
@@ -1061,6 +1066,10 @@ class TRRBTEditor {
         const item = document.createElement('li');
         appendText(item, name);
         appendBr(item);
+
+        const span = document.createElement('span');
+        item.appendChild(span);
+
         for (const choice_value of values) {
             const choice_text = (choice_value === '') ? 'none' : choice_value;
             const choice_id = id + '_' + choice_value;
@@ -1071,13 +1080,14 @@ class TRRBTEditor {
             input.type = 'radio';
             input.value = choice_value;
             input.checked = (choice_value === value);
+            input.onclick = ()=>{span.style.backgroundColor = '#ffffdd';};
 
             const label = document.createElement('label');
             label.innerHTML = choice_text;
             label.htmlFor = choice_id;
 
-            item.appendChild(input);
-            item.appendChild(label);
+            span.appendChild(input);
+            span.appendChild(label);
         }
         parent.appendChild(item);
     }
@@ -1137,6 +1147,7 @@ class TRRBTEditor {
         input.name = id;
         input.innerHTML = text;
         input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
+        input.oninput = ()=>{input.style.backgroundColor = '#ffffdd';};
 
         item.appendChild(label)
         appendBr(item)
@@ -1256,7 +1267,7 @@ class TRRBTEditor {
                 }
                 if (this.clipboard !== null) {
                     if (node.hasOwnProperty('children')) {
-                        if (node.type === 'player' && this.clipboard.type !== 'rewrite') {
+                        if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
                             // pass
                         } else {
                             appendButton(ed, 'Paste Subtree', bind1(this, 'onNodePaste', true));
@@ -1366,23 +1377,41 @@ class TRRBTEditor {
                     for (let ii = 0; ii < rows; ++ ii) {
                         if (ii < EDT_NODE_PROTOTYPES.length) {
                             const proto = EDT_NODE_PROTOTYPES[ii];
-                            if (node.type === 'player' && proto.type !== 'rewrite') {
+                            if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
                                 const clr = this.nodeColor(proto.type, false);
                                 const help_str = EDT_NODE_HELP[proto.type].help;
                                 appendButton(td1, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
-                                appendButton(td1, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), clr)
+                                if (proto.hasOwnProperty('children')) {
+                                    if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                                        // pass
+                                    } else {
+                                        appendButton(td1, '\u2193', bind2(this, 'onNodeAddChild', proto.type, true), clr)
+                                    }
+                                }
+                                appendButton(td1, 'Add ' + proto.type, bind2(this, 'onNodeAddChild', proto.type, false), clr)
                                 appendBr(td1);
                             }
                         }
                         if (ii < EDT_XNODE_PROTOTYPES.length) {
                             const proto = EDT_XNODE_PROTOTYPES[ii];
-                            const clr = this.nodeColor(proto.type, false);
-                            const help_str = EDT_NODE_HELP[proto.type].help;
-                            appendButton(td2, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
-                            appendButton(td2, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
-                            appendBr(td2);
+                            if (node.type === 'player' && !can_be_player_children([proto])) {
+                                // pass
+                            } else {
+                                const clr = this.nodeColor(proto.type, false);
+                                const help_str = EDT_NODE_HELP[proto.type].help;
+                                appendButton(td2, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
+                                if (proto.hasOwnProperty('children')) {
+                                    if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                                        // pass
+                                    } else {
+                                        appendButton(td2, '\u2193', bind2(this, 'onNodeAddChild', proto.type, true), clr)
+                                    }
+                                }
+                                appendButton(td2, 'Add ' + proto.type, bind2(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                                appendBr(td2);
+                            }
                         }
                     }
                 }
@@ -1516,10 +1545,16 @@ class TRRBTEditor {
         return null;
     }
 
-    onNodeAddChild(type) {
+    onNodeAddChild(type, reparent) {
         let node = this.propertyNodes.node;
 
-        node.children.push(deepcopyobj(this.getNodePrototype(type)));
+        let new_node = deepcopyobj(this.getNodePrototype(type));
+        if (reparent) {
+            new_node.children = node.children;
+            node.children = [new_node];
+        } else {
+            node.children.push(new_node);
+        }
         this.updateTreeStructureAndDraw(false, false);
     }
 
