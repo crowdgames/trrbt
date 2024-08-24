@@ -1518,6 +1518,7 @@ class TRRBTEditor {
                     parent.children.splice(index, 1);
                 }
                 this.updateTreeStructureAndDraw(false, false);
+                this.updatePropertyEditor(null, true);
             }
         }
     }
