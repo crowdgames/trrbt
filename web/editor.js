@@ -1050,8 +1050,11 @@ class TRRBTEditor {
     }
 
     parseTextProperty(id, intOnly) {
-        const value = document.getElementById(id).value;
-        if (intOnly && value != '') {
+        let value = document.getElementById(id).value;
+        value = value.trim();
+        if (value.match(/\s+/) !== null) {
+            return {ok:false, error:"Cannot have spaces"};
+        } else if (intOnly && value != '') {
             const asInt = parseInt(value, 10);
             if (isNaN(asInt) || asInt < 1 || asInt > 100) {
                 return {ok:false, error:"Must be an integer between 1 and 100"};
@@ -1068,6 +1071,7 @@ class TRRBTEditor {
         appendBr(item);
 
         const span = document.createElement('span');
+        span.id = id;
         item.appendChild(span);
 
         for (const choice_value of values) {
@@ -1107,12 +1111,8 @@ class TRRBTEditor {
     }
 
     parseListProperty(id) {
-        const result = this.parseTextProperty(id, false);
-        if (!result.ok) {
-            return result;
-        } else {
-            return {ok:true, value:result.value.split(/\s+/)};
-        }
+        let value = document.getElementById(id).value;
+        return {ok:true, value:value.split(/\s+/)};
     }
 
     appendPatternProperty(parent, id, name, value, tileSize) {
@@ -1437,28 +1437,32 @@ class TRRBTEditor {
         let node = this.propertyNodes.node;
 
         let new_props = new Map();
+        let alert_strs = [];
 
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             if (node.hasOwnProperty(propid)) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
-                    alert('Error saving ' + EDT_PROP_NAMES[propid] + '.\n' + result.error);
-                    return;
+                    document.getElementById('prop_' + propid).style.backgroundColor = '#ffdddd';
+                    alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid] + '.\n' + result.error);
+                } else {
+                    new_props.set(propid, result.value);
                 }
-                new_props.set(propid, result.value);
             }
         }
 
-        if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
-            if (!new_props.has('lhs') && new_props.has('rhs')) {
-                alert('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + 'Missing one.');
-                return;
-            }
+        if (new_props.has('lhs') && new_props.has('rhs')) {
             let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
             if (!result.ok) {
-                alert('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
-                return;
+                document.getElementById('prop_lhs').style.backgroundColor = '#ffdddd';
+                document.getElementById('prop_rhs').style.backgroundColor = '#ffdddd';
+                alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
             }
+        }
+
+        if (alert_strs.length > 0) {
+            alert(alert_strs.join('\n\n'));
+            return;
         }
 
         for (let [propid, value] of new_props.entries()) {
