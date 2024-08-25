@@ -1454,8 +1454,16 @@ class TRRBTEditor {
         if (new_props.has('lhs') && new_props.has('rhs')) {
             let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
             if (!result.ok) {
-                document.getElementById('prop_lhs').style.backgroundColor = '#ffdddd';
-                document.getElementById('prop_rhs').style.backgroundColor = '#ffdddd';
+                let lhs = document.getElementById('prop_lhs');
+                let rhs = document.getElementById('prop_rhs');
+                lhs.style.backgroundColor = '#ffdddd';
+                rhs.style.backgroundColor = '#ffdddd';
+                let reset_colors = ()=> {
+                    lhs.style.backgroundColor = '#ffffdd';
+                    rhs.style.backgroundColor = '#ffffdd';
+                }
+                lhs.oninput = reset_colors;
+                rhs.oninput = reset_colors;
                 alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
             }
         }
