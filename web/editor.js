@@ -72,6 +72,7 @@ const EDT_NODE_HELP = {
     'append-rows': {color:[0,1,0], help:'Appends a new row to the board. Always succeeds.'},
     'append-cols': {color:[0,1,0], help:'Appends a new column the board. Always succeeds.'},
     'layer-template': {color:[0,1,0], help:'Creates a new layer with the given name filled with the given tile. Always succeeds.'},
+    'display-board': {color:[0,1,0], help:'Causes the board to be displayed. Always succeeds.'},
 
     'match': {color:[0,1,1], help:'Succeeds if pattern matches current board, otherwise fails.'},
 
@@ -1272,6 +1273,11 @@ class TRRBTEditor {
                 if (parent !== null) {
                     appendButton(ed, 'Move Earlier', bind1(this, 'onNodeShift', true));
                     appendButton(ed, 'Move Later', bind1(this, 'onNodeShift', false));
+                    if (node.type === 'player') {
+                        // pass
+                    } else if (node.hasOwnProperty('children')) {
+                        appendButton(ed, 'Swap with Parent', bind0(this, 'onNodeSwapUp'));
+                    }
                 }
                 appendBr(ed);
                 appendBr(ed);
@@ -1608,6 +1614,31 @@ class TRRBTEditor {
                     this.updateTreeStructureAndDraw(false, false);
                 }
             }
+        }
+    }
+
+    onNodeSwapUp() {
+        let node = this.propertyNodes.node;
+        let parent = this.propertyNodes.parent;
+
+        function reassignnode(nodeto, nodefrom) {
+            for (const prop of Object.getOwnPropertyNames(nodeto)) {
+                if (prop !== 'children') {
+                    delete nodeto[prop];
+                }
+            }
+            for (const prop of Object.getOwnPropertyNames(nodefrom)) {
+                if (prop !== 'children') {
+                    nodeto[prop] = nodefrom[prop];
+                }
+            }
+        }
+
+        if (parent !== null) {
+            const tmp = shallowcopyobj(parent);
+            reassignnode(parent, node);
+            reassignnode(node, tmp);
+            this.updateTreeStructureAndDraw(false, false);
         }
     }
 
