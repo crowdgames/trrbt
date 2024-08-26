@@ -141,6 +141,7 @@ class TRRBTEditor {
         this.mousePos = null;
         this.mousePos_u = null;
         this.mouseLastTime = null;
+        this.mouseClearProp = null;
         this.xformInv = null;
         this.mouseNode = null;
         this.propertyNodes = null;
@@ -254,6 +255,7 @@ class TRRBTEditor {
         this.mousePos = null;
         this.mousePos_u = null;
         this.mouseLastTime = null;
+        this.mouseClearProp = null;
         this.xformInv = null;
         this.mouseNode = null;
         this.propertyNodes = null;
@@ -1714,6 +1716,9 @@ class TRRBTEditor {
 
         const isDouble = (this.mouseLastTime !== null && mouseTime - this.mouseLastTime <= DOUBLE_CLICK_TIME);
 
+        this.mouseLastTime = mouseTime;
+        this.mouseClearProp = true;
+
         if (this.mouseNode !== null) {
             if (this.propertyEditor === null || (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node)) {
                 if (isDouble) {
@@ -1726,6 +1731,7 @@ class TRRBTEditor {
             }
 
             this.updatePropertyEditor(this.mouseNode, false);
+            this.mouseClearProp = false;
         } else {
             if (isDouble) {
                 this.resetXform();
@@ -1736,11 +1742,7 @@ class TRRBTEditor {
                     this.mouseZoom = this.mousePos;
                 }
             }
-
-            this.updatePropertyEditor(null, false);
         }
-
-        this.mouseLastTime = mouseTime;
 
         evt.preventDefault();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
@@ -1748,6 +1750,10 @@ class TRRBTEditor {
 
     onMouseUp(evt) {
         const mouseButton = evt.button;
+
+        if (this.mouseClearProp) {
+            this.updatePropertyEditor(null, false);
+        }
 
         this.mousePan = null;
         this.mouseZoom = null;
@@ -1768,11 +1774,13 @@ class TRRBTEditor {
             if (this.mousePos !== null) {
                 this.translateXform(mousePos.x - this.mousePos.x, mousePos.y - this.mousePos.y);
                 mousePos = this.xformInv.transformPoint(mousePos_u);
+                this.mouseClearProp = false;
             }
         } else if (this.mouseZoom !== null) {
             if (this.mousePos !== null) {
                 this.zoomAroundXform(this.mouseZoom, 1 + ((mousePos_u.y - this.mousePos_u.y) / 400));
                 mousePos = this.xformInv.transformPoint(mousePos_u);
+                this.mouseClearProp = false;
             }
         } else {
             for (let [dispid, rect] of this.nodeDrawPositions.entries()) {
