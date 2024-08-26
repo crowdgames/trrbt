@@ -1662,6 +1662,25 @@ class TRRBTEditor {
         }
     }
 
+    importGame(game) {
+        copyIntoGame(this.game, game);
+
+        this.mousePan = null;
+        this.mouseZoom = null;
+
+        this.mouseNode = null;
+        this.mousePos_u = null;
+        this.mousePos = null;
+
+        this.updateTreeStructureAndDraw(false, true);
+        this.updatePropertyEditor(this.mouseNode, false);
+
+        this.resetXform();
+        if (this.xform_editor !== null) {
+            this.xform_editor.resetXform();
+        }
+    }
+
     onImport() {
         if (!navigator.clipboard) {
             alert('ERROR: Cannot find clipboard.');
@@ -1670,17 +1689,8 @@ class TRRBTEditor {
             navigator.clipboard.readText().then(function(text) {
                 let gameImport = JSON.parse(text);
                 this_editor.clearNodeDispid(gameImport.tree);
-                copyIntoGame(this_editor.game, gameImport);
 
-                this_editor.mousePan = null;
-                this_editor.mouseZoom = null;
-
-                this_editor.mouseNode = null;
-                this_editor.mousePos_u = null;
-                this_editor.mousePos = null;
-
-                this_editor.updateTreeStructureAndDraw(false, true);
-                this_editor.updatePropertyEditor(this_editor.mouseNode, false);
+                this_editor.importGame(gameImport);
 
                 alert('Game imported from clipboard.');
             }, function(err) {
