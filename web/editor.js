@@ -152,6 +152,8 @@ class TRRBTEditor {
 
         this.layout_horizontal = null;
 
+        this.tooltip = null;
+
         this.engine = null;
 
         this.xform_editor = null;
@@ -237,6 +239,15 @@ class TRRBTEditor {
         this.ctx = this.canvas.getContext('2d');
         this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
+
+        this.tooltip = document.getElementById('tooltip');
+        if (this.tooltip === null) {
+            this.tooltip = document.createElement('div');
+            this.tooltip.id = 'tooltip';
+            this.tooltip.style = 'position:absolute; top:0; left:0; z-index:99; pointer-events:none; width:250px; background-color:lightyellow; outline:3px solid yellow; padding:5px; font-style:italic;';
+            document.body.appendChild(this.tooltip);
+        }
+        this.tooltip.style.display = 'none';
 
         this.undoStack = [];
         this.undoStackPos = -1;
@@ -527,7 +538,11 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('comment') && node.comment != '') {
             texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
-            texts.push({type:EDT_TEXT_LINE,  data:node.comment});
+            if (node.comment.length > 30) {
+                texts.push({type:EDT_TEXT_LINE,  data:node.comment.substring(0, 27) + '...'});
+            } else {
+                texts.push({type:EDT_TEXT_LINE,  data:node.comment});
+            }
             texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
         }
 
@@ -900,6 +915,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.60 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
             ctx.lineTo(nx + 0.40 * nw, ny + 0.00 * nh);
+            ctx.closePath();
             ctx.fill();
         } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
             ctx.beginPath();
@@ -912,6 +928,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.75 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.lineTo(nx + 0.25 * nw, ny + 0.00 * nh);
+            ctx.closePath();
             ctx.fill();
         } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
@@ -926,10 +943,12 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 1.00 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
             ctx.lineTo(nx + 0.10 * nw, ny + 0.00 * nh);
+            ctx.closePath();
             ctx.fill();
         } else {
             ctx.beginPath();
             ctx.ellipse(nx + 0.5 * nw, ny + 0.5 * nh, 0.5 * nw, 0.5 * nh, 0, 0, TAU);
+            ctx.closePath();
             ctx.fill();
         }
 
@@ -978,6 +997,12 @@ class TRRBTEditor {
                                    texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
+        }
+
+        if (node.hasOwnProperty('comment') && node.comment != '') {
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = 'yellow';
+            ctx.stroke();
         }
 
         if (stackNodes.has(node.dispid)) {
@@ -1804,6 +1829,15 @@ class TRRBTEditor {
         this.mousePos_u = mousePos_u;
         this.mousePos = mousePos;
 
+        if (this.mouseNode && this.mouseNode.hasOwnProperty('comment') && this.mouseNode['comment'] !== '') {
+            this.tooltip.style.display = 'block';
+            this.tooltip.style.left = (evt.pageX) + 'px';
+            this.tooltip.style.top = (evt.pageY + 15) + 'px';
+            this.tooltip.innerHTML = this.mouseNode['comment'];
+        } else {
+            this.tooltip.style.display = 'none';
+        }
+
         evt.preventDefault();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
@@ -1815,6 +1849,8 @@ class TRRBTEditor {
         this.mouseNode = null;
         this.mousePos_u = null;
         this.mousePos = null;
+
+        this.tooltip.style.display = 'none';
 
         evt.preventDefault();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
