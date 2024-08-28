@@ -392,12 +392,15 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                 }
             }
         }
+        return null;
     }
 
     if (!apply_xform) {
         if (['x-file'].indexOf(ntype) >= 0) {
             const linked_nodes = get_link_or_file_nodes();
-            node.children = linked_nodes;
+            if (linked_nodes !== null) {
+                node.children = linked_nodes;
+            }
         }
         ret_nodes.push(node)
 
@@ -425,7 +428,9 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
 
         if (['x-link', 'x-file'].indexOf(ntype) >= 0) {
             const linked_nodes = get_link_or_file_nodes();
-            ret_nodes.push(...linked_nodes);
+            if (linked_nodes !== null) {
+                ret_nodes.push(...linked_nodes);
+            }
         } else if (['x-ident', 'x-prune', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip-only', 'x-swap-only', 'x-replace-only'].indexOf(ntype) >= 0) {
             let fn = null;
             if (ntype === 'x-ident') {

@@ -24,16 +24,16 @@ out:
 	mkdir -p out
 
 out/%.pdf: out/%.gv | out
-	dot $< -Tpdf -o $@
+	dot $< -o $@ -Tpdf
 
 out/%.png: out/%.gv | out
-	dot $< -Gbgcolor=transparent -Gdpi=300 -Tpng -o $@
+	dot $< -o $@ -Gbgcolor=transparent -Gdpi=300 -Tpng
 
 out/%-unxform.gv: games/%.yaml yaml2bt.py util.py | out
-	python yaml2bt.py --resolve $< > $@
+	python yaml2bt.py $< --out $@ --resolve
 
 out/%-xform.gv: games/%.yaml yaml2bt.py util.py | out
-	python yaml2bt.py --resolve --xform $< > $@
+	python yaml2bt.py $< --out $@ --resolve --xform
 
 clean:
 	$(RMRF) out
