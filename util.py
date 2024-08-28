@@ -538,14 +538,15 @@ def game_print_gv(game):
 
     node_clear_ids(game.tree)
 
-    print('digraph G {')
-    print(f'  graph [ordering="out", margin="0"];')
-    print(f'  _NAME [shape="component", label=<{game.name}>, style="filled", fillcolor="#cccccc"];')
-    for line in node_lines:
-        print(line)
-    for line in edge_lines:
-        print(line)
-    print('}')
+    lines = []
+    lines.append(f'digraph G {{')
+    lines.append(f'  graph [ordering="out", margin="0"];')
+    lines.append(f'  _NAME [shape="component", label=<{game.name}>, style="filled", fillcolor="#cccccc"];')
+    lines += node_lines
+    lines += edge_lines
+    lines.append(f'}}')
+
+    return '\n'.join(lines) + '\n'
 
 def game_print_json(game):
     print(json.dumps({'name':game.name, 'tree':game.tree}))
