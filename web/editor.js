@@ -13,43 +13,87 @@ const EDT_TEXT_LINE       = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
 const EDT_TEXT_RECT_END   = 4;
 
+const EDT_PARSE_TEXT_INT    = 0;
+const EDT_PARSE_TEXT_WORD   = 1;
+const EDT_PARSE_TEXT_TEXT   = 2;
+
 const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type:'player', nid:'', children:[], pid:'' },
+    { type:'player', comment:'', nid:'', children:[], pid:'' },
 
-    { type:'win', nid:'', children:[], pid:'' },
-    { type:'lose', nid:'', children:[], pid:'' },
-    { type:'draw', nid:'', children:[] },
+    { type:'win', comment:'', nid:'', children:[], pid:'' },
+    { type:'lose', comment:'', nid:'', children:[], pid:'' },
+    { type:'draw', comment:'', nid:'', children:[] },
 
-    { type:'order', nid:'', children:[] },
-    { type:'all', nid:'', children:[] },
-    { type:'none', nid:'', children:[] },
-    { type:'random-try', nid:'', children:[] },
-    { type:'loop-until-all', nid:'', children:[] },
-    { type:'loop-times', nid:'', children:[], times:1 },
+    { type:'order', comment:'', nid:'', children:[] },
+    { type:'all', comment:'', nid:'', children:[] },
+    { type:'none', comment:'', nid:'', children:[] },
+    { type:'random-try', comment:'', nid:'', children:[] },
+    { type:'loop-until-all', comment:'', nid:'', children:[] },
+    { type:'loop-times', comment:'', nid:'', children:[], times:1 },
 
-    { type:'rewrite', nid:'', button:'', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
-    { type:'set-board', nid:'', pattern:EDT_EMPTY_PATTERN },
-    { type:'layer-template', nid:'', layer:'', with:'' },
+    { type:'rewrite', comment:'', nid:'', button:'', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
+    { type:'set-board', comment:'', nid:'', pattern:EDT_EMPTY_PATTERN },
+    { type:'layer-template', comment:'', nid:'', layer:'', with:'' },
 
     { type:'match', pattern:EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type:'x-ident', nid:'', children:[] },
-    { type:'x-mirror', nid:'', children:[] },
-    { type:'x-skew', nid:'', children:[] },
-    { type:'x-rotate', nid:'', children:[] },
-    { type:'x-spin', nid:'', children:[] },
-    { type:'x-flip-only', nid:'', children:[] },
-    { type:'x-swap-only', nid:'', children:[], what:'', with:'' },
-    { type:'x-replace-only', nid:'', children:[], what:'', withs:'' },
-    { type:'x-link', nid:'', target:'' },
+    { type:'x-ident', comment:'', nid:'', children:[] },
+    { type:'x-mirror', comment:'', nid:'', children:[] },
+    { type:'x-skew', comment:'', nid:'', children:[] },
+    { type:'x-rotate', comment:'', nid:'', children:[] },
+    { type:'x-spin', comment:'', nid:'', children:[] },
+    { type:'x-flip-only', comment:'', nid:'', children:[] },
+    { type:'x-swap-only', comment:'', nid:'', children:[], what:'', with:'' },
+    { type:'x-replace-only', comment:'', nid:'', children:[], what:'', withs:'' },
+    { type:'x-link', comment:'', nid:'', target:'' },
 ];
 
+const EDT_NODE_HELP = {
+    'player': {color:[0,0,1], help:'If any LHS of any child matches, given player can choose which RHS rewrite to apply. Succeeds if there were any matches, otherwise, fails.'},
+
+    'win': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+    'lose': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+    'draw': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+
+    'order': {color:[1,1,0], help:'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.'},
+    'all': {color:[1,1,0], help:'Runs children in order, until any child fails. Fails if any child fails, otherwise succeeds.'},
+    'none': {color:[1,1,0], help:'Runs children in order, until any child succeeds. Fails if any child succeeds, otherwise succeeds.'},
+    'random-try': {color:[1,1,0], help:'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.'},
+    'loop-until-all': {color:[1,1,0], help:'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.'},
+    'loop-times': {color:[1,1,0], help:'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.'},
+
+    'rewrite': {color:[0,1,0], help:'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.'},
+    'set-board': {color:[0,1,0], help:'Sets the board. Always succeeds.'},
+    'append-rows': {color:[0,1,0], help:'Appends a new row to the board. Always succeeds.'},
+    'append-cols': {color:[0,1,0], help:'Appends a new column the board. Always succeeds.'},
+    'layer-template': {color:[0,1,0], help:'Creates a new layer with the given name filled with the given tile. Always succeeds.'},
+    'display-board': {color:[0,1,0], help:'Causes the board to be displayed. Always succeeds.'},
+
+    'match': {color:[0,1,1], help:'Succeeds if pattern matches current board, otherwise fails.'},
+
+    'x-ident': {color:[1,1,1], help:''},
+    'x-mirror': {color:[1,1,1], help:''},
+    'x-skew': {color:[1,1,1], help:''},
+    'x-rotate': {color:[1,1,1], help:''},
+    'x-spin': {color:[1,1,1], help:''},
+    'x-flip-only': {color:[1,1,1], help:''},
+    'x-swap-only': {color:[1,1,1], help:''},
+    'x-replace-only': {color:[1,1,1], help:''},
+
+    'x-prune': {color:[1,1,1], help:''},
+    'x-unroll-replace': {color:[1,1,1], help:''},
+
+    'x-link': {color:[1,1,1], help:''},
+    'x-file': {color:[1,1,1], help:''}
+}
+
 const EDT_PROP_NAMES = {
+    comment: 'comment',
     nid: 'node id',
     file: 'file name',
     target: 'target id',
@@ -97,6 +141,7 @@ class TRRBTEditor {
         this.mousePos = null;
         this.mousePos_u = null;
         this.mouseLastTime = null;
+        this.mouseClearProp = null;
         this.xformInv = null;
         this.mouseNode = null;
         this.propertyNodes = null;
@@ -106,6 +151,8 @@ class TRRBTEditor {
         this.collapsedNodes = null;
 
         this.layout_horizontal = null;
+
+        this.tooltip = null;
 
         this.engine = null;
 
@@ -177,21 +224,10 @@ class TRRBTEditor {
         const lt = sel ? 'dd' : 'cc';
         const dk = sel ? 'bb' : 'aa';
 
-        if (type === 'player') {
-            return '#' + dk + dk + lt;
-        } else if (['win', 'lose', 'draw'].indexOf(type) >= 0) {
-            return '#' + lt + dk + dk;
-        } else if (['rewrite', 'set-board', 'layer-template', 'append-rows', 'append-cols'].indexOf(type) >= 0) {
-            return '#' + dk + lt + dk;
-        } else if (['match'].indexOf(type) >= 0) {
-            return '#' + dk + lt + lt;
-        } else if (['display-board'].indexOf(type) >= 0) {
-            return '#' + dk + dk + dk;
-        } else if (type.startsWith('x-')) {
-            return '#' + lt + lt + lt;
-        } else {
-            return '#' + lt + lt + dk;
-        }
+        const help = EDT_NODE_HELP[type];
+        const clr = help.color;
+
+        return '#' + (clr[0] ? lt : dk) + (clr[1] ? lt : dk) + (clr[2] ? lt : dk);
     }
 
     onLoad() {
@@ -203,6 +239,15 @@ class TRRBTEditor {
         this.ctx = this.canvas.getContext('2d');
         this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
+
+        this.tooltip = document.getElementById('tooltip');
+        if (this.tooltip === null) {
+            this.tooltip = document.createElement('div');
+            this.tooltip.id = 'tooltip';
+            this.tooltip.style = 'position:absolute; top:0; left:0; z-index:99; pointer-events:none; width:250px; background-color:lightyellow; outline:3px solid yellow; padding:5px; font-style:italic;';
+            document.body.appendChild(this.tooltip);
+        }
+        this.tooltip.style.display = 'none';
 
         this.undoStack = [];
         this.undoStackPos = -1;
@@ -221,6 +266,7 @@ class TRRBTEditor {
         this.mousePos = null;
         this.mousePos_u = null;
         this.mouseLastTime = null;
+        this.mouseClearProp = null;
         this.xformInv = null;
         this.mouseNode = null;
         this.propertyNodes = null;
@@ -346,6 +392,10 @@ class TRRBTEditor {
 
         this.updateNodeIds();
         this.updateXformedTreeStructure();
+
+        if (this.propertyNodes !== null) {
+            this.updatePropertyEditor(this.propertyNodes.node, true);
+        }
 
         if (this.hasEngine()) {
             this.engine.onLoad();
@@ -485,6 +535,16 @@ class TRRBTEditor {
         texts.push({type:EDT_TEXT_FONT,  data:'10px sans-serif'});
 
         //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
+
+        if (node.hasOwnProperty('comment') && node.comment != '') {
+            texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
+            if (node.comment.length > 30) {
+                texts.push({type:EDT_TEXT_LINE,  data:node.comment.substring(0, 27) + '...'});
+            } else {
+                texts.push({type:EDT_TEXT_LINE,  data:node.comment});
+            }
+            texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
+        }
 
         if (node.hasOwnProperty('nid') && node.nid != '') {
             texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['nid'] + ': ' + node.nid});
@@ -855,6 +915,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.60 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
             ctx.lineTo(nx + 0.40 * nw, ny + 0.00 * nh);
+            ctx.closePath();
             ctx.fill();
         } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
             ctx.beginPath();
@@ -867,6 +928,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.75 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.lineTo(nx + 0.25 * nw, ny + 0.00 * nh);
+            ctx.closePath();
             ctx.fill();
         } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
@@ -881,10 +943,12 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 1.00 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
             ctx.lineTo(nx + 0.10 * nw, ny + 0.00 * nh);
+            ctx.closePath();
             ctx.fill();
         } else {
             ctx.beginPath();
             ctx.ellipse(nx + 0.5 * nw, ny + 0.5 * nh, 0.5 * nw, 0.5 * nh, 0, 0, TAU);
+            ctx.closePath();
             ctx.fill();
         }
 
@@ -935,6 +999,12 @@ class TRRBTEditor {
             }
         }
 
+        if (node.hasOwnProperty('comment') && node.comment != '') {
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = 'yellow';
+            ctx.stroke();
+        }
+
         if (stackNodes.has(node.dispid)) {
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#222222';
@@ -959,8 +1029,8 @@ class TRRBTEditor {
     updateCanvasSize(desiredWidth, desiredHeight) {
         this.canvas.width = desiredWidth * PIXEL_RATIO;
         this.canvas.height = desiredHeight * PIXEL_RATIO;
-        this.canvas.style.width = desiredWidth + "px";
-        this.canvas.style.height = desiredHeight + "px";
+        this.canvas.style.width = desiredWidth + 'px';
+        this.canvas.style.height = desiredHeight + 'px';
         this.resetXform();
     }
 
@@ -1012,6 +1082,7 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'text';
         input.value = value;
+        input.oninput = ()=>{input.style.backgroundColor = '#ffffdd';};
 
         item.appendChild(label);
         appendBr(item);
@@ -1020,23 +1091,32 @@ class TRRBTEditor {
         parent.appendChild(item);
     }
 
-    parseTextProperty(id, intOnly) {
-        const value = document.getElementById(id).value;
-        if (intOnly && value != '') {
-            const asInt = parseInt(value, 10);
-            if (isNaN(asInt) || asInt < 1 || asInt > 100) {
-                return {ok:false, error:"Must be an integer between 1 and 100"};
+    parseTextProperty(id, how) {
+        let value = document.getElementById(id).value;
+        value = value.trim();
+        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
+            if (value.match(/\s+/) !== null) {
+                return {ok:false, error:'Cannot have spaces'};
+            } else if (how === EDT_PARSE_TEXT_INT && value != '') {
+                const asInt = parseInt(value, 10);
+                if (isNaN(asInt) || asInt < 1 || asInt > 100) {
+                    return {ok:false, error:'Must be an integer between 1 and 100'};
+                }
+                return {ok:true, value:asInt};
             }
-            return {ok:true, value:asInt};
-        } else {
-            return {ok:true, value:value};
         }
+        return {ok:true, value:value};
     }
 
     appendChoiceProperty(parent, id, name, value, values) {
         const item = document.createElement('li');
         appendText(item, name);
         appendBr(item);
+
+        const span = document.createElement('span');
+        span.id = id;
+        item.appendChild(span);
+
         for (const choice_value of values) {
             const choice_text = (choice_value === '') ? 'none' : choice_value;
             const choice_id = id + '_' + choice_value;
@@ -1047,13 +1127,14 @@ class TRRBTEditor {
             input.type = 'radio';
             input.value = choice_value;
             input.checked = (choice_value === value);
+            input.onclick = ()=>{span.style.backgroundColor = '#ffffdd';};
 
             const label = document.createElement('label');
             label.innerHTML = choice_text;
             label.htmlFor = choice_id;
 
-            item.appendChild(input);
-            item.appendChild(label);
+            span.appendChild(input);
+            span.appendChild(label);
         }
         parent.appendChild(item);
     }
@@ -1073,12 +1154,8 @@ class TRRBTEditor {
     }
 
     parseListProperty(id) {
-        const result = this.parseTextProperty(id, false);
-        if (!result.ok) {
-            return result;
-        } else {
-            return {ok:true, value:result.value.split(/\s+/)};
-        }
+        let value = document.getElementById(id).value;
+        return {ok:true, value:value.split(/\s+/)};
     }
 
     appendPatternProperty(parent, id, name, value, tileSize) {
@@ -1113,6 +1190,7 @@ class TRRBTEditor {
         input.name = id;
         input.innerHTML = text;
         input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
+        input.oninput = ()=>{input.style.backgroundColor = '#ffffdd';};
 
         item.appendChild(label)
         appendBr(item)
@@ -1195,6 +1273,9 @@ class TRRBTEditor {
 
             appendButton(ed, 'Undo', bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', bind0(this, 'onRedo'));
+            appendText(ed, ' ', false, false);
+            appendButton(ed, 'Hrz/Vrt', bind0(this, 'onHrzVrt'));
+            appendText(ed, ' ', false, false);
             appendButton(ed, 'Import', bind0(this, 'onImport'));
             appendButton(ed, 'Export', bind0(this, 'onExport'));
             appendBr(ed);
@@ -1219,6 +1300,11 @@ class TRRBTEditor {
                 if (parent !== null) {
                     appendButton(ed, 'Move Earlier', bind1(this, 'onNodeShift', true));
                     appendButton(ed, 'Move Later', bind1(this, 'onNodeShift', false));
+                    if (node.type === 'player') {
+                        // pass
+                    } else if (node.hasOwnProperty('children')) {
+                        appendButton(ed, 'Swap with Parent', bind0(this, 'onNodeSwapUp'));
+                    }
                 }
                 appendBr(ed);
                 appendBr(ed);
@@ -1229,7 +1315,7 @@ class TRRBTEditor {
                 }
                 if (this.clipboard !== null) {
                     if (node.hasOwnProperty('children')) {
-                        if (node.type === 'player' && this.clipboard.type !== 'rewrite') {
+                        if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
                             // pass
                         } else {
                             appendButton(ed, 'Paste Subtree', bind1(this, 'onNodePaste', true));
@@ -1255,6 +1341,10 @@ class TRRBTEditor {
 
                 const list = appendList(ed);
 
+                if (node.hasOwnProperty('comment')) {
+                    this.appendTextProperty(list, 'prop_comment', EDT_PROP_NAMES['comment'], node.comment);
+                    anyProperties = true;
+                }
                 if (node.hasOwnProperty('nid')) {
                     this.appendTextProperty(list, 'prop_nid', EDT_PROP_NAMES['nid'], node.nid);
                     anyProperties = true;
@@ -1339,17 +1429,41 @@ class TRRBTEditor {
                     for (let ii = 0; ii < rows; ++ ii) {
                         if (ii < EDT_NODE_PROTOTYPES.length) {
                             const proto = EDT_NODE_PROTOTYPES[ii];
-                            if (node.type === 'player' && proto.type !== 'rewrite') {
+                            if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                appendButton(td1, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                                const clr = this.nodeColor(proto.type, false);
+                                const help_str = EDT_NODE_HELP[proto.type].help;
+                                appendButton(td1, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
+                                if (proto.hasOwnProperty('children')) {
+                                    if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                                        // pass
+                                    } else {
+                                        appendButton(td1, '\u2193', bind2(this, 'onNodeAddChild', proto.type, true), clr)
+                                    }
+                                }
+                                appendButton(td1, 'Add ' + proto.type, bind2(this, 'onNodeAddChild', proto.type, false), clr)
                                 appendBr(td1);
                             }
                         }
                         if (ii < EDT_XNODE_PROTOTYPES.length) {
                             const proto = EDT_XNODE_PROTOTYPES[ii];
-                            appendButton(td2, 'Add ' + proto.type, bind1(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
-                            appendBr(td2);
+                            if (node.type === 'player' && !can_be_player_children([proto])) {
+                                // pass
+                            } else {
+                                const clr = this.nodeColor(proto.type, false);
+                                const help_str = EDT_NODE_HELP[proto.type].help;
+                                appendButton(td2, '?', ()=>{alert(proto.type + ': ' + help_str);}, clr);
+                                if (proto.hasOwnProperty('children')) {
+                                    if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                                        // pass
+                                    } else {
+                                        appendButton(td2, '\u2193', bind2(this, 'onNodeAddChild', proto.type, true), clr)
+                                    }
+                                }
+                                appendButton(td2, 'Add ' + proto.type, bind2(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                                appendBr(td2);
+                            }
                         }
                     }
                 }
@@ -1358,14 +1472,15 @@ class TRRBTEditor {
     }
 
     onNodeSaveProperties() {
-        const SAVE_PROPS = [['nid', bind0(this, 'parseTextProperty'), false],
-                            ['file', bind0(this, 'parseTextProperty'), false],
-                            ['target', bind0(this, 'parseTextProperty'), false],
-                            ['pid', bind0(this, 'parseTextProperty'), false],
-                            ['layer', bind0(this, 'parseTextProperty'), false],
-                            ['times', bind0(this, 'parseTextProperty'), true],
-                            ['what', bind0(this, 'parseTextProperty'), false],
-                            ['with', bind0(this, 'parseTextProperty'), false],
+        const SAVE_PROPS = [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                            ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                            ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                             ['withs', bind0(this, 'parseListProperty'), false],
                             ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
                             ['pattern', bind0(this, 'parsePatternProperty'), undefined],
@@ -1375,28 +1490,40 @@ class TRRBTEditor {
         let node = this.propertyNodes.node;
 
         let new_props = new Map();
+        let alert_strs = [];
 
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             if (node.hasOwnProperty(propid)) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
-                    alert('Error saving ' + EDT_PROP_NAMES[propid] + '.\n' + result.error);
-                    return;
+                    document.getElementById('prop_' + propid).style.backgroundColor = '#ffdddd';
+                    alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid] + '.\n' + result.error);
+                } else {
+                    new_props.set(propid, result.value);
                 }
-                new_props.set(propid, result.value);
             }
         }
 
-        if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
-            if (!new_props.has('lhs') && new_props.has('rhs')) {
-                alert('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + 'Missing one.');
-                return;
-            }
+        if (new_props.has('lhs') && new_props.has('rhs')) {
             let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
             if (!result.ok) {
-                alert('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
-                return;
+                let lhs = document.getElementById('prop_lhs');
+                let rhs = document.getElementById('prop_rhs');
+                lhs.style.backgroundColor = '#ffdddd';
+                rhs.style.backgroundColor = '#ffdddd';
+                let reset_colors = ()=> {
+                    lhs.style.backgroundColor = '#ffffdd';
+                    rhs.style.backgroundColor = '#ffffdd';
+                }
+                lhs.oninput = reset_colors;
+                rhs.oninput = reset_colors;
+                alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
             }
+        }
+
+        if (alert_strs.length > 0) {
+            alert(alert_strs.join('\n\n'));
+            return;
         }
 
         for (let [propid, value] of new_props.entries()) {
@@ -1456,6 +1583,7 @@ class TRRBTEditor {
                     parent.children.splice(index, 1);
                 }
                 this.updateTreeStructureAndDraw(false, false);
+                this.updatePropertyEditor(null, true);
             }
         }
     }
@@ -1483,10 +1611,16 @@ class TRRBTEditor {
         return null;
     }
 
-    onNodeAddChild(type) {
+    onNodeAddChild(type, reparent) {
         let node = this.propertyNodes.node;
 
-        node.children.push(deepcopyobj(this.getNodePrototype(type)));
+        let new_node = deepcopyobj(this.getNodePrototype(type));
+        if (reparent) {
+            new_node.children = node.children;
+            node.children = [new_node];
+        } else {
+            node.children.push(new_node);
+        }
         this.updateTreeStructureAndDraw(false, false);
     }
 
@@ -1510,12 +1644,66 @@ class TRRBTEditor {
         }
     }
 
+    onNodeSwapUp() {
+        let node = this.propertyNodes.node;
+        let parent = this.propertyNodes.parent;
+
+        function reassignnode(nodeto, nodefrom) {
+            for (const prop of Object.getOwnPropertyNames(nodeto)) {
+                if (prop !== 'children') {
+                    delete nodeto[prop];
+                }
+            }
+            for (const prop of Object.getOwnPropertyNames(nodefrom)) {
+                if (prop !== 'children') {
+                    nodeto[prop] = nodefrom[prop];
+                }
+            }
+        }
+
+        if (parent !== null) {
+            const tmp = shallowcopyobj(parent);
+            reassignnode(parent, node);
+            reassignnode(node, tmp);
+            this.updateTreeStructureAndDraw(false, false);
+        }
+    }
+
     onUndo() {
         this.undoUndo();
     }
 
     onRedo() {
         this.undoRedo();
+    }
+
+    onHrzVrt() {
+        this.layout_horizontal = !this.layout_horizontal;
+        this.updatePositionsAndDraw(false);
+
+        if (this.xform_editor !== null) {
+            this.xform_editor.layout_horizontal = this.layout_horizontal;
+            this.xform_editor.updatePositionsAndDraw(false);
+        }
+    }
+
+    importGame(game) {
+        copyIntoGame(this.game, game);
+
+        this.mousePan = null;
+        this.mouseZoom = null;
+
+        this.mouseNode = null;
+        this.mousePos_u = null;
+        this.mousePos = null;
+
+        this.updateTreeStructureAndDraw(false, true);
+        this.updatePropertyEditor(this.mouseNode, false);
+
+        this.resetXform();
+        if (this.xform_editor !== null) {
+            this.xform_editor.resetXform();
+        }
     }
 
     onImport() {
@@ -1526,17 +1714,8 @@ class TRRBTEditor {
             navigator.clipboard.readText().then(function(text) {
                 let gameImport = JSON.parse(text);
                 this_editor.clearNodeDispid(gameImport.tree);
-                copyIntoGame(this_editor.game, gameImport);
 
-                this_editor.mousePan = null;
-                this_editor.mouseZoom = null;
-
-                this_editor.mouseNode = null;
-                this_editor.mousePos_u = null;
-                this_editor.mousePos = null;
-
-                this_editor.updateTreeStructureAndDraw(false, true);
-                this_editor.updatePropertyEditor(this_editor.mouseNode, false);
+                this_editor.importGame(gameImport);
 
                 alert('Game imported from clipboard.');
             }, function(err) {
@@ -1553,7 +1732,7 @@ class TRRBTEditor {
             this.clearNodeDispid(gameExport.tree);
             let text = JSON.stringify(gameExport);
             text = text.replace(/[\u007F-\uFFFF]/g, function(chr) {
-                return "\\u" + ("0000" + chr.charCodeAt(0).toString(16)).substr(-4)
+                return '\\u' + ('0000' + chr.charCodeAt(0).toString(16)).substr(-4)
             });
             navigator.clipboard.writeText(text).then(function() {
                 alert('Game exported to clipboard.');
@@ -1572,6 +1751,9 @@ class TRRBTEditor {
 
         const isDouble = (this.mouseLastTime !== null && mouseTime - this.mouseLastTime <= DOUBLE_CLICK_TIME);
 
+        this.mouseLastTime = mouseTime;
+        this.mouseClearProp = true;
+
         if (this.mouseNode !== null) {
             if (this.propertyEditor === null || (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node)) {
                 if (isDouble) {
@@ -1584,6 +1766,7 @@ class TRRBTEditor {
             }
 
             this.updatePropertyEditor(this.mouseNode, false);
+            this.mouseClearProp = false;
         } else {
             if (isDouble) {
                 this.resetXform();
@@ -1594,11 +1777,7 @@ class TRRBTEditor {
                     this.mouseZoom = this.mousePos;
                 }
             }
-
-            this.updatePropertyEditor(null, false);
         }
-
-        this.mouseLastTime = mouseTime;
 
         evt.preventDefault();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
@@ -1606,6 +1785,10 @@ class TRRBTEditor {
 
     onMouseUp(evt) {
         const mouseButton = evt.button;
+
+        if (this.mouseClearProp) {
+            this.updatePropertyEditor(null, false);
+        }
 
         this.mousePan = null;
         this.mouseZoom = null;
@@ -1626,11 +1809,13 @@ class TRRBTEditor {
             if (this.mousePos !== null) {
                 this.translateXform(mousePos.x - this.mousePos.x, mousePos.y - this.mousePos.y);
                 mousePos = this.xformInv.transformPoint(mousePos_u);
+                this.mouseClearProp = false;
             }
         } else if (this.mouseZoom !== null) {
             if (this.mousePos !== null) {
                 this.zoomAroundXform(this.mouseZoom, 1 + ((mousePos_u.y - this.mousePos_u.y) / 400));
                 mousePos = this.xformInv.transformPoint(mousePos_u);
+                this.mouseClearProp = false;
             }
         } else {
             for (let [dispid, rect] of this.nodeDrawPositions.entries()) {
@@ -1644,6 +1829,15 @@ class TRRBTEditor {
         this.mousePos_u = mousePos_u;
         this.mousePos = mousePos;
 
+        if (this.mouseNode && this.mouseNode.hasOwnProperty('comment') && this.mouseNode['comment'] !== '') {
+            this.tooltip.style.display = 'block';
+            this.tooltip.style.left = (evt.pageX) + 'px';
+            this.tooltip.style.top = (evt.pageY + 15) + 'px';
+            this.tooltip.innerHTML = this.mouseNode['comment'];
+        } else {
+            this.tooltip.style.display = 'none';
+        }
+
         evt.preventDefault();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
@@ -1655,6 +1849,8 @@ class TRRBTEditor {
         this.mouseNode = null;
         this.mousePos_u = null;
         this.mousePos = null;
+
+        this.tooltip.style.display = 'none';
 
         evt.preventDefault();
         window.requestAnimationFrame(bind0(this, 'onDraw'));

@@ -54,6 +54,10 @@ function bind1(obj, fn, arg1) {
     return obj[fn].bind(obj, arg1);
 }
 
+function bind2(obj, fn, arg1, arg2) {
+    return obj[fn].bind(obj, arg1, arg2);
+}
+
 function splitGraphemes(str) {
     return [...SEGMENTER.segment(str)].map(x => x.segment);
 }
@@ -128,7 +132,24 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_nid_to_nod
     }
 }
 
-
+function can_be_player_children(nodes) {
+    for (const node of nodes) {
+        if (node.type === 'rewrite') {
+            // pass
+        } else if (node.type === 'x-file') {
+            return false;
+        } else if (node.type === 'x-link') {
+            return false;
+        } else if (node.type.startsWith('x-')) {
+            if (!can_be_player_children(node.children)) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
 
 function xform_node_shallowequal(node1, node2) {
     const props1 = Object.getOwnPropertyNames(node1);

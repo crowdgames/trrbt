@@ -15,9 +15,7 @@
       var editor_u = new TRRBTEditor(game_u, SEL_getGameTree, 'editorucanvas', 'editordiv');
       var editor_x = new TRRBTEditor(game_x, SEL_getGameTree, 'editorxcanvas', null);
       function onSelectGame(gameSelected) {
-          copyIntoGame(game_u, gameSelected);
-          editor_u.updateTreeStructureAndDraw(false, true);
-          editor_u.updatePropertyEditor(null);
+          editor_u.importGame(gameSelected);
       }
       function onLoad() {
           copyIntoGame(game_u, SEL_startingGame());
@@ -39,6 +37,7 @@
             <td rowspan="2">
               <div id="selectordiv" style="width:400px; height:50px" tabindex="1">
               </div>
+              <hr style="width:25%; margin-left:0"/>
               <div id="editordiv" style="width:400px; height:650px" tabindex="4">
               </div>
             </td>
