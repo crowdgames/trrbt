@@ -58,15 +58,6 @@ function bind2(obj, fn, arg1, arg2) {
     return obj[fn].bind(obj, arg1, arg2);
 }
 
-function splitGraphemes(str) {
-    return [...SEGMENTER.segment(str)].map(x => x.segment);
-}
-
-function charLength(str) {
-    const graphemes = splitGraphemes(str);
-    return graphemes.length;
-}
-
 
 
 function appendText(parent, text, bold, underline) {
@@ -150,6 +141,57 @@ function can_be_player_children(nodes) {
     }
     return true;
 }
+
+
+
+function splitGraphemes(str) {
+    return [...SEGMENTER.segment(str)].map(x => x.segment);
+}
+
+function graphemeLength(str) {
+    const graphemes = splitGraphemes(str);
+    return graphemes.length;
+}
+
+function getTileSize(patterns) {
+    let size = 1;
+    for (const pattern of patterns) {
+        for (const layer of Object.getOwnPropertyNames(pattern)) {
+            for (const row of pattern[layer]) {
+                for (const tile of row) {
+                    size = Math.max(size, graphemeLength(tile));
+                }
+            }
+        }
+    }
+    return size;
+}
+
+function joinRow(row, tileSize, alwaysPad) {
+    let rowStr = '';
+
+    for (let ii = 0; ii < row.length; ++ ii) {
+        const graphemes = splitGraphemes(row[ii]);
+
+        for (const ch of graphemes) {
+            rowStr += ch;
+        }
+
+        if (ii + 1 < row.length || alwaysPad) {
+            for (let jj = graphemes.length; jj < tileSize; ++ jj) {
+                rowStr += ' ';
+            }
+        }
+
+        if (ii + 1 < row.length) {
+            rowStr += ' ';
+        }
+    }
+
+    return rowStr;
+}
+
+
 
 function xform_node_shallowequal(node1, node2) {
     const props1 = Object.getOwnPropertyNames(node1);

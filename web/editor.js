@@ -482,44 +482,6 @@ class TRRBTEditor {
         return anyMoved;
     }
 
-    getTileSize(patterns) {
-        let size = 1;
-        for (const pattern of patterns) {
-            for (const layer of Object.getOwnPropertyNames(pattern)) {
-                for (const row of pattern[layer]) {
-                    for (const tile of row) {
-                        size = Math.max(size, charLength(tile));
-                    }
-                }
-            }
-        }
-        return size;
-    }
-
-    joinRow(row, tileSize, alwaysPad) {
-        let rowStr = '';
-
-        for (let ii = 0; ii < row.length; ++ ii) {
-            const graphemes = splitGraphemes(row[ii]);
-
-            for (const ch of graphemes) {
-                rowStr += ch;
-            }
-
-            if (ii + 1 < row.length || alwaysPad) {
-                for (let jj = graphemes.length; jj < tileSize; ++ jj) {
-                    rowStr += ' ';
-                }
-            }
-
-            if (ii + 1 < row.length) {
-                rowStr += ' ';
-            }
-        }
-
-        return rowStr;
-    }
-
     updateDesiredPositionsTree(nodePositions, nodeTexts, tree) {
         nodePositions.clear();
         nodeTexts.clear();
@@ -588,7 +550,7 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('pattern')) {
             const layers = Object.getOwnPropertyNames(node.pattern);
-            const tileSize = this.getTileSize([node.pattern]);
+            const tileSize = getTileSize([node.pattern]);
 
             for (const layer of layers) {
                 if (layers.length === 1 && layers[0] === 'main') {
@@ -603,9 +565,9 @@ class TRRBTEditor {
                 texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
 
                 for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
-                    const row_text = this.joinRow(node.pattern[layer][ii], tileSize, false);
+                    const row_text = joinRow(node.pattern[layer][ii], tileSize, false);
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charLength(row_text), len:charLength(row_text)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:graphemeLength(row_text), len:graphemeLength(row_text)});
                     }
                     texts.push({type:EDT_TEXT_LINE, data:row_text});
                 }
@@ -638,7 +600,7 @@ class TRRBTEditor {
                 layers.shift('main');
             }
 
-            const tileSize = this.getTileSize(patterns);
+            const tileSize = getTileSize(patterns);
 
             for (const layer of layers) {
                 if (layers.length === 1 && layers[0] === 'main') {
@@ -655,13 +617,13 @@ class TRRBTEditor {
                 const length = node.lhs.hasOwnProperty(layer) ? node.lhs[layer].length : node.rhs[layer].length;
                 for (let ii = 0; ii < length; ++ ii) {
                     const connect = (ii === 0) ? ' → ' : '   ';
-                    let lhs = node.lhs.hasOwnProperty(layer) ? this.joinRow(node.lhs[layer][ii], tileSize, true) : null;
-                    let rhs = node.rhs.hasOwnProperty(layer) ? this.joinRow(node.rhs[layer][ii], tileSize, true) : null;
-                    lhs = (lhs !== null) ? lhs : ' '.repeat(charLength(rhs));
-                    rhs = (rhs !== null) ? rhs : ' '.repeat(charLength(length));
+                    let lhs = node.lhs.hasOwnProperty(layer) ? joinRow(node.lhs[layer][ii], tileSize, true) : null;
+                    let rhs = node.rhs.hasOwnProperty(layer) ? joinRow(node.rhs[layer][ii], tileSize, true) : null;
+                    lhs = (lhs !== null) ? lhs : ' '.repeat(graphemeLength(rhs));
+                    rhs = (rhs !== null) ? rhs : ' '.repeat(graphemeLength(length));
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:charLength(lhs), len:charLength(lhs) + 3 + charLength(rhs)});
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:charLength(lhs) + 3, to:charLength(lhs) + 3 + charLength(rhs), len:charLength(lhs) + 3 + charLength(rhs)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:graphemeLength(lhs), len:graphemeLength(lhs) + 3 + graphemeLength(rhs)});
+                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:graphemeLength(lhs) + 3, to:graphemeLength(lhs) + 3 + graphemeLength(rhs), len:graphemeLength(lhs) + 3 + graphemeLength(rhs)});
                     }
                     texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
                 }
@@ -680,7 +642,7 @@ class TRRBTEditor {
 
         for (const text of texts) {
             if (text.type === EDT_TEXT_LINE) {
-                nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * charLength(text.data));
+                nw = Math.max(nw, 2 * EDT_NODE_PADDING + EDT_FONT_CHAR_SIZE * graphemeLength(text.data));
                 nh += EDT_FONT_LINE_SIZE;
             }
         }
@@ -971,7 +933,7 @@ class TRRBTEditor {
                     if (rects.length == 0) {
                         ctx.fillText(text.data, nx + nw / 2, ny + texty, nw - EDT_NODE_PADDING);
                     } else {
-                        const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * charLength(text.data) / 2);
+                        const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * graphemeLength(text.data) / 2);
                         const width = nw - EDT_NODE_PADDING;
                         let ii = 0;
                         for (const ch of splitGraphemes(text.data)) {
@@ -1170,14 +1132,14 @@ class TRRBTEditor {
             } else {
                 text += ' ' + layer + '\n';
                 rows += 1;
-                cols = Math.max(cols, charLength(layer) + 1);
+                cols = Math.max(cols, graphemeLength(layer) + 1);
             }
 
             for (const row of value[layer]) {
-                const row_text = this.joinRow(row, tileSize, false);
+                const row_text = joinRow(row, tileSize, false);
                 text += row_text + '\n';
                 rows += 1;
-                cols = Math.max(cols, charLength(row_text));
+                cols = Math.max(cols, graphemeLength(row_text));
             }
         }
 
@@ -1386,14 +1348,14 @@ class TRRBTEditor {
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('pattern')) {
-                    const tileSize = this.getTileSize([node.pattern]);
+                    const tileSize = getTileSize([node.pattern]);
                     this.appendPatternProperty(list, 'prop_pattern', EDT_PROP_NAMES['pattern'], node.pattern, tileSize);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                     const hasLHS = node.hasOwnProperty('lhs');
                     const hasRHS = node.hasOwnProperty('rhs');
-                    const tileSize = (hasLHS && hasRHS) ? this.getTileSize([node.lhs, node.rhs]) : (hasLHS ? this.getTileSize([node.lhs]) : this.getTileSize([node.rhs]));
+                    const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                     if (hasLHS) {
                         this.appendPatternProperty(list, 'prop_lhs', EDT_PROP_NAMES['lhs'], node.lhs, tileSize);
                         anyProperties = true;

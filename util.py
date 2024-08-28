@@ -564,8 +564,8 @@ def file_to_game_in_folder(folder):
     def file_to_game(filename):
         global _file_to_game
 
+        filename = f'{folder}/{filename}.yaml'
         if filename not in _file_to_game:
-            filename = f'{folder}/{filename}.yaml'
             if os.path.exists(filename):
                 data = yamlload(filename)
                 _file_to_game[filename] = data[FKEY_TREE]
