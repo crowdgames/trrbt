@@ -876,7 +876,6 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.40 * nw, ny + 1.00 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.60 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
-            ctx.lineTo(nx + 0.40 * nw, ny + 0.00 * nh);
             ctx.closePath();
             ctx.fill();
         } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
@@ -889,12 +888,32 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.25 * nw, ny + 1.00 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.75 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
-            ctx.lineTo(nx + 0.25 * nw, ny + 0.00 * nh);
             ctx.closePath();
             ctx.fill();
         } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
+            ctx.fill();
+        } else if (['x-unroll-replace'].indexOf(node.type) >= 0) {
+            ctx.beginPath();
+            ctx.moveTo(nx + 0.00 * nw, ny + 0.00 * nh);
+            ctx.lineTo(nx + 0.33 * nw, ny + 0.05 * nh);
+            ctx.lineTo(nx + 0.67 * nw, ny + 0.00 * nh);
+            ctx.lineTo(nx + 1.00 * nw, ny + 0.05 * nh);
+            ctx.lineTo(nx + 1.00 * nw, ny + 1.00 * nh);
+            ctx.lineTo(nx + 0.67 * nw, ny + 0.95 * nh);
+            ctx.lineTo(nx + 0.33 * nw, ny + 1.00 * nh);
+            ctx.lineTo(nx + 0.00 * nw, ny + 0.95 * nh);
+            ctx.closePath();
+            ctx.fill();
+        } else if (['x-link', 'x-file'].indexOf(node.type) >= 0) {
+            ctx.beginPath();
+            ctx.moveTo(nx + 0.00 * nw, ny + 0.00 * nh);
+            ctx.lineTo(nx + 1.00 * nw, ny + 0.00 * nh);
+            ctx.lineTo(nx + 1.00 * nw, ny + 0.85 * nh);
+            ctx.lineTo(nx + 0.50 * nw, ny + 1.00 * nh);
+            ctx.lineTo(nx + 0.00 * nw, ny + 0.85 * nh);
+            ctx.closePath();
             ctx.fill();
         } else if (node.type.startsWith('x-')) {
             ctx.beginPath();
@@ -904,7 +923,6 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.90 * nw, ny + 1.00 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 1.00 * nh);
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
-            ctx.lineTo(nx + 0.10 * nw, ny + 0.00 * nh);
             ctx.closePath();
             ctx.fill();
         } else {
