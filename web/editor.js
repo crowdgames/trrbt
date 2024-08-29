@@ -594,11 +594,13 @@ class TRRBTEditor {
                 }
                 patterns.push(node.rhs);
             }
+            /*
             const mainIndex = layers.indexOf('main');
             if (mainIndex > 0) {
                 layers.splice(mainIndex, 1);
-                layers.shift('main');
+                layers.unshift('main');
             }
+            */
 
             const tileSize = getTileSize(patterns);
 
