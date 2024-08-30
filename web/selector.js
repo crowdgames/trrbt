@@ -19,6 +19,7 @@ function SEL_onLoad() {
             select.onchange = function() {
                 const game = select.options[select.selectedIndex].value;
                 select.selectedIndex = 0;
+                window.location.hash = game;
                 onSelectGame(GAME_SETUPS[game]);
             };
             div.appendChild(select);
