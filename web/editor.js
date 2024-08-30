@@ -244,7 +244,7 @@ class TRRBTEditor {
         if (this.tooltip === null) {
             this.tooltip = document.createElement('div');
             this.tooltip.id = 'tooltip';
-            this.tooltip.style = 'position:absolute; top:0; left:0; z-index:99; pointer-events:none; width:250px; background-color:lightyellow; outline:3px solid yellow; padding:5px; font-style:italic;';
+            this.tooltip.style = 'position:absolute; top:0; left:0; z-index:99; pointer-events:none; max-width:250px; background-color:lightyellow; outline:3px solid yellow; padding:5px; font-style:italic;';
             document.body.appendChild(this.tooltip);
         }
         this.tooltip.style.display = 'none';
