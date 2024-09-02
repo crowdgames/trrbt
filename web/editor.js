@@ -82,31 +82,31 @@ const EDT_NODE_HELP = {
     'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
     'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
     'x-flip-only': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
-    'x-swap-only': {color:[1,1,1], help:'Swap characters in patterns and player ids, removing original.'},
-    'x-replace-only': {color:[1,1,1], help:'Replace characters in patterns and player ids, removing original.'},
+    'x-swap-only': {color:[1,1,1], help:'Swap characters in patterns and player IDs, removing original.'},
+    'x-replace-only': {color:[1,1,1], help:'Replace characters in patterns and player IDs, removing original.'},
 
     'x-prune': {color:[1,1,1], help:'Remove nodes.'},
     'x-unroll-replace': {color:[1,1,1], help:'Duplicate replaces here as children of an order node.'},
 
-    'x-link': {color:[1,1,1], help:'Link to another node by node id.'},
-    'x-file': {color:[1,1,1], help:'Link to another node by file name and node id.'}
+    'x-link': {color:[1,1,1], help:'Link to another node by node ID.'},
+    'x-file': {color:[1,1,1], help:'Link to another node by file name and node ID.'}
 }
 
 const EDT_PROP_NAMES = {
-    comment: 'comment',
-    nid: 'node id',
-    file: 'file name',
-    target: 'target id',
-    pid: 'player',
-    layer: 'layer',
-    times: 'times',
-    what: 'what',
-    with: 'with',
-    withs: 'withs',
-    button: 'button',
-    pattern: 'pattern',
-    lhs: 'LHS',
-    rhs: 'RHS'
+    comment: {name:'comment', help:'A comment about the node.'},
+    nid: {name:'node ID', help:'ID of node that other nodes can use to refer to it.'},
+    file: {name:'file name', help:'Name of file to link to.'},
+    target: {name:'target ID', help:'Target node ID to link to.'},
+    pid: {name:'player ID', help:'ID of player to make choice.'},
+    layer: {name:'layer', help:'Name of layer to use.'},
+    times: {name:'times', help:'How many times.'},
+    what: {name:'what', help:'Character to be swapped/replaced.'},
+    with: {name:'with', help:'Other tile to use.'},
+    withs: {name:'withs', help:'Space-separated other tiles to use.'},
+    button: {name:'button', help:'Button to press to apply rewrite.'},
+    pattern: {name:'pattern', help:'A tile pattern.'},
+    lhs: {name:'LHS', help:'Left hand side tile pattern of a rewrite rule.'},
+    rhs: {name:'RHS', help:'Right hand side tile pattern of a rewrite rule.'}
 };
 
 
@@ -509,43 +509,43 @@ class TRRBTEditor {
         }
 
         if (node.hasOwnProperty('nid') && node.nid != '') {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['nid'] + ': ' + node.nid});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['nid'].name + ': ' + node.nid});
         }
 
         if (node.hasOwnProperty('file')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['file'] + ': ' + node.file});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['file'].name + ': ' + node.file});
         }
 
         if (node.hasOwnProperty('target')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['target'] + ': ' + node.target});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['target'].name + ': ' + node.target});
         }
 
         if (node.hasOwnProperty('pid')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['pid'] + ': ' + node.pid});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['pid'].name + ': ' + node.pid});
         }
 
         if (node.hasOwnProperty('layer')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['layer'] + ': ' + node.layer});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['layer'].name + ': ' + node.layer});
         }
 
         if (node.hasOwnProperty('times')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['times'] + ': ' + node.times});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['times'].name + ': ' + node.times});
         }
 
         if (node.hasOwnProperty('what')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['what'] + ': ' + node.what});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['what'].name + ': ' + node.what});
         }
 
         if (node.hasOwnProperty('with')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['with'] + ': ' + node.with});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['with'].name + ': ' + node.with});
         }
 
         if (node.hasOwnProperty('withs')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['withs'] + ': ' + node.withs.join(' ')});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['withs'].name + ': ' + node.withs.join(' ')});
         }
 
         if (node.hasOwnProperty('button') && node.button !== '') {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['button'] + ': ' + node.button});
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['button'].name + ': ' + node.button});
         }
 
         if (node.hasOwnProperty('pattern')) {
@@ -1054,11 +1054,12 @@ class TRRBTEditor {
         }
     }
 
-    appendTextProperty(parent, id, name, value) {
+    appendTextProperty(parent, id, name, help, value) {
         const item = document.createElement('li');
         const label = document.createElement('label');
         label.innerHTML = name;
         label.htmlFor = id;
+        label.title = help;
         const input = document.createElement('input');
         input.id = id;
         input.name = id;
@@ -1090,9 +1091,13 @@ class TRRBTEditor {
         return {ok:true, value:value};
     }
 
-    appendChoiceProperty(parent, id, name, value, values) {
+    appendChoiceProperty(parent, id, name, help, value, values) {
         const item = document.createElement('li');
-        appendText(item, name);
+
+        const label = document.createElement('label');
+        label.innerHTML = name;
+        label.title = help;
+        item.appendChild(label);
         appendBr(item);
 
         const span = document.createElement('span');
@@ -1131,8 +1136,8 @@ class TRRBTEditor {
         return {ok:false, error:'An unknown choice was selected.'};
     }
 
-    appendListProperty(parent, id, name, value) {
-        this.appendTextProperty(parent, id, name, value.join(' '));
+    appendListProperty(parent, id, name, help, value) {
+        this.appendTextProperty(parent, id, name, help, value.join(' '));
     }
 
     parseListProperty(id) {
@@ -1140,7 +1145,7 @@ class TRRBTEditor {
         return {ok:true, value:value.split(/\s+/)};
     }
 
-    appendPatternProperty(parent, id, name, value, tileSize) {
+    appendPatternProperty(parent, id, name, help, value, tileSize) {
         let rows = 0;
         let cols = 0;
         let text = '';
@@ -1167,6 +1172,7 @@ class TRRBTEditor {
         const label = document.createElement('label');
         label.innerHTML = name;
         label.htmlFor = id;
+        label.title = help;
         const input = document.createElement('textarea');
         input.id = id;
         input.name = id;
@@ -1332,52 +1338,52 @@ class TRRBTEditor {
                 const list = appendList(ed);
 
                 if (node.hasOwnProperty('comment')) {
-                    this.appendTextProperty(list, 'prop_comment', EDT_PROP_NAMES['comment'], node.comment);
+                    this.appendTextProperty(list, 'prop_comment', EDT_PROP_NAMES['comment'].name, EDT_PROP_NAMES['comment'].help, node.comment);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('nid')) {
-                    this.appendTextProperty(list, 'prop_nid', EDT_PROP_NAMES['nid'], node.nid);
+                    this.appendTextProperty(list, 'prop_nid', EDT_PROP_NAMES['nid'].name, EDT_PROP_NAMES['nid'].help, node.nid);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('file')) {
-                    this.appendTextProperty(list, 'prop_file', EDT_PROP_NAMES['file'], node.file);
+                    this.appendTextProperty(list, 'prop_file', EDT_PROP_NAMES['file'].name, EDT_PROP_NAMES['file'].help, node.file);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('target')) {
-                    this.appendTextProperty(list, 'prop_target', EDT_PROP_NAMES['target'], node.target);
+                    this.appendTextProperty(list, 'prop_target', EDT_PROP_NAMES['target'].name, EDT_PROP_NAMES['target'].help, node.target);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('pid')) {
-                    this.appendTextProperty(list, 'prop_pid', EDT_PROP_NAMES['pid'], node.pid);
+                    this.appendTextProperty(list, 'prop_pid', EDT_PROP_NAMES['pid'].name, EDT_PROP_NAMES['pid'].help, node.pid);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('layer')) {
-                    this.appendTextProperty(list, 'prop_layer', EDT_PROP_NAMES['layer'], node.layer);
+                    this.appendTextProperty(list, 'prop_layer', EDT_PROP_NAMES['layer'].name, EDT_PROP_NAMES['layer'].help, node.layer);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('times')) {
-                    this.appendTextProperty(list, 'prop_times', EDT_PROP_NAMES['times'], node.times);
+                    this.appendTextProperty(list, 'prop_times', EDT_PROP_NAMES['times'].name, EDT_PROP_NAMES['times'].help, node.times);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('what')) {
-                    this.appendTextProperty(list, 'prop_what', EDT_PROP_NAMES['what'], node.what);
+                    this.appendTextProperty(list, 'prop_what', EDT_PROP_NAMES['what'].name, EDT_PROP_NAMES['what'].help, node.what);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('with')) {
-                    this.appendTextProperty(list, 'prop_with', EDT_PROP_NAMES['with'], node.with);
+                    this.appendTextProperty(list, 'prop_with', EDT_PROP_NAMES['with'].name, EDT_PROP_NAMES['with'].help, node.with);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('withs')) {
-                    this.appendListProperty(list, 'prop_withs', EDT_PROP_NAMES['withs'], node.withs);
+                    this.appendListProperty(list, 'prop_withs', EDT_PROP_NAMES['withs'].name, EDT_PROP_NAMES['withs'].help, node.withs);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('button')) {
-                    this.appendChoiceProperty(list, 'prop_button', EDT_PROP_NAMES['button'], node.button, EDT_BUTTONS);
+                    this.appendChoiceProperty(list, 'prop_button', EDT_PROP_NAMES['button'].name, EDT_PROP_NAMES['button'].help, node.button, EDT_BUTTONS);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('pattern')) {
                     const tileSize = getTileSize([node.pattern]);
-                    this.appendPatternProperty(list, 'prop_pattern', EDT_PROP_NAMES['pattern'], node.pattern, tileSize);
+                    this.appendPatternProperty(list, 'prop_pattern', EDT_PROP_NAMES['pattern'].name, EDT_PROP_NAMES['pattern'].help, node.pattern, tileSize);
                     anyProperties = true;
                 }
                 if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
@@ -1385,11 +1391,11 @@ class TRRBTEditor {
                     const hasRHS = node.hasOwnProperty('rhs');
                     const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                     if (hasLHS) {
-                        this.appendPatternProperty(list, 'prop_lhs', EDT_PROP_NAMES['lhs'], node.lhs, tileSize);
+                        this.appendPatternProperty(list, 'prop_lhs', EDT_PROP_NAMES['lhs'].name, EDT_PROP_NAMES['lhs'].help, node.lhs, tileSize);
                         anyProperties = true;
                     }
                     if (hasRHS) {
-                        this.appendPatternProperty(list, 'prop_rhs', EDT_PROP_NAMES['rhs'], node.rhs, tileSize);
+                        this.appendPatternProperty(list, 'prop_rhs', EDT_PROP_NAMES['rhs'].name, EDT_PROP_NAMES['rhs'].help, node.rhs, tileSize);
                         anyProperties = true;
                     }
                 }
@@ -1487,7 +1493,7 @@ class TRRBTEditor {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     document.getElementById('prop_' + propid).style.backgroundColor = '#ffdddd';
-                    alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid] + '.\n' + result.error);
+                    alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid].name + '.\n' + result.error);
                 } else {
                     new_props.set(propid, result.value);
                 }
@@ -1507,7 +1513,7 @@ class TRRBTEditor {
                 }
                 lhs.oninput = reset_colors;
                 rhs.oninput = reset_colors;
-                alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'] + ' and ' + EDT_PROP_NAMES['rhs'] + '.\n' + result.error);
+                alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'].name + ' and ' + EDT_PROP_NAMES['rhs'].name + '.\n' + result.error);
             }
         }
 
