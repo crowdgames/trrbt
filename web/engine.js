@@ -14,6 +14,7 @@ class TRRBTEngine {
 
         this.canvas = null;
         this.ctx = null;
+        this.breakResumeText = null;
         this.engineEditor = null;
 
         this.padding = null;
@@ -251,6 +252,7 @@ class TRRBTEngine {
 
         this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
+        this.breakResumeText = null;
         this.engineEditor = this.divname ? document.getElementById(this.divname) : null;
 
         this.padding = 10;
@@ -341,19 +343,26 @@ class TRRBTEngine {
         appendText(ed, 'Engine', true, true);
         appendBr(ed);
 
-        appendButton(ed, 'Restart', 'Restart game.', bind0(this, 'onLoad'));
+        appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
         appendBr(ed);
         appendBr(ed);
 
-        appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', bind0(this, 'onBreakResume'));
+        appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
+        appendText(ed, ' ', false, false);
+        this.breakResumeText = document.createElement('span');
+        this.breakResumeText.style.color = '#ffdddd';
+        this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
+        this.breakResumeText.title = 'Game is currently in break mode, where you must manually step. Resume or restart to play as normal.';
+        this.breakResumeText.style.display = 'none';
+        ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
-        appendButton(ed, 'Undo Move', 'Undo to last player choice.', bind1(this, 'onUndo', true));
-        appendButton(ed, 'Undo Step', 'Undo a single step.', bind1(this, 'onUndo', false));
+        appendButton(ed, 'Undo Move', 'Undo to last player choice.', null, bind1(this, 'onUndo', true));
+        appendButton(ed, 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', false));
         appendBr(ed);
 
-        appendButton(ed, 'Next Move', 'Run to next player choice.', bind1(this, 'onNext', true));
-        appendButton(ed, 'Next Step', 'Run a single step.', bind1(this, 'onNext', false));
+        appendButton(ed, 'Next Move', 'Run to next player choice.', null, bind1(this, 'onNext', true));
+        appendButton(ed, 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', false));
         appendBr(ed);
     }
 
@@ -568,14 +577,27 @@ class TRRBTEngine {
             const ratio = window.devicePixelRatio;
             this.canvas.width = desiredWidth * ratio;
             this.canvas.height = desiredHeight * ratio;
-            this.canvas.style.width = desiredWidth + "px";
-            this.canvas.style.height = desiredHeight + "px";
+            this.canvas.style.width = desiredWidth + 'px';
+            this.canvas.style.height = desiredHeight + 'px';
             this.ctx.scale(ratio, ratio);
         }
     }
 
+    updateStepManual(setting) {
+        if (setting != this.stepManual) {
+            this.stepManual = setting;
+            if (this.breakResumeText !== null) {
+                if (this.stepManual) {
+                    this.breakResumeText.style.display = 'inline';
+                } else {
+                    this.breakResumeText.style.display = 'none';
+                }
+            }
+        }
+    }
+
     onBreakResume() {
-        this.stepManual = !this.stepManual;
+        this.updateStepManual(!this.stepManual);
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
 
@@ -586,7 +608,7 @@ class TRRBTEngine {
                 this.undoPop();
             }
         } else {
-            this.stepManual = true;
+            this.updateStepManual(true);
         }
         this.updateEditor();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
@@ -600,7 +622,7 @@ class TRRBTEngine {
             }
             this.updateEditor();
         } else {
-            this.stepManual = true;
+            this.updateStepManual(true);
         }
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }

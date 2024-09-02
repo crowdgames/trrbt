@@ -399,7 +399,7 @@ class TRRBTEditor {
 
         if (this.hasEngine()) {
             this.engine.onLoad();
-            this.engine.stepManual = true;
+            this.engine.updateStepManual(true);
         }
     }
 
@@ -1253,13 +1253,13 @@ class TRRBTEditor {
             appendText(ed, 'Editor', true, true);
             appendBr(ed);
 
-            appendButton(ed, 'Undo', 'Undo an edit.', bind0(this, 'onUndo'));
-            appendButton(ed, 'Redo', 'Redo an edit.', bind0(this, 'onRedo'));
+            appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
+            appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
             appendText(ed, ' ', false, false);
-            appendButton(ed, 'Hrz/Vrt', 'Toggle between horizontal and vertical layout.', bind0(this, 'onHrzVrt'));
+            appendButton(ed, 'Hrz/Vrt', 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
             appendText(ed, ' ', false, false);
-            appendButton(ed, 'Import', 'Import game (paste) from clipboard.', bind0(this, 'onImport'));
-            appendButton(ed, 'Export', 'Export game (copy) to clipboard.', bind0(this, 'onExport'));
+            appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
+            appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed);
             appendBr(ed);
 
@@ -1284,32 +1284,32 @@ class TRRBTEditor {
                 const node_help_str = EDT_NODE_HELP[node.type].help;
 
                 appendText(ed, node.type + ' ', true);
-                appendButton(ed, '?', tooltip_help, ()=>{alert(node.type + ': ' + node_help_str);}, node_clr);
+                appendButton(ed, '?', tooltip_help, node_clr, ()=>{alert(node.type + ': ' + node_help_str);});
                 appendBr(ed);
                 appendBr(ed);
 
                 if (parent !== null) {
-                    appendButton(ed, 'Move Earlier', 'Move node earlier in parent.', bind1(this, 'onNodeShift', true));
-                    appendButton(ed, 'Move Later', 'Move node later in parent.', bind1(this, 'onNodeShift', false));
+                    appendButton(ed, 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
+                    appendButton(ed, 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
                     if (node.type === 'player') {
                         // pass
                     } else if (node.hasOwnProperty('children')) {
-                        appendButton(ed, 'Swap with Parent', 'Swap node with parent.', bind0(this, 'onNodeSwapUp'));
+                        appendButton(ed, 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
                     }
                 }
                 appendBr(ed);
                 appendBr(ed);
 
-                appendButton(ed, 'Copy Subtree', 'Remember this subtree to paste later.', bind1(this, 'onNodeCopy', false));
+                appendButton(ed, 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
                 if (node !== this.game.tree) {
-                    appendButton(ed, 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', bind1(this, 'onNodeCopy', true));
+                    appendButton(ed, 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
                 }
                 if (this.clipboard !== null) {
                     if (node.hasOwnProperty('children')) {
                         if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
                             // pass
                         } else {
-                            appendButton(ed, 'Paste Subtree', 'Paste the remembered subtree.', bind1(this, 'onNodePaste', true));
+                            appendButton(ed, 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
                         }
                     }
                 }
@@ -1318,12 +1318,12 @@ class TRRBTEditor {
 
                 if (node.hasOwnProperty('children') && node.children.length > 0) {
                     if (node !== this.game.tree) {
-                        appendButton(ed, 'Delete and Reparent', 'Delete this node and move its children to the parent.', bind1(this, 'onNodeDelete', true));
-                        appendButton(ed, 'Delete Subtree', 'Delete this node and the whole subtree.', bind1(this, 'onNodeDelete', false));
+                        appendButton(ed, 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
+                        appendButton(ed, 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
                     }
-                    appendButton(ed, 'Delete Children', 'Delete all children of this node.', bind1(this, 'onNodeDeleteChildren', false));
+                    appendButton(ed, 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
                 } else if (node !== this.game.tree) {
-                    appendButton(ed, 'Delete', 'Delete this node.', bind1(this, 'onNodeDelete', false));
+                    appendButton(ed, 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
                 }
                 appendBr(ed);
 
@@ -1395,7 +1395,7 @@ class TRRBTEditor {
                 }
 
                 if (anyProperties) {
-                    appendButton(ed, 'Save', 'Save node changes.', bind0(this, 'onNodeSaveProperties'));
+                    appendButton(ed, 'Save', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
                     appendBr(ed);
                 }
 
@@ -1424,15 +1424,15 @@ class TRRBTEditor {
                             } else {
                                 const clr = this.nodeColor(proto.type, false);
                                 const help_str = EDT_NODE_HELP[proto.type].help;
-                                appendButton(td1, '?', tooltip_help, ()=>{alert(proto.type + ': ' + help_str);}, clr);
+                                appendButton(td1, '?', tooltip_help, clr, ()=>{alert(proto.type + ': ' + help_str);});
                                 if (proto.hasOwnProperty('children')) {
                                     if (proto.type === 'player' && !can_be_player_children(node.children)) {
                                         // pass
                                     } else {
-                                        appendButton(td1, '\u2193', tooltip_add_below, bind2(this, 'onNodeAddChild', proto.type, true), clr)
+                                        appendButton(td1, '\u2193', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, true))
                                     }
                                 }
-                                appendButton(td1, 'Add ' + proto.type, tooltip_add_end, bind2(this, 'onNodeAddChild', proto.type, false), clr)
+                                appendButton(td1, 'Add ' + proto.type, tooltip_add_end, clr, bind2(this, 'onNodeAddChild', proto.type, false))
                                 appendBr(td1);
                             }
                         }
@@ -1443,15 +1443,15 @@ class TRRBTEditor {
                             } else {
                                 const clr = this.nodeColor(proto.type, false);
                                 const help_str = EDT_NODE_HELP[proto.type].help;
-                                appendButton(td2, '?', tooltip_help, ()=>{alert(proto.type + ': ' + help_str);}, clr);
+                                appendButton(td2, '?', tooltip_help, clr, ()=>{alert(proto.type + ': ' + help_str);});
                                 if (proto.hasOwnProperty('children')) {
                                     if (proto.type === 'player' && !can_be_player_children(node.children)) {
                                         // pass
                                     } else {
-                                        appendButton(td2, '\u2193', tooltip_add_below, bind2(this, 'onNodeAddChild', proto.type, true), clr)
+                                        appendButton(td2, '\u2193', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, true))
                                     }
                                 }
-                                appendButton(td2, 'Add ' + proto.type, tooltip_add_end, bind2(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
+                                appendButton(td2, 'Add ' + proto.type, tooltip_add_end, clr, bind2(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
                                 appendBr(td2);
                             }
                         }
