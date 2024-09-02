@@ -11,7 +11,7 @@ function SEL_onLoad() {
 
         if (false) {
             for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
-                appendButton(div, game, function() {onSelectGame(GAME_SETUPS[game]);});
+                appendButton(div, game, 'Load game.', function() {onSelectGame(GAME_SETUPS[game]);});
             }
         } else {
             const select = document.createElement('select');

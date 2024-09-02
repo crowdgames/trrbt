@@ -341,19 +341,19 @@ class TRRBTEngine {
         appendText(ed, 'Engine', true, true);
         appendBr(ed);
 
-        appendButton(ed, 'Restart', bind0(this, 'onLoad'));
+        appendButton(ed, 'Restart', 'Restart game.', bind0(this, 'onLoad'));
         appendBr(ed);
         appendBr(ed);
 
-        appendButton(ed, 'Break/Resume', bind0(this, 'onBreakResume'));
+        appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', bind0(this, 'onBreakResume'));
         appendBr(ed);
 
-        appendButton(ed, 'Undo Move', bind1(this, 'onUndo', true));
-        appendButton(ed, 'Undo Step', bind1(this, 'onUndo', false));
+        appendButton(ed, 'Undo Move', 'Undo to last player choice.', bind1(this, 'onUndo', true));
+        appendButton(ed, 'Undo Step', 'Undo a single step.', bind1(this, 'onUndo', false));
         appendBr(ed);
 
-        appendButton(ed, 'Next Move', bind1(this, 'onNext', true));
-        appendButton(ed, 'Next Step', bind1(this, 'onNext', false));
+        appendButton(ed, 'Next Move', 'Run to next player choice.', bind1(this, 'onNext', true));
+        appendButton(ed, 'Next Step', 'Run a single step.', bind1(this, 'onNext', false));
         appendBr(ed);
     }
 

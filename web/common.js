@@ -75,9 +75,10 @@ function appendText(parent, text, bold, underline) {
     parent.appendChild(elem);
 }
 
-function appendButton(parent, text, callback, color) {
+function appendButton(parent, text, tooltip, callback, color) {
     const button = document.createElement('button');
     button.innerHTML = text;
+    button.title = tooltip;
     button.onclick = callback;
     if (color !== undefined) {
         button.style.backgroundColor = color
