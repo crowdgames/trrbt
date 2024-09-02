@@ -76,20 +76,20 @@ const EDT_NODE_HELP = {
 
     'match': {color:[0,1,1], help:'Succeeds if pattern matches current board, otherwise fails.'},
 
-    'x-ident': {color:[1,1,1], help:''},
-    'x-mirror': {color:[1,1,1], help:''},
-    'x-skew': {color:[1,1,1], help:''},
-    'x-rotate': {color:[1,1,1], help:''},
-    'x-spin': {color:[1,1,1], help:''},
-    'x-flip-only': {color:[1,1,1], help:''},
-    'x-swap-only': {color:[1,1,1], help:''},
-    'x-replace-only': {color:[1,1,1], help:''},
+    'x-ident': {color:[1,1,1], help:'Do not apply any transform.'},
+    'x-mirror': {color:[1,1,1], help:'Mirror patterns left-right.'},
+    'x-skew': {color:[1,1,1], help:'Skew patterns along columns.'},
+    'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
+    'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
+    'x-flip-only': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
+    'x-swap-only': {color:[1,1,1], help:'Swap characters in patterns and player ids, removing original.'},
+    'x-replace-only': {color:[1,1,1], help:'Replace characters in patterns and player ids, removing original.'},
 
-    'x-prune': {color:[1,1,1], help:''},
-    'x-unroll-replace': {color:[1,1,1], help:''},
+    'x-prune': {color:[1,1,1], help:'Remove nodes.'},
+    'x-unroll-replace': {color:[1,1,1], help:'Duplicate replaces here as children of an order node.'},
 
-    'x-link': {color:[1,1,1], help:''},
-    'x-file': {color:[1,1,1], help:''}
+    'x-link': {color:[1,1,1], help:'Link to another node by node id.'},
+    'x-file': {color:[1,1,1], help:'Link to another node by file name and node id.'}
 }
 
 const EDT_PROP_NAMES = {
