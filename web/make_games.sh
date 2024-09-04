@@ -1,8 +1,9 @@
-set -e
+set -ex
 
 rm -rf games
 mkdir -p games
 
+python copy_game.py games/games.js games_web empty.json
 python copy_game.py games/games.js games_web connect4-emoji.json
 python copy_game.py games/games.js games_web soko-emoji.json
 python copy_game.py games/games.js games_web soko2.json

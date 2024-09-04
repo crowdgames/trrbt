@@ -553,9 +553,11 @@ def game_print_json(game):
 
 def yamlload(filename):
     with open(filename, 'rt') as f:
-        data = yaml.safe_load(f)
-        data[FKEY_TREE] = node_reshape_tiles(data[FKEY_TREE])
-        return data
+        return yaml.safe_load(f)
+
+def processyamlgame(data):
+    data[FKEY_TREE] = node_reshape_tiles(data[FKEY_TREE])
+    return data
 
 
 
@@ -567,7 +569,7 @@ def file_to_game_in_folder(folder):
         filename = f'{folder}/{filename}.yaml'
         if filename not in _file_to_game:
             if os.path.exists(filename):
-                data = yamlload(filename)
+                data = processyamlgame(yamlload(filename))
                 _file_to_game[filename] = data[FKEY_TREE]
             else:
                 _file_to_game[filename] = None
@@ -577,7 +579,7 @@ def file_to_game_in_folder(folder):
     return file_to_game
 
 def yaml2bt(filename, resolve, xform):
-    data = yamlload(filename)
+    data = processyamlgame(yamlload(filename))
 
     name = data[FKEY_NAME]
     root = data[FKEY_TREE]
