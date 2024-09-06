@@ -49,7 +49,7 @@ const EDT_XNODE_PROTOTYPES = [
     { type:'x-spin', comment:'', nid:'', children:[] },
     { type:'x-flip-only', comment:'', nid:'', children:[] },
     { type:'x-swap-only', comment:'', nid:'', children:[], what:'', with:'' },
-    { type:'x-replace-only', comment:'', nid:'', children:[], what:'', withs:'' },
+    { type:'x-replace-only', comment:'', nid:'', children:[], what:'', withs:[] },
     { type:'x-link', comment:'', nid:'', target:'' },
 ];
 
