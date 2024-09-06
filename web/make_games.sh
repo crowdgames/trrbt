@@ -7,8 +7,8 @@ python copy_game.py games/games.js games_web empty.json
 python copy_game.py games/games.js games_web connect4-emoji.json
 python copy_game.py games/games.js games_web soko-emoji.json
 python copy_game.py games/games.js games_web soko2.json
-python copy_game.py games/games.js games_web tutorial-complete.json
-python copy_game.py games/games.js games_web tutorial-incomplete.json
+python copy_game.py games/games.js games_web soko_quest-emoji.json
+python copy_game.py games/games.js games_web soko_quest-emoji-incomplete.json
 
 python make_game.py games/games.js ../games ttt.yaml
 python make_game.py games/games.js ../games connect4.yaml
