@@ -575,7 +575,7 @@ class TRRBTEngine {
                 if (child.type === 'rewrite') {
                     let matches = this.findLayerPattern(child.lhs);
                     for (let match of matches) {
-                        choices.push({desc:child.desc, button:child.button, rhs:child.rhs, row:match.row, col:match.col});
+                        choices.push({desc:child.desc, button:child.button, lhs:child.lhs, rhs:child.rhs, row:match.row, col:match.col});
                     }
                 }
             }
