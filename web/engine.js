@@ -16,6 +16,7 @@ class TRRBTEngine {
         this.callStack = null;
         this.callResult = null;
         this.gameResult = null;
+        this.gameOver = false;
         this.loopCheck = 0;
         this.stepDelay = null;
 
@@ -23,6 +24,7 @@ class TRRBTEngine {
         this.rows = 0;
         this.cols = 0;
 
+        this.choices = null;
         this.choicesByRct = null;
         this.choicesByBtn = null;
         this.choicePlayer = null;
@@ -36,6 +38,7 @@ class TRRBTEngine {
         this.callStack = null;
         this.callResult = null;
         this.gameResult = null;
+        this.gameOver = false;
         this.loopCheck = 0;
         this.stepDelay = null;
 
@@ -43,6 +46,7 @@ class TRRBTEngine {
         this.rows = 0;
         this.cols = 0;
 
+        this.choices = null;
         this.choicesByRct = null;
         this.choicesByBtn = null;
         this.choicePlayer = null;
@@ -68,12 +72,14 @@ class TRRBTEngine {
         state.callStack = callStackCopy;
         state.callResult = this.callResult;
         state.gameResult = deepcopyobj(this.gameResult);
+        state.gameOver = this.gameOver;
         state.loopCheck = this.loopCheck;
 
         state.board = deepcopyobj(this.board);
         state.rows = this.rows;
         state.cols = this.cols;
 
+        state.choices = deepcopyobj(this.choices);
         state.choicesByRct = deepcopyobj(this.choicesByRct);
         state.choicesByBtn = deepcopyobj(this.choicesByBtn);
         state.choicePlayer = this.choicePlayer;
@@ -103,12 +109,14 @@ class TRRBTEngine {
             this.callStack = state.callStack;
             this.callResult = state.callResult;
             this.gameResult = state.gameResult;
+            this.gameOver = state.gameOver;
             this.loopCheck = state.loopCheck;
 
             this.board = state.board;
             this.rows = state.rows;
             this.cols = state.cols;
 
+            this.choices = state.choices;
             this.choicesByRct = state.choicesByRct;
             this.choicesByBtn = state.choicesByBtn;
             this.choicePlayer = state.choicePlayer;
@@ -117,12 +125,14 @@ class TRRBTEngine {
             this.callStack = null;
             this.callResult = null;
             this.gameResult = null;
+            this.gameOver = false;
             this.loopCheck = 0;
 
             this.board = null;
             this.rows = null;
             this.cols = null;
 
+            this.choices = null;
             this.choicesByRct = null;
             this.choicesByBtn = null;
             this.choicePlayer = null;
@@ -137,7 +147,7 @@ class TRRBTEngine {
     }
 
     shouldStepToInput() {
-        return this.game.tree !== null && this.gameResult !== true && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
+        return this.game.tree !== null && this.gameOver !== true && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
     }
 
     stepToInput() {
@@ -159,6 +169,18 @@ class TRRBTEngine {
         }
 
         return stepped;
+    }
+
+    makeChoiceIndex(choiceIndex) {
+        this.stepGameTree();
+
+        this.choiceWait = this.choices[choiceIndex];
+        this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
+
+        this.choices = null;
+        this.choicesByRct = null;
+        this.choicesByBtn = null;
+        this.choicePlayer = null;
     }
 
     layerPatternSize(lpattern) {
@@ -287,7 +309,7 @@ class TRRBTEngine {
                 this.callStack = [];
                 this.pushCallStack(this.game.tree);
             } else {
-                if (this.gameResult === true) {
+                if (this.gameOver === true) {
                 } else if (this.gameResult === null) {
                     this.undoPush();
 
@@ -305,20 +327,7 @@ class TRRBTEngine {
                 } else {
                     this.undoPush();
 
-                    if (this.gameResult.result === 'win') {
-                        let player = this.gameResult.player;
-                        setTimeout(() => { alert('Game over, player ' + player + ' wins!') }, 100);
-                    } else if (this.gameResult.result === 'lose') {
-                        let player = this.gameResult.player;
-                        setTimeout(() => { alert('Game over, player ' + player + ' loses!') }, 100);
-                    } else if (this.gameResult.result === 'draw') {
-                        setTimeout(() => { alert('Game over, draw!') }, 100);
-                    } else if (this.gameResult.result === 'stalemate') {
-                        setTimeout(() => { alert('Game over, stalemate!') }, 100);
-                    } else {
-                        setTimeout(() => { alert('Game over, unknown result!') }, 100);
-                    }
-                    this.gameResult = true;
+                    this.gameOver = true;
                 }
             }
         }
@@ -585,10 +594,13 @@ class TRRBTEngine {
             if (choices.length > 0) {
                 this.choicePlayer = frame.node.pid;
 
+                this.choices = choices;
                 this.choicesByRct = Object.create(null);
                 this.choicesByBtn = Object.create(null);
 
-                for (let choice of choices) {
+                for (let choiceIndex = 0; choiceIndex < this.choices.length; choiceIndex += 1) {
+                    const choice = this.choices[choiceIndex];
+
                     let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
                     let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
                     let rctk = JSON.stringify(rct);
@@ -598,11 +610,11 @@ class TRRBTEngine {
                         mapChoices = this.choicesByRct[rctk].choices;
                     }
 
-                    mapChoices.push(choice);
+                    mapChoices.push(choiceIndex);
                     this.choicesByRct[rctk] = {rct:rct, choices:mapChoices};
 
                     if (choice.button !== undefined) {
-                        this.choicesByBtn[choice.button] = choice;
+                        this.choicesByBtn[choice.button] = choiceIndex;
                     }
                 }
 
@@ -645,6 +657,8 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.gameResultWait = null;
+
         this.stepManual = false;
 
         this.editor = null;
@@ -675,6 +689,8 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.gameResultWait = null;
+
         this.stepManual = false;
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
@@ -888,7 +904,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         let choiceOverwrite = null;
         if (this.mouseChoice !== null && !this.mouseAlt) {
-            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx].rhs };
+            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.choices[this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx]].rhs };
         }
 
         this.ctx.fillStyle = '#000000';
@@ -1030,6 +1046,30 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.ctx.strokeStyle = '#ffdddd';
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
+
+        if (this.gameOver) {
+            if (this.gameResultWait === null) {
+                this.gameResultWait = 10;
+            } else if (this.gameResultWait > 0) {
+                this.gameResultWait -= 1;
+                window.requestAnimationFrame(bind0(this, 'onDraw'));
+                if (this.gameResultWait == 0) {
+                    if (this.gameResult.result === 'win') {
+                        let player = this.gameResult.player;
+                        alert('Game over, player ' + player + ' wins!');
+                    } else if (this.gameResult.result === 'lose') {
+                        let player = this.gameResult.player;
+                        alert('Game over, player ' + player + ' loses!');
+                    } else if (this.gameResult.result === 'draw') {
+                        alert('Game over, draw!');
+                    } else if (this.gameResult.result === 'stalemate') {
+                        alert('Game over, stalemate!');
+                    } else {
+                        alert('Game over, unknown result!');
+                    }
+                }
+            }
+        }
     }
 
     updateStepManual(setting) {
@@ -1062,6 +1102,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.gameResultWait = null;
 
         this.onBoardResized();
 
@@ -1113,14 +1154,9 @@ class TRRBTWebEngine extends TRRBTEngine {
                     keyp = 'action2';
                 }
                 if (keyp !== null && Object.hasOwn(this.choicesByBtn, keyp)) {
-                    this.stepGameTree();
+                    this.makeChoiceIndex(this.choicesByBtn[keyp]);
 
-                    this.choiceWait = this.choicesByBtn[keyp];
-                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
                     this.mouseChoice = null;
-                    this.choicesByRct = null;
-                    this.choicesByBtn = null;
-                    this.choicePlayer = null;
                 }
             }
         }
@@ -1145,14 +1181,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (mouseButton === BUTTON_LEFT) {
             if (this.mouseChoice !== null) {
                 if (this.choiceWait === true) {
-                    this.stepGameTree();
+                    this.makeChoiceIndex(this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx], true)
 
-                    this.choiceWait = this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx];
-                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
                     this.mouseChoice = null;
-                    this.choicesByRct = null;
-                    this.choicesByBtn = null;
-                    this.choicePlayer = null;
                 }
             }
         } else if (mouseButton === BUTTON_RIGHT) {
