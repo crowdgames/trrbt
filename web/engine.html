@@ -10,8 +10,8 @@
   </head>
   <body>
     <script>
-      var game = {};
-      var engine = new TRRBTEngine(game, 'enginecanvas', 'enginediv');
+      var game = emptyGame();
+      var engine = new TRRBTWebEngine(game, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
           xformApplyIntoGame(game, gameSelected, SEL_getGameTree);
           engine.onLoad();

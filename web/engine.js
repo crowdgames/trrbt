@@ -7,26 +7,8 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 class TRRBTEngine {
 
-    constructor(game, canvasname, divname) {
+    constructor(game) {
         this.game = game;
-        this.canvasname = canvasname;
-        this.divname = divname;
-
-        this.canvas = null;
-        this.ctx = null;
-        this.breakResumeText = null;
-        this.engineEditor = null;
-
-        this.padding = null;
-        this.cell_size = null;
-        this.keysDown = null;
-
-        this.spriteImages = null;
-        this.spriteTiles = null;
-        this.back = null;
-        this.hideText = null;
-
-        this.player_id_colors = new Map();
 
         this.undoStackPlayer = [];
         this.undoStackRecent = [];
@@ -35,6 +17,7 @@ class TRRBTEngine {
         this.callResult = null;
         this.gameResult = null;
         this.loopCheck = 0;
+        this.stepDelay = null;
 
         this.board = null;
         this.rows = 0;
@@ -44,19 +27,29 @@ class TRRBTEngine {
         this.choicesByBtn = null;
         this.choicePlayer = null;
         this.choiceWait = false;
-
-        this.mouseChoice = null;
-        this.mouseAlt = false;
-        this.stepManual = false;
-        this.stepDelay = null;
-
-        this.editor = null;
     }
 
-    updateEditor() {
-        if (this.editor !== null) {
-            this.editor.updatePositionsAndDraw();
-        }
+    onLoad() {
+        this.undoStackPlayer = [];
+        this.undoStackRecent = [];
+
+        this.callStack = null;
+        this.callResult = null;
+        this.gameResult = null;
+        this.loopCheck = 0;
+        this.stepDelay = null;
+
+        this.board = null;
+        this.rows = 0;
+        this.cols = 0;
+
+        this.choicesByRct = null;
+        this.choicesByBtn = null;
+        this.choicePlayer = null;
+        this.choiceWait = false;
+    }
+
+    onBoardResized() {
     }
 
     undoPush() {
@@ -65,7 +58,7 @@ class TRRBTEngine {
         if (this.callStack !== null) {
             callStackCopy = [];
             for (let frame of this.callStack) {
-                let frameCopy = {node: frame.node, local: copymap(frame.local)};
+                let frameCopy = {node: frame.node, local: deepcopyobj(frame.local)};
                 callStackCopy.push(frameCopy);
             }
         }
@@ -81,8 +74,8 @@ class TRRBTEngine {
         state.rows = this.rows;
         state.cols = this.cols;
 
-        state.choicesByRct = copymap(this.choicesByRct);
-        state.choicesByBtn = copymap(this.choicesByBtn);
+        state.choicesByRct = deepcopyobj(this.choicesByRct);
+        state.choicesByBtn = deepcopyobj(this.choicesByBtn);
         state.choicePlayer = this.choicePlayer;
         state.choiceWait = deepcopyobj(this.choiceWait);
 
@@ -136,11 +129,7 @@ class TRRBTEngine {
             this.choiceWait = false;
         }
 
-        this.mouseChoice = null;
-        this.mouseAlt = false;
         this.stepDelay = null;
-
-        this.resizeCanvas();
     }
 
     undoEmpty() {
@@ -169,621 +158,7 @@ class TRRBTEngine {
             }
         }
 
-        if (stepped) {
-            this.updateEditor();
-        }
-    }
-
-    arrayToImageData(from_data, fw, fh, ww, hh) {
-        let new_data = new Uint8ClampedArray(ww * hh * 4);
-        for (let xx = 0; xx < ww; xx += 1) {
-            for (let yy = 0; yy < hh; yy += 1) {
-                const fx = Math.floor(xx / ww * fw);
-                const fy = Math.floor(yy / hh * fh);
-
-                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
-                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
-                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
-                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
-            }
-        }
-        return new ImageData(new_data, ww, hh);
-    }
-
-    loadSpriteImage(image_name, image_info) {
-        this.spriteImages.set(image_name, null);
-
-        const image_info_data = image_info.data;
-        const image_decoded = atob(image_info_data);
-        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
-        const image_blob = new Blob([image_array.buffer]);
-        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
-        const image_reader = image_decompressed.getReader();
-
-        let image_read_array = null;
-
-        let this_engine = this;
-
-        image_reader.read().then(function process({ done, value }) {
-            if (!done) {
-                if (image_read_array === null) {
-                    image_read_array = value;
-                } else {
-                    let merged_array = new Uint8Array(image_read_array.length + value.length);
-                    merged_array.set(image_read_array);
-                    merged_array.set(value, image_read_array.length);
-                    image_read_array = merged_array;
-                }
-                return image_reader.read().then(process);
-            } else {
-                const image_data = this_engine.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this_engine.cell_size, this_engine.cell_size);
-                let img_promise = createImageBitmap(image_data);
-                img_promise.then((img_loaded) => this_engine.spriteImages.set(image_name, img_loaded));
-            }
-        });
-    }
-
-    onLoad() {
-        document.oncontextmenu = function() {
-            return false;
-        }
-
-        this.undoStackPlayer = [];
-        this.undoStackRecent = [];
-
-        this.callStack = null;
-        this.callResult = null;
-        this.gameResult = null;
-
-        this.board = null;
-        this.rows = null;
-        this.cols = null;
-
-        this.choicesByRct = null;
-        this.choicesByBtn = null;
-        this.choicePlayer = null;
-        this.choiceWait = false;
-        this.loopCheck = 0;
-
-        this.mouseChoice = null;
-        this.mouseAlt = false;
-        this.stepDelay = null;
-        this.stepManual = false;
-
-        this.canvas = document.getElementById(this.canvasname);
-        this.ctx = this.canvas.getContext('2d');
-        this.breakResumeText = null;
-        this.engineEditor = this.divname ? document.getElementById(this.divname) : null;
-
-        this.padding = 10;
-        this.cell_size = 50;
-        this.keysDown = new Set();
-
-        this.spriteImages = null;
-        this.spriteTiles = null;
-        this.back = null;
-        this.hideText = null;
-
-        this.player_id_colors = new Map();
-
-        this.undoStackPlayer = [];
-        this.undoStackRecent = [];
-
-        this.callStack = null;
-        this.callResult = null;
-        this.gameResult = null;
-        this.loopCheck = 0;
-
-        this.board = null;
-        this.rows = 0;
-        this.cols = 0;
-
-        this.choicesByRct = null;
-        this.choicesByBtn = null;
-        this.choicePlayer = null;
-        this.choiceWait = false;
-
-        this.mouseChoice = null;
-        this.mouseAlt = false;
-        this.stepManual = false;
-        this.stepDelay = null;
-
-        this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
-        this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
-        this.canvas.addEventListener('mouseup', bind0(this, 'onMouseUp'));
-        this.canvas.addEventListener('mouseout', bind0(this, 'onMouseOut'));
-        this.canvas.addEventListener('keydown', bind0(this, 'onKeyDown'));
-        this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
-        this.canvas.focus();
-
-        if (this.game.sprites !== null) {
-            if (this.game.sprites.images !== undefined) {
-                this.spriteImages = new Map();
-                for (let imageName in this.game.sprites.images) {
-                    const image_info = this.game.sprites.images[imageName];
-                    this.loadSpriteImage(imageName, image_info)
-                }
-            }
-            if (this.game.sprites.tiles !== undefined) {
-                this.spriteTiles = new Map();
-                for (let tile in this.game.sprites.tiles) {
-                    this.spriteTiles.set(tile, this.game.sprites.tiles[tile]);
-                }
-            }
-            if (this.game.sprites.players !== undefined) {
-                for (let pid in this.game.sprites.players) {
-                    this.player_id_colors.set(pid, this.game.sprites.players[pid]);
-                }
-            }
-            if (this.game.sprites.back !== undefined) {
-                this.back = this.game.sprites.back;
-            }
-            if (this.game.sprites.hidetext !== undefined) {
-                this.hideText = this.game.sprites.hidetext;
-            }
-        }
-
-        this.canvas.style.backgroundColor = '#ffffff';
-
-        this.updateEngineEditor();
-
-        this.resizeCanvas();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    updateEngineEditor() {
-        if (this.engineEditor === null) {
-            return;
-        }
-
-        const ed = this.engineEditor;
-
-        ed.innerHTML = '';
-
-        appendText(ed, 'Engine', true, true);
-        appendBr(ed);
-
-        appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
-        appendBr(ed);
-        appendBr(ed);
-
-        appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
-        appendText(ed, ' ', false, false);
-        this.breakResumeText = document.createElement('span');
-        this.breakResumeText.style.color = '#ffdddd';
-        this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
-        this.breakResumeText.title = 'Game is currently in break mode, where you must manually step. Resume or restart to play as normal.';
-        this.breakResumeText.style.display = 'none';
-        ed.appendChild(this.breakResumeText);
-        appendBr(ed);
-
-        appendButton(ed, 'Undo Move', 'Undo to last player choice.', null, bind1(this, 'onUndo', true));
-        appendButton(ed, 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', false));
-        appendBr(ed);
-
-        appendButton(ed, 'Next Move', 'Run to next player choice.', null, bind1(this, 'onNext', true));
-        appendButton(ed, 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', false));
-        appendBr(ed);
-    }
-
-    onDraw() {
-        if (this.spriteImages !== null) {
-            for (let [imgName, img] of this.spriteImages) {
-                if (img === null) {
-                    window.requestAnimationFrame(bind0(this, 'onDraw'));
-                    return;
-                }
-            }
-        }
-
-        if (this.stepDelay !== null) {
-            if (Date.now() < this.stepDelay) {
-                window.requestAnimationFrame(bind0(this, 'onDraw'));
-                return;
-            } else {
-                this.stepDelay = null;
-            }
-        }
-
-        if (!this.stepManual) {
-            this.stepToInput();
-        }
-
-        if (this.stepDelay !== null) {
-            window.requestAnimationFrame(bind0(this, 'onDraw'));
-        }
-
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.fillStyle = '#eeeeee';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-
-        for (let rr = 0; rr < this.rows; rr += 1) {
-            for (let cc = 0; cc < this.cols; cc += 1) {
-                let all_invis = true;
-                for (const [layer, pattern] of Object.entries(this.board)) {
-                    if (pattern[rr][cc] !== '.') {
-                        all_invis = false;
-                    }
-                }
-                if (!all_invis) {
-                    if (this.back !== null) {
-                        const brows = this.back.length;
-                        const bcols = this.back[0].length;
-
-                        const back_tile = this.back[rr % brows][cc % bcols];
-                        if (this.spriteTiles !== null && this.spriteTiles.has(back_tile)) {
-                            const img = this.spriteImages.get(this.spriteTiles.get(back_tile));
-                            this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
-                        }
-                    } else {
-                        this.ctx.fillStyle = '#cccccc';
-                        this.ctx.fillRect(this.tocvsx(cc), this.tocvsy(rr), this.cell_size, this.cell_size);
-                    }
-                }
-            }
-        }
-
-        let choiceOverwrite = null;
-        if (this.mouseChoice !== null && !this.mouseAlt) {
-            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.choicesByRct.get(JSON.stringify(this.mouseChoice.rct)).choices[this.mouseChoice.idx].rhs };
-        }
-
-        this.ctx.fillStyle = '#000000';
-
-        for (let rr = 0; rr < this.rows; rr += 1) {
-            for (let cc = 0; cc < this.cols; cc += 1) {
-                let tiles = [];
-                let overwrites = [];
-                if (choiceOverwrite !== null &&
-                    choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
-                    choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
-                    for (const [layer, pattern] of Object.entries(this.board)) {
-                        if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
-                            const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
-                            if (tileOverwrite !== '.') {
-                                tiles.push(tileOverwrite);
-                                overwrites.push(true);
-                            } else {
-                                tiles.push(pattern[rr][cc]);
-                                overwrites.push(false);
-                            }
-                        } else {
-                            tiles.push(pattern[rr][cc]);
-                            overwrites.push(false);
-                        }
-                    }
-                } else {
-                    for (const [layer, pattern] of Object.entries(this.board)) {
-                        tiles.push(pattern[rr][cc]);
-                        overwrites.push(false);
-                    }
-                }
-                tiles = tiles.reverse();
-                overwrites = overwrites.reverse();
-                for (let ii in tiles) {
-                    const tile = tiles[ii];
-                    const overwrite = overwrites[ii];
-                    if (overwrite) {
-                        this.ctx.globalAlpha = 0.5;
-                    } else {
-                        this.ctx.globalAlpha = 1.0;
-                    }
-                    if (tile !== '.') {
-                        if (this.spriteTiles !== null && this.spriteTiles.has(tile)) {
-                            const imgName = this.spriteTiles.get(tile);
-                            if (imgName !== null) {
-                                const img = this.spriteImages.get(imgName);
-                                this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
-                            }
-                        } else {
-                            if (this.hideText !== null && this.hideText.indexOf(tile) >= 0) {
-                                // pass
-                            } else {
-                                this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
-                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (this.choicesByRct !== null) {
-            this.ctx.lineWidth = 3;
-            this.ctx.globalAlpha = 1.0;
-
-            if (!this.player_id_colors.has(this.choicePlayer)) {
-                let color_num = this.player_id_colors.size % 5;
-                let next_color = null;
-                if (color_num === 0) {
-                    next_color = [0, 0, 220];
-                } else if (color_num === 1) {
-                    next_color = [0, 220, 0];
-                } else if (color_num === 2) {
-                    next_color = [220, 220, 0];
-                } else if (color_num === 3) {
-                    next_color = [220, 0, 220];
-                } else {
-                    next_color = [0, 220, 220];
-                }
-                this.player_id_colors.set(this.choicePlayer, next_color);
-            }
-
-            let player_color = this.player_id_colors.get(this.choicePlayer);
-
-            if (this.mouseChoice !== null) {
-                let rct = this.mouseChoice.rct;
-                let idx = this.mouseChoice.idx;
-
-                let rct_choices = this.choicesByRct.get(JSON.stringify(rct)).choices;
-                let desc = rct_choices[idx].desc;
-
-                this.ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                this.ctx.beginPath();
-                this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), rct.cols * this.cell_size, rct.rows * this.cell_size, 3);
-                this.ctx.stroke();
-
-                if (rct_choices.length > 1) {
-                    this.ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                    this.ctx.beginPath();
-                    this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), 0.4 * this.cell_size, 0.4 * this.cell_size, 3);
-                    this.ctx.fill();
-                    this.ctx.fillStyle = '#DCDCDC'
-                    this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
-                    this.ctx.fillText(idx + 1, this.tocvsx(rct.col + 0.2), this.tocvsy(rct.row + 0.2 + 0.025));
-                }
-                if (desc !== undefined) {
-                    this.ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
-                    this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
-                    this.ctx.fillText(desc, this.tocvsx(rct.col + 0.5 * rct.cols), this.tocvsy(rct.row + rct.rows - 0.2));
-                }
-            } else {
-                if (!this.mouseAlt) {
-                    this.ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
-
-                    for (const [rctk, rctChoices] of this.choicesByRct.entries()) {
-                        let rct = rctChoices.rct;
-                        let choices = rctChoices.choices;
-                        this.ctx.beginPath();
-                        this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), rct.cols * this.cell_size, rct.rows * this.cell_size, 3);
-                        this.ctx.stroke();
-                        if (choices.length > 1) {
-                            this.ctx.fillStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
-                            this.ctx.beginPath();
-                            this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), 0.4 * this.cell_size, 0.4 * this.cell_size, 3);
-                            this.ctx.fill();
-                            this.ctx.fillStyle = '#DCDCDC'
-                            this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
-                            this.ctx.fillText(choices.length, this.tocvsx(rct.col + 0.2), this.tocvsy(rct.row + 0.2 + 0.025));
-                        }
-                    }
-                }
-            }
-        }
-
-        if (this.stepManual) {
-            this.ctx.lineWidth = 10;
-            this.ctx.strokeStyle = '#ffdddd';
-            this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
-        }
-    }
-
-    resizeCanvas() {
-        const desiredWidth = this.tocvsx(Math.max(1, this.cols)) + this.padding;
-        const desiredHeight = this.tocvsy(Math.max(1, this.rows)) + this.padding;
-        if (this.canvas.width != desiredWidth || this.canvas.height != desiredHeight) {
-            const ratio = window.devicePixelRatio;
-            this.canvas.width = desiredWidth * ratio;
-            this.canvas.height = desiredHeight * ratio;
-            this.canvas.style.width = desiredWidth + 'px';
-            this.canvas.style.height = desiredHeight + 'px';
-            this.ctx.scale(ratio, ratio);
-        }
-    }
-
-    updateStepManual(setting) {
-        if (setting != this.stepManual) {
-            this.stepManual = setting;
-            if (this.breakResumeText !== null) {
-                if (this.stepManual) {
-                    this.breakResumeText.style.display = 'inline';
-                } else {
-                    this.breakResumeText.style.display = 'none';
-                }
-            }
-        }
-    }
-
-    onBreakResume() {
-        this.updateStepManual(!this.stepManual);
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onUndo(toInput) {
-        this.undoPop();
-        if (toInput) {
-            while (!this.undoEmpty() && this.shouldStepToInput()) {
-                this.undoPop();
-            }
-        } else {
-            this.updateStepManual(true);
-        }
-        this.updateEditor();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onNext(toInput) {
-        if (this.shouldStepToInput()) {
-            this.stepGameTree();
-            if (toInput) {
-                this.stepToInput();
-            }
-            this.updateEditor();
-        } else {
-            this.updateStepManual(true);
-        }
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onKeyDown(evt) {
-        let key = evt.key;
-
-        if (!this.keysDown.has(key)) {
-            this.keysDown.add(key);
-
-            if (key === 'b' || key === 'B') {
-                this.onBreakResume();
-            } else if (key === 'n' || key === 'N') {
-                this.onNext(key === 'n');
-            } else if (key === 'p' || key === 'P') {
-                this.onUndo(key === 'p');
-            }
-
-            if (this.choiceWait === true) {
-                let keyp = null;
-                if (key === 'ArrowLeft') {
-                    keyp = 'left';
-                } else if (key === 'ArrowRight') {
-                    keyp = 'right';
-                } else if (key === 'ArrowUp') {
-                    keyp = 'up';
-                } else if (key === 'ArrowDown') {
-                    keyp = 'down';
-                } else if (key === 'z') {
-                    keyp = 'action1';
-                } else if (key === 'x') {
-                    keyp = 'action2';
-                }
-                if (keyp !== null && this.choicesByBtn.has(keyp)) {
-                    this.stepGameTree();
-
-                    this.choiceWait = this.choicesByBtn.get(keyp);
-                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
-                    this.mouseChoice = null;
-                    this.choicesByRct = null;
-                    this.choicesByBtn = null;
-                    this.choicePlayer = null;
-                }
-            }
-        }
-
-        evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onKeyUp(evt) {
-        let key = evt.key;
-
-        this.keysDown.delete(key);
-
-        evt.preventDefault();
-    }
-
-    onMouseDown(evt) {
-        this.canvas.focus();
-
-        const mouseButton = evt.button;
-
-        if (mouseButton === BUTTON_LEFT) {
-            if (this.mouseChoice !== null) {
-                if (this.choiceWait === true) {
-                    this.stepGameTree();
-
-                    this.choiceWait = this.choicesByRct.get(JSON.stringify(this.mouseChoice.rct)).choices[this.mouseChoice.idx];
-                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
-                    this.mouseChoice = null;
-                    this.choicesByRct = null;
-                    this.choicesByBtn = null;
-                    this.choicePlayer = null;
-                }
-            }
-        } else if (mouseButton === BUTTON_RIGHT) {
-            this.mouseAlt = true;
-        }
-
-        evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onMouseUp(evt) {
-        const mouseButton = evt.button;
-
-        if (mouseButton === BUTTON_RIGHT) {
-            this.mouseAlt = false;
-        }
-
-        evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onMouseMove(evt) {
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = evt.clientX - rect.left;
-        const mouseY = evt.clientY - rect.top;
-
-        this.mouseChoice = null;
-        if (this.choicesByRct !== null) {
-            const mr = this.fromcvsy(mouseY);
-            const mc = this.fromcvsx(mouseX);
-            if (0 <= mr && mr < this.rows && 0 <= mc && mc < this.cols) {
-                let best_choices = [];
-                let best_dist_sqr = null;
-
-                for (const [rctk, rctChoices] of this.choicesByRct.entries()) {
-                    let rct = rctChoices.rct;
-                    let choices = rctChoices.choices;
-                    if (rct.row <= mr && mr <= rct.row + rct.rows && rct.col <= mc && mc <= rct.col + rct.cols) {
-                        let rowmid = rct.row + rct.rows / 2.0;
-                        let colmid = rct.col + rct.cols / 2.0;
-                        let dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2;
-                        if (best_dist_sqr === null || dist_sqr < best_dist_sqr - 0.001) {
-                            best_dist_sqr = dist_sqr;
-                            best_choices = [];
-                            for (let ii = 0; ii < choices.length; ii += 1) {
-                                best_choices.push({rct:rct, idx:ii});
-                            }
-                        } else if (dist_sqr < best_dist_sqr + 0.001) {
-                            for (let ii = 0; ii < choices.length; ii += 1) {
-                                best_choices.push({rct:rct, idx:ii});
-                            }
-                        }
-                    }
-                }
-
-                if (best_choices.length > 0) {
-                    const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
-                    this.mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
-                }
-            }
-        }
-
-        evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onMouseOut(evt) {
-        this.mouseChoice = null;
-
-        evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    tocvsx(x) {
-        return (x * this.cell_size) + this.padding;
-    }
-
-    tocvsy(y) {
-        return (y * this.cell_size) + this.padding;
-    }
-
-    fromcvsx(x) {
-        return (x - this.padding) / this.cell_size;
-    }
-
-    fromcvsy(y) {
-        return (y - this.padding) / this.cell_size;
+        return stepped;
     }
 
     layerPatternSize(lpattern) {
@@ -842,33 +217,33 @@ class TRRBTEngine {
 
     localInit(frame, what) {
         if (frame.local === null) {
-            frame.local = new Map();
+            frame.local = Object.create(null);
             for (let [name, val] of what) {
-                frame.local.set(name, val);
+                frame.local[name] = val;
             }
         }
     }
 
     localGet(frame, name) {
-        return frame.local.get(name);
+        return frame.local[name];
     }
 
     localSet(frame, name, val) {
-        return frame.local.set(name, val);
+        return frame.local[name] = val;
     }
 
     localSetIfTrue(frame, name, check) {
         if (check === true) {
-            frame.local.set(name, true);
+            frame.local[name] = true;
         }
     }
 
     localIncrement(frame, name) {
-        frame.local.set(name, frame.local.get(name) + 1)
+        frame.local[name] = frame.local[name] + 1;
     }
 
     localEqual(frame, name, val) {
-        return frame.local.get(name) === val;
+        return frame.local[name] === val;
     }
 
     pushCallStack(node) {
@@ -876,8 +251,8 @@ class TRRBTEngine {
     }
 
     pushCallStackNextChild(frame) {
-        this.pushCallStack(frame.node.children[frame.local.get('index')]);
-        frame.local.set('index', frame.local.get('index') + 1);
+        this.pushCallStack(frame.node.children[frame.local['index']]);
+        frame.local['index'] = frame.local['index'] + 1;
         return null;
     }
 
@@ -1096,7 +471,7 @@ class TRRBTEngine {
             this.rows = newRows;
             this.cols = newCols;
 
-            this.resizeCanvas();
+            this.onBoardResized();
         }
 
         return true;
@@ -1151,7 +526,7 @@ class TRRBTEngine {
             this.rows = this.board.length;
             this.cols = this.board[0].length;
 
-            this.resizeCanvas();
+            this.onBoardResized();
         }
 
         return true;
@@ -1210,24 +585,24 @@ class TRRBTEngine {
             if (choices.length > 0) {
                 this.choicePlayer = frame.node.pid;
 
-                this.choicesByRct = new Map();
-                this.choicesByBtn = new Map();
+                this.choicesByRct = Object.create(null);
+                this.choicesByBtn = Object.create(null);
 
                 for (let choice of choices) {
                     let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
                     let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
                     let rctk = JSON.stringify(rct);
 
-                    let mapChoices = []
-                    if (this.choicesByRct.has(rctk)) {
-                        mapChoices = this.choicesByRct.get(rctk).choices;
+                    let mapChoices = [];
+                    if (Object.hasOwn(this.choicesByRct, rctk)) {
+                        mapChoices = this.choicesByRct[rctk].choices;
                     }
 
                     mapChoices.push(choice);
-                    this.choicesByRct.set(rctk, {rct:rct, choices:mapChoices});
+                    this.choicesByRct[rctk] = {rct:rct, choices:mapChoices};
 
                     if (choice.button !== undefined) {
-                        this.choicesByBtn.set(choice.button, choice);
+                        this.choicesByBtn[choice.button] = choice;
                     }
                 }
 
@@ -1240,4 +615,630 @@ class TRRBTEngine {
         }
     }
 
+};
+
+
+
+class TRRBTWebEngine extends TRRBTEngine {
+
+    constructor(game, canvasname, divname) {
+        super(game);
+
+        this.canvasname = canvasname;
+        this.divname = divname;
+
+        this.canvas = null;
+        this.ctx = null;
+        this.breakResumeText = null;
+        this.engineDiv = null;
+
+        this.padding = null;
+        this.cell_size = null;
+        this.keysDown = null;
+
+        this.spriteImages = null;
+        this.spriteTiles = null;
+        this.back = null;
+        this.hideText = null;
+
+        this.player_id_colors = null;
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+        this.stepManual = false;
+
+        this.editor = null;
+    }
+
+    onLoad() {
+        super.onLoad(this);
+
+        document.oncontextmenu = function() {
+            return false;
+        }
+
+        this.canvas = document.getElementById(this.canvasname);
+        this.ctx = this.canvas.getContext('2d');
+        this.breakResumeText = null;
+        this.engineDiv = this.divname ? document.getElementById(this.divname) : null;
+
+        this.padding = 10;
+        this.cell_size = 50;
+        this.keysDown = new Set();
+
+        this.spriteImages = null;
+        this.spriteTiles = null;
+        this.back = null;
+        this.hideText = null;
+
+        this.player_id_colors = Object.create(null);
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+        this.stepManual = false;
+
+        this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
+        this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
+        this.canvas.addEventListener('mouseup', bind0(this, 'onMouseUp'));
+        this.canvas.addEventListener('mouseout', bind0(this, 'onMouseOut'));
+        this.canvas.addEventListener('keydown', bind0(this, 'onKeyDown'));
+        this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
+        this.canvas.focus();
+
+        if (this.game.sprites !== null) {
+            if (this.game.sprites.images !== undefined) {
+                this.spriteImages = Object.create(null);
+                for (let imageName in this.game.sprites.images) {
+                    const image_info = this.game.sprites.images[imageName];
+                    this.loadSpriteImage(imageName, image_info)
+                }
+            }
+            if (this.game.sprites.tiles !== undefined) {
+                this.spriteTiles = Object.create(null);
+                for (let tile in this.game.sprites.tiles) {
+                    this.spriteTiles[tile] = this.game.sprites.tiles[tile];
+                }
+            }
+            if (this.game.sprites.players !== undefined) {
+                for (let pid in this.game.sprites.players) {
+                    this.player_id_colors[String(pid)] = this.game.sprites.players[pid];
+                }
+            }
+            if (this.game.sprites.back !== undefined) {
+                this.back = this.game.sprites.back;
+            }
+            if (this.game.sprites.hidetext !== undefined) {
+                this.hideText = this.game.sprites.hidetext;
+            }
+        }
+
+        this.canvas.style.backgroundColor = '#ffffff';
+
+        this.updateEngineEditor();
+
+        this.onBoardResized();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onBoardResized() {
+        super.onBoardResized(this);
+
+        const desiredWidth = this.tocvsx(Math.max(1, this.cols)) + this.padding;
+        const desiredHeight = this.tocvsy(Math.max(1, this.rows)) + this.padding;
+        if (this.canvas.width != desiredWidth || this.canvas.height != desiredHeight) {
+            const ratio = window.devicePixelRatio;
+            this.canvas.width = desiredWidth * ratio;
+            this.canvas.height = desiredHeight * ratio;
+            this.canvas.style.width = desiredWidth + 'px';
+            this.canvas.style.height = desiredHeight + 'px';
+            this.ctx.scale(ratio, ratio);
+        }
+    }
+
+    arrayToImageData(from_data, fw, fh, ww, hh) {
+        let new_data = new Uint8ClampedArray(ww * hh * 4);
+        for (let xx = 0; xx < ww; xx += 1) {
+            for (let yy = 0; yy < hh; yy += 1) {
+                const fx = Math.floor(xx / ww * fw);
+                const fy = Math.floor(yy / hh * fh);
+
+                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
+                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
+                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
+                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
+            }
+        }
+        return new ImageData(new_data, ww, hh);
+    }
+
+    loadSpriteImage(image_name, image_info) {
+        this.spriteImages[image_name] = null;
+
+        const image_info_data = image_info.data;
+        const image_decoded = atob(image_info_data);
+        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
+        const image_blob = new Blob([image_array.buffer]);
+        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
+        const image_reader = image_decompressed.getReader();
+
+        let image_read_array = null;
+
+        let this_engine = this;
+
+        image_reader.read().then(function process({ done, value }) {
+            if (!done) {
+                if (image_read_array === null) {
+                    image_read_array = value;
+                } else {
+                    let merged_array = new Uint8Array(image_read_array.length + value.length);
+                    merged_array.set(image_read_array);
+                    merged_array.set(value, image_read_array.length);
+                    image_read_array = merged_array;
+                }
+                return image_reader.read().then(process);
+            } else {
+                const image_data = this_engine.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this_engine.cell_size, this_engine.cell_size);
+                let img_promise = createImageBitmap(image_data);
+                img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
+            }
+        });
+    }
+
+    updateEditor() {
+        if (this.editor !== null) {
+            this.editor.updatePositionsAndDraw();
+        }
+    }
+
+    updateEngineEditor() {
+        if (this.engineDiv === null) {
+            return;
+        }
+
+        const ed = this.engineDiv;
+
+        ed.innerHTML = '';
+
+        appendText(ed, 'Engine', true, true);
+        appendBr(ed);
+
+        appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendBr(ed);
+        appendBr(ed);
+
+        appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
+        appendText(ed, ' ', false, false);
+        this.breakResumeText = document.createElement('span');
+        this.breakResumeText.style.color = '#ffdddd';
+        this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
+        this.breakResumeText.title = 'Game is currently in break mode, where you must manually step. Resume or restart to play as normal.';
+        this.breakResumeText.style.display = 'none';
+        ed.appendChild(this.breakResumeText);
+        appendBr(ed);
+
+        appendButton(ed, 'Undo Move', 'Undo to last player choice.', null, bind1(this, 'onUndo', true));
+        appendButton(ed, 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', false));
+        appendBr(ed);
+
+        appendButton(ed, 'Next Move', 'Run to next player choice.', null, bind1(this, 'onNext', true));
+        appendButton(ed, 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', false));
+        appendBr(ed);
+    }
+
+    onDraw() {
+        if (this.spriteImages !== null) {
+            for (let [imgName, img] of Object.entries(this.spriteImages)) {
+                if (img === null) {
+                    window.requestAnimationFrame(bind0(this, 'onDraw'));
+                    return;
+                }
+            }
+        }
+
+        if (this.stepDelay !== null) {
+            if (Date.now() < this.stepDelay) {
+                window.requestAnimationFrame(bind0(this, 'onDraw'));
+                return;
+            } else {
+                this.stepDelay = null;
+            }
+        }
+
+        if (!this.stepManual) {
+            if (this.stepToInput()) {
+                this.updateEditor();
+            }
+        }
+
+        if (this.stepDelay !== null) {
+            window.requestAnimationFrame(bind0(this, 'onDraw'));
+        }
+
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.fillStyle = '#eeeeee';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+
+        for (let rr = 0; rr < this.rows; rr += 1) {
+            for (let cc = 0; cc < this.cols; cc += 1) {
+                let all_invis = true;
+                for (const [layer, pattern] of Object.entries(this.board)) {
+                    if (pattern[rr][cc] !== '.') {
+                        all_invis = false;
+                    }
+                }
+                if (!all_invis) {
+                    if (this.back !== null) {
+                        const brows = this.back.length;
+                        const bcols = this.back[0].length;
+
+                        const back_tile = this.back[rr % brows][cc % bcols];
+                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, back_tile)) {
+                            const img = this.spriteImages[this.spriteTiles[back_tile]];
+                            this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
+                        }
+                    } else {
+                        this.ctx.fillStyle = '#cccccc';
+                        this.ctx.fillRect(this.tocvsx(cc), this.tocvsy(rr), this.cell_size, this.cell_size);
+                    }
+                }
+            }
+        }
+
+        let choiceOverwrite = null;
+        if (this.mouseChoice !== null && !this.mouseAlt) {
+            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx].rhs };
+        }
+
+        this.ctx.fillStyle = '#000000';
+
+        for (let rr = 0; rr < this.rows; rr += 1) {
+            for (let cc = 0; cc < this.cols; cc += 1) {
+                let tiles = [];
+                let overwrites = [];
+                if (choiceOverwrite !== null &&
+                    choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
+                    choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
+                    for (const [layer, pattern] of Object.entries(this.board)) {
+                        if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
+                            const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                            if (tileOverwrite !== '.') {
+                                tiles.push(tileOverwrite);
+                                overwrites.push(true);
+                            } else {
+                                tiles.push(pattern[rr][cc]);
+                                overwrites.push(false);
+                            }
+                        } else {
+                            tiles.push(pattern[rr][cc]);
+                            overwrites.push(false);
+                        }
+                    }
+                } else {
+                    for (const [layer, pattern] of Object.entries(this.board)) {
+                        tiles.push(pattern[rr][cc]);
+                        overwrites.push(false);
+                    }
+                }
+                tiles = tiles.reverse();
+                overwrites = overwrites.reverse();
+                for (let ii in tiles) {
+                    const tile = tiles[ii];
+                    const overwrite = overwrites[ii];
+                    if (overwrite) {
+                        this.ctx.globalAlpha = 0.5;
+                    } else {
+                        this.ctx.globalAlpha = 1.0;
+                    }
+                    if (tile !== '.') {
+                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, tile)) {
+                            const imgName = this.spriteTiles[tile];
+                            if (imgName !== null) {
+                                const img = this.spriteImages[imgName];
+                                this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
+                            }
+                        } else {
+                            if (this.hideText !== null && this.hideText.indexOf(tile) >= 0) {
+                                // pass
+                            } else {
+                                this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
+                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (this.choicesByRct !== null) {
+            this.ctx.lineWidth = 3;
+            this.ctx.globalAlpha = 1.0;
+
+            const colork = String(this.choicePlayer);
+            if (!Object.hasOwn(this.player_id_colors, colork)) {
+                let color_num = Object.keys(this.player_id_colors).length % 5;
+                let next_color = null;
+                if (color_num === 0) {
+                    next_color = [0, 0, 220];
+                } else if (color_num === 1) {
+                    next_color = [0, 220, 0];
+                } else if (color_num === 2) {
+                    next_color = [220, 220, 0];
+                } else if (color_num === 3) {
+                    next_color = [220, 0, 220];
+                } else {
+                    next_color = [0, 220, 220];
+                }
+                this.player_id_colors[colork] = next_color;
+            }
+
+            let player_color = this.player_id_colors[colork];
+
+            if (this.mouseChoice !== null) {
+                let rct = this.mouseChoice.rct;
+                let idx = this.mouseChoice.idx;
+
+                let rct_choices = this.choicesByRct[JSON.stringify(rct)].choices;
+                let desc = rct_choices[idx].desc;
+
+                this.ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                this.ctx.beginPath();
+                this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), rct.cols * this.cell_size, rct.rows * this.cell_size, 3);
+                this.ctx.stroke();
+
+                if (rct_choices.length > 1) {
+                    this.ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                    this.ctx.beginPath();
+                    this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), 0.4 * this.cell_size, 0.4 * this.cell_size, 3);
+                    this.ctx.fill();
+                    this.ctx.fillStyle = '#DCDCDC'
+                    this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
+                    this.ctx.fillText(idx + 1, this.tocvsx(rct.col + 0.2), this.tocvsy(rct.row + 0.2 + 0.025));
+                }
+                if (desc !== undefined) {
+                    this.ctx.fillStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
+                    this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
+                    this.ctx.fillText(desc, this.tocvsx(rct.col + 0.5 * rct.cols), this.tocvsy(rct.row + rct.rows - 0.2));
+                }
+            } else {
+                if (!this.mouseAlt) {
+                    this.ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+
+                    for (const [rctk, rctChoices] of Object.entries(this.choicesByRct)) {
+                        let rct = rctChoices.rct;
+                        let choices = rctChoices.choices;
+                        this.ctx.beginPath();
+                        this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), rct.cols * this.cell_size, rct.rows * this.cell_size, 3);
+                        this.ctx.stroke();
+                        if (choices.length > 1) {
+                            this.ctx.fillStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
+                            this.ctx.beginPath();
+                            this.ctx.roundRect(this.tocvsx(rct.col), this.tocvsy(rct.row), 0.4 * this.cell_size, 0.4 * this.cell_size, 3);
+                            this.ctx.fill();
+                            this.ctx.fillStyle = '#DCDCDC'
+                            this.ctx.font = (0.9 * 0.4 * this.cell_size) + ENG_FONTNAME;
+                            this.ctx.fillText(choices.length, this.tocvsx(rct.col + 0.2), this.tocvsy(rct.row + 0.2 + 0.025));
+                        }
+                    }
+                }
+            }
+        }
+
+        if (this.stepManual) {
+            this.ctx.lineWidth = 10;
+            this.ctx.strokeStyle = '#ffdddd';
+            this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
+        }
+    }
+
+    updateStepManual(setting) {
+        if (setting != this.stepManual) {
+            this.stepManual = setting;
+            if (this.breakResumeText !== null) {
+                if (this.stepManual) {
+                    this.breakResumeText.style.display = 'inline';
+                } else {
+                    this.breakResumeText.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    onBreakResume() {
+        this.updateStepManual(!this.stepManual);
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onUndo(toInput) {
+        this.undoPop();
+        if (toInput) {
+            while (!this.undoEmpty() && this.shouldStepToInput()) {
+                this.undoPop();
+            }
+        } else {
+            this.updateStepManual(true);
+        }
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+
+        this.onBoardResized();
+
+        this.updateEditor();
+
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onNext(toInput) {
+        if (this.shouldStepToInput()) {
+            this.stepGameTree();
+            if (toInput) {
+                this.stepToInput();
+            }
+            this.updateEditor();
+        } else {
+            this.updateStepManual(true);
+        }
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onKeyDown(evt) {
+        let key = evt.key;
+
+        if (!this.keysDown.has(key)) {
+            this.keysDown.add(key);
+
+            if (key === 'b' || key === 'B') {
+                this.onBreakResume();
+            } else if (key === 'n' || key === 'N') {
+                this.onNext(key === 'n');
+            } else if (key === 'p' || key === 'P') {
+                this.onUndo(key === 'p');
+            }
+
+            if (this.choiceWait === true) {
+                let keyp = null;
+                if (key === 'ArrowLeft') {
+                    keyp = 'left';
+                } else if (key === 'ArrowRight') {
+                    keyp = 'right';
+                } else if (key === 'ArrowUp') {
+                    keyp = 'up';
+                } else if (key === 'ArrowDown') {
+                    keyp = 'down';
+                } else if (key === 'z') {
+                    keyp = 'action1';
+                } else if (key === 'x') {
+                    keyp = 'action2';
+                }
+                if (keyp !== null && Object.hasOwn(this.choicesByBtn, keyp)) {
+                    this.stepGameTree();
+
+                    this.choiceWait = this.choicesByBtn[keyp];
+                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
+                    this.mouseChoice = null;
+                    this.choicesByRct = null;
+                    this.choicesByBtn = null;
+                    this.choicePlayer = null;
+                }
+            }
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onKeyUp(evt) {
+        let key = evt.key;
+
+        this.keysDown.delete(key);
+
+        evt.preventDefault();
+    }
+
+    onMouseDown(evt) {
+        this.canvas.focus();
+
+        const mouseButton = evt.button;
+
+        if (mouseButton === BUTTON_LEFT) {
+            if (this.mouseChoice !== null) {
+                if (this.choiceWait === true) {
+                    this.stepGameTree();
+
+                    this.choiceWait = this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx];
+                    this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
+                    this.mouseChoice = null;
+                    this.choicesByRct = null;
+                    this.choicesByBtn = null;
+                    this.choicePlayer = null;
+                }
+            }
+        } else if (mouseButton === BUTTON_RIGHT) {
+            this.mouseAlt = true;
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onMouseUp(evt) {
+        const mouseButton = evt.button;
+
+        if (mouseButton === BUTTON_RIGHT) {
+            this.mouseAlt = false;
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onMouseMove(evt) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = evt.clientX - rect.left;
+        const mouseY = evt.clientY - rect.top;
+
+        this.mouseChoice = null;
+        if (this.choicesByRct !== null) {
+            const mr = this.fromcvsy(mouseY);
+            const mc = this.fromcvsx(mouseX);
+            if (0 <= mr && mr < this.rows && 0 <= mc && mc < this.cols) {
+                let best_choices = [];
+                let best_dist_sqr = null;
+
+                for (const [rctk, rctChoices] of Object.entries(this.choicesByRct)) {
+                    let rct = rctChoices.rct;
+                    let choices = rctChoices.choices;
+                    if (rct.row <= mr && mr <= rct.row + rct.rows && rct.col <= mc && mc <= rct.col + rct.cols) {
+                        let rowmid = rct.row + rct.rows / 2.0;
+                        let colmid = rct.col + rct.cols / 2.0;
+                        let dist_sqr = (mr - rowmid) ** 2 + (mc - colmid) ** 2;
+                        if (best_dist_sqr === null || dist_sqr < best_dist_sqr - 0.001) {
+                            best_dist_sqr = dist_sqr;
+                            best_choices = [];
+                            for (let ii = 0; ii < choices.length; ii += 1) {
+                                best_choices.push({rct:rct, idx:ii});
+                            }
+                        } else if (dist_sqr < best_dist_sqr + 0.001) {
+                            for (let ii = 0; ii < choices.length; ii += 1) {
+                                best_choices.push({rct:rct, idx:ii});
+                            }
+                        }
+                    }
+                }
+
+                if (best_choices.length > 0) {
+                    const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
+                    this.mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
+                }
+            }
+        }
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    onMouseOut(evt) {
+        this.mouseChoice = null;
+
+        evt.preventDefault();
+        window.requestAnimationFrame(bind0(this, 'onDraw'));
+    }
+
+    tocvsx(x) {
+        return (x * this.cell_size) + this.padding;
+    }
+
+    tocvsy(y) {
+        return (y * this.cell_size) + this.padding;
+    }
+
+    fromcvsx(x) {
+        return (x - this.padding) / this.cell_size;
+    }
+
+    fromcvsy(y) {
+        return (y - this.padding) / this.cell_size;
+    }
 };

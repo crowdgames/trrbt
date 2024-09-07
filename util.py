@@ -112,8 +112,10 @@ def require_js():
 
         js = ''
         js += open(os.path.join(dirname, 'web/common.js')).read() + '\n'
+        js += open(os.path.join(dirname, 'web/engine.js')).read() + '\n'
         js += '() => { return { '
-        js += 'xform_apply_to_tree:xform_apply_to_tree'
+        js += 'xform_apply_to_tree:xform_apply_to_tree,'
+        js += 'new_engine:(game)=>{ return new TRRBTEngine(game); }'
         js += ' } };\n'
 
         _js_common = pythonmonkey.eval(js)()
@@ -123,6 +125,12 @@ def xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispids):
     require_js()
 
     return _js_common['xform_apply_to_tree'](tree, resolve_file_to_game, apply_xform, use_dispids)
+
+def new_engine(game):
+    global _js_common
+    require_js()
+
+    return _js_common['new_engine'](game)
 
 
 
