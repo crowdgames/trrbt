@@ -6,8 +6,8 @@ import time
 import copy
 from queue import PriorityQueue
 from collections import deque
-import game
-from game import GameOverException, END_WIN
+import game_py
+from game_py import GameOverException, END_WIN
 
 
 def manhattan(board, a, b):
@@ -49,7 +49,7 @@ class Frontier:
         return self.priority < other.priority
 
 
-class AgentGameProcessor(game.GameProcessor):
+class AgentGameProcessor(game_py.GameProcessor):
     def __init__(self, filename, agent_id, agent_heuristic, timeout):
         super().__init__(filename, True, [], False)
         self.agent_id = agent_id
