@@ -16,7 +16,6 @@ class TRRBTEngine {
         this.callStack = null;
         this.callResult = null;
         this.gameResult = null;
-        this.gameOver = false;
         this.loopCheck = 0;
         this.stepDelay = null;
 
@@ -38,7 +37,6 @@ class TRRBTEngine {
         this.callStack = null;
         this.callResult = null;
         this.gameResult = null;
-        this.gameOver = false;
         this.loopCheck = 0;
         this.stepDelay = null;
 
@@ -72,7 +70,6 @@ class TRRBTEngine {
         state.callStack = callStackCopy;
         state.callResult = this.callResult;
         state.gameResult = deepcopyobj(this.gameResult);
-        state.gameOver = this.gameOver;
         state.loopCheck = this.loopCheck;
 
         state.board = deepcopyobj(this.board);
@@ -109,7 +106,6 @@ class TRRBTEngine {
             this.callStack = state.callStack;
             this.callResult = state.callResult;
             this.gameResult = state.gameResult;
-            this.gameOver = state.gameOver;
             this.loopCheck = state.loopCheck;
 
             this.board = state.board;
@@ -125,7 +121,6 @@ class TRRBTEngine {
             this.callStack = null;
             this.callResult = null;
             this.gameResult = null;
-            this.gameOver = false;
             this.loopCheck = 0;
 
             this.board = null;
@@ -147,7 +142,11 @@ class TRRBTEngine {
     }
 
     shouldStepToInput() {
-        return this.game.tree !== null && this.gameOver !== true && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
+        return this.game.tree !== null && this.gameResult === null && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
+    }
+
+    gameOver() {
+        return this.gameResult !== null;
     }
 
     stepToInput() {
@@ -162,7 +161,7 @@ class TRRBTEngine {
 
                 if (this.loopCheck === 100000) {
                     this.loopCheck = true;
-                    setTimeout(() => { alert('too many steps before player input, stopping') }, 100);
+                    this.gameResult = {result:'timeout'};
                     break;
                 }
             }
@@ -309,8 +308,7 @@ class TRRBTEngine {
                 this.callStack = [];
                 this.pushCallStack(this.game.tree);
             } else {
-                if (this.gameOver === true) {
-                } else if (this.gameResult === null) {
+                if (this.gameResult === null) {
                     this.undoPush();
 
                     if (this.callStack.length === 0) {
@@ -324,10 +322,6 @@ class TRRBTEngine {
                             this.callStack.pop();
                         }
                     }
-                } else {
-                    this.undoPush();
-
-                    this.gameOver = true;
                 }
             }
         }
@@ -1047,7 +1041,7 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
 
-        if (this.gameOver) {
+        if (this.gameResult !== null) {
             if (this.gameResultWait === null) {
                 this.gameResultWait = 10;
             } else if (this.gameResultWait > 0) {
@@ -1064,8 +1058,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                         alert('Game over, draw!');
                     } else if (this.gameResult.result === 'stalemate') {
                         alert('Game over, stalemate!');
+                    } else if (this.gameResult.result === 'timeout') {
+                        alert('Game over, too many steps before player input!');
                     } else {
-                        alert('Game over, unknown result!');
+                        alert('Game over, unknown result: ' + this.gameResult.result + '!');
                     }
                 }
             }
