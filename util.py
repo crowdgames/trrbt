@@ -196,6 +196,12 @@ def listify(patt):
 def tuplify(patt):
     return tuple([tuple(row) for row in patt])
 
+def intify(s):
+    if type(s) == float and int(s) == s:
+        return int(s)
+    else:
+        return s
+
 def pad_pattern(patt):
     max_row_len = max([len(row) for row in patt])
     return [row + (['.'] * (max_row_len - len(row))) for row in patt]
@@ -274,12 +280,6 @@ def node_max_tile_width(node):
             tile_len = max(tile_len, node_max_tile_width(child))
 
     return tile_len
-
-def gv_int(s):
-    if type(s) == float and int(s) == s:
-        return int(s)
-    else:
-        return s
 
 def gv_filter_string(s):
     return s.replace('<', '&lt;').replace('>', '&gt;')
@@ -432,9 +432,9 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
         nlabel += ntype
 
         if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
-            nlabel += ':' + str(gv_int(node[NKEY_PID]))
+            nlabel += ':' + str(intify(node[NKEY_PID]))
         elif ntype in [ND_LOOP_TIMES]:
-            nlabel += ':' + str(gv_int(node[NKEY_TIMES]))
+            nlabel += ':' + str(intify(node[NKEY_TIMES]))
         elif ntype in [NDX_UNROLL_REPLACE]:
             nlabel += GVNEWLINE
             nlabel += gv_filter_string(node[NKEY_WHAT])
