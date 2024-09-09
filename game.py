@@ -26,15 +26,18 @@ def run_game(filename, choice_order, random_players, clear_screen):
     previous_moves = {}
     max_tile_width = util.node_max_tile_width(game.tree)
 
-    while True:
-        engine.stepToChoice()
-
+    def displayBoard():
         if clear_screen is not None:
             cls()
 
         print('Current board is:')
         print(util.layer_pattern_to_string(engine.state.board, None, '-', '-\n', '\n', '', '', ' ', '\n', max_tile_width))
         print()
+
+    while True:
+        engine.stepToWait()
+
+        displayBoard()
 
         if engine.gameOver():
             go = engine.state.gameResult
@@ -52,54 +55,18 @@ def run_game(filename, choice_order, random_players, clear_screen):
                 print('Game over, unrecognized game result:', go.result)
             break
 
-        player_id = util.intify(engine.state.choicePlayer)
+        elif engine.state.displayWait:
+            displayBoard()
 
-        if player_id in random_players:
-            choiceIndex = random.randint(0, len(engine.state.choices) - 1)
-            choice = engine.state.choices[choiceIndex]
+            delay(engine.state.displayDelay)
 
-            lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            rhs = util.layer_pattern_to_string(choice.rhs, None, '-', '-:', '&', '', '', ' ', '; ')
-            row = round(choice.row)
-            col = round(choice.col)
+            engine.clearDisplayWait()
 
-            print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
+        elif engine.state.choiceWait:
+            player_id = util.intify(engine.state.choicePlayer)
 
-            engine.makeChoiceIndex(choiceIndex)
-            print()
-
-            if clear_screen is not None:
-                delay(clear_screen)
-
-        else:
-            inputToChoiceIndex = {}
-
-            for choiceIndex, choice in enumerate(engine.state.choices):
-                if choice_order:
-                    inputIndex = choiceIndex + 1
-
-                else:
-                    inputIndex = None
-
-                    choice_keys = [(str(choice.lhs), choice.row, choice.col, str(choice.rhs)), (str(choice.lhs), choice.row, choice.col), (str(choice.lhs))]
-                    for choice_key in choice_keys:
-                        if choice_key in previous_moves:
-                            inputIndex = previous_moves[choice_key]
-                            break
-
-                    if inputIndex is None:
-                        inputIndex = 1 + (max(previous_moves.values()) if len(previous_moves) > 0 else 0)
-
-                    while inputIndex in inputToChoiceIndex:
-                        inputIndex += 1
-
-                    for choice_key in choice_keys:
-                        previous_moves[choice_key] = inputIndex
-
-                inputToChoiceIndex[inputIndex] = choiceIndex
-
-            print(f'Choices for player {player_id} are:')
-            for inputIndex, choiceIndex in inputToChoiceIndex.items():
+            if player_id in random_players:
+                choiceIndex = random.randint(0, len(engine.state.choices) - 1)
                 choice = engine.state.choices[choiceIndex]
 
                 lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
@@ -107,22 +74,66 @@ def run_game(filename, choice_order, random_players, clear_screen):
                 row = round(choice.row)
                 col = round(choice.col)
 
-                desc = f'({choice.desc}) ' if choice.desc is not None else ''
+                print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
-                print(f'{desc}{inputIndex}: {lhs} → {rhs} at {row},{col}')
+                engine.clearChoiceWait(choiceIndex)
+                print()
 
-            choiceIndex = None
-            while choiceIndex is None:
-                try:
-                    user_input = int(input(f'Please enter the number of your choice: '))
-                    if user_input not in inputToChoiceIndex:
-                        print('Your number is out of range!')
+                if clear_screen is not None:
+                    delay(clear_screen)
+
+            else:
+                inputToChoiceIndex = {}
+
+                for choiceIndex, choice in enumerate(engine.state.choices):
+                    if choice_order:
+                        inputIndex = choiceIndex + 1
+
                     else:
-                        choiceIndex = inputToChoiceIndex[user_input]
-                except ValueError:
-                    print('Error: Please enter a valid number.')
-            engine.makeChoiceIndex(choiceIndex)
-            print()
+                        inputIndex = None
+
+                        choice_keys = [(str(choice.lhs), choice.row, choice.col, str(choice.rhs)), (str(choice.lhs), choice.row, choice.col), (str(choice.lhs))]
+                        for choice_key in choice_keys:
+                            if choice_key in previous_moves:
+                                inputIndex = previous_moves[choice_key]
+                                break
+
+                        if inputIndex is None:
+                            inputIndex = 1 + (max(previous_moves.values()) if len(previous_moves) > 0 else 0)
+
+                        while inputIndex in inputToChoiceIndex:
+                            inputIndex += 1
+
+                        for choice_key in choice_keys:
+                            previous_moves[choice_key] = inputIndex
+
+                    inputToChoiceIndex[inputIndex] = choiceIndex
+
+                print(f'Choices for player {player_id} are:')
+                for inputIndex, choiceIndex in inputToChoiceIndex.items():
+                    choice = engine.state.choices[choiceIndex]
+
+                    lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
+                    rhs = util.layer_pattern_to_string(choice.rhs, None, '-', '-:', '&', '', '', ' ', '; ')
+                    row = round(choice.row)
+                    col = round(choice.col)
+
+                    desc = f'({choice.desc}) ' if choice.desc is not None else ''
+
+                    print(f'{desc}{inputIndex}: {lhs} → {rhs} at {row},{col}')
+
+                choiceIndex = None
+                while choiceIndex is None:
+                    try:
+                        user_input = int(input(f'Please enter the number of your choice: '))
+                        if user_input not in inputToChoiceIndex:
+                            print('Your number is out of range!')
+                        else:
+                            choiceIndex = inputToChoiceIndex[user_input]
+                    except ValueError:
+                        print('Error: Please enter a valid number.')
+                engine.clearChoiceWait(choiceIndex)
+                print()
 
 
 

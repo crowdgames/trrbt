@@ -343,4 +343,4 @@ tree:
                     pattern: Pdb
 
             - type: display-board
-              delay: 200
+              delay: 0.2
