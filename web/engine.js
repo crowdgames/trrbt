@@ -5,19 +5,13 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 
 
-class TRRBTEngine {
+class TRRBTState {
 
-    constructor(game) {
-        this.game = game;
-
-        this.undoStackPlayer = [];
-        this.undoStackRecent = [];
-
+    constructor() {
         this.callStack = null;
         this.callResult = null;
         this.gameResult = null;
         this.loopCheck = 0;
-        this.stepDelay = null;
 
         this.board = null;
         this.rows = 0;
@@ -30,31 +24,9 @@ class TRRBTEngine {
         this.choiceWait = false;
     }
 
-    onLoad() {
-        this.undoStackPlayer = [];
-        this.undoStackRecent = [];
+    clone() {
+        let state = new TRRBTState();
 
-        this.callStack = null;
-        this.callResult = null;
-        this.gameResult = null;
-        this.loopCheck = 0;
-        this.stepDelay = null;
-
-        this.board = null;
-        this.rows = 0;
-        this.cols = 0;
-
-        this.choices = null;
-        this.choicesByRct = null;
-        this.choicesByBtn = null;
-        this.choicePlayer = null;
-        this.choiceWait = false;
-    }
-
-    onBoardResized() {
-    }
-
-    undoPush() {
         let callStackCopy = null;
 
         if (this.callStack !== null) {
@@ -64,8 +36,6 @@ class TRRBTEngine {
                 callStackCopy.push(frameCopy);
             }
         }
-
-        let state = {};
 
         state.callStack = callStackCopy;
         state.callResult = this.callResult;
@@ -82,104 +52,367 @@ class TRRBTEngine {
         state.choicePlayer = this.choicePlayer;
         state.choiceWait = deepcopyobj(this.choiceWait);
 
-        while (this.undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
-            let oldState = this.undoStackRecent.shift();
-            if (oldState.callStack !== null && oldState.callStack.length > 0 && oldState.callStack.at(-1).node.type === 'player' && oldState.choiceWait === true) {
-                while (this.undoStackPlayer.length >= ENG_UNDO_PLAYER_MAX) {
-                    this.undoStackPlayer.shift();
-                }
-                this.undoStackPlayer.push(oldState);
-            }
-        }
-        this.undoStackRecent.push(state);
+        return state;
     }
 
-    undoPop() {
-        let state = null;
-        if (this.undoStackRecent.length > 0) {
-            state = this.undoStackRecent.pop();
-        } else if (this.undoStackPlayer.length > 0) {
-            state = this.undoStackPlayer.pop();
-        }
+};
 
-        if (state !== null) {
-            this.callStack = state.callStack;
-            this.callResult = state.callResult;
-            this.gameResult = state.gameResult;
-            this.loopCheck = state.loopCheck;
 
-            this.board = state.board;
-            this.rows = state.rows;
-            this.cols = state.cols;
 
-            this.choices = state.choices;
-            this.choicesByRct = state.choicesByRct;
-            this.choicesByBtn = state.choicesByBtn;
-            this.choicePlayer = state.choicePlayer;
-            this.choiceWait = state.choiceWait;
+class TRRBTStepper {
+
+    makeChoiceIndex(tree, state, choiceIndex) {
+        state.choiceWait = state.choices[choiceIndex];
+        this.rewriteLayerPattern(state, state.choiceWait.rhs, state.choiceWait.row, state.choiceWait.col);
+
+        state.choices = null;
+        state.choicesByRct = null;
+        state.choicesByBtn = null;
+        state.choicePlayer = null;
+    }
+
+    stepReady(tree, state) {
+        return tree !== null && state.gameResult === null && state.choiceWait !== true;
+    }
+
+    step(tree, state, stepout) {
+        const NODE_FN_MAP = {
+            'display-board': bind0(this, 'stepNodeDisplayBoard'),
+            'set-board': bind0(this, 'stepNodeSetBoard'),
+            'layer-template': bind0(this, 'stepNodeLayerTemplate'),
+            'append-rows': bind0(this, 'stepNodeAppendRows'),
+            'order': bind0(this, 'stepNodeOrder'),
+            'loop-until-all': bind0(this, 'stepNodeLoopUntilAll'),
+            'loop-times': bind0(this, 'stepNodeLoopTimes'),
+            'random-try': bind0(this, 'stepNodeRandomTry'),
+            'all': bind0(this, 'stepNodeAll'),
+            'none': bind0(this, 'stepNodeNone'),
+            'win': bind0(this, 'stepNodeWin'),
+            'lose': bind0(this, 'stepNodeLose'),
+            'draw': bind0(this, 'stepNodeDraw'),
+            'match': bind0(this, 'stepNodeMatch'),
+            'rewrite': bind0(this, 'stepNodeRewrite'),
+            'player': bind0(this, 'stepNodePlayer'),
+        };
+
+        if (tree === null) {
+            // pass
+        } else if (state.gameResult !== null) {
+            // pass
+        } else if (state.callStack === null) {
+            state.callStack = [];
+            this.pushCallStack(state, tree);
+        } else if (state.callStack.length === 0) {
+            state.gameResult = {result:'stalemate'};
         } else {
-            this.callStack = null;
-            this.callResult = null;
-            this.gameResult = null;
-            this.loopCheck = 0;
+            let frame = state.callStack.at(-1);
 
-            this.board = null;
-            this.rows = null;
-            this.cols = null;
+            if (frame.node.type === 'player') {
+                state.loopCheck = 0;
+            } else {
+                state.loopCheck += 1;
+            }
 
-            this.choices = null;
-            this.choicesByRct = null;
-            this.choicesByBtn = null;
-            this.choicePlayer = null;
-            this.choiceWait = false;
-        }
+            if (stepout !== null && state.loopCheck >= stepout) {
+                state.gameResult = {result:'stepout'};
+            } else {
+                let fn = NODE_FN_MAP[frame.node.type];
+                state.callResult = fn(state, frame, state.callResult);
 
-        this.stepDelay = null;
-    }
-
-    undoEmpty() {
-        return (this.undoStackRecent.length + this.undoStackPlayer.length) === 0;
-    }
-
-    shouldStepToInput() {
-        return this.game.tree !== null && this.gameResult === null && this.choiceWait !== true && this.loopCheck !== true && this.stepDelay === null;
-    }
-
-    gameOver() {
-        return this.gameResult !== null;
-    }
-
-    stepToInput() {
-        let stepped = false;
-
-        if (this.loopCheck !== true) {
-            this.loopCheck = 0;
-            while (this.shouldStepToInput()) {
-                this.stepGameTree();
-                ++ this.loopCheck;
-                stepped = true;
-
-                if (this.loopCheck === 100000) {
-                    this.loopCheck = true;
-                    this.gameResult = {result:'timeout'};
-                    break;
+                if (state.callResult === true || state.callResult === false) {
+                    state.callStack.pop();
                 }
             }
         }
-
-        return stepped;
     }
 
-    makeChoiceIndex(choiceIndex) {
-        this.stepGameTree();
+    stepNodeOrder(state, frame, lastResult) {
+        this.localInit(frame, [['any', false],
+                               ['index', 0]]);
 
-        this.choiceWait = this.choices[choiceIndex];
-        this.rewriteLayerPattern(this.choiceWait.rhs, this.choiceWait.row, this.choiceWait.col);
+        this.localSetIfTrue(frame, 'any', lastResult);
 
-        this.choices = null;
-        this.choicesByRct = null;
-        this.choicesByBtn = null;
-        this.choicePlayer = null;
+        if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return this.localGet(frame, 'any');
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeLoopUntilAll(state, frame, lastResult) {
+        this.localInit(frame, [['any', false],
+                               ['anyThisLoop', false],
+                               ['index', 0]]);
+
+        this.localSetIfTrue(frame, 'any', lastResult);
+        this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
+
+        if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            if (this.localGet(frame, 'anyThisLoop')) {
+                this.localSet(frame, 'anyThisLoop', false);
+                this.localSet(frame, 'index', 0);
+            } else {
+                return this.localGet(frame, 'any');
+            }
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeLoopTimes(state, frame, lastResult) {
+        this.localInit(frame, [['any', false],
+                               ['times', 0],
+                               ['index', 0]]);
+
+        this.localSetIfTrue(frame, 'any', lastResult);
+
+        if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            if (this.localEqual(frame, 'times', frame.node.times)) {
+                return this.localGet(frame, 'any');
+            } else {
+                this.localIncrement('times');
+                this.localSet(frame, 'index', 0);
+            }
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeRandomTry(state, frame, lastResult) {
+        this.localInit(frame, [['order', null]]);
+
+        if (this.localEqual(frame, 'order', null)) {
+            let order = [];
+            for (let ii = 0; ii < frame.node.children.length; ++ ii) {
+                order.push(ii);
+            }
+            order.sort((a, b) => 0.5 - Math.random());
+            this.localSet(frame, 'order', order);
+        }
+
+        if (lastResult === true) {
+            return true;
+        } else if (this.localGet(frame, 'order').length == 0) {
+            return false;
+        } else {
+            const index = this.localGet(frame, 'order').pop();
+            this.pushCallStack(state, frame.node.children[index]);
+            return null;
+        }
+    }
+
+    stepNodeAll(state, frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === false) {
+            return false;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return true;
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeNone(state, frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            return false;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return true;
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeWin(state, frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            state.gameResult = {result:'win', player:frame.node.pid};
+            return null;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return false;
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeLose(state, frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            state.gameResult = {result:'lose', player:frame.node.pid};
+            return null;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return false;
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeDraw(state, frame, lastResult) {
+        this.localInit(frame, [['index', 0]]);
+
+        if (lastResult === true) {
+            state.gameResult = {result:'draw'};
+            return null;
+        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            return false;
+        } else {
+            return this.pushCallStackNextChild(state, frame);
+        }
+    }
+
+    stepNodeSetBoard(state, frame, lastResult) {
+        state.board = deepcopyobj(frame.node.pattern);
+
+        const [newRows, newCols] = this.layerPatternSize(state.board);
+        if (newRows !== state.rows || newCols !== state.cols) {
+            state.rows = newRows;
+            state.cols = newCols;
+        }
+
+        return true;
+    }
+
+    stepNodeDisplayBoard(state, frame, lastResult) {
+        if (frame.node.hasOwnProperty('delay')) {
+            //!! this.stepDelay = Date.now() + frame.node.delay;
+        }
+        return true;
+    }
+
+    stepNodeLayerTemplate(state, frame, lastResult) {
+        let newLayer = [];
+        for (let row of state.board['main']) {
+            let newRow = [];
+            for (let tile of row) {
+                if (tile === '.') {
+                    newRow.push('.');
+                } else {
+                    newRow.push(frame.node.with);
+                }
+            }
+            newLayer.push(newRow);
+        }
+
+        state.board[frame.node.layer] = newLayer;
+
+        return true;
+    }
+
+    stepNodeAppendRows(state, frame, lastResult) {
+        if (state.rows === 0 || state.cols === 0) {
+            state.board = frame.node.pattern.slice();
+        } else {
+            for (let patternRow of frame.node.pattern) {
+                let newRow = []
+                while (newRow.length < state.cols) {
+                    for (let tile of patternRow) {
+                        if (newRow.length < state.cols) {
+                            newRow.push(tile);
+                        }
+                    }
+                }
+                state.board.push(newRow);
+            }
+        }
+
+        let newRows = state.board.length;
+        let newCols = state.board[0].length;
+        if (newRows !== state.rows || newCols !== state.cols) {
+            state.rows = state.board.length;
+            state.cols = state.board[0].length;
+        }
+
+        return true;
+    }
+
+    stepNodeMatch(state, frame, lastResult) {
+        if (this.findLayerPattern(state, frame.node.pattern).length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodeRewrite(state, frame, lastResult) {
+        let matches = this.findLayerPattern(state, frame.node.lhs);
+        if (matches.length > 0) {
+            let match = matches[Math.floor(Math.random() * matches.length)];
+            this.rewriteLayerPattern(state, frame.node.rhs, match.row, match.col);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodePlayer(state, frame, lastResult) {
+        if (state.choiceWait === true) {
+            return null;
+        } else if (state.choiceWait !== false) {
+            let choiceInfo = state.choiceWait;
+            state.choiceWait = false;
+
+            this.rewriteLayerPattern(state, choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
+            return true;
+        } else {
+            let choices = [];
+            for (let child of frame.node.children) {
+                if (child.type === 'rewrite') {
+                    let matches = this.findLayerPattern(state, child.lhs);
+                    for (let match of matches) {
+                        choices.push({desc:child.desc, button:child.button, lhs:child.lhs, rhs:child.rhs, row:match.row, col:match.col});
+                    }
+                }
+            }
+
+            let choicesUnique = []
+            let choicesSeen = new Set();
+            for (let choice of choices) {
+                const choicek = JSON.stringify(choice);
+                if (!choicesSeen.has(choicek)) {
+                    choicesSeen.add(choicek);
+                    choicesUnique.push(choice);
+                }
+            }
+            choices = choicesUnique;
+
+            if (choices.length > 0) {
+                state.choicePlayer = frame.node.pid;
+
+                state.choices = choices;
+                state.choicesByRct = Object.create(null);
+                state.choicesByBtn = Object.create(null);
+
+                for (let choiceIndex = 0; choiceIndex < state.choices.length; choiceIndex += 1) {
+                    const choice = state.choices[choiceIndex];
+
+                    let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
+                    let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
+                    let rctk = JSON.stringify(rct);
+
+                    let mapChoices = [];
+                    if (Object.hasOwn(state.choicesByRct, rctk)) {
+                        mapChoices = state.choicesByRct[rctk].choices;
+                    }
+
+                    mapChoices.push(choiceIndex);
+                    state.choicesByRct[rctk] = {rct:rct, choices:mapChoices};
+
+                    if (choice.button !== undefined) {
+                        state.choicesByBtn[choice.button] = choiceIndex;
+                    }
+                }
+
+                state.choiceWait = true;
+
+                return null;
+            } else {
+                return false;
+            }
+        }
     }
 
     layerPatternSize(lpattern) {
@@ -189,7 +422,7 @@ class TRRBTEngine {
         return [0, 0];
     }
 
-    matchLayerPattern(lpattern, row, col) {
+    matchLayerPattern(state, lpattern, row, col) {
         const [prows, pcols] = this.layerPatternSize(lpattern);
 
         for (let rr = 0; rr < prows; rr += 1) {
@@ -198,7 +431,7 @@ class TRRBTEngine {
                     if (lpattern[layer][rr][cc] === '.') {
                         continue;
                     }
-                    if (this.board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
+                    if (state.board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
                         return false;
                     }
                 }
@@ -207,7 +440,7 @@ class TRRBTEngine {
         return true;
     }
 
-    rewriteLayerPattern(lpattern, row, col) {
+    rewriteLayerPattern(state, lpattern, row, col) {
         const [prows, pcols] = this.layerPatternSize(lpattern);
 
         for (let rr = 0; rr < prows; rr += 1) {
@@ -216,19 +449,19 @@ class TRRBTEngine {
                     if (lpattern[layer][rr][cc] === '.') {
                         continue;
                     }
-                    this.board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
+                    state.board[layer][row + rr][col + cc] = lpattern[layer][rr][cc];
                 }
             }
         }
     }
 
-    findLayerPattern(lpattern) {
+    findLayerPattern(state, lpattern) {
         const [prows, pcols] = this.layerPatternSize(lpattern);
 
         let ret = []
-        for (let rr = 0; rr < this.rows - prows + 1; rr += 1) {
-            for (let cc = 0; cc < this.cols - pcols + 1; cc += 1) {
-                if (this.matchLayerPattern(lpattern, rr, cc)) {
+        for (let rr = 0; rr < state.rows - prows + 1; rr += 1) {
+            for (let cc = 0; cc < state.cols - pcols + 1; cc += 1) {
+                if (this.matchLayerPattern(state, lpattern, rr, cc)) {
                     ret.push({row:rr, col:cc});
                 }
             }
@@ -267,358 +500,108 @@ class TRRBTEngine {
         return frame.local[name] === val;
     }
 
-    pushCallStack(node) {
-        this.callStack.push({node: node, local: null});
+    pushCallStack(state, node) {
+        state.callStack.push({node: node, local: null});
     }
 
-    pushCallStackNextChild(frame) {
-        this.pushCallStack(frame.node.children[frame.local['index']]);
+    pushCallStackNextChild(state, frame) {
+        this.pushCallStack(state, frame.node.children[frame.local['index']]);
         frame.local['index'] = frame.local['index'] + 1;
         return null;
     }
+};
 
-    stepGameTree(stack) {
-        const NODE_FN_MAP = {
-            'display-board': bind0(this, 'stepNodeDisplayBoard'),
-            'set-board': bind0(this, 'stepNodeSetBoard'),
-            'layer-template': bind0(this, 'stepNodeLayerTemplate'),
-            'append-rows': bind0(this, 'stepNodeAppendRows'),
-            'order': bind0(this, 'stepNodeOrder'),
-            'loop-until-all': bind0(this, 'stepNodeLoopUntilAll'),
-            'loop-times': bind0(this, 'stepNodeLoopTimes'),
-            'random-try': bind0(this, 'stepNodeRandomTry'),
-            'all': bind0(this, 'stepNodeAll'),
-            'none': bind0(this, 'stepNodeNone'),
-            'win': bind0(this, 'stepNodeWin'),
-            'lose': bind0(this, 'stepNodeLose'),
-            'draw': bind0(this, 'stepNodeDraw'),
-            'match': bind0(this, 'stepNodeMatch'),
-            'rewrite': bind0(this, 'stepNodeRewrite'),
-            'player': bind0(this, 'stepNodePlayer'),
-        };
 
-        if (this.game.tree === null) {
-            return false;
-        }
 
-        if (this.loopCheck !== true && this.stepDelay === null) {
-            if (this.callStack === null) {
-                this.undoPush();
+class TRRBTEngine {
 
-                this.callStack = [];
-                this.pushCallStack(this.game.tree);
-            } else {
-                if (this.gameResult === null) {
-                    this.undoPush();
+    constructor(game) {
+        this.game = game;
 
-                    if (this.callStack.length === 0) {
-                        this.gameResult = {result:'stalemate'};
-                    } else {
-                        let frame = this.callStack.at(-1);
-                        let fn = NODE_FN_MAP[frame.node.type];
-                        this.callResult = fn(frame, this.callResult);
+        this.state = null;
+        this.stepper = null;
 
-                        if (this.callResult === true || this.callResult === false) {
-                            this.callStack.pop();
-                        }
-                    }
+        this.undoStackPlayer = null;
+        this.undoStackRecent = null;
+
+        this.stepDelay = null;
+    }
+
+    onLoad() {
+        this.game = this.game;
+
+        this.state = new TRRBTState();
+        this.stepper = new TRRBTStepper();
+
+        this.undoStackPlayer = [];
+        this.undoStackRecent = [];
+
+        this.stepDelay = null;
+    }
+
+    undoPush() {
+        let state = this.state.clone();
+
+        while (this.undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
+            let oldState = this.undoStackRecent.shift();
+            if (oldState.callStack !== null && oldState.callStack.length > 0 && oldState.callStack.at(-1).node.type === 'player' && oldState.choiceWait === true) {
+                while (this.undoStackPlayer.length >= ENG_UNDO_PLAYER_MAX) {
+                    this.undoStackPlayer.shift();
                 }
+                this.undoStackPlayer.push(oldState);
             }
         }
+        this.undoStackRecent.push(state);
     }
 
-    stepNodeOrder(frame, lastResult) {
-        this.localInit(frame, [['any', false],
-                               ['index', 0]]);
+    undoPop() {
+        let state = null;
+        if (this.undoStackRecent.length > 0) {
+            state = this.undoStackRecent.pop();
+        } else if (this.undoStackPlayer.length > 0) {
+            state = this.undoStackPlayer.pop();
+        }
 
-        this.localSetIfTrue(frame, 'any', lastResult);
-
-        if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return this.localGet(frame, 'any');
+        if (state !== null) {
+            this.state = state;
         } else {
-            return this.pushCallStackNextChild(frame);
+            this.state = new TRRBTState();
         }
+
+        this.stepDelay = null;
     }
 
-    stepNodeLoopUntilAll(frame, lastResult) {
-        this.localInit(frame, [['any', false],
-                               ['anyThisLoop', false],
-                               ['index', 0]]);
-
-        this.localSetIfTrue(frame, 'any', lastResult);
-        this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
-
-        if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            if (this.localGet(frame, 'anyThisLoop')) {
-                this.localSet(frame, 'anyThisLoop', false);
-                this.localSet(frame, 'index', 0);
-            } else {
-                return this.localGet(frame, 'any');
-            }
-        } else {
-            return this.pushCallStackNextChild(frame);
-        }
+    undoEmpty() {
+        return (this.undoStackRecent.length + this.undoStackPlayer.length) === 0;
     }
 
-    stepNodeLoopTimes(frame, lastResult) {
-        this.localInit(frame, [['any', false],
-                               ['times', 0],
-                               ['index', 0]]);
-
-        this.localSetIfTrue(frame, 'any', lastResult);
-
-        if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            if (this.localEqual(frame, 'times', frame.node.times)) {
-                return this.localGet(frame, 'any');
-            } else {
-                this.localIncrement('times');
-                this.localSet(frame, 'index', 0);
-            }
-        } else {
-            return this.pushCallStackNextChild(frame);
-        }
+    gameOver() {
+        return this.state.gameResult !== null;
     }
 
-    stepNodeRandomTry(frame, lastResult) {
-        this.localInit(frame, [['order', null]]);
-
-        if (this.localEqual(frame, 'order', null)) {
-            let order = [];
-            for (let ii = 0; ii < frame.node.children.length; ++ ii) {
-                order.push(ii);
-            }
-            order.sort((a, b) => 0.5 - Math.random());
-            this.localSet(frame, 'order', order);
-        }
-
-
-        if (lastResult === true) {
-            return true;
-        } else if (this.localGet(frame, 'order').length == 0) {
-            return false;
-        } else {
-            const index = this.localGet(frame, 'order').pop();
-            this.pushCallStack(frame.node.children[index]);
-            return null;
-        }
+    stepReady() {
+        return this.stepper.stepReady(this.game.tree, this.state);
     }
 
-    stepNodeAll(frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
-
-        if (lastResult === false) {
-            return false;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return true;
-        } else {
-            return this.pushCallStackNextChild(frame);
-        }
+    step() {
+        this.undoPush();
+        this.stepper.step(this.game.tree, this.state, 100000);
     }
 
-    stepNodeNone(frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
+    stepToChoice() {
+        let stepped = false;
 
-        if (lastResult === true) {
-            return false;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return true;
-        } else {
-            return this.pushCallStackNextChild(frame);
+        while (this.stepReady()) {
+            this.step();
+            stepped = true;
         }
+
+        return stepped;
     }
 
-    stepNodeWin(frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
-
-        if (lastResult === true) {
-            this.gameResult = {result:'win', player:frame.node.pid};
-            return null;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return false;
-        } else {
-            return this.pushCallStackNextChild(frame);
-        }
-    }
-
-    stepNodeLose(frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
-
-        if (lastResult === true) {
-            this.gameResult = {result:'lose', player:frame.node.pid};
-            return null;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return false;
-        } else {
-            return this.pushCallStackNextChild(frame);
-        }
-    }
-
-    stepNodeDraw(frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
-
-        if (lastResult === true) {
-            this.gameResult = {result:'draw'};
-            return null;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return false;
-        } else {
-            return this.pushCallStackNextChild(frame);
-        }
-    }
-
-    stepNodeSetBoard(frame, lastResult) {
-        this.board = JSON.parse(JSON.stringify(frame.node.pattern));
-
-        const [newRows, newCols] = this.layerPatternSize(this.board);
-        if (newRows !== this.rows || newCols !== this.cols) {
-            this.rows = newRows;
-            this.cols = newCols;
-
-            this.onBoardResized();
-        }
-
-        return true;
-    }
-
-    stepNodeDisplayBoard(frame, lastResult) {
-        if (frame.node.hasOwnProperty('delay')) {
-            this.stepDelay = Date.now() + frame.node.delay;
-        }
-        return true;
-    }
-
-    stepNodeLayerTemplate(frame, lastResult) {
-        let newLayer = [];
-        for (let row of this.board['main']) {
-            let newRow = [];
-            for (let tile of row) {
-                if (tile === '.') {
-                    newRow.push('.');
-                } else {
-                    newRow.push(frame.node.with);
-                }
-            }
-            newLayer.push(newRow);
-        }
-
-        this.board[frame.node.layer] = newLayer;
-
-        return true;
-    }
-
-    stepNodeAppendRows(frame, lastResult) {
-        if (this.rows === 0 || this.cols === 0) {
-            this.board = frame.node.pattern.slice();
-        } else {
-            for (let patternRow of frame.node.pattern) {
-                let newRow = []
-                while (newRow.length < this.cols) {
-                    for (let tile of patternRow) {
-                        if (newRow.length < this.cols) {
-                            newRow.push(tile);
-                        }
-                    }
-                }
-                this.board.push(newRow);
-            }
-        }
-
-        let newRows = this.board.length;
-        let newCols = this.board[0].length;
-        if (newRows !== this.rows || newCols !== this.cols) {
-            this.rows = this.board.length;
-            this.cols = this.board[0].length;
-
-            this.onBoardResized();
-        }
-
-        return true;
-    }
-
-    stepNodeMatch(frame, lastResult) {
-        if (this.findLayerPattern(frame.node.pattern).length > 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    stepNodeRewrite(frame, lastResult) {
-        let matches = this.findLayerPattern(frame.node.lhs);
-        if (matches.length > 0) {
-            let match = matches[Math.floor(Math.random()*matches.length)];
-            this.rewriteLayerPattern(frame.node.rhs, match.row, match.col);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    stepNodePlayer(frame, lastResult) {
-        if (this.choiceWait === true) {
-            return null;
-        } else if (this.choiceWait !== false) {
-            let choiceInfo = this.choiceWait;
-            this.choiceWait = false;
-
-            this.rewriteLayerPattern(choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
-            return true;
-        } else {
-            let choices = []
-            for (let child of frame.node.children) {
-                if (child.type === 'rewrite') {
-                    let matches = this.findLayerPattern(child.lhs);
-                    for (let match of matches) {
-                        choices.push({desc:child.desc, button:child.button, lhs:child.lhs, rhs:child.rhs, row:match.row, col:match.col});
-                    }
-                }
-            }
-
-            let choicesUnique = []
-            let choicesSeen = new Set();
-            for (let choice of choices) {
-                const choicek = JSON.stringify(choice);
-                if (!choicesSeen.has(choicek)) {
-                    choicesSeen.add(choicek);
-                    choicesUnique.push(choice);
-                }
-            }
-            choices = choicesUnique;
-
-            if (choices.length > 0) {
-                this.choicePlayer = frame.node.pid;
-
-                this.choices = choices;
-                this.choicesByRct = Object.create(null);
-                this.choicesByBtn = Object.create(null);
-
-                for (let choiceIndex = 0; choiceIndex < this.choices.length; choiceIndex += 1) {
-                    const choice = this.choices[choiceIndex];
-
-                    let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
-                    let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
-                    let rctk = JSON.stringify(rct);
-
-                    let mapChoices = [];
-                    if (Object.hasOwn(this.choicesByRct, rctk)) {
-                        mapChoices = this.choicesByRct[rctk].choices;
-                    }
-
-                    mapChoices.push(choiceIndex);
-                    this.choicesByRct[rctk] = {rct:rct, choices:mapChoices};
-
-                    if (choice.button !== undefined) {
-                        this.choicesByBtn[choice.button] = choiceIndex;
-                    }
-                }
-
-                this.choiceWait = true;
-
-                return null;
-            } else {
-                return false;
-            }
-        }
+    makeChoiceIndex(choiceIndex) {
+        this.undoPush();
+        this.stepper.makeChoiceIndex(this.game, this.state, choiceIndex);
     }
 
 };
@@ -726,23 +709,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.updateEngineEditor();
 
-        this.onBoardResized();
         window.requestAnimationFrame(bind0(this, 'onDraw'));
-    }
-
-    onBoardResized() {
-        super.onBoardResized(this);
-
-        const desiredWidth = this.tocvsx(Math.max(1, this.cols)) + this.padding;
-        const desiredHeight = this.tocvsy(Math.max(1, this.rows)) + this.padding;
-        if (this.canvas.width != desiredWidth || this.canvas.height != desiredHeight) {
-            const ratio = window.devicePixelRatio;
-            this.canvas.width = desiredWidth * ratio;
-            this.canvas.height = desiredHeight * ratio;
-            this.canvas.style.width = desiredWidth + 'px';
-            this.canvas.style.height = desiredHeight + 'px';
-            this.ctx.scale(ratio, ratio);
-        }
     }
 
     arrayToImageData(from_data, fw, fh, ww, hh) {
@@ -835,6 +802,19 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendBr(ed);
     }
 
+    resizeCanvas() {
+        const desiredWidth = this.tocvsx(Math.max(1, this.state.cols)) + this.padding;
+        const desiredHeight = this.tocvsy(Math.max(1, this.state.rows)) + this.padding;
+        if (this.canvas.width != desiredWidth || this.canvas.height != desiredHeight) {
+            const ratio = window.devicePixelRatio;
+            this.canvas.width = desiredWidth * ratio;
+            this.canvas.height = desiredHeight * ratio;
+            this.canvas.style.width = desiredWidth + 'px';
+            this.canvas.style.height = desiredHeight + 'px';
+            this.ctx.scale(ratio, ratio);
+        }
+    }
+
     onDraw() {
         if (this.spriteImages !== null) {
             for (let [imgName, img] of Object.entries(this.spriteImages)) {
@@ -855,7 +835,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         if (!this.stepManual) {
-            if (this.stepToInput()) {
+            if (this.stepToChoice()) {
                 this.updateEditor();
             }
         }
@@ -864,16 +844,18 @@ class TRRBTWebEngine extends TRRBTEngine {
             window.requestAnimationFrame(bind0(this, 'onDraw'));
         }
 
+        this.resizeCanvas();
+
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.fillStyle = '#eeeeee';
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
-        for (let rr = 0; rr < this.rows; rr += 1) {
-            for (let cc = 0; cc < this.cols; cc += 1) {
+        for (let rr = 0; rr < this.state.rows; rr += 1) {
+            for (let cc = 0; cc < this.state.cols; cc += 1) {
                 let all_invis = true;
-                for (const [layer, pattern] of Object.entries(this.board)) {
+                for (const [layer, pattern] of Object.entries(this.state.board)) {
                     if (pattern[rr][cc] !== '.') {
                         all_invis = false;
                     }
@@ -898,19 +880,19 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         let choiceOverwrite = null;
         if (this.mouseChoice !== null && !this.mouseAlt) {
-            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.choices[this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx]].rhs };
+            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.state.choices[this.state.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx]].rhs };
         }
 
         this.ctx.fillStyle = '#000000';
 
-        for (let rr = 0; rr < this.rows; rr += 1) {
-            for (let cc = 0; cc < this.cols; cc += 1) {
+        for (let rr = 0; rr < this.state.rows; rr += 1) {
+            for (let cc = 0; cc < this.state.cols; cc += 1) {
                 let tiles = [];
                 let overwrites = [];
                 if (choiceOverwrite !== null &&
                     choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                     choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
-                    for (const [layer, pattern] of Object.entries(this.board)) {
+                    for (const [layer, pattern] of Object.entries(this.state.board)) {
                         if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
                             const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
                             if (tileOverwrite !== '.') {
@@ -926,7 +908,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                         }
                     }
                 } else {
-                    for (const [layer, pattern] of Object.entries(this.board)) {
+                    for (const [layer, pattern] of Object.entries(this.state.board)) {
                         tiles.push(pattern[rr][cc]);
                         overwrites.push(false);
                     }
@@ -961,11 +943,11 @@ class TRRBTWebEngine extends TRRBTEngine {
             }
         }
 
-        if (this.choicesByRct !== null) {
+        if (this.state.choicesByRct !== null) {
             this.ctx.lineWidth = 3;
             this.ctx.globalAlpha = 1.0;
 
-            const colork = String(this.choicePlayer);
+            const colork = String(this.state.choicePlayer);
             if (!Object.hasOwn(this.player_id_colors, colork)) {
                 let color_num = Object.keys(this.player_id_colors).length % 5;
                 let next_color = null;
@@ -989,7 +971,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 let rct = this.mouseChoice.rct;
                 let idx = this.mouseChoice.idx;
 
-                let rct_choices = this.choicesByRct[JSON.stringify(rct)].choices;
+                let rct_choices = this.state.choicesByRct[JSON.stringify(rct)].choices;
                 let desc = rct_choices[idx].desc;
 
                 this.ctx.strokeStyle = `rgb(${player_color[0]}, ${player_color[1]}, ${player_color[2]})`;
@@ -1015,7 +997,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 if (!this.mouseAlt) {
                     this.ctx.strokeStyle = `rgb(${player_color[0] * 0.5}, ${player_color[1] * 0.5}, ${player_color[2] * 0.5})`;
 
-                    for (const [rctk, rctChoices] of Object.entries(this.choicesByRct)) {
+                    for (const [rctk, rctChoices] of Object.entries(this.state.choicesByRct)) {
                         let rct = rctChoices.rct;
                         let choices = rctChoices.choices;
                         this.ctx.beginPath();
@@ -1041,27 +1023,28 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
 
-        if (this.gameResult !== null) {
+        if (this.state.gameResult !== null) {
             if (this.gameResultWait === null) {
                 this.gameResultWait = 10;
+                window.requestAnimationFrame(bind0(this, 'onDraw'));
             } else if (this.gameResultWait > 0) {
                 this.gameResultWait -= 1;
                 window.requestAnimationFrame(bind0(this, 'onDraw'));
                 if (this.gameResultWait == 0) {
-                    if (this.gameResult.result === 'win') {
-                        let player = this.gameResult.player;
+                    if (this.state.gameResult.result === 'win') {
+                        let player = this.state.gameResult.player;
                         alert('Game over, player ' + player + ' wins!');
-                    } else if (this.gameResult.result === 'lose') {
-                        let player = this.gameResult.player;
+                    } else if (this.state.gameResult.result === 'lose') {
+                        let player = this.state.gameResult.player;
                         alert('Game over, player ' + player + ' loses!');
-                    } else if (this.gameResult.result === 'draw') {
+                    } else if (this.state.gameResult.result === 'draw') {
                         alert('Game over, draw!');
-                    } else if (this.gameResult.result === 'stalemate') {
+                    } else if (this.state.gameResult.result === 'stalemate') {
                         alert('Game over, stalemate!');
-                    } else if (this.gameResult.result === 'timeout') {
+                    } else if (this.state.gameResult.result === 'stepout') {
                         alert('Game over, too many steps before player input!');
                     } else {
-                        alert('Game over, unknown result: ' + this.gameResult.result + '!');
+                        alert('Game over, unknown result: ' + this.state.gameResult.result + '!');
                     }
                 }
             }
@@ -1086,10 +1069,10 @@ class TRRBTWebEngine extends TRRBTEngine {
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
 
-    onUndo(toInput) {
+    onUndo(toChoice) {
         this.undoPop();
-        if (toInput) {
-            while (!this.undoEmpty() && this.shouldStepToInput()) {
+        if (toChoice) {
+            while (!this.undoEmpty() && this.stepReady()) {
                 this.undoPop();
             }
         } else {
@@ -1100,18 +1083,16 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseAlt = false;
         this.gameResultWait = null;
 
-        this.onBoardResized();
-
         this.updateEditor();
 
         window.requestAnimationFrame(bind0(this, 'onDraw'));
     }
 
-    onNext(toInput) {
-        if (this.shouldStepToInput()) {
-            this.stepGameTree();
-            if (toInput) {
-                this.stepToInput();
+    onNext(toChoice) {
+        if (this.stepReady()) {
+            this.step();
+            if (toChoice) {
+                this.stepToChoice();
             }
             this.updateEditor();
         } else {
@@ -1134,7 +1115,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 this.onUndo(key === 'p');
             }
 
-            if (this.choiceWait === true) {
+            if (this.state.choiceWait === true) {
                 let keyp = null;
                 if (key === 'ArrowLeft') {
                     keyp = 'left';
@@ -1149,9 +1130,9 @@ class TRRBTWebEngine extends TRRBTEngine {
                 } else if (key === 'x') {
                     keyp = 'action2';
                 }
-                if (keyp !== null && Object.hasOwn(this.choicesByBtn, keyp)) {
-                    this.makeChoiceIndex(this.choicesByBtn[keyp]);
-
+                if (keyp !== null && Object.hasOwn(this.state.choicesByBtn, keyp)) {
+                    const choiceIndex = this.state.choicesByBtn[keyp];
+                    this.makeChoiceIndex(choiceIndex);
                     this.mouseChoice = null;
                 }
             }
@@ -1176,9 +1157,9 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         if (mouseButton === BUTTON_LEFT) {
             if (this.mouseChoice !== null) {
-                if (this.choiceWait === true) {
-                    this.makeChoiceIndex(this.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx], true)
-
+                if (this.state.choiceWait === true) {
+                    const choiceIndex = this.state.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx];
+                    this.makeChoiceIndex(choiceIndex);
                     this.mouseChoice = null;
                 }
             }
@@ -1207,14 +1188,14 @@ class TRRBTWebEngine extends TRRBTEngine {
         const mouseY = evt.clientY - rect.top;
 
         this.mouseChoice = null;
-        if (this.choicesByRct !== null) {
+        if (this.state.choicesByRct !== null) {
             const mr = this.fromcvsy(mouseY);
             const mc = this.fromcvsx(mouseX);
-            if (0 <= mr && mr < this.rows && 0 <= mc && mc < this.cols) {
+            if (0 <= mr && mr < this.state.rows && 0 <= mc && mc < this.state.cols) {
                 let best_choices = [];
                 let best_dist_sqr = null;
 
-                for (const [rctk, rctChoices] of Object.entries(this.choicesByRct)) {
+                for (const [rctk, rctChoices] of Object.entries(this.state.choicesByRct)) {
                     let rct = rctChoices.rct;
                     let choices = rctChoices.choices;
                     if (rct.row <= mr && mr <= rct.row + rct.rows && rct.col <= mc && mc <= rct.col + rct.cols) {

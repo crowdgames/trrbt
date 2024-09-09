@@ -115,7 +115,7 @@ def require_js():
         js += open(os.path.join(dirname, 'web/engine.js')).read() + '\n'
         js += '() => { return { '
         js += 'xform_apply_to_tree:xform_apply_to_tree,'
-        js += 'new_engine:(game)=>{ return new TRRBTEngine(game); }'
+        js += 'new_engine:(game)=>{ let engine = new TRRBTEngine(game); engine.onLoad(); return engine; }'
         js += ' } };\n'
 
         _js_common = pythonmonkey.eval(js)()
