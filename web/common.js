@@ -46,6 +46,23 @@ function deepcopyobj(obj) {
     }
 }
 
+function samepropsobj(obj1, obj2) {
+    const props1 = Object.getOwnPropertyNames(obj1);
+    const props2 = Object.getOwnPropertyNames(obj2);
+
+    if (props1.length !== props2.length) {
+        return false;
+    }
+
+    for (const p1 of props1) {
+        if (props2.indexOf(p1) < 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 function bind0(obj, fn) {
     return obj[fn].bind(obj);
 }

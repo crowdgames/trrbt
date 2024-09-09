@@ -83,6 +83,7 @@ class TRRBTStepper {
             'set-board': bind0(this, 'stepNodeSetBoard'),
             'layer-template': bind0(this, 'stepNodeLayerTemplate'),
             'append-rows': bind0(this, 'stepNodeAppendRows'),
+            'append-columns': bind0(this, 'stepNodeAppendCols'),
             'order': bind0(this, 'stepNodeOrder'),
             'loop-until-all': bind0(this, 'stepNodeLoopUntilAll'),
             'loop-times': bind0(this, 'stepNodeLoopTimes'),
@@ -172,7 +173,7 @@ class TRRBTStepper {
             if (this.localEqual(frame, 'times', frame.node.times)) {
                 return this.localGet(frame, 'any');
             } else {
-                this.localIncrement('times');
+                this.localIncrement(frame, 'times');
                 this.localSet(frame, 'index', 0);
             }
         } else {
@@ -270,10 +271,8 @@ class TRRBTStepper {
         state.board = deepcopyobj(frame.node.pattern);
 
         const [newRows, newCols] = this.layerPatternSize(state.board);
-        if (newRows !== state.rows || newCols !== state.cols) {
-            state.rows = newRows;
-            state.cols = newCols;
-        }
+        state.rows = newRows;
+        state.cols = newCols;
 
         return true;
     }
@@ -305,28 +304,50 @@ class TRRBTStepper {
     }
 
     stepNodeAppendRows(state, frame, lastResult) {
-        if (state.rows === 0 || state.cols === 0) {
-            state.board = frame.node.pattern.slice();
+        if (state.board === null) {
+            state.board = deepcopyobj(frame.node.pattern);
         } else {
-            for (let patternRow of frame.node.pattern) {
-                let newRow = []
-                while (newRow.length < state.cols) {
-                    for (let tile of patternRow) {
-                        if (newRow.length < state.cols) {
-                            newRow.push(tile);
-                        }
+            const patt = frame.node.pattern;
+            if (!samepropsobj(state.board, patt)) {
+                return false;
+            }
+
+            for (let layer in state.board) {
+                for (let patternRow of patt[layer]) {
+                    let newRow = [];
+                    for (let ii = 0; ii < state.cols; ii += 1) {
+                        newRow.push(patternRow[ii % patternRow.length]);
                     }
+                    state.board[layer].push(newRow);
                 }
-                state.board.push(newRow);
             }
         }
 
-        let newRows = state.board.length;
-        let newCols = state.board[0].length;
-        if (newRows !== state.rows || newCols !== state.cols) {
-            state.rows = state.board.length;
-            state.cols = state.board[0].length;
+        const [newRows, newCols] = this.layerPatternSize(state.board);
+        state.rows = newRows;
+        state.cols = newCols;
+
+        return true;
+    }
+
+    stepNodeAppendCols(state, frame, lastResult) {
+        if (state.board === null) {
+            state.board = deepcopyobj(frame.node.pattern);
+        } else {
+            const patt = frame.node.pattern;
+            if (!samepropsobj(state.board, patt)) {
+                return false;
+            }
+            for (let layer in state.board) {
+                for (let ii = 0; ii < state.rows; ii += 1) {
+                    state.board[layer][ii].push(...patt[layer][ii % patt[layer].length].slice(0));
+                }
+            }
         }
+
+        const [newRows, newCols] = this.layerPatternSize(state.board);
+        state.rows = newRows;
+        state.cols = newCols;
 
         return true;
     }
