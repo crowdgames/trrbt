@@ -156,6 +156,8 @@ class TRRBTEditor {
 
         this.engine = null;
 
+        this.drawRequested = false;
+
         this.xform_editor = null;
     }
 
@@ -290,10 +292,21 @@ class TRRBTEditor {
         this.updateTreeStructure(false);
         this.updatePropertyEditor(null, true);
 
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.drawRequested = false;
+
+        this.requestDraw();
+    }
+
+    requestDraw() {
+        if (!this.drawRequested) {
+            this.drawRequested = true;
+            window.requestAnimationFrame(bind0(this, 'onDraw'));
+        }
     }
 
     onDraw() {
+        this.drawRequested = false;
+
         const currentXform = this.ctx.getTransform();
 
         this.ctx.resetTransform();
@@ -321,7 +334,7 @@ class TRRBTEditor {
             }
 
             if (anyNodeMoved) {
-                window.requestAnimationFrame(bind0(this, 'onDraw'));
+                this.requestDraw();
             } else {
                 this.nodeDrawPositionsWantUpdate = false;
             }
@@ -413,7 +426,7 @@ class TRRBTEditor {
             this.nodeDrawLastTime = null; // prevents node sliding animation
         }
         this.nodeDrawPositionsWantUpdate = true;
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
         this.updateXformedTreeDraw(skipAnimate);
     }
 
@@ -1776,7 +1789,7 @@ class TRRBTEditor {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseUp(evt) {
@@ -1790,7 +1803,7 @@ class TRRBTEditor {
         this.mouseZoom = null;
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseMove(evt) {
@@ -1835,7 +1848,7 @@ class TRRBTEditor {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseOut(evt) {
@@ -1849,7 +1862,7 @@ class TRRBTEditor {
         this.tooltip.style.display = 'none';
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseWheel(evt) {
@@ -1862,7 +1875,7 @@ class TRRBTEditor {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onKeyDown(evt) {
@@ -1884,7 +1897,7 @@ class TRRBTEditor {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onKeyUp(evt) {
