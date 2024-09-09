@@ -687,6 +687,8 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.stepManual = false;
 
+        this.drawRequested = false;
+
         this.editor = null;
     }
 
@@ -719,6 +721,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.gameResultWait = null;
 
         this.stepManual = false;
+
+        this.drawRequested = false;
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
         this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
@@ -759,7 +763,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.updateEngineEditor();
 
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     arrayToImageData(from_data, fw, fh, ww, hh) {
@@ -865,29 +869,22 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
     }
 
+    requestDraw() {
+        if (!this.drawRequested) {
+            this.drawRequested = true;
+            window.requestAnimationFrame(bind0(this, 'onDraw'));
+        }
+    }
+
     onDraw() {
+        this.drawRequested = false;
+
         if (this.spriteImages !== null) {
             for (let [imgName, img] of Object.entries(this.spriteImages)) {
                 if (img === null) {
-                    window.requestAnimationFrame(bind0(this, 'onDraw'));
+                    this.requestDraw();
                     return;
                 }
-            }
-        }
-
-        if (this.state.displayWait) {
-            if (this.delayUntil === null) {
-                if (this.stepManual) {
-                    this.delayUntil = 0;
-                } else {
-                    this.delayUntil = Date.now() + 1000 * this.state.displayDelay;
-                }
-            } else if (Date.now() < this.delayUntil) {
-                window.requestAnimationFrame(bind0(this, 'onDraw'));
-                return;
-            } else {
-                this.delayUntil = null;
-                this.clearDisplayWait();
             }
         }
 
@@ -897,8 +894,21 @@ class TRRBTWebEngine extends TRRBTEngine {
             }
         }
 
-        if (this.stepDelay !== null) {
-            window.requestAnimationFrame(bind0(this, 'onDraw'));
+        if (this.state.displayWait) {
+            this.requestDraw();
+            if (this.delayUntil === null) {
+                if (this.stepManual) {
+                    this.delayUntil = 0;
+                } else {
+                    this.delayUntil = Date.now() + 1000 * this.state.displayDelay;
+                }
+            } else {
+                if (Date.now() >= this.delayUntil) {
+                    this.delayUntil = null;
+                    this.clearDisplayWait();
+                }
+                return;
+            }
         }
 
         this.resizeCanvas();
@@ -1083,10 +1093,10 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.state.gameResult !== null) {
             if (this.gameResultWait === null) {
                 this.gameResultWait = 10;
-                window.requestAnimationFrame(bind0(this, 'onDraw'));
+                this.requestDraw();
             } else if (this.gameResultWait > 0) {
                 this.gameResultWait -= 1;
-                window.requestAnimationFrame(bind0(this, 'onDraw'));
+                this.requestDraw();
                 if (this.gameResultWait == 0) {
                     if (this.state.gameResult.result === 'win') {
                         let player = this.state.gameResult.player;
@@ -1123,7 +1133,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
     onBreakResume() {
         this.updateStepManual(!this.stepManual);
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onUndo(toChoice) {
@@ -1143,7 +1153,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.updateEditor();
 
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onNext(toChoice) {
@@ -1163,7 +1173,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         } else {
             this.updateStepManual(true);
         }
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+
+        this.requestDraw();
     }
 
     onKeyDown(evt) {
@@ -1204,7 +1215,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onKeyUp(evt) {
@@ -1233,7 +1244,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseUp(evt) {
@@ -1244,7 +1255,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseMove(evt) {
@@ -1289,14 +1300,14 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     onMouseOut(evt) {
         this.mouseChoice = null;
 
         evt.preventDefault();
-        window.requestAnimationFrame(bind0(this, 'onDraw'));
+        this.requestDraw();
     }
 
     tocvsx(x) {
