@@ -70,7 +70,7 @@ const EDT_NODE_HELP = {
     'rewrite': {color:[0,1,0], help:'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.'},
     'set-board': {color:[0,1,0], help:'Sets the board. Always succeeds.'},
     'append-rows': {color:[0,1,0], help:'Appends a new row to the board. Always succeeds.'},
-    'append-cols': {color:[0,1,0], help:'Appends a new column the board. Always succeeds.'},
+    'append-columns': {color:[0,1,0], help:'Appends a new column the board. Always succeeds.'},
     'layer-template': {color:[0,1,0], help:'Creates a new layer with the given name filled with the given tile. Always succeeds.'},
     'display-board': {color:[0,1,0], help:'Causes the board to be displayed. Always succeeds.'},
 

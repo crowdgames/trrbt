@@ -19,11 +19,15 @@ class TRRBTState {
         this.rows = 0;
         this.cols = 0;
 
+        this.displayWait = false;
+        this.displayDelay = null;
+
+        this.choiceWait = false;
+        this.choiceMade = null;
+        this.choicePlayer = null;
         this.choices = null;
         this.choicesByRct = null;
         this.choicesByBtn = null;
-        this.choicePlayer = null;
-        this.choiceWait = false;
     }
 
     clone() {
@@ -48,11 +52,15 @@ class TRRBTState {
         state.rows = this.rows;
         state.cols = this.cols;
 
+        state.displayWait = this.displayWait;
+        state.displayDelay = this.displayDelay;
+
+        state.choiceWait = this.choiceWait;
+        state.choiceMade = deepcopyobj(this.choiceMade);
+        state.choicePlayer = this.choicePlayer;
         state.choices = deepcopyobj(this.choices);
         state.choicesByRct = deepcopyobj(this.choicesByRct);
         state.choicesByBtn = deepcopyobj(this.choicesByBtn);
-        state.choicePlayer = this.choicePlayer;
-        state.choiceWait = deepcopyobj(this.choiceWait);
 
         return state;
     }
@@ -63,18 +71,24 @@ class TRRBTState {
 
 class TRRBTStepper {
 
-    makeChoiceIndex(tree, state, choiceIndex) {
-        state.choiceWait = state.choices[choiceIndex];
-        this.rewriteLayerPattern(state, state.choiceWait.rhs, state.choiceWait.row, state.choiceWait.col);
+    clearDisplayWait(tree, state) {
+        state.displayWait = false;
+        state.displayDelay = null;
+    }
 
+    clearChoiceWait(tree, state, choiceIndex) {
+        state.choiceWait = false;
+        state.choiceMade = state.choices[choiceIndex];
+        state.choicePlayer = null;
         state.choices = null;
         state.choicesByRct = null;
         state.choicesByBtn = null;
-        state.choicePlayer = null;
+
+        this.rewriteLayerPattern(state, state.choiceMade.rhs, state.choiceMade.row, state.choiceMade.col);
     }
 
     stepReady(tree, state) {
-        return tree !== null && state.gameResult === null && state.choiceWait !== true;
+        return tree !== null && state.gameResult === null && state.displayWait === false && state.choiceWait === false;
     }
 
     step(tree, state, stepout) {
@@ -278,10 +292,17 @@ class TRRBTStepper {
     }
 
     stepNodeDisplayBoard(state, frame, lastResult) {
-        if (frame.node.hasOwnProperty('delay')) {
-            //!! this.stepDelay = Date.now() + frame.node.delay;
+        if (state.displayWait === true) {
+            return null;
+        } else {
+            state.displayWait = true;
+            state.displayDelay = 0;
+
+            if (frame.node.hasOwnProperty('delay')) {
+                state.displayDelay = frame.node.delay;
+            }
+            return true;
         }
-        return true;
     }
 
     stepNodeLayerTemplate(state, frame, lastResult) {
@@ -374,13 +395,18 @@ class TRRBTStepper {
     stepNodePlayer(state, frame, lastResult) {
         if (state.choiceWait === true) {
             return null;
-        } else if (state.choiceWait !== false) {
-            let choiceInfo = state.choiceWait;
-            state.choiceWait = false;
-
-            this.rewriteLayerPattern(state, choiceInfo.rhs, choiceInfo.row, choiceInfo.col);
+        } else if (state.choiceMade !== null) {
+            this.rewriteLayerPattern(state, state.choiceMade.rhs, state.choiceMade.row, state.choiceMade.col);
+            state.choiceMade = null;
             return true;
         } else {
+            state.choiceWait = false;
+            state.choiceMade = null;
+            state.choicePlayer = null;
+            state.choices = null;
+            state.choicesByRct = null;
+            state.choicesByBtn = null;
+
             let choices = [];
             for (let child of frame.node.children) {
                 if (child.type === 'rewrite') {
@@ -546,8 +572,6 @@ class TRRBTEngine {
 
         this.undoStackPlayer = null;
         this.undoStackRecent = null;
-
-        this.stepDelay = null;
     }
 
     onLoad() {
@@ -558,8 +582,6 @@ class TRRBTEngine {
 
         this.undoStackPlayer = [];
         this.undoStackRecent = [];
-
-        this.stepDelay = null;
     }
 
     undoPush() {
@@ -590,8 +612,6 @@ class TRRBTEngine {
         } else {
             this.state = new TRRBTState();
         }
-
-        this.stepDelay = null;
     }
 
     undoEmpty() {
@@ -611,7 +631,7 @@ class TRRBTEngine {
         this.stepper.step(this.game.tree, this.state, ENG_LOOP_CHECK_MAX);
     }
 
-    stepToChoice() {
+    stepToWait() {
         let stepped = false;
 
         while (this.stepReady()) {
@@ -622,9 +642,14 @@ class TRRBTEngine {
         return stepped;
     }
 
-    makeChoiceIndex(choiceIndex) {
+    clearDisplayWait() {
         this.undoPush();
-        this.stepper.makeChoiceIndex(this.game, this.state, choiceIndex);
+        this.stepper.clearDisplayWait(this.game, this.state);
+    }
+
+    clearChoiceWait(choiceIndex) {
+        this.undoPush();
+        this.stepper.clearChoiceWait(this.game, this.state, choiceIndex);
     }
 
 };
@@ -657,6 +682,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.delayUntil = null;
         this.gameResultWait = null;
 
         this.stepManual = false;
@@ -689,6 +715,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.delayUntil = null;
         this.gameResultWait = null;
 
         this.stepManual = false;
@@ -848,17 +875,24 @@ class TRRBTWebEngine extends TRRBTEngine {
             }
         }
 
-        if (this.stepDelay !== null) {
-            if (Date.now() < this.stepDelay) {
+        if (this.state.displayWait) {
+            if (this.delayUntil === null) {
+                if (this.stepManual) {
+                    this.delayUntil = 0;
+                } else {
+                    this.delayUntil = Date.now() + 1000 * this.state.displayDelay;
+                }
+            } else if (Date.now() < this.delayUntil) {
                 window.requestAnimationFrame(bind0(this, 'onDraw'));
                 return;
             } else {
-                this.stepDelay = null;
+                this.delayUntil = null;
+                this.clearDisplayWait();
             }
         }
 
         if (!this.stepManual) {
-            if (this.stepToChoice()) {
+            if (this.stepToWait()) {
                 this.updateEditor();
             }
         }
@@ -1095,7 +1129,7 @@ class TRRBTWebEngine extends TRRBTEngine {
     onUndo(toChoice) {
         this.undoPop();
         if (toChoice) {
-            while (!this.undoEmpty() && this.stepReady()) {
+            while (!this.undoEmpty() && this.state.choiceWait === false) {
                 this.undoPop();
             }
         } else {
@@ -1104,6 +1138,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.delayUntil = 0;
         this.gameResultWait = null;
 
         this.updateEditor();
@@ -1115,7 +1150,14 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.stepReady()) {
             this.step();
             if (toChoice) {
-                this.stepToChoice();
+                while (true) {
+                    this.stepToWait();
+                    if (this.state.displayWait) {
+                        this.clearDisplayWait();
+                    } else {
+                        break;
+                    }
+                }
             }
             this.updateEditor();
         } else {
@@ -1155,7 +1197,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 }
                 if (keyp !== null && Object.hasOwn(this.state.choicesByBtn, keyp)) {
                     const choiceIndex = this.state.choicesByBtn[keyp];
-                    this.makeChoiceIndex(choiceIndex);
+                    this.clearChoiceWait(choiceIndex);
                     this.mouseChoice = null;
                 }
             }
@@ -1182,7 +1224,7 @@ class TRRBTWebEngine extends TRRBTEngine {
             if (this.mouseChoice !== null) {
                 if (this.state.choiceWait === true) {
                     const choiceIndex = this.state.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx];
-                    this.makeChoiceIndex(choiceIndex);
+                    this.clearChoiceWait(choiceIndex);
                     this.mouseChoice = null;
                 }
             }
