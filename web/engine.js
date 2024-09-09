@@ -3,6 +3,8 @@ const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 const ENG_UNDO_PLAYER_MAX = 100;
 const ENG_UNDO_RECENT_MAX = 100;
 
+const ENG_LOOP_CHECK_MAX = 100000;
+
 
 
 class TRRBTState {
@@ -585,7 +587,7 @@ class TRRBTEngine {
 
     step() {
         this.undoPush();
-        this.stepper.step(this.game.tree, this.state, 100000);
+        this.stepper.step(this.game.tree, this.state, ENG_LOOP_CHECK_MAX);
     }
 
     stepToChoice() {
