@@ -27,17 +27,17 @@ def run_game(filename, choice_order, random_players, clear_screen):
     max_tile_width = util.node_max_tile_width(game.tree)
 
     while True:
-        engine.stepToInput()
+        engine.stepToChoice()
 
         if clear_screen is not None:
             cls()
 
         print('Current board is:')
-        print(util.layer_pattern_to_string(engine.board, None, '-', '-\n', '\n', '', '', ' ', '\n', max_tile_width))
+        print(util.layer_pattern_to_string(engine.state.board, None, '-', '-\n', '\n', '', '', ' ', '\n', max_tile_width))
         print()
 
         if engine.gameOver():
-            go = engine.gameResult
+            go = engine.state.gameResult
             if go.result == 'win':
                 print('Game over, player', go.player, 'wins')
             elif go.result == 'lose':
@@ -46,17 +46,17 @@ def run_game(filename, choice_order, random_players, clear_screen):
                 print('Game over, draw')
             elif go.result == 'stalemate':
                 print('Game over, stalemate')
-            elif go.result == 'timeout':
+            elif go.result == 'stepout':
                 print('Game over, too many steps before player input!')
             else:
                 print('Game over, unrecognized game result:', go.result)
             break
 
-        player_id = util.intify(engine.choicePlayer)
+        player_id = util.intify(engine.state.choicePlayer)
 
         if player_id in random_players:
-            choiceIndex = random.randint(0, len(engine.choices) - 1)
-            choice = engine.choices[choiceIndex]
+            choiceIndex = random.randint(0, len(engine.state.choices) - 1)
+            choice = engine.state.choices[choiceIndex]
 
             lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
             rhs = util.layer_pattern_to_string(choice.rhs, None, '-', '-:', '&', '', '', ' ', '; ')
@@ -74,7 +74,7 @@ def run_game(filename, choice_order, random_players, clear_screen):
         else:
             inputToChoiceIndex = {}
 
-            for choiceIndex, choice in enumerate(engine.choices):
+            for choiceIndex, choice in enumerate(engine.state.choices):
                 if choice_order:
                     inputIndex = choiceIndex + 1
 
@@ -100,7 +100,7 @@ def run_game(filename, choice_order, random_players, clear_screen):
 
             print(f'Choices for player {player_id} are:')
             for inputIndex, choiceIndex in inputToChoiceIndex.items():
-                choice = engine.choices[choiceIndex]
+                choice = engine.state.choices[choiceIndex]
 
                 lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
                 rhs = util.layer_pattern_to_string(choice.rhs, None, '-', '-:', '&', '', '', ' ', '; ')
