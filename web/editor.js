@@ -1344,14 +1344,16 @@ class TRRBTEditor {
                 }
 
                 const tooltip_help = 'Get more information about this node type.';
+                const tooltip_add_front = 'Add new node at front of children.';
+                const tooltip_add_back = 'Add new node at back of children.';
                 const tooltip_add_below = 'Add new child node, and move current children to new node.';
-                const tooltip_add_end = 'Add new node at end of children.';
+                const tooltip_add_above = 'Add node as new parent to current node.';
 
                 const node_clr = this.nodeColor(node.type, false);
                 const node_help_str = EDT_NODE_HELP[node.type].help;
 
-                appendText(ed, node.type + ' ', true);
                 appendButton(ed, '?', tooltip_help, node_clr, ()=>{alert(node.type + ': ' + node_help_str);});
+                appendText(ed, ' ' + node.type, true);
                 appendBr(ed);
                 appendBr(ed);
 
@@ -1470,62 +1472,60 @@ class TRRBTEditor {
                     appendBr(ed);
                 }
 
-                if (node.hasOwnProperty('children')) {
-                    appendBr(ed);
-                    appendBr(ed);
+                appendBr(ed);
+                appendBr(ed);
 
-                    const table = document.createElement('table');
-                    ed.appendChild(table);
-                    const tbody = document.createElement('tbody');
-                    table.appendChild(tbody);
-                    const tr = document.createElement('tr');
-                    tr.style = 'vertical-align:top';
-                    tbody.appendChild(tr);
-                    const td1 = document.createElement('td');
-                    tr.appendChild(td1);
-                    const td2 = document.createElement('td');
-                    tr.appendChild(td2);
+                appendText(ed, 'Add', false, false);
 
-                    const rows = Math.max(EDT_NODE_PROTOTYPES.length, EDT_XNODE_PROTOTYPES.length);
-                    for (let ii = 0; ii < rows; ++ ii) {
-                        if (ii < EDT_NODE_PROTOTYPES.length) {
-                            const proto = EDT_NODE_PROTOTYPES[ii];
+                const table = document.createElement('table');
+                ed.appendChild(table);
+                const tbody = document.createElement('tbody');
+                table.appendChild(tbody);
+                const tr = document.createElement('tr');
+                tr.style = 'vertical-align:top; font-size:small';
+                tbody.appendChild(tr);
+                const td1 = document.createElement('td');
+                tr.appendChild(td1);
+                const td2 = document.createElement('td');
+                tr.appendChild(td2);
+
+                for (let [elem, protos] of [[td1, EDT_NODE_PROTOTYPES], [td2, EDT_XNODE_PROTOTYPES]]) {
+                    for (const proto of protos) {
+                        const clr = this.nodeColor(proto.type, false);
+                        const help_str = EDT_NODE_HELP[proto.type].help;
+
+                        if (node.hasOwnProperty('children')) {
                             if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                const clr = this.nodeColor(proto.type, false);
-                                const help_str = EDT_NODE_HELP[proto.type].help;
-                                appendButton(td1, '?', tooltip_help, clr, ()=>{alert(proto.type + ': ' + help_str);});
-                                if (proto.hasOwnProperty('children')) {
-                                    if (proto.type === 'player' && !can_be_player_children(node.children)) {
-                                        // pass
-                                    } else {
-                                        appendButton(td1, '\u2193', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, true))
-                                    }
-                                }
-                                appendButton(td1, 'Add ' + proto.type, tooltip_add_end, clr, bind2(this, 'onNodeAddChild', proto.type, false))
-                                appendBr(td1);
+                                appendButton(elem, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                                appendButton(elem, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
                             }
                         }
-                        if (ii < EDT_XNODE_PROTOTYPES.length) {
-                            const proto = EDT_XNODE_PROTOTYPES[ii];
-                            if (node.type === 'player' && !can_be_player_children([proto])) {
+
+                        if (node.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
+                            if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                                // pass
+                            } else if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                const clr = this.nodeColor(proto.type, false);
-                                const help_str = EDT_NODE_HELP[proto.type].help;
-                                appendButton(td2, '?', tooltip_help, clr, ()=>{alert(proto.type + ': ' + help_str);});
-                                if (proto.hasOwnProperty('children')) {
-                                    if (proto.type === 'player' && !can_be_player_children(node.children)) {
-                                        // pass
-                                    } else {
-                                        appendButton(td2, '\u2193', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, true))
-                                    }
-                                }
-                                appendButton(td2, 'Add ' + proto.type, tooltip_add_end, clr, bind2(this, 'onNodeAddChild', proto.type), this.nodeColor(proto.type, false));
-                                appendBr(td2);
+                                appendButton(elem, '\u2193', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
                             }
                         }
+
+                        if (parent !== null && parent.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
+                            if (proto.type === 'player' && !can_be_player_children([node])) {
+                                    // pass
+                            } else if (parent.type === 'player' && !can_be_player_children([proto])) {
+                                // pass
+                            } else {
+                                appendButton(elem, '\u2191', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
+                            }
+                        }
+
+                        appendButton(elem, '?', tooltip_help, clr, ()=>{alert(proto.type + ': ' + help_str);});
+                        appendText(elem, ' ' + proto.type, false, false);
+                        appendBr(elem);
                     }
                 }
             }
@@ -1671,17 +1671,36 @@ class TRRBTEditor {
         return null;
     }
 
-    onNodeAddChild(type, reparent) {
+    onNodeAddChild(type, where) {
         let node = this.propertyNodes.node;
 
         let new_node = deepcopyobj(this.getNodePrototype(type));
-        if (reparent) {
+        if (where === 'below') {
             new_node.children = node.children;
             node.children = [new_node];
-        } else {
+        } else if (where === 'back') {
             node.children.push(new_node);
+        } else if (where === 'front') {
+            node.children.unshift(new_node);
         }
         this.updateTreeStructureAndDraw(false, false);
+    }
+
+    onNodeAddParent(type) {
+        let node = this.propertyNodes.node;
+        let parent = this.propertyNodes.parent;
+
+        if (parent !== null) {
+            const index = parent.children.indexOf(node);
+
+            let new_node = deepcopyobj(this.getNodePrototype(type));
+            new_node.children = [node];
+
+            //parent.children.splice(index, 1);
+            parent.children.splice(index, 1, new_node);
+
+            this.updateTreeStructureAndDraw(false, false);
+        }
     }
 
     onNodeShift(earlier) {
