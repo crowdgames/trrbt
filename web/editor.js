@@ -51,8 +51,8 @@ const EDT_XNODE_PROTOTYPES = [
     { type:'x-rotate', comment:'', nid:'', children:[], remorig:false },
     { type:'x-spin', comment:'', nid:'', children:[], remorig:false },
     { type:'x-flip', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-swap-only', comment:'', nid:'', children:[], what:'', with:'' },
-    { type:'x-replace-only', comment:'', nid:'', children:[], what:'', withs:[] },
+    { type:'x-swap', comment:'', nid:'', children:[], what:'', with:'' },
+    { type:'x-replace', comment:'', nid:'', children:[], what:'', withs:[] },
     { type:'x-link', comment:'', nid:'', target:'' },
 ];
 
@@ -85,8 +85,8 @@ const EDT_NODE_HELP = {
     'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
     'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
     'x-flip': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
-    'x-swap-only': {color:[1,1,1], help:'Swap characters in patterns and player IDs, removing original.'},
-    'x-replace-only': {color:[1,1,1], help:'Replace characters in patterns and player IDs, removing original.'},
+    'x-swap': {color:[1,1,1], help:'Swap characters in patterns and player IDs, removing original.'},
+    'x-replace': {color:[1,1,1], help:'Replace characters in patterns and player IDs, removing original.'},
 
     'x-prune': {color:[1,1,1], help:'Remove nodes.'},
     'x-unroll-replace': {color:[1,1,1], help:'Duplicate replaces here as children of an order node.'},

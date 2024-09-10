@@ -19,13 +19,13 @@ tree:
     children:
     - type: x-mirror
       children:
-      - type: x-replace-only
+      - type: x-replace
         what: a
         withs:
         - K
         - P
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: b
           withs:
           - K
@@ -106,7 +106,7 @@ tree:
                  children:
                  - type: match
                    pattern: Ra
-          - type: x-swap-only
+          - type: x-swap
             what: B
             with: R
             children:

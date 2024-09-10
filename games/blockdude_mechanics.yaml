@@ -51,14 +51,14 @@ tree:
             pattern: <P
         - type: order
           children:
-          - type: x-replace-only
+          - type: x-replace
             comment: player
             what: P
             withs:
             - P>
             - <P
             children:
-            - type: x-replace-only
+            - type: x-replace
               comment: solid tiles
               what: S
               withs:
@@ -66,7 +66,7 @@ tree:
               - Bf
               - W
               children:
-              - type: x-replace-only
+              - type: x-replace
                 comment: not holding a block
                 what: X
                 withs:
@@ -151,7 +151,7 @@ tree:
                   - type: x-mirror
                     comment: block handling
                     children:
-                    - type: x-replace-only
+                    - type: x-replace
                       comment: block-agnostic
                       what: B
                       withs:

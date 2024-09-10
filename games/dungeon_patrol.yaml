@@ -30,7 +30,7 @@ tree:
       - type: loop-until-all
         comment: patrol, tagged
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: w
           withs:
           - X

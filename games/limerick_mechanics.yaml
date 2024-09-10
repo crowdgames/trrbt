@@ -13,7 +13,7 @@ tree:
       - type: match
         comment: has apple been eaten?
         pattern: A
-      - type: x-replace-only
+      - type: x-replace
         comment: head
         what: H!
         withs:
@@ -22,7 +22,7 @@ tree:
         - H3
         - H4
         children:
-        - type: x-replace-only
+        - type: x-replace
           comment: takeable objects (key, apple)
           what: O
           withs:
@@ -177,7 +177,7 @@ tree:
                 - type: loop-until-all
                   comment: erase the body
                   children:
-                  - type: x-replace-only
+                  - type: x-replace
                     comment: body
                     what: B
                     withs:

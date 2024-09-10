@@ -34,7 +34,7 @@ tree:
           children:
           - type: match
             pattern: _
-    - type: x-swap-only
+    - type: x-swap
       what: X
       with: O
       children:

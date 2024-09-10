@@ -421,7 +421,7 @@ function xform_rule_replace_only_fn(wht, wths) {
             if (node.what === wht) {
                 let new_node = {type:'order', children:[]};
                 for (const which of wths) {
-                    new_node.children.push({type:'x-replace-only', what:node.what, withs:[which], children:deepcopyobj(node.children)});
+                    new_node.children.push({type:'x-replace', what:node.what, withs:[which], children:deepcopyobj(node.children)});
                 }
                 ret.push(new_node);
             } else {
@@ -507,7 +507,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
             if (linked_nodes !== null) {
                 ret_nodes.push(...linked_nodes);
             }
-        } else if (['x-ident', 'x-prune', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap-only', 'x-replace-only'].indexOf(ntype) >= 0) {
+        } else if (['x-ident', 'x-prune', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap', 'x-replace'].indexOf(ntype) >= 0) {
             let fn = null;
             if (ntype === 'x-ident') {
                 fn = xform_rule_identity;
@@ -523,9 +523,9 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                 fn = xform_rule_skew_fn(node.remorig);
             } else if (ntype === 'x-flip') {
                 fn = xform_rule_flip_fn(node.remorig);
-            } else if (ntype === 'x-swap-only') {
+            } else if (ntype === 'x-swap') {
                 fn = xform_rule_swap_only_fn(node.what, node.with);
-            } else if (ntype === 'x-replace-only') {
+            } else if (ntype === 'x-replace') {
                 fn = xform_rule_replace_only_fn(node.what, node.withs);
             }
 

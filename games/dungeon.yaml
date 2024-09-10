@@ -14,7 +14,7 @@ tree:
   - type: loop-until-all
     nid: gameloop
     children:
-    - type: x-replace-only
+    - type: x-replace
       comment: player inventory is nothing or key
       what: i
       withs:

@@ -26,21 +26,21 @@ tree:
   - type: loop-until-all
     nid: gameloop
     children:
-    - type: x-replace-only
+    - type: x-replace
       what: a
       withs:
       - _
       - E
       - F
       children:
-      - type: x-replace-only
+      - type: x-replace
         what: b
         withs:
         - _
         - E
         - F
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: d
           withs:
           - '<'
