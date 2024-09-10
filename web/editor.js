@@ -1,116 +1,116 @@
 const EDT_UNDO_MAX = 25;
 
-const EDT_NODE_PADDING =  8;
+const EDT_NODE_PADDING = 8;
 const EDT_NODE_SPACING = 25;
 
-const EDT_FONT_SIZE      = 10;
-const EDT_FONT_CHAR_SIZE =  7;
+const EDT_FONT_SIZE = 10;
+const EDT_FONT_CHAR_SIZE = 7;
 const EDT_FONT_LINE_SIZE = 12;
 
-const EDT_TEXT_FONT       = 0;
-const EDT_TEXT_COLOR      = 1;
-const EDT_TEXT_LINE       = 2;
+const EDT_TEXT_FONT = 0;
+const EDT_TEXT_COLOR = 1;
+const EDT_TEXT_LINE = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
-const EDT_TEXT_RECT_END   = 4;
+const EDT_TEXT_RECT_END = 4;
 
-const EDT_PARSE_TEXT_INT    = 0;
-const EDT_PARSE_TEXT_WORD   = 1;
-const EDT_PARSE_TEXT_TEXT   = 2;
+const EDT_PARSE_TEXT_INT = 0;
+const EDT_PARSE_TEXT_WORD = 1;
+const EDT_PARSE_TEXT_TEXT = 2;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
-const EDT_COLOR_ERROR  = '#ffdddd';
+const EDT_COLOR_ERROR = '#ffdddd';
 
 const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type:'player', comment:'', nid:'', children:[], pid:'' },
+    { type: 'player', comment: '', nid: '', children: [], pid: '' },
 
-    { type:'win', comment:'', nid:'', children:[], pid:'' },
-    { type:'lose', comment:'', nid:'', children:[], pid:'' },
-    { type:'draw', comment:'', nid:'', children:[] },
+    { type: 'win', comment: '', nid: '', children: [], pid: '' },
+    { type: 'lose', comment: '', nid: '', children: [], pid: '' },
+    { type: 'draw', comment: '', nid: '', children: [] },
 
-    { type:'order', comment:'', nid:'', children:[] },
-    { type:'all', comment:'', nid:'', children:[] },
-    { type:'none', comment:'', nid:'', children:[] },
-    { type:'random-try', comment:'', nid:'', children:[] },
-    { type:'loop-until-all', comment:'', nid:'', children:[] },
-    { type:'loop-times', comment:'', nid:'', children:[], times:1 },
+    { type: 'order', comment: '', nid: '', children: [] },
+    { type: 'all', comment: '', nid: '', children: [] },
+    { type: 'none', comment: '', nid: '', children: [] },
+    { type: 'random-try', comment: '', nid: '', children: [] },
+    { type: 'loop-until-all', comment: '', nid: '', children: [] },
+    { type: 'loop-times', comment: '', nid: '', children: [], times: 1 },
 
-    { type:'rewrite', comment:'', nid:'', button:'', lhs:EDT_EMPTY_PATTERN, rhs:EDT_EMPTY_PATTERN },
-    { type:'set-board', comment:'', nid:'', pattern:EDT_EMPTY_PATTERN },
-    { type:'layer-template', comment:'', nid:'', layer:'', with:'' },
+    { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
+    { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
 
-    { type:'match', pattern:EDT_EMPTY_PATTERN },
+    { type: 'match', pattern: EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type:'x-ident', comment:'', nid:'', children:[] },
-    { type:'x-mirror', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-skew', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-rotate', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-spin', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-flip', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-swap-only', comment:'', nid:'', children:[], what:'', with:'' },
-    { type:'x-replace-only', comment:'', nid:'', children:[], what:'', withs:[] },
-    { type:'x-link', comment:'', nid:'', target:'' },
+    { type: 'x-ident', comment: '', nid: '', children: [] },
+    { type: 'x-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-skew', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-rotate', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-spin', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-flip', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-swap-only', comment: '', nid: '', children: [], what: '', with: '' },
+    { type: 'x-replace-only', comment: '', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-link', comment: '', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
-    'player': {color:[0,0,1], help:'If any LHS of any child matches, given player can choose which RHS rewrite to apply. Succeeds if there were any matches, otherwise, fails.'},
+    'player': { color: [0, 0, 1], help: 'If any LHS of any child matches, given player can choose which RHS rewrite to apply. Succeeds if there were any matches, otherwise, fails.' },
 
-    'win': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
-    'lose': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
-    'draw': {color:[1,0,0], help:'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.'},
+    'win': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
+    'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
+    'draw': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
 
-    'order': {color:[1,1,0], help:'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.'},
-    'all': {color:[1,1,0], help:'Runs children in order, until any child fails. Fails if any child fails, otherwise succeeds.'},
-    'none': {color:[1,1,0], help:'Runs children in order, until any child succeeds. Fails if any child succeeds, otherwise succeeds.'},
-    'random-try': {color:[1,1,0], help:'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.'},
-    'loop-until-all': {color:[1,1,0], help:'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.'},
-    'loop-times': {color:[1,1,0], help:'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.'},
+    'order': { color: [1, 1, 0], help: 'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.' },
+    'all': { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Fails if any child fails, otherwise succeeds.' },
+    'none': { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Fails if any child succeeds, otherwise succeeds.' },
+    'random-try': { color: [1, 1, 0], help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
+    'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.' },
+    'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.' },
 
-    'rewrite': {color:[0,1,0], help:'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.'},
-    'set-board': {color:[0,1,0], help:'Sets the board. Always succeeds.'},
-    'append-rows': {color:[0,1,0], help:'Appends a new row to the board. Always succeeds.'},
-    'append-columns': {color:[0,1,0], help:'Appends a new column the board. Always succeeds.'},
-    'layer-template': {color:[0,1,0], help:'Creates a new layer with the given name filled with the given tile. Always succeeds.'},
-    'display-board': {color:[0,1,0], help:'Causes the board to be displayed. Always succeeds.'},
+    'rewrite': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
+    'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
+    'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
+    'layer-template': { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
+    'display-board': { color: [0, 1, 0], help: 'Causes the board to be displayed. Always succeeds.' },
 
-    'match': {color:[0,1,1], help:'Succeeds if pattern matches current board, otherwise fails.'},
+    'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
 
-    'x-ident': {color:[1,1,1], help:'Do not apply any transform.'},
-    'x-mirror': {color:[1,1,1], help:'Mirror patterns left-right.'},
-    'x-skew': {color:[1,1,1], help:'Skew patterns along columns.'},
-    'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
-    'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
-    'x-flip': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
-    'x-swap-only': {color:[1,1,1], help:'Swap characters in patterns and player IDs, removing original.'},
-    'x-replace-only': {color:[1,1,1], help:'Replace characters in patterns and player IDs, removing original.'},
+    'x-ident': { color: [1, 1, 1], help: 'Do not apply any transform.' },
+    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right.' },
+    'x-skew': { color: [1, 1, 1], help: 'Skew patterns along columns.' },
+    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees.' },
+    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns 90, 180, and 270 degrees.' },
+    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom, removing original.' },
+    'x-swap-only': { color: [1, 1, 1], help: 'Swap characters in patterns and player IDs, removing original.' },
+    'x-replace-only': { color: [1, 1, 1], help: 'Replace characters in patterns and player IDs, removing original.' },
 
-    'x-prune': {color:[1,1,1], help:'Remove nodes.'},
-    'x-unroll-replace': {color:[1,1,1], help:'Duplicate replaces here as children of an order node.'},
+    'x-prune': { color: [1, 1, 1], help: 'Remove nodes.' },
+    'x-unroll-replace': { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
 
-    'x-link': {color:[1,1,1], help:'Link to another node by node ID.'},
-    'x-file': {color:[1,1,1], help:'Link to another node by file name and node ID.'}
+    'x-link': { color: [1, 1, 1], help: 'Link to another node by node ID.' },
+    'x-file': { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
 }
 
 const EDT_PROP_NAMES = {
-    comment: {name:'comment', help:'A comment about the node.'},
-    nid: {name:'node ID', help:'ID of node that other nodes can use to refer to it.'},
-    remorig: {name:'remove original', help:'Remove original pattern after transform applied.'},
-    file: {name:'file name', help:'Name of file to link to.'},
-    target: {name:'target ID', help:'Target node ID to link to.'},
-    pid: {name:'player ID', help:'ID of player to make choice.'},
-    layer: {name:'layer', help:'Name of layer to use.'},
-    times: {name:'times', help:'How many times.'},
-    what: {name:'what', help:'Character to be swapped/replaced.'},
-    with: {name:'with', help:'Other character to use.'},
-    withs: {name:'withs', help:'Space-separated other characters to use.'},
-    button: {name:'button', help:'Button to press to apply rewrite.'},
-    pattern: {name:'pattern', help:'A tile pattern.'},
-    lhs: {name:'LHS', help:'Left hand side tile pattern of a rewrite rule.'},
-    rhs: {name:'RHS', help:'Right hand side tile pattern of a rewrite rule.'}
+    comment: { name: 'comment', help: 'A comment about the node.' },
+    nid: { name: 'node ID', help: 'ID of node that other nodes can use to refer to it.' },
+    remorig: { name: 'remove original', help: 'Remove original pattern after transform applied.' },
+    file: { name: 'file name', help: 'Name of file to link to.' },
+    target: { name: 'target ID', help: 'Target node ID to link to.' },
+    pid: { name: 'player ID', help: 'ID of player to make choice.' },
+    layer: { name: 'layer', help: 'Name of layer to use.' },
+    times: { name: 'times', help: 'How many times.' },
+    what: { name: 'what', help: 'Character to be swapped/replaced.' },
+    with: { name: 'with', help: 'Other character to use.' },
+    withs: { name: 'withs', help: 'Space-separated other characters to use.' },
+    button: { name: 'button', help: 'Button to press to apply rewrite.' },
+    pattern: { name: 'pattern', help: 'A tile pattern.' },
+    lhs: { name: 'LHS', help: 'Left hand side tile pattern of a rewrite rule.' },
+    rhs: { name: 'RHS', help: 'Right hand side tile pattern of a rewrite rule.' }
 };
 
 
@@ -198,7 +198,7 @@ class TRRBTEditor {
             this.mousePos = null;
 
             this.updateTreeStructureAndDraw(true, true);
-            this.updatePropertyEditor(this.mouseNode, false);
+            this.updatePropertyEditor(this.mouseNode);
 
             //console.log('undo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
         }
@@ -220,7 +220,7 @@ class TRRBTEditor {
             this.mousePos = null;
 
             this.updateTreeStructureAndDraw(true, true);
-            this.updatePropertyEditor(this.mouseNode, false);
+            this.updatePropertyEditor(this.mouseNode);
 
             //console.log('redo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
         }
@@ -237,7 +237,7 @@ class TRRBTEditor {
     }
 
     onLoad() {
-        document.oncontextmenu = function() {
+        document.oncontextmenu = function () {
             return false;
         }
 
@@ -294,7 +294,7 @@ class TRRBTEditor {
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
         this.updateTreeStructure(false);
-        this.updatePropertyEditor(null, true);
+        this.updatePropertyEditor(null);
 
         this.drawRequested = false;
 
@@ -411,7 +411,7 @@ class TRRBTEditor {
         this.updateXformedTreeStructure();
 
         if (this.propertyNodes !== null) {
-            this.updatePropertyEditor(this.propertyNodes.node, true);
+            this.updatePropertyEditor(this.propertyNodes.node);
         }
 
         if (this.hasEngine()) {
@@ -508,65 +508,65 @@ class TRRBTEditor {
 
     updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
         let texts = [];
-        texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
-        texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
-        texts.push({type:EDT_TEXT_LINE,  data:node.type});
-        texts.push({type:EDT_TEXT_FONT,  data:'10px sans-serif'});
+        texts.push({ type: EDT_TEXT_FONT, data: 'bold 10px sans-serif' });
+        texts.push({ type: EDT_TEXT_COLOR, data: '#222222' });
+        texts.push({ type: EDT_TEXT_LINE, data: node.type });
+        texts.push({ type: EDT_TEXT_FONT, data: '10px sans-serif' });
 
         //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
 
         if (node.hasOwnProperty('comment') && node.comment != '') {
-            texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
+            texts.push({ type: EDT_TEXT_FONT, data: 'italic 10px sans-serif' });
             if (node.comment.length > 30) {
-                texts.push({type:EDT_TEXT_LINE,  data:node.comment.substring(0, 27) + '...'});
+                texts.push({ type: EDT_TEXT_LINE, data: node.comment.substring(0, 27) + '...' });
             } else {
-                texts.push({type:EDT_TEXT_LINE,  data:node.comment});
+                texts.push({ type: EDT_TEXT_LINE, data: node.comment });
             }
-            texts.push({type:EDT_TEXT_FONT,  data:'bold 10px sans-serif'});
+            texts.push({ type: EDT_TEXT_FONT, data: 'bold 10px sans-serif' });
         }
 
         if (node.hasOwnProperty('nid') && node.nid != '') {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['nid'].name + ': ' + node.nid});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['nid'].name + ': ' + node.nid });
         }
 
         if (node.hasOwnProperty('remorig') && node.remorig) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['remorig'].name});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['remorig'].name });
         }
 
         if (node.hasOwnProperty('file')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['file'].name + ': ' + node.file});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['file'].name + ': ' + node.file });
         }
 
         if (node.hasOwnProperty('target')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['target'].name + ': ' + node.target});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['target'].name + ': ' + node.target });
         }
 
         if (node.hasOwnProperty('pid')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['pid'].name + ': ' + node.pid});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['pid'].name + ': ' + node.pid });
         }
 
         if (node.hasOwnProperty('layer')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['layer'].name + ': ' + node.layer});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['layer'].name + ': ' + node.layer });
         }
 
         if (node.hasOwnProperty('times')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['times'].name + ': ' + node.times});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['times'].name + ': ' + node.times });
         }
 
         if (node.hasOwnProperty('what')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['what'].name + ': ' + node.what});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['what'].name + ': ' + node.what });
         }
 
         if (node.hasOwnProperty('with')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['with'].name + ': ' + node.with});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['with'].name + ': ' + node.with });
         }
 
         if (node.hasOwnProperty('withs')) {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['withs'].name + ': ' + node.withs.join(' ')});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['withs'].name + ': ' + node.withs.join(' ') });
         }
 
         if (node.hasOwnProperty('button') && node.button !== '') {
-            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['button'].name + ': ' + node.button});
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['button'].name + ': ' + node.button });
         }
 
         if (node.hasOwnProperty('pattern')) {
@@ -577,23 +577,23 @@ class TRRBTEditor {
                 if (layers.length === 1 && layers[0] === 'main') {
                     // pass
                 } else {
-                    texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
-                    texts.push({type:EDT_TEXT_COLOR, data:'#888888'});
-                    texts.push({type:EDT_TEXT_LINE,  data:'- ' + layer + ' -'});
+                    texts.push({ type: EDT_TEXT_FONT, data: 'italic 10px sans-serif' });
+                    texts.push({ type: EDT_TEXT_COLOR, data: '#888888' });
+                    texts.push({ type: EDT_TEXT_LINE, data: '- ' + layer + ' -' });
                 }
 
-                texts.push({type:EDT_TEXT_FONT,  data:'10px Courier New'});
-                texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
+                texts.push({ type: EDT_TEXT_FONT, data: '10px Courier New' });
+                texts.push({ type: EDT_TEXT_COLOR, data: '#222222' });
 
-                for (let ii = 0; ii < node.pattern[layer].length; ++ ii) {
+                for (let ii = 0; ii < node.pattern[layer].length; ++ii) {
                     const row_text = joinRow(node.pattern[layer][ii], tileSize, false);
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:graphemeLength(row_text), len:graphemeLength(row_text)});
+                        texts.push({ type: EDT_TEXT_RECT_BEGIN, from: 0, to: graphemeLength(row_text), len: graphemeLength(row_text) });
                     }
-                    texts.push({type:EDT_TEXT_LINE, data:row_text});
+                    texts.push({ type: EDT_TEXT_LINE, data: row_text });
                 }
                 if (node.pattern[layer].length > 0) {
-                    texts.push({type:EDT_TEXT_RECT_END});
+                    texts.push({ type: EDT_TEXT_RECT_END });
                 }
             }
         }
@@ -629,30 +629,30 @@ class TRRBTEditor {
                 if (layers.length === 1 && layers[0] === 'main') {
                     // pass
                 } else {
-                    texts.push({type:EDT_TEXT_FONT,  data:'italic 10px sans-serif'});
-                    texts.push({type:EDT_TEXT_COLOR, data:'#888888'});
-                    texts.push({type:EDT_TEXT_LINE,  data:'- ' + layer + ' -'});
+                    texts.push({ type: EDT_TEXT_FONT, data: 'italic 10px sans-serif' });
+                    texts.push({ type: EDT_TEXT_COLOR, data: '#888888' });
+                    texts.push({ type: EDT_TEXT_LINE, data: '- ' + layer + ' -' });
                 }
 
-                texts.push({type:EDT_TEXT_FONT,  data:'10px Courier New'});
-                texts.push({type:EDT_TEXT_COLOR, data:'#222222'});
+                texts.push({ type: EDT_TEXT_FONT, data: '10px Courier New' });
+                texts.push({ type: EDT_TEXT_COLOR, data: '#222222' });
 
                 const length = node.lhs.hasOwnProperty(layer) ? node.lhs[layer].length : node.rhs[layer].length;
-                for (let ii = 0; ii < length; ++ ii) {
+                for (let ii = 0; ii < length; ++ii) {
                     const connect = (ii === 0) ? ' → ' : '   ';
                     let lhs = node.lhs.hasOwnProperty(layer) ? joinRow(node.lhs[layer][ii], tileSize, true) : null;
                     let rhs = node.rhs.hasOwnProperty(layer) ? joinRow(node.rhs[layer][ii], tileSize, true) : null;
                     lhs = (lhs !== null) ? lhs : ' '.repeat(graphemeLength(rhs));
                     rhs = (rhs !== null) ? rhs : ' '.repeat(graphemeLength(length));
                     if (ii === 0) {
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:0, to:graphemeLength(lhs), len:graphemeLength(lhs) + 3 + graphemeLength(rhs)});
-                        texts.push({type:EDT_TEXT_RECT_BEGIN, from:graphemeLength(lhs) + 3, to:graphemeLength(lhs) + 3 + graphemeLength(rhs), len:graphemeLength(lhs) + 3 + graphemeLength(rhs)});
+                        texts.push({ type: EDT_TEXT_RECT_BEGIN, from: 0, to: graphemeLength(lhs), len: graphemeLength(lhs) + 3 + graphemeLength(rhs) });
+                        texts.push({ type: EDT_TEXT_RECT_BEGIN, from: graphemeLength(lhs) + 3, to: graphemeLength(lhs) + 3 + graphemeLength(rhs), len: graphemeLength(lhs) + 3 + graphemeLength(rhs) });
                     }
-                    texts.push({type:EDT_TEXT_LINE,  data:lhs + connect + rhs});
+                    texts.push({ type: EDT_TEXT_LINE, data: lhs + connect + rhs });
                 }
                 if (length > 0) {
-                    texts.push({type:EDT_TEXT_RECT_END});
-                    texts.push({type:EDT_TEXT_RECT_END});
+                    texts.push({ type: EDT_TEXT_RECT_END });
+                    texts.push({ type: EDT_TEXT_RECT_END });
                 }
             }
         }
@@ -698,7 +698,7 @@ class TRRBTEditor {
             }
         }
 
-        nodePositions.set(node.dispid, {x:nx, y:ny, w:nw, h:nh})
+        nodePositions.set(node.dispid, { x: nx, y: ny, w: nw, h: nh })
         nodeTexts.set(node.dispid, texts);
 
         return next_pos;
@@ -845,14 +845,14 @@ class TRRBTEditor {
                     const midy = 0.5 * (ny + nh + cny);
 
                     const edge = this.layout_horizontal ?
-                          [nx + nw / 2, ny + nh,
-                           nx + nw / 2, midy,
-                           cnx + cnw / 2, midy,
-                           cnx + cnw / 2, cny] :
-                          [nx + nw, ny + nh / 2,
-                           midx, ny + nh / 2,
-                           midx, cny + cnh / 2,
-                           cnx, cny + cnh / 2];
+                        [nx + nw / 2, ny + nh,
+                        nx + nw / 2, midy,
+                        cnx + cnw / 2, midy,
+                        cnx + cnw / 2, cny] :
+                        [nx + nw, ny + nh / 2,
+                            midx, ny + nh / 2,
+                            midx, cny + cnh / 2,
+                            cnx, cny + cnh / 2];
 
                     if (stackNodes.has(child.dispid)) {
                         stackEdges.push(edge);
@@ -984,20 +984,20 @@ class TRRBTEditor {
                                 break;
                             }
                             ctx.fillText(ch, cx, cy);
-                            ++ ii;
+                            ++ii;
                         }
                     }
-                    ++ line;
+                    ++line;
                 } else if (text.type === EDT_TEXT_RECT_BEGIN) {
-                    rects.push({from:text.from, to:text.to, len:text.len, texty:texty});
+                    rects.push({ from: text.from, to: text.to, len: text.len, texty: texty });
                 } else if (text.type == EDT_TEXT_RECT_END) {
                     const rect = rects.pop();
                     const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
                     const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
                     ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
-                                   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
-                                   width,
-                                   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
+                        ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+                        width,
+                        texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
         }
@@ -1091,7 +1091,7 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'text';
         input.value = value;
-        input.oninput = ()=>{ this.highlightProperty(id); };
+        input.oninput = () => { this.highlightProperty(id); };
 
         item.appendChild(label);
         appendBr(item);
@@ -1101,20 +1101,22 @@ class TRRBTEditor {
     }
 
     parseTextProperty(id, how) {
+        console.log(id)
+        console.log(document.getElementById(id))
         let value = document.getElementById(id).value;
         value = value.trim();
         if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
             if (value.match(/\s+/) !== null) {
-                return {ok:false, error:'Cannot have spaces'};
+                return { ok: false, error: 'Cannot have spaces' };
             } else if (how === EDT_PARSE_TEXT_INT && value != '') {
                 const asInt = parseInt(value, 10);
                 if (isNaN(asInt) || asInt < 1 || asInt > 100) {
-                    return {ok:false, error:'Must be an integer between 1 and 100'};
+                    return { ok: false, error: 'Must be an integer between 1 and 100' };
                 }
-                return {ok:true, value:asInt};
+                return { ok: true, value: asInt };
             }
         }
-        return {ok:true, value:value};
+        return { ok: true, value: value };
     }
 
     appendBoolProperty(parent, id, name, help, value) {
@@ -1132,7 +1134,7 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'checkbox';
         input.checked = value;
-        input.onclick = ()=>{ this.highlightProperty(id, false); };
+        input.onclick = () => { this.highlightProperty(id, false); };
 
         const labelCheck = document.createElement('label');
         labelCheck.innerHTML = 'set';
@@ -1149,7 +1151,7 @@ class TRRBTEditor {
 
     parseBoolProperty(id, how) {
         let value = document.getElementById(id + '_check').checked;
-        return {ok:true, value:value};
+        return { ok: true, value: value };
     }
 
     appendChoiceProperty(parent, id, name, help, value, values) {
@@ -1175,7 +1177,7 @@ class TRRBTEditor {
             input.type = 'radio';
             input.value = choice_value;
             input.checked = (choice_value === value);
-            input.onclick = ()=>{ this.highlightProperty(id, false); };
+            input.onclick = () => { this.highlightProperty(id, false); };
 
             const label = document.createElement('label');
             label.innerHTML = choice_text;
@@ -1191,10 +1193,10 @@ class TRRBTEditor {
         for (const choice_value of values) {
             let elem = document.getElementById(id + '_' + choice_value);
             if (elem.checked) {
-                return {ok:true, value:elem.value};
+                return { ok: true, value: elem.value };
             }
         }
-        return {ok:false, error:'An unknown choice was selected.'};
+        return { ok: false, error: 'An unknown choice was selected.' };
     }
 
     appendListProperty(parent, id, name, help, value) {
@@ -1203,7 +1205,7 @@ class TRRBTEditor {
 
     parseListProperty(id) {
         let value = document.getElementById(id).value;
-        return {ok:true, value:value.split(/\s+/)};
+        return { ok: true, value: value.split(/\s+/) };
     }
 
     appendPatternProperty(parent, id, name, help, value, tileSize) {
@@ -1239,7 +1241,7 @@ class TRRBTEditor {
         input.name = id;
         input.innerHTML = text;
         input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
-        input.oninput = ()=>{ this.highlightProperty(id, false); };
+        input.oninput = () => { this.highlightProperty(id, false); };
 
         item.appendChild(label)
         appendBr(item)
@@ -1282,35 +1284,35 @@ class TRRBTEditor {
                     rows = pattern[layer].length;
                 }
                 if (rows !== pattern[layer].length) {
-                    return {ok:false, error:'Layer row count mismatch.'};
+                    return { ok: false, error: 'Layer row count mismatch.' };
                 }
                 for (const row of pattern[layer]) {
                     if (cols === null) {
                         cols = row.length;
                     }
                     if (cols !== row.length) {
-                        return {ok:false, error:'Layer column count mismatch.'};
+                        return { ok: false, error: 'Layer column count mismatch.' };
                     }
                 }
             }
         }
 
         if (patterns.length === 1) {
-            return {ok:true, value:patterns[0]};
+            return { ok: true, value: patterns[0] };
         } else {
-            return {ok:true, value:patterns};
+            return { ok: true, value: patterns };
         }
     }
 
-    updatePropertyEditor(node, force) {
+    updatePropertyEditor(node, force = true) {
         if (this.propertyEditor === null) {
             return;
         }
 
         const changed =
-              force ||
-              (this.propertyNodes === null && node !== null) ||
-              (this.propertyNodes !== null && node !== this.propertyNodes.node);
+            force ||
+            (this.propertyNodes === null && node !== null) ||
+            (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
         if (changed) {
             const ed = this.propertyEditor;
@@ -1328,9 +1330,11 @@ class TRRBTEditor {
             appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed);
+            this.appendTextProperty(ed, 'gameprop_name', 'Game Title', 'A title for the game', this.game.name)
+            appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
             appendBr(ed);
 
-            this.propertyNodes = (node !== null) ? { node:node, parent:this.findNodeParent(this.game.tree, node) } : null;
+            this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(this.game.tree, node) } : null;
             if (this.propertyNodes) {
                 const parent = this.propertyNodes.parent;
 
@@ -1352,7 +1356,7 @@ class TRRBTEditor {
                 const node_clr = this.nodeColor(node.type, false);
                 const node_help_str = EDT_NODE_HELP[node.type].help;
 
-                appendButton(ed, '?', tooltip_help, node_clr, ()=>{alert(node.type + ': ' + node_help_str);});
+                appendButton(ed, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
                 appendText(ed, ' ' + node.type, true);
                 appendBr(ed);
                 appendBr(ed);
@@ -1515,7 +1519,7 @@ class TRRBTEditor {
 
                         if (parent !== null && parent.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
                             if (proto.type === 'player' && !can_be_player_children([node])) {
-                                    // pass
+                                // pass
                             } else if (parent.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
@@ -1523,7 +1527,7 @@ class TRRBTEditor {
                             }
                         }
 
-                        appendButton(elem, '?', tooltip_help, clr, ()=>{alert(proto.type + ': ' + help_str);});
+                        appendButton(elem, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
                         appendText(elem, ' ' + proto.type, false, false);
                         appendBr(elem);
                     }
@@ -1532,22 +1536,49 @@ class TRRBTEditor {
         }
     }
 
+    onGameSaveName() {
+        const SAVE_PROPS = [['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT]]
+
+        let new_props = new Map();
+        let alert_strs = [];
+        for (let [propid, propfn, proparg] of SAVE_PROPS) {
+            let result = propfn('gameprop_' + propid, proparg);
+            if (!result.ok) {
+                this.highlightProperty('gameprop_' + propid, true);
+                alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid].name + '.\n' + result.error);
+            } else {
+                new_props.set(propid, result.value);
+            }
+        }
+
+        if (alert_strs.length > 0) {
+            alert(alert_strs.join('\n\n'));
+            return;
+        }
+
+        for (let [propid, value] of new_props.entries()) {
+            this.game[propid] = value;
+        }
+
+        this.updateTreeStructureAndDraw(false, false);
+    }
+
     onNodeSaveProperties() {
         const SAVE_PROPS = [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                            ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-                            ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-                            ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                            ['withs', bind0(this, 'parseListProperty'), false],
-                            ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-                            ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-                            ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-                            ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
+        ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+        ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+        ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+        ['withs', bind0(this, 'parseListProperty'), false],
+        ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+        ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+        ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+        ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
 
         let node = this.propertyNodes.node;
 
@@ -1571,7 +1602,7 @@ class TRRBTEditor {
             if (!result.ok) {
                 this.highlightProperty('prop_lhs', true);
                 this.highlightProperty('prop_rhs', true);
-                let reset_colors = ()=> {
+                let reset_colors = () => {
                     this.highlightProperty('prop_lhs', false);
                     this.highlightProperty('prop_rhs', false);
                 }
@@ -1643,7 +1674,7 @@ class TRRBTEditor {
                     parent.children.splice(index, 1);
                 }
                 this.updateTreeStructureAndDraw(false, false);
-                this.updatePropertyEditor(null, true);
+                this.updatePropertyEditor(null);
             }
         }
     }
@@ -1777,7 +1808,7 @@ class TRRBTEditor {
         this.mousePos = null;
 
         this.updateTreeStructureAndDraw(false, true);
-        this.updatePropertyEditor(this.mouseNode, false);
+        this.updatePropertyEditor(this.mouseNode);
 
         this.resetXform();
         if (this.xform_editor !== null) {
@@ -1790,14 +1821,14 @@ class TRRBTEditor {
             alert('ERROR: Cannot find clipboard.');
         } else {
             let this_editor = this;
-            navigator.clipboard.readText().then(function(text) {
+            navigator.clipboard.readText().then(function (text) {
                 let gameImport = JSON.parse(text);
                 this_editor.clearNodeDispid(gameImport.tree);
 
                 this_editor.importGame(gameImport);
 
                 alert('Game imported from clipboard.');
-            }, function(err) {
+            }, function (err) {
                 alert('ERROR: Could not import game from clipboard.');
             });
         }
@@ -1810,12 +1841,12 @@ class TRRBTEditor {
             let gameExport = deepcopyobj(this.game);
             this.clearNodeDispid(gameExport.tree);
             let text = JSON.stringify(gameExport);
-            text = text.replace(/[\u007F-\uFFFF]/g, function(chr) {
+            text = text.replace(/[\u007F-\uFFFF]/g, function (chr) {
                 return '\\u' + ('0000' + chr.charCodeAt(0).toString(16)).substr(-4)
             });
-            navigator.clipboard.writeText(text).then(function() {
+            navigator.clipboard.writeText(text).then(function () {
                 alert('Game exported to clipboard.');
-            }, function(err) {
+            }, function (err) {
                 alert('ERROR: Could not export game to clipboard.');
             });
         }

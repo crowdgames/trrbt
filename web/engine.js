@@ -830,6 +830,8 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         ed.innerHTML = '';
 
+        appendText(ed, '')
+
         appendText(ed, 'Engine', true, true);
         appendBr(ed);
 
