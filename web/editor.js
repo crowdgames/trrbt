@@ -17,6 +17,9 @@ const EDT_PARSE_TEXT_INT    = 0;
 const EDT_PARSE_TEXT_WORD   = 1;
 const EDT_PARSE_TEXT_TEXT   = 2;
 
+const EDT_COLOR_CHANGE = '#ffffbb';
+const EDT_COLOR_ERROR  = '#ffdddd';
+
 const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
 
 const EDT_EMPTY_PATTERN = {}
@@ -43,11 +46,11 @@ const EDT_NODE_PROTOTYPES = [
 
 const EDT_XNODE_PROTOTYPES = [
     { type:'x-ident', comment:'', nid:'', children:[] },
-    { type:'x-mirror', comment:'', nid:'', children:[] },
-    { type:'x-skew', comment:'', nid:'', children:[] },
-    { type:'x-rotate', comment:'', nid:'', children:[] },
-    { type:'x-spin', comment:'', nid:'', children:[] },
-    { type:'x-flip-only', comment:'', nid:'', children:[] },
+    { type:'x-mirror', comment:'', nid:'', children:[], remorig:false },
+    { type:'x-skew', comment:'', nid:'', children:[], remorig:false },
+    { type:'x-rotate', comment:'', nid:'', children:[], remorig:false },
+    { type:'x-spin', comment:'', nid:'', children:[], remorig:false },
+    { type:'x-flip', comment:'', nid:'', children:[], remorig:false },
     { type:'x-swap-only', comment:'', nid:'', children:[], what:'', with:'' },
     { type:'x-replace-only', comment:'', nid:'', children:[], what:'', withs:[] },
     { type:'x-link', comment:'', nid:'', target:'' },
@@ -81,7 +84,7 @@ const EDT_NODE_HELP = {
     'x-skew': {color:[1,1,1], help:'Skew patterns along columns.'},
     'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
     'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
-    'x-flip-only': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
+    'x-flip': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
     'x-swap-only': {color:[1,1,1], help:'Swap characters in patterns and player IDs, removing original.'},
     'x-replace-only': {color:[1,1,1], help:'Replace characters in patterns and player IDs, removing original.'},
 
@@ -95,6 +98,7 @@ const EDT_NODE_HELP = {
 const EDT_PROP_NAMES = {
     comment: {name:'comment', help:'A comment about the node.'},
     nid: {name:'node ID', help:'ID of node that other nodes can use to refer to it.'},
+    remorig: {name:'remove original', help:'Remove original pattern after transform applied.'},
     file: {name:'file name', help:'Name of file to link to.'},
     target: {name:'target ID', help:'Target node ID to link to.'},
     pid: {name:'player ID', help:'ID of player to make choice.'},
@@ -523,6 +527,10 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('nid') && node.nid != '') {
             texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['nid'].name + ': ' + node.nid});
+        }
+
+        if (node.hasOwnProperty('remorig') && node.remorig) {
+            texts.push({type:EDT_TEXT_LINE,  data:EDT_PROP_NAMES['remorig'].name});
         }
 
         if (node.hasOwnProperty('file')) {
@@ -1067,6 +1075,11 @@ class TRRBTEditor {
         }
     }
 
+    highlightProperty(id, isError) {
+        let elem = document.getElementById(id);
+        elem.style.backgroundColor = (isError ? EDT_COLOR_ERROR : EDT_COLOR_CHANGE);
+    }
+
     appendTextProperty(parent, id, name, help, value) {
         const item = document.createElement('li');
         const label = document.createElement('label');
@@ -1078,7 +1091,7 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'text';
         input.value = value;
-        input.oninput = ()=>{input.style.backgroundColor = '#ffffdd';};
+        input.oninput = ()=>{ this.highlightProperty(id); };
 
         item.appendChild(label);
         appendBr(item);
@@ -1101,6 +1114,41 @@ class TRRBTEditor {
                 return {ok:true, value:asInt};
             }
         }
+        return {ok:true, value:value};
+    }
+
+    appendBoolProperty(parent, id, name, help, value) {
+        const item = document.createElement('li');
+        const label = document.createElement('label');
+        label.innerHTML = name;
+        label.htmlFor = id;
+        label.title = help;
+
+        const span = document.createElement('span');
+        span.id = id;
+
+        const input = document.createElement('input');
+        input.id = id + '_check';
+        input.name = id;
+        input.type = 'checkbox';
+        input.checked = value;
+        input.onclick = ()=>{ this.highlightProperty(id, false); };
+
+        const labelCheck = document.createElement('label');
+        labelCheck.innerHTML = 'set';
+        labelCheck.htmlFor = id + '_check';
+
+        item.appendChild(label);
+        appendBr(item);
+        span.appendChild(input);
+        span.appendChild(labelCheck);
+        item.appendChild(span);
+        appendBr(item);
+        parent.appendChild(item);
+    }
+
+    parseBoolProperty(id, how) {
+        let value = document.getElementById(id + '_check').checked;
         return {ok:true, value:value};
     }
 
@@ -1127,7 +1175,7 @@ class TRRBTEditor {
             input.type = 'radio';
             input.value = choice_value;
             input.checked = (choice_value === value);
-            input.onclick = ()=>{span.style.backgroundColor = '#ffffdd';};
+            input.onclick = ()=>{ this.highlightProperty(id, false); };
 
             const label = document.createElement('label');
             label.innerHTML = choice_text;
@@ -1191,7 +1239,7 @@ class TRRBTEditor {
         input.name = id;
         input.innerHTML = text;
         input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
-        input.oninput = ()=>{input.style.backgroundColor = '#ffffdd';};
+        input.oninput = ()=>{ this.highlightProperty(id, false); };
 
         item.appendChild(label)
         appendBr(item)
@@ -1358,6 +1406,10 @@ class TRRBTEditor {
                     this.appendTextProperty(list, 'prop_nid', EDT_PROP_NAMES['nid'].name, EDT_PROP_NAMES['nid'].help, node.nid);
                     anyProperties = true;
                 }
+                if (node.hasOwnProperty('remorig')) {
+                    this.appendBoolProperty(list, 'prop_remorig', EDT_PROP_NAMES['remorig'].name, EDT_PROP_NAMES['remorig'].help, node.remorig);
+                    anyProperties = true;
+                }
                 if (node.hasOwnProperty('file')) {
                     this.appendTextProperty(list, 'prop_file', EDT_PROP_NAMES['file'].name, EDT_PROP_NAMES['file'].help, node.file);
                     anyProperties = true;
@@ -1483,6 +1535,7 @@ class TRRBTEditor {
     onNodeSaveProperties() {
         const SAVE_PROPS = [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
                             ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                            ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
                             ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                             ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                             ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
@@ -1505,7 +1558,7 @@ class TRRBTEditor {
             if (node.hasOwnProperty(propid)) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
-                    document.getElementById('prop_' + propid).style.backgroundColor = '#ffdddd';
+                    this.highlightProperty('prop_' + propid, true);
                     alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid].name + '.\n' + result.error);
                 } else {
                     new_props.set(propid, result.value);
@@ -1516,16 +1569,14 @@ class TRRBTEditor {
         if (new_props.has('lhs') && new_props.has('rhs')) {
             let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
             if (!result.ok) {
-                let lhs = document.getElementById('prop_lhs');
-                let rhs = document.getElementById('prop_rhs');
-                lhs.style.backgroundColor = '#ffdddd';
-                rhs.style.backgroundColor = '#ffdddd';
+                this.highlightProperty('prop_lhs', true);
+                this.highlightProperty('prop_rhs', true);
                 let reset_colors = ()=> {
-                    lhs.style.backgroundColor = '#ffffdd';
-                    rhs.style.backgroundColor = '#ffffdd';
+                    this.highlightProperty('prop_lhs', false);
+                    this.highlightProperty('prop_rhs', false);
                 }
-                lhs.oninput = reset_colors;
-                rhs.oninput = reset_colors;
+                document.getElementById('prop_lhs').oninput = reset_colors;
+                document.getElementById('prop_rhs').oninput = reset_colors;
                 alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'].name + ' and ' + EDT_PROP_NAMES['rhs'].name + '.\n' + result.error);
             }
         }

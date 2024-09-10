@@ -110,7 +110,8 @@ tree:
             what: B
             with: R
             children:
-            - type: x-flip-only
+            - type: x-flip
+              remorig: true
               children:
               - type: x-link
                 target: ply

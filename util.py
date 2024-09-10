@@ -15,7 +15,7 @@ NDX_MIRROR         = 'x-mirror'
 NDX_SKEW           = 'x-skew'
 NDX_ROTATE         = 'x-rotate'
 NDX_SPIN           = 'x-spin'
-NDX_FLIP_ONLY      = 'x-flip-only'
+NDX_FLIP           = 'x-flip'
 NDX_SWAP_ONLY      = 'x-swap-only'
 NDX_REPLACE_ONLY   = 'x-replace-only'
 
@@ -57,6 +57,7 @@ NKEY_RHS           = 'rhs'
 NKEY_LAYER         = 'layer'
 
 NKEY_PID           = 'pid'
+NKEY_REMORIG       = 'remorig'
 NKEY_LAYER         = 'layer'
 NKEY_TIMES         = 'times'
 NKEY_WHAT          = 'what'
@@ -96,6 +97,8 @@ GVBUTTONBGN = '<FONT POINT-SIZE="9"><I>['
 GVBUTTONEND = ']</I></FONT>'
 GVDESCBGN   = '<FONT POINT-SIZE="9">('
 GVDESCEND   = ')</FONT>'
+GVBOOLBGN   = '<FONT POINT-SIZE="9">'
+GVBOOLEND   = '</FONT>'
 
 NKEY_GVID   = '__GVID'
 
@@ -405,7 +408,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
         nlabel += '</TABLE>'
 
     else:
-        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP_ONLY, NDX_SWAP_ONLY, NDX_REPLACE_ONLY]:
+        if ntype in [NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY]:
             nshape = 'hexagon'
             nfill = f'#{lt}{dk}{lt}'
         elif ntype in [NDX_UNROLL_REPLACE]:
@@ -431,7 +434,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
 
         nlabel += ntype
 
-        if ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
+        if ntype in [NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY]:
+            if NKEY_REMORIG in node and node[NKEY_REMORIG]:
+                nlabel += GVNEWLINE
+                nlabel += GVBOOLBGN
+                nlabel += 'remove original'
+                nlabel += GVBOOLEND
+        elif ntype in [ND_PLAYER, ND_WIN, ND_LOSE]:
             nlabel += ':' + str(intify(node[NKEY_PID]))
         elif ntype in [ND_LOOP_TIMES]:
             nlabel += ':' + str(intify(node[NKEY_TIMES]))
@@ -442,7 +451,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
             nlabel += ':' + node[NKEY_FILE] + '@' + node[NKEY_TARGET]
         elif ntype in [NDX_LINK]:
             nlabel += ':@' + node[NKEY_TARGET]
-        elif ntype == NDX_SWAP_ONLY:
+        elif ntype in [NDX_SWAP_ONLY]:
             nlabel += GVNEWLINE
             nlabel += GVTILEBGN
             nlabel += gv_filter_string(node[NKEY_WHAT])
