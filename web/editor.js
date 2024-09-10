@@ -80,15 +80,17 @@ const EDT_NODE_HELP = {
     'match': {color:[0,1,1], help:'Succeeds if pattern matches current board, otherwise fails.'},
 
     'x-ident': {color:[1,1,1], help:'Do not apply any transform.'},
+    'x-prune': {color:[1,1,1], help:'Remove nodes.'},
+
     'x-mirror': {color:[1,1,1], help:'Mirror patterns left-right.'},
     'x-skew': {color:[1,1,1], help:'Skew patterns along columns.'},
     'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
     'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
-    'x-flip': {color:[1,1,1], help:'Flip patterns top-bottom, removing original.'},
-    'x-swap': {color:[1,1,1], help:'Swap characters in patterns and player IDs, removing original.'},
-    'x-replace': {color:[1,1,1], help:'Replace characters in patterns and player IDs, removing original.'},
+    'x-flip': {color:[1,1,1], help:'Flip patterns top-bottom.'},
 
-    'x-prune': {color:[1,1,1], help:'Remove nodes.'},
+    'x-swap': {color:[1,1,1], help:'Swap characters in patterns and player IDs (removing original).'},
+    'x-replace': {color:[1,1,1], help:'Replace characters in patterns and player IDs (removing original).'},
+
     'x-unroll-replace': {color:[1,1,1], help:'Duplicate replaces here as children of an order node.'},
 
     'x-link': {color:[1,1,1], help:'Link to another node by node ID.'},
@@ -1509,7 +1511,7 @@ class TRRBTEditor {
                             } else if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                appendButton(elem, '\u2193', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
+                                appendButton(elem, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
                             }
                         }
 
@@ -1519,7 +1521,7 @@ class TRRBTEditor {
                             } else if (parent.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                appendButton(elem, '\u2191', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
+                                appendButton(elem, '\u2912', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
                             }
                         }
 
