@@ -29,13 +29,13 @@ tree:
   - type: loop-until-all
     nid: gameloop
     children:
-    - type: x-replace-only
+    - type: x-replace
       what: a
       withs:
       - _
       - E
       children:
-      - type: x-replace-only
+      - type: x-replace
         what: b
         withs:
         - _

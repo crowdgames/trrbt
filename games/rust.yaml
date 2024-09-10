@@ -1,7 +1,7 @@
 ---
 name: rust-layer
 tree:
-  type: x-replace-only
+  type: x-replace
   what: n
   withs:
   - 1
@@ -118,7 +118,7 @@ tree:
         with: _
       - type: loop-until-all
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: t
           withs:
           - Sn
@@ -142,20 +142,20 @@ tree:
     - type: loop-until-all
       nid: gameloop
       children:
-      - type: x-replace-only
+      - type: x-replace
         what: s
         withs:
         - X
         - B
         - SDn
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: e
           withs:
           - E
           - G
           children:
-          - type: x-replace-only
+          - type: x-replace
             what: d
             withs:
             - '<'

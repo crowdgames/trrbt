@@ -37,7 +37,7 @@ tree:
             children:
             - type: match
               pattern: R R R R
-    - type: x-swap-only
+    - type: x-swap
       what: R
       with: Y
       children:
