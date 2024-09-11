@@ -38,7 +38,7 @@ class TRRBTState {
         if (this.callStack !== null) {
             callStackCopy = [];
             for (let frame of this.callStack) {
-                let frameCopy = {node: frame.node, local: deepcopyobj(frame.local)};
+                let frameCopy = { node: frame.node, local: deepcopyobj(frame.local) };
                 callStackCopy.push(frameCopy);
             }
         }
@@ -131,7 +131,7 @@ class TRRBTStepper {
             state.callStack = [];
             this.pushCallStack(state, tree);
         } else if (state.callStack.length === 0) {
-            state.gameResult = {result:'stalemate'};
+            state.gameResult = { result: 'stalemate' };
         } else {
             let frame = state.callStack.at(-1);
 
@@ -142,7 +142,7 @@ class TRRBTStepper {
             }
 
             if (stepout !== null && state.loopCheck >= stepout) {
-                state.gameResult = {result:'stepout'};
+                state.gameResult = { result: 'stepout' };
             } else {
                 let fn = NODE_FN_MAP[frame.node.type];
                 state.callResult = fn(state, frame, state.callResult);
@@ -156,7 +156,7 @@ class TRRBTStepper {
 
     stepNodeOrder(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-                               ['index', 0]]);
+        ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
 
@@ -169,8 +169,8 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-                               ['anyThisLoop', false],
-                               ['index', 0]]);
+        ['anyThisLoop', false],
+        ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
         this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
@@ -189,8 +189,8 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-                               ['times', 0],
-                               ['index', 0]]);
+        ['times', 0],
+        ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
 
@@ -211,7 +211,7 @@ class TRRBTStepper {
 
         if (this.localEqual(frame, 'order', null)) {
             let order = [];
-            for (let ii = 0; ii < frame.node.children.length; ++ ii) {
+            for (let ii = 0; ii < frame.node.children.length; ++ii) {
                 order.push(ii);
             }
             order.sort((a, b) => 0.5 - Math.random());
@@ -257,7 +257,7 @@ class TRRBTStepper {
         this.localInit(frame, [['index', 0]]);
 
         if (lastResult === true) {
-            state.gameResult = {result:'win', player:frame.node.pid};
+            state.gameResult = { result: 'win', player: frame.node.pid };
             return null;
         } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
             return false;
@@ -270,7 +270,7 @@ class TRRBTStepper {
         this.localInit(frame, [['index', 0]]);
 
         if (lastResult === true) {
-            state.gameResult = {result:'lose', player:frame.node.pid};
+            state.gameResult = { result: 'lose', player: frame.node.pid };
             return null;
         } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
             return false;
@@ -283,7 +283,7 @@ class TRRBTStepper {
         this.localInit(frame, [['index', 0]]);
 
         if (lastResult === true) {
-            state.gameResult = {result:'draw'};
+            state.gameResult = { result: 'draw' };
             return null;
         } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
             return false;
@@ -423,7 +423,7 @@ class TRRBTStepper {
                 if (child.type === 'rewrite') {
                     let matches = this.findLayerPattern(state, child.lhs);
                     for (let match of matches) {
-                        choices.push({desc:child.desc, button:child.button, lhs:child.lhs, rhs:child.rhs, row:match.row, col:match.col});
+                        choices.push({ desc: child.desc, button: child.button, lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col });
                     }
                 }
             }
@@ -450,7 +450,7 @@ class TRRBTStepper {
                     const choice = state.choices[choiceIndex];
 
                     let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
-                    let rct = {row:choice.row, col:choice.col, rows:rowsChoice, cols:colsChoice };
+                    let rct = { row: choice.row, col: choice.col, rows: rowsChoice, cols: colsChoice };
                     let rctk = JSON.stringify(rct);
 
                     let mapChoices = [];
@@ -459,7 +459,7 @@ class TRRBTStepper {
                     }
 
                     mapChoices.push(choiceIndex);
-                    state.choicesByRct[rctk] = {rct:rct, choices:mapChoices};
+                    state.choicesByRct[rctk] = { rct: rct, choices: mapChoices };
 
                     if (choice.button !== undefined) {
                         state.choicesByBtn[choice.button] = choiceIndex;
@@ -522,7 +522,7 @@ class TRRBTStepper {
         for (let rr = 0; rr < state.rows - prows + 1; rr += 1) {
             for (let cc = 0; cc < state.cols - pcols + 1; cc += 1) {
                 if (this.matchLayerPattern(state, lpattern, rr, cc)) {
-                    ret.push({row:rr, col:cc});
+                    ret.push({ row: rr, col: cc });
                 }
             }
         }
@@ -561,7 +561,7 @@ class TRRBTStepper {
     }
 
     pushCallStack(state, node) {
-        state.callStack.push({node: node, local: null});
+        state.callStack.push({ node: node, local: null });
     }
 
     pushCallStackNextChild(state, frame) {
@@ -706,7 +706,7 @@ class TRRBTWebEngine extends TRRBTEngine {
     onLoad() {
         super.onLoad(this);
 
-        document.oncontextmenu = function() {
+        document.oncontextmenu = function () {
             return false;
         }
 
@@ -840,7 +840,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         const ed = this.engineDiv;
 
         ed.innerHTML = '';
-
+        appendText(ed, 'Hover for descriptions')
         appendText(ed, '')
 
         appendText(ed, 'Engine', true, true);
@@ -853,7 +853,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ', false, false);
         this.breakResumeText = document.createElement('span');
-        this.breakResumeText.style.color = '#ffdddd';
+        this.breakResumeText.style.color = '#fc5d5d';
         this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
         this.breakResumeText.title = 'Game is currently in break mode, where you must manually step. Resume or restart to play as normal.';
         this.breakResumeText.style.display = 'none';
@@ -960,7 +960,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         let choiceOverwrite = null;
         if (this.mouseChoice !== null && !this.mouseAlt) {
-            choiceOverwrite = {rct: this.mouseChoice.rct, rhs:this.state.choices[this.state.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx]].rhs };
+            choiceOverwrite = { rct: this.mouseChoice.rct, rhs: this.state.choices[this.state.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx]].rhs };
         }
 
         this.ctx.fillStyle = '#000000';
@@ -1295,11 +1295,11 @@ class TRRBTWebEngine extends TRRBTEngine {
                             best_dist_sqr = dist_sqr;
                             best_choices = [];
                             for (let ii = 0; ii < choices.length; ii += 1) {
-                                best_choices.push({rct:rct, idx:ii});
+                                best_choices.push({ rct: rct, idx: ii });
                             }
                         } else if (dist_sqr < best_dist_sqr + 0.001) {
                             for (let ii = 0; ii < choices.length; ii += 1) {
-                                best_choices.push({rct:rct, idx:ii});
+                                best_choices.push({ rct: rct, idx: ii });
                             }
                         }
                     }
@@ -1307,7 +1307,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
                 if (best_choices.length > 0) {
                     const choice_idx = Math.max(0, Math.min(best_choices.length - 1, Math.floor(best_choices.length * (mc - Math.floor(mc)))));
-                    this.mouseChoice = {rct:best_choices[choice_idx].rct, idx:best_choices[choice_idx].idx}
+                    this.mouseChoice = { rct: best_choices[choice_idx].rct, idx: best_choices[choice_idx].idx }
                 }
             }
         }

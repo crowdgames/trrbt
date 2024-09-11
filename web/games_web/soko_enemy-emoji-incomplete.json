@@ -466,7 +466,7 @@
                                 "comment": "Wait"
                             }
                         ],
-                        "pid": "1",
+                        "pid": "\ud83e\uddb8",
                         "comment": ""
                     },
                     {
@@ -495,7 +495,7 @@
                                 ]
                             }
                         ],
-                        "pid": "1",
+                        "pid": "\ud83e\uddb8",
                         "comment": "All boxes on targets"
                     },
                     {
@@ -520,7 +520,7 @@
                                 ]
                             }
                         ],
-                        "pid": "1",
+                        "pid": "\ud83e\uddb8",
                         "comment": "Player is killed"
                     },
                     {
