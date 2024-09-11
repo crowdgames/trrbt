@@ -10,26 +10,26 @@
   </head>
   <body>
     <script>
-      var game_u = emptyGame();
-      var game_x = emptyGame();
-      var editor_u = new TRRBTEditor(game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv');
-      var editor_x = new TRRBTEditor(game_x, SEL_getGameTree, 'editorxcanvas', null);
-      var engine = new TRRBTWebEngine(game_x, 'enginecanvas', 'enginediv');
+      var G_game_u = emptyGame();
+      var G_game_x = emptyGame();
+      var G_editor_u = new TRRBTEditor(G_game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv');
+      var G_editor_x = new TRRBTEditor(G_game_x, SEL_getGameTree, 'editorxcanvas', null);
+      var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
-          editor_u.importGame(gameSelected);
+          G_editor_u.importGame(gameSelected);
       }
       function onLoad() {
-          copyIntoGame(game_u, SEL_startingGame());
+          copyIntoGame(G_game_u, SEL_startingGame());
 
-          editor_u.xform_editor = editor_x;
+          G_editor_u.xform_editor = G_editor_x;
 
-          editor_x.engine = engine;
-          engine.editor = editor_x;
+          G_editor_x.engine = G_engine;
+          G_engine.editor = G_editor_x;
 
-          engine.onLoad();
-          engine.stepManual = true;
-          editor_x.onLoad();
-          editor_u.onLoad();
+          G_engine.onLoad();
+          G_engine.stepManual = true;
+          G_editor_x.onLoad();
+          G_editor_u.onLoad();
       }
       window.addEventListener('load', onLoad, false);
     </script>

@@ -1539,7 +1539,7 @@ class TRRBTEditor {
     }
 
     onGameSaveName() {
-        const SAVE_PROPS = [['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT]]
+        const SAVE_PROPS = [['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT]];
 
         let new_props = new Map();
         let alert_strs = [];
@@ -1566,21 +1566,22 @@ class TRRBTEditor {
     }
 
     onNodeSaveProperties() {
-        const SAVE_PROPS = [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-        ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-        ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-        ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-        ['withs', bind0(this, 'parseListProperty'), false],
-        ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-        ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-        ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-        ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
+        const SAVE_PROPS =
+              [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+               ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+               ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+               ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+               ['withs', bind0(this, 'parseListProperty'), false],
+               ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+               ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+               ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+               ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
 
         let node = this.propertyNodes.node;
 
