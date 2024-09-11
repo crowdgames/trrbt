@@ -45,15 +45,15 @@ const EDT_NODE_PROTOTYPES = [
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type:'x-ident', comment:'', nid:'', children:[] },
-    { type:'x-mirror', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-skew', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-rotate', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-spin', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-flip', comment:'', nid:'', children:[], remorig:false },
-    { type:'x-swap', comment:'', nid:'', children:[], what:'', with:'' },
-    { type:'x-replace', comment:'', nid:'', children:[], what:'', withs:[] },
-    { type:'x-link', comment:'', nid:'', target:'' },
+    { type: 'x-ident', comment: '', nid: '', children: [] },
+    { type: 'x-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-skew', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-rotate', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-spin', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-flip', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-swap', comment: '', nid: '', children: [], what: '', with: '' },
+    { type: 'x-replace', comment: '', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-link', comment: '', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
@@ -79,19 +79,19 @@ const EDT_NODE_HELP = {
 
     'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
 
-    'x-ident': {color:[1,1,1], help:'Do not apply any transform.'},
-    'x-prune': {color:[1,1,1], help:'Remove nodes.'},
+    'x-ident': { color: [1, 1, 1], help: 'Do not apply any transform.' },
+    'x-prune': { color: [1, 1, 1], help: 'Remove nodes.' },
 
-    'x-mirror': {color:[1,1,1], help:'Mirror patterns left-right.'},
-    'x-skew': {color:[1,1,1], help:'Skew patterns along columns.'},
-    'x-rotate': {color:[1,1,1], help:'Rotate patterns 90 degrees.'},
-    'x-spin': {color:[1,1,1], help:'Rotate patterns 90, 180, and 270 degrees.'},
-    'x-flip': {color:[1,1,1], help:'Flip patterns top-bottom.'},
+    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right.' },
+    'x-skew': { color: [1, 1, 1], help: 'Skew patterns along columns.' },
+    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees.' },
+    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns 90, 180, and 270 degrees.' },
+    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom.' },
 
-    'x-swap': {color:[1,1,1], help:'Swap characters in patterns and player IDs (removing original).'},
-    'x-replace': {color:[1,1,1], help:'Replace characters in patterns and player IDs (removing original).'},
+    'x-swap': { color: [1, 1, 1], help: 'Swap characters in patterns and player IDs (removing original).' },
+    'x-replace': { color: [1, 1, 1], help: 'Replace characters in patterns and player IDs (removing original).' },
 
-    'x-unroll-replace': {color:[1,1,1], help:'Duplicate replaces here as children of an order node.'},
+    'x-unroll-replace': { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
 
     'x-link': { color: [1, 1, 1], help: 'Link to another node by node ID.' },
     'x-file': { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
@@ -414,6 +414,8 @@ class TRRBTEditor {
 
         if (this.propertyNodes !== null) {
             this.updatePropertyEditor(this.propertyNodes.node);
+        } else {
+            this.updatePropertyEditor(null)
         }
 
         if (this.hasEngine()) {
