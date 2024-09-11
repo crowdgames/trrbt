@@ -1085,7 +1085,9 @@ class TRRBTEditor {
     }
 
     appendTextProperty(parent, id, name, help, value) {
-        const item = document.createElement('li');
+        const inList = (parent.nodeName === 'UL');
+
+        const item = inList ? document.createElement('li') : document.createElement('span');
         const label = document.createElement('label');
         label.innerHTML = name;
         label.htmlFor = id;
@@ -1098,9 +1100,9 @@ class TRRBTEditor {
         input.oninput = () => { this.highlightProperty(id); };
 
         item.appendChild(label);
-        appendBr(item);
+        if (inList) { appendBr(item) } else { appendText(item, ' '); }
         item.appendChild(input);
-        appendBr(item);
+        if (inList) appendBr(item);
         parent.appendChild(item);
     }
 
@@ -1332,8 +1334,12 @@ class TRRBTEditor {
             appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed);
+            appendBr(ed);
+
             this.appendTextProperty(ed, 'gameprop_name', 'Game Title', 'A title for the game', this.game.name)
+            appendText(ed, ' ');
             appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
+            appendBr(ed);
             appendBr(ed);
 
             this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(this.game.tree, node) } : null;
