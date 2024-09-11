@@ -1326,9 +1326,9 @@ class TRRBTEditor {
 
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
-            appendText(ed, ' ', false, false);
+            appendText(ed, ' ');
             appendButton(ed, 'Hrz/Vrt', 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
-            appendText(ed, ' ', false, false);
+            appendText(ed, ' ');
             appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed);
@@ -1481,7 +1481,7 @@ class TRRBTEditor {
                 appendBr(ed);
                 appendBr(ed);
 
-                appendText(ed, 'Add', false, false);
+                appendText(ed, 'Add');
 
                 const table = document.createElement('table');
                 ed.appendChild(table);
@@ -1530,7 +1530,7 @@ class TRRBTEditor {
                         }
 
                         appendButton(elem, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
-                        appendText(elem, ' ' + proto.type, false, false);
+                        appendText(elem, ' ' + proto.type);
                         appendBr(elem);
                     }
                 }
