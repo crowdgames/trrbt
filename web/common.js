@@ -1,6 +1,6 @@
 const BUTTON_LEFT = 0;
 const BUTTON_RIGHT = 2;
-const PIXEL_RATIO = (typeof(window) === 'undefined') ? 1 : window.devicePixelRatio;
+const PIXEL_RATIO = (typeof (window) === 'undefined') ? 1 : window.devicePixelRatio;
 const DOUBLE_CLICK_TIME = 300;
 
 const TAU = 2 * Math.PI;
@@ -10,7 +10,7 @@ const SEGMENTER = new Intl.Segmenter();
 let G_nextId = 0;
 
 function getNextId() {
-    ++ G_nextId;
+    ++G_nextId;
     return G_nextId;
 }
 
@@ -77,7 +77,7 @@ function bind2(obj, fn, arg1, arg2) {
 
 
 
-function appendText(parent, text, bold, underline) {
+function appendText(parent, text, bold = false, underline = false, italic = false) {
     let elem = document.createTextNode(text);
     if (bold) {
         const elem_b = document.createElement('b');
@@ -88,6 +88,11 @@ function appendText(parent, text, bold, underline) {
         const elem_u = document.createElement('u');
         elem_u.appendChild(elem);
         elem = elem_u;
+    }
+    if (italic) {
+        const elem_i = document.createElement('i');
+        elem_i.appendChild(elem);
+        elem = elem_i;
     }
     parent.appendChild(elem);
 }
@@ -178,7 +183,7 @@ function getTileSize(patterns) {
 function joinRow(row, tileSize, alwaysPad) {
     let rowStr = '';
 
-    for (let ii = 0; ii < row.length; ++ ii) {
+    for (let ii = 0; ii < row.length; ++ii) {
         const graphemes = splitGraphemes(row[ii]);
 
         for (const ch of graphemes) {
@@ -186,7 +191,7 @@ function joinRow(row, tileSize, alwaysPad) {
         }
 
         if (ii + 1 < row.length || alwaysPad) {
-            for (let jj = graphemes.length; jj < tileSize; ++ jj) {
+            for (let jj = graphemes.length; jj < tileSize; ++jj) {
                 rowStr += ' ';
             }
         }
@@ -287,9 +292,9 @@ function xform_rule_prune(node) {
 function xform_rule_mirror_fn(remorig) {
     function xform_rule_mirror(node) {
         function pattern_func(patt) {
-            return patt.slice(0).map(row=>row.slice(0).reverse());
+            return patt.slice(0).map(row => row.slice(0).reverse());
         }
-        let button_obj = {'left':'right', 'right':'left'};
+        let button_obj = { 'left': 'right', 'right': 'left' };
 
         return xform_unique(xform_remorig(remorig, node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)));
     }
@@ -301,7 +306,7 @@ function xform_rule_rotate_fn(remorig) {
         function pattern_func(patt) {
             return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
         }
-        let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'};
+        let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
 
         return xform_unique(xform_remorig(remorig, node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)));
     }
@@ -313,10 +318,10 @@ function xform_rule_spin_fn(remorig) {
         function pattern_func(patt) {
             return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
         }
-        let button_obj = {'left':'up', 'up':'right', 'right':'down', 'down':'left'};
+        let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
 
         let ret = [node];
-        for (let ii = 0; ii < 3; ++ ii) {
+        for (let ii = 0; ii < 3; ++ii) {
             ret.push(xform_rule_apply(shallowcopyobj(ret.at(-1)), pattern_func, null, button_obj));
         }
         if (remorig) {
@@ -333,9 +338,9 @@ function xform_rule_skew_fn(remorig) {
             const rows = patt.length;
             const cols = patt[0].length;
             let ret = [];
-            for (let rr = 0; rr < rows + cols - 1; ++ rr) {
+            for (let rr = 0; rr < rows + cols - 1; ++rr) {
                 let row = [];
-                for (let cc = 0; cc < cols; ++ cc) {
+                for (let cc = 0; cc < cols; ++cc) {
                     const skewed = rr - cc;
                     if (0 <= skewed && skewed < patt.length) {
                         row.push(patt[skewed][cc]);
@@ -358,7 +363,7 @@ function xform_rule_flip_fn(remorig) {
         function pattern_func(patt) {
             return patt.slice(0).reverse();
         }
-        let button_obj = {'up':'down', 'down':'up'};
+        let button_obj = { 'up': 'down', 'down': 'up' };
 
         return xform_unique(xform_remorig(remorig, node, xform_rule_apply(shallowcopyobj(node), pattern_func, null, button_obj)));
     }
@@ -367,7 +372,7 @@ function xform_rule_flip_fn(remorig) {
 
 function xform_rule_swap_only_fn(wht, wth) {
     const swap_regex = new RegExp('(' + wht + '|' + wth + ')', 'g');
-    const swap_fn = function(mm) { return mm === wht ? wth : wht; };
+    const swap_fn = function (mm) { return mm === wht ? wth : wht; };
 
     function pattern_func(patt) {
         let ret = [];
@@ -419,9 +424,9 @@ function xform_rule_replace_only_fn(wht, wths) {
         let ret = [];
         if (node.type === 'x-unroll-replace') {
             if (node.what === wht) {
-                let new_node = {type:'order', children:[]};
+                let new_node = { type: 'order', children: [] };
                 for (const which of wths) {
-                    new_node.children.push({type:'x-replace', what:node.what, withs:[which], children:deepcopyobj(node.children)});
+                    new_node.children.push({ type: 'x-replace', what: node.what, withs: [which], children: deepcopyobj(node.children) });
                 }
                 ret.push(new_node);
             } else {
@@ -537,7 +542,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                         if (dispid_suffix > 0) {
                             child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suffix;
                         }
-                        ++ dispid_suffix;
+                        ++dispid_suffix;
                     }
                     ret_nodes.push(child_xformed);
                 }
@@ -600,5 +605,5 @@ function copyIntoGame(game, fromGame) {
 }
 
 function emptyGame() {
-    return {name:'empty', sprites:null, tree:null};
+    return { name: 'empty', sprites: null, tree: null };
 }

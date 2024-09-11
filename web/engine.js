@@ -840,8 +840,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         const ed = this.engineDiv;
 
         ed.innerHTML = '';
-        appendText(ed, 'Hover for descriptions')
-        appendText(ed, '')
+        appendText(ed, 'Hover for additional info', false, false, true);
+        appendBr(ed);
+        appendText(ed, '');
 
         appendText(ed, 'Engine', true, true);
         appendBr(ed);
@@ -851,7 +852,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendBr(ed);
 
         appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
-        appendText(ed, ' ', false, false);
+        appendText(ed, ' ');
         this.breakResumeText = document.createElement('span');
         this.breakResumeText.style.color = '#fc5d5d';
         this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
