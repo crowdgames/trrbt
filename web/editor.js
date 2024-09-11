@@ -1203,6 +1203,24 @@ class TRRBTEditor {
         return { ok: false, error: 'An unknown choice was selected.' };
     }
 
+    appendEmojiPicker(parent) {
+        appendText(parent, 'Click to copy emoji to keyboard', false, false, true);
+        const emojiPicker = document.createElement('emoji-picker');
+        emojiPicker.style.height = "175px"
+        emojiPicker.addEventListener('emoji-click', e => {
+            if (!navigator.clipboard) {
+                alert('ERROR: Cannot find clipboard.');
+            } else {
+                navigator.clipboard.writeText(e.detail.unicode).then(function () {
+                    alert('Emoji exported to clipboard.');
+                }, function (err) {
+                    alert('ERROR: Could not copy to clipboard.');
+                });
+            }
+        })
+        parent.appendChild(emojiPicker)
+    }
+
     appendListProperty(parent, id, name, help, value) {
         this.appendTextProperty(parent, id, name, help, value.join(' '));
     }
@@ -1325,6 +1343,8 @@ class TRRBTEditor {
 
             appendText(ed, 'Editor', true, true);
             appendBr(ed);
+
+            this.appendEmojiPicker(ed);
 
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
