@@ -42,7 +42,7 @@ tree:
           rhs: DO .
       - type: order
         children:
-        - type: x-replace-only
+        - type: x-replace
           comment: DEVNOTE Why isn't there a token to just represent "I don't care WHAT it is, but I want to move whatever it is around the board" - like an inverse "." where I don't care what "." is and I don't want to affect it. Another issue is that x-replace only replaces all instances of the token with the same token only - not any combo. This is why I am forced to use "ANY_ACTION" and "ANY_THING" instead of just one "ANY".
           what: ANY_ACTION
           withs:
@@ -50,8 +50,8 @@ tree:
           - EX
           - GO
           children:
-          - type: x-replace-only
-            comment: DEVNOTE These nested x-replace-onlys are a PAIN
+          - type: x-replace
+            comment: DEVNOTE These nested x-replaces are a PAIN
             what: ANY_DIR
             withs:
             - NORTH
@@ -59,13 +59,13 @@ tree:
             - EAST
             - WEST
             children:
-            - type: x-replace-only
+            - type: x-replace
               what: ANY_ROOM
               withs:
               - LOST_AND_FOUND
               - HALLWAY
               children:
-              - type: x-replace-only
+              - type: x-replace
                 comment: DEVNOTE Why can I add ANY_DIR here and it works for the direction, but if I add ANY_ROOM it's a nogo? I want to be able to compose x-replace only lists
                 what: ANY_THING
                 withs:

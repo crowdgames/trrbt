@@ -86,7 +86,7 @@ tree:
             children:
             - type: match
               pattern: = ~ X ~ = ~ X ~ = ~ X ~ =
-    - type: x-swap-only
+    - type: x-swap
       what: X
       with: O
       children:

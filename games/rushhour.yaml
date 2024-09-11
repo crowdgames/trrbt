@@ -38,7 +38,7 @@ tree:
           - type: rewrite
             lhs: CR CR __
             rhs: __ CR CR
-        - type: x-replace-only
+        - type: x-replace
           comment: cars and trucks move
           what: a
           withs:

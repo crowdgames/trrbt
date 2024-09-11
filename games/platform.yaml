@@ -11,7 +11,7 @@ tree:
              _   _   _   _   E   _   _   X   X   X   _   _;
              P0  _   _   _   X   X   X   X   X   X   _   O;
              X   X   X   X   X   X   X   X   X   X   X   X;
-  - type: x-replace-only
+  - type: x-replace
     what: a
     withs:
     - 0
