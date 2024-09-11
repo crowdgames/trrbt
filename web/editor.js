@@ -1101,8 +1101,6 @@ class TRRBTEditor {
     }
 
     parseTextProperty(id, how) {
-        console.log(id)
-        console.log(document.getElementById(id))
         let value = document.getElementById(id).value;
         value = value.trim();
         if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
@@ -1137,7 +1135,7 @@ class TRRBTEditor {
         input.onclick = () => { this.highlightProperty(id, false); };
 
         const labelCheck = document.createElement('label');
-        labelCheck.innerHTML = 'set';
+        labelCheck.innerHTML = 'set as true';
         labelCheck.htmlFor = id + '_check';
 
         item.appendChild(label);
