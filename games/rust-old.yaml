@@ -54,7 +54,7 @@ tree:
   - type: loop-until-all
     nid: gameloop
     children:
-    - type: x-replace-only
+    - type: x-replace
       what: p
       withs:
       - P
@@ -62,7 +62,7 @@ tree:
       - P:A2
       - P:A3
       children:
-      - type: x-replace-only
+      - type: x-replace
         what: a
         withs:
         - _
@@ -73,7 +73,7 @@ tree:
         - E
         - F
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: b
           withs:
           - _
@@ -84,7 +84,7 @@ tree:
           - E
           - F
           children:
-          - type: x-replace-only
+          - type: x-replace
             what: d
             withs:
             - '<'

@@ -37,20 +37,20 @@ tree:
         rhs:
           main: '_'
           ladd: '='
-  - type: x-replace-only
+  - type: x-replace
     what: d
     withs:
     - L
     - R
     children:
-    - type: x-replace-only
+    - type: x-replace
       what: a
       withs:
       - J
       - C
       - S
       children:
-      - type: x-replace-only
+      - type: x-replace
         what: b
         withs:
         - R
@@ -58,7 +58,7 @@ tree:
         - C
         - S
         children:
-        - type: x-replace-only
+        - type: x-replace
           what: s
           withs:
           - '->'

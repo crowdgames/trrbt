@@ -91,6 +91,17 @@ class TRRBTStepper {
         return tree !== null && state.gameResult === null && state.displayWait === false && state.choiceWait === false;
     }
 
+    stepToWait(tree, state, stepout) {
+        let stepped = false;
+
+        while (this.stepReady(tree, state)) {
+            this.step(tree, state, stepout);
+            stepped = true;
+        }
+
+        return stepped;
+    }
+
     step(tree, state, stepout) {
         const NODE_FN_MAP = {
             'display-board': bind0(this, 'stepNodeDisplayBoard'),
@@ -622,13 +633,23 @@ class TRRBTEngine {
         return this.state.gameResult !== null;
     }
 
-    stepReady() {
-        return this.stepper.stepReady(this.game.tree, this.state);
+    clearDisplayWait() {
+        this.undoPush();
+        this.stepper.clearDisplayWait(this.game.tree, this.state);
+    }
+
+    clearChoiceWait(choiceIndex) {
+        this.undoPush();
+        this.stepper.clearChoiceWait(this.game.tree, this.state, choiceIndex);
     }
 
     step() {
         this.undoPush();
         this.stepper.step(this.game.tree, this.state, ENG_LOOP_CHECK_MAX);
+    }
+
+    stepReady() {
+        return this.stepper.stepReady(this.game.tree, this.state);
     }
 
     stepToWait() {
@@ -640,16 +661,6 @@ class TRRBTEngine {
         }
 
         return stepped;
-    }
-
-    clearDisplayWait() {
-        this.undoPush();
-        this.stepper.clearDisplayWait(this.game, this.state);
-    }
-
-    clearChoiceWait(choiceIndex) {
-        this.undoPush();
-        this.stepper.clearChoiceWait(this.game, this.state, choiceIndex);
     }
 
 };
