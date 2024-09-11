@@ -92,11 +92,31 @@ class TRRBTStepper {
     }
 
     stepToWait(tree, state, stepout) {
-        let stepped = false;
+        let stepped = 0;
+
+        if (tree === null) {
+            return stepped;
+        }
 
         while (this.stepReady(tree, state)) {
             this.step(tree, state, stepout);
-            stepped = true;
+            ++ stepped;
+        }
+
+        return stepped;
+    }
+
+    stepToWaitChoiceOrResult(tree, state, stepout) {
+        let stepped = 0;
+
+        if (tree === null) {
+            return stepped;
+        }
+
+        stepped += this.stepToWait(tree, state, stepout);
+        while (state.displayWait) {
+            this.clearDisplayWait(tree, state);
+            stepped += this.stepToWait(tree, state, stepout);
         }
 
         return stepped;
@@ -653,11 +673,11 @@ class TRRBTEngine {
     }
 
     stepToWait() {
-        let stepped = false;
+        let stepped = 0;
 
         while (this.stepReady()) {
             this.step();
-            stepped = true;
+            ++ stepped;
         }
 
         return stepped;
@@ -903,7 +923,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         if (!this.stepManual) {
-            if (this.stepToWait()) {
+            if (this.stepToWait() > 0) {
                 this.updateEditor();
             }
         }

@@ -10,15 +10,15 @@
   </head>
   <body>
     <script>
-      var game = emptyGame();
-      var engine = new TRRBTWebEngine(game, 'enginecanvas', 'enginediv');
+      var G_game = emptyGame();
+      var G_engine = new TRRBTWebEngine(G_game, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
-          xformApplyIntoGame(game, gameSelected, SEL_getGameTree);
-          engine.onLoad();
+          xformApplyIntoGame(G_game, gameSelected, SEL_getGameTree);
+          G_engine.onLoad();
       }
       function onLoad() {
-          xformApplyIntoGame(game, SEL_startingGame(), SEL_getGameTree);
-          engine.onLoad();
+          xformApplyIntoGame(G_game, SEL_startingGame(), SEL_getGameTree);
+          G_engine.onLoad();
       }
       window.addEventListener('load', onLoad, false);
     </script>
