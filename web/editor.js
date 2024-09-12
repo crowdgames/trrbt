@@ -261,7 +261,8 @@ class TRRBTEditor {
         if (this.emojiPicker === null) {
             if (window.customElements.get('emoji-picker') !== undefined) {
                 this.emojiPicker = document.createElement('emoji-picker');
-                this.emojiPicker.style.height = '175px';
+                this.emojiPicker.style.display = 'none';
+                this.emojiPicker.style.height = '200px';
                 this.emojiPicker.addEventListener('emoji-click', e => {
                     if (!navigator.clipboard) {
                         alert('ERROR: Cannot find clipboard.');
@@ -1224,9 +1225,10 @@ class TRRBTEditor {
 
     appendThisEmojiPicker(parent) {
         if (this.emojiPicker) {
-            appendText(parent, 'Click to copy emoji to clipboard', false, false, true);
+            appendButton(parent, 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
             appendBr(parent);
             parent.appendChild(this.emojiPicker);
+            appendBr(parent);
         }
     }
 
@@ -1823,6 +1825,16 @@ class TRRBTEditor {
 
     onRedo() {
         this.undoRedo();
+    }
+
+    onShowHidEmojiPicker() {
+        if (this.emojiPicker !== null) {
+            if (this.emojiPicker.style.display === 'none') {
+                this.emojiPicker.style.display = 'block';
+            } else {
+                this.emojiPicker.style.display = 'none';
+            }
+        }
     }
 
     onHrzVrt() {
