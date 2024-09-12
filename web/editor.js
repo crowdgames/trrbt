@@ -1204,21 +1204,24 @@ class TRRBTEditor {
     }
 
     appendEmojiPicker(parent) {
-        appendText(parent, 'Click to copy emoji to keyboard', false, false, true);
-        const emojiPicker = document.createElement('emoji-picker');
-        emojiPicker.style.height = "175px"
-        emojiPicker.addEventListener('emoji-click', e => {
-            if (!navigator.clipboard) {
-                alert('ERROR: Cannot find clipboard.');
-            } else {
-                navigator.clipboard.writeText(e.detail.unicode).then(function () {
-                    alert('Emoji exported to clipboard.');
-                }, function (err) {
-                    alert('ERROR: Could not copy to clipboard.');
-                });
-            }
-        })
-        parent.appendChild(emojiPicker)
+        if (window.customElements.get('emoji-picker') !== undefined) {
+            const emojiPicker = document.createElement('emoji-picker');
+            emojiPicker.style.height = '175px';
+            emojiPicker.addEventListener('emoji-click', e => {
+                if (!navigator.clipboard) {
+                    alert('ERROR: Cannot find clipboard.');
+                } else {
+                    navigator.clipboard.writeText(e.detail.unicode).then(function () {
+                        alert('Emoji ' + e.detail.unicode + ' copied to clipboard.');
+                    }, function (err) {
+                        alert('ERROR: Could not copy to clipboard.');
+                    });
+                }
+            });
+            appendText(parent, 'Click to copy emoji to clipboard', false, false, true);
+            appendBr(parent);
+            parent.appendChild(emojiPicker);
+        }
     }
 
     appendListProperty(parent, id, name, help, value) {
