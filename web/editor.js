@@ -1541,8 +1541,12 @@ class TRRBTEditor {
                             if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                appendButton(elem, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
-                                appendButton(elem, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
+                                if (node.children.length === 0) {
+                                    appendButton(elem, '\u2193', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                                } else {
+                                    appendButton(elem, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                                    appendButton(elem, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
+                                }
                             }
                         }
 
@@ -1552,7 +1556,9 @@ class TRRBTEditor {
                             } else if (node.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                appendButton(elem, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
+                                if (node.children.length > 0) {
+                                    appendButton(elem, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
+                                }
                             }
                         }
 
