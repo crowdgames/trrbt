@@ -159,6 +159,7 @@ class TRRBTEditor {
         this.layout_horizontal = null;
 
         this.tooltip = null;
+        this.emojiPicker = null;
 
         this.engine = null;
 
@@ -256,6 +257,24 @@ class TRRBTEditor {
             document.body.appendChild(this.tooltip);
         }
         this.tooltip.style.display = 'none';
+
+        if (this.emojiPicker === null) {
+            if (window.customElements.get('emoji-picker') !== undefined) {
+                this.emojiPicker = document.createElement('emoji-picker');
+                this.emojiPicker.style.height = '175px';
+                this.emojiPicker.addEventListener('emoji-click', e => {
+                    if (!navigator.clipboard) {
+                        alert('ERROR: Cannot find clipboard.');
+                    } else {
+                        navigator.clipboard.writeText(e.detail.unicode).then(function () {
+                            alert('Emoji ' + e.detail.unicode + ' copied to clipboard.');
+                        }, function (err) {
+                            alert('ERROR: Could not copy to clipboard.');
+                        });
+                    }
+                });
+            }
+        }
 
         this.undoStack = [];
         this.undoStackPos = -1;
@@ -1203,24 +1222,11 @@ class TRRBTEditor {
         return { ok: false, error: 'An unknown choice was selected.' };
     }
 
-    appendEmojiPicker(parent) {
-        if (window.customElements.get('emoji-picker') !== undefined) {
-            const emojiPicker = document.createElement('emoji-picker');
-            emojiPicker.style.height = '175px';
-            emojiPicker.addEventListener('emoji-click', e => {
-                if (!navigator.clipboard) {
-                    alert('ERROR: Cannot find clipboard.');
-                } else {
-                    navigator.clipboard.writeText(e.detail.unicode).then(function () {
-                        alert('Emoji ' + e.detail.unicode + ' copied to clipboard.');
-                    }, function (err) {
-                        alert('ERROR: Could not copy to clipboard.');
-                    });
-                }
-            });
+    appendThisEmojiPicker(parent) {
+        if (this.emojiPicker) {
             appendText(parent, 'Click to copy emoji to clipboard', false, false, true);
             appendBr(parent);
-            parent.appendChild(emojiPicker);
+            parent.appendChild(this.emojiPicker);
         }
     }
 
@@ -1347,7 +1353,7 @@ class TRRBTEditor {
             appendText(ed, 'Editor', true, true);
             appendBr(ed);
 
-            this.appendEmojiPicker(ed);
+            this.appendThisEmojiPicker(ed);
 
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
