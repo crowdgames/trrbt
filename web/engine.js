@@ -511,6 +511,9 @@ class TRRBTStepper {
                     if (lpattern[layer][rr][cc] === '.') {
                         continue;
                     }
+                    if (!state.board.hasOwnProperty(layer)) {
+                        return false;
+                    }
                     if (state.board[layer][row + rr][col + cc] !== lpattern[layer][rr][cc]) {
                         return false;
                     }
