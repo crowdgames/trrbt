@@ -1355,8 +1355,6 @@ class TRRBTEditor {
             appendText(ed, 'Editor', true, true);
             appendBr(ed);
 
-            this.appendThisEmojiPicker(ed);
-
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
             appendText(ed, ' ');
@@ -1372,6 +1370,8 @@ class TRRBTEditor {
             appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
             appendBr(ed);
             appendBr(ed);
+
+            this.appendThisEmojiPicker(ed);
 
             this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(this.game.tree, node) } : null;
             if (this.propertyNodes) {
