@@ -710,7 +710,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
-        this.hideText = null;
 
         this.player_id_colors = null;
 
@@ -745,7 +744,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
-        this.hideText = null;
 
         this.player_id_colors = Object.create(null);
 
@@ -787,9 +785,6 @@ class TRRBTWebEngine extends TRRBTEngine {
             }
             if (this.game.sprites.back !== undefined) {
                 this.back = this.game.sprites.back;
-            }
-            if (this.game.sprites.hidetext !== undefined) {
-                this.hideText = this.game.sprites.hidetext;
             }
         }
 
@@ -1035,7 +1030,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
-                            if (this.hideText !== null && this.hideText.indexOf(tile) >= 0) {
+                            if (tile.length > 0 && tile[0] === '_') {
                                 // pass
                             } else {
                                 this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
