@@ -774,7 +774,7 @@ class TRRBTEditor {
                 if (target) {
                     found_target = true;
 
-                    if (file === null) {
+                    if (file === null && nodePositions.has(target.dispid)) {
                         const tnrect = nodePositions.get(target.dispid);
                         const tnx = tnrect.x;
                         const tny = tnrect.y;
