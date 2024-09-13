@@ -176,7 +176,7 @@ class TRRBTStepper {
 
     stepNodeOrder(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-        ['index', 0]]);
+                               ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
 
@@ -189,8 +189,8 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-        ['anyThisLoop', false],
-        ['index', 0]]);
+                               ['anyThisLoop', false],
+                               ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
         this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
@@ -209,16 +209,16 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-        ['times', 0],
-        ['index', 0]]);
+                               ['times', 0],
+                               ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
 
         if (this.localEqual(frame, 'index', frame.node.children.length)) {
+            this.localIncrement(frame, 'times');
             if (this.localEqual(frame, 'times', frame.node.times)) {
                 return this.localGet(frame, 'any');
             } else {
-                this.localIncrement(frame, 'times');
                 this.localSet(frame, 'index', 0);
             }
         } else {
