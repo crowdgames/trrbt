@@ -159,6 +159,7 @@ class TRRBTEditor {
         this.layout_horizontal = null;
 
         this.tooltip = null;
+        this.emojiMessage = null;
         this.emojiPicker = null;
 
         this.engine = null;
@@ -260,6 +261,10 @@ class TRRBTEditor {
 
         if (this.emojiPicker === null) {
             if (window.customElements.get('emoji-picker') !== undefined) {
+                this.emojiMessage = document.createElement('span');
+                this.emojiMessage.style = 'font-size:small';
+                let emojiMessage = this.emojiMessage;
+
                 this.emojiPicker = document.createElement('emoji-picker');
                 this.emojiPicker.style.display = 'none';
                 this.emojiPicker.style.height = '200px';
@@ -268,12 +273,14 @@ class TRRBTEditor {
                         alert('ERROR: Cannot find clipboard.');
                     } else {
                         navigator.clipboard.writeText(e.detail.unicode).then(function () {
-                            alert('Emoji ' + e.detail.unicode + ' copied to clipboard.');
+                            emojiMessage.innerHTML = 'Emoji ' + e.detail.unicode + ' copied to clipboard.';
                         }, function (err) {
                             alert('ERROR: Could not copy to clipboard.');
                         });
                     }
                 });
+                this.emojiPicker.addEventListener('mousemove', e => { emojiMessage.innerHTML = '';});
+                this.emojiPicker.addEventListener('mouseout', e => { emojiMessage.innerHTML = '';});
             }
         }
 
@@ -1226,9 +1233,12 @@ class TRRBTEditor {
     appendThisEmojiPicker(parent) {
         if (this.emojiPicker) {
             appendButton(parent, 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
+            appendText(parent, ' ');
+            parent.appendChild(this.emojiMessage);
             appendBr(parent);
             parent.appendChild(this.emojiPicker);
             appendBr(parent);
+
         }
     }
 
