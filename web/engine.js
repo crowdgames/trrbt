@@ -5,6 +5,11 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 const ENG_LOOP_CHECK_MAX = 100000;
 
+const ENG_CELL_SIZE_MIN     =  15;
+const ENG_CELL_SIZE_MAX     =  60;
+const ENG_CELL_SIZE_DEFAULT =  50;
+const ENG_CELL_SIZE_STEP    =   5;
+
 
 
 class TRRBTState {
@@ -707,6 +712,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.cell_size = null;
         this.keysDown = null;
 
+        this.spriteArrays = null;
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
@@ -737,10 +743,11 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.breakResumeText = null;
         this.engineDiv = this.divname ? document.getElementById(this.divname) : null;
 
-        this.padding = 10;
-        this.cell_size = 50;
+        this.padding = (this.padding === null) ? 10 : this.padding;
+        this.cell_size = (this.cell_size === null) ? ENG_CELL_SIZE_DEFAULT : this.cell_size;
         this.keysDown = new Set();
 
+        this.spriteArrays = null;
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
@@ -766,6 +773,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         if (this.game.sprites !== null) {
             if (this.game.sprites.images !== undefined) {
+                this.spriteArrays = Object.create(null);
                 this.spriteImages = Object.create(null);
                 for (let imageName in this.game.sprites.images) {
                     const image_info = this.game.sprites.images[imageName];
@@ -812,6 +820,7 @@ class TRRBTWebEngine extends TRRBTEngine {
     }
 
     loadSpriteImage(image_name, image_info) {
+        this.spriteArrays[image_name] = null;
         this.spriteImages[image_name] = null;
 
         const image_info_data = image_info.data;
@@ -837,11 +846,27 @@ class TRRBTWebEngine extends TRRBTEngine {
                 }
                 return image_reader.read().then(process);
             } else {
-                const image_data = this_engine.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this_engine.cell_size, this_engine.cell_size);
-                let img_promise = createImageBitmap(image_data);
-                img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
+                this_engine.spriteArrays[image_name] = { array:image_read_array, size:image_info.size };
+                this_engine.resizeSpriteImage(image_name);
             }
         });
+    }
+
+    resizeSpriteImage(image_name) {
+        let this_engine = this;
+        const image_array = this_engine.spriteArrays[image_name];
+        const image_data = this_engine.arrayToImageData(image_array.array, image_array.size[0], image_array.size[1], this_engine.cell_size, this_engine.cell_size);
+        let img_promise = createImageBitmap(image_data);
+        img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
+    }
+
+    resizeAllSpriteImages() {
+        if (this.spriteImages !== null) {
+            for (const image_name of Object.keys(this.spriteArrays)) {
+                this.spriteImages[image_name] = null;
+                this.resizeSpriteImage(image_name);
+            }
+        }
     }
 
     updateEditor() {
@@ -860,12 +885,27 @@ class TRRBTWebEngine extends TRRBTEngine {
         ed.innerHTML = '';
         appendText(ed, 'Hover for additional info', false, false, true);
         appendBr(ed);
-        appendText(ed, '');
 
         appendText(ed, 'Engine', true, true);
         appendBr(ed);
 
         appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+
+        appendText(ed, ' Size: ');
+        /*
+        // slider doesn't seem to work well when things move around on resize, isn't vertically centered
+        let sizeSlider = document.createElement('input');
+        sizeSlider.type = 'range';
+        sizeSlider.min = ENG_CELL_SIZE_MIN;
+        sizeSlider.max = ENG_CELL_SIZE_MAX;
+        sizeSlider.step =ENG_CELL_SIZE_STEP;
+        sizeSlider.value = this.cell_size;
+        sizeSlider.oninput = bind1(this, 'onCellSize', sizeSlider);
+        ed.appendChild(sizeSlider);
+        */
+        appendButton(ed, 'Smaller', 'Make game smaller.', null, bind1(this, 'onCellSize', -1));
+        appendButton(ed, 'Larger', 'Make game larger.', null, bind1(this, 'onCellSize', 1));
+
         appendBr(ed);
         appendBr(ed);
 
@@ -1161,6 +1201,12 @@ class TRRBTWebEngine extends TRRBTEngine {
                 }
             }
         }
+    }
+
+    onCellSize(by) {
+        this.cell_size = Math.max(ENG_CELL_SIZE_MIN, Math.min(ENG_CELL_SIZE_MAX, this.cell_size + by * ENG_CELL_SIZE_STEP));
+        this.resizeAllSpriteImages();
+        this.requestDraw();
     }
 
     onBreakResume() {
