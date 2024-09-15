@@ -991,6 +991,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
+        const TEXT_YOFFSET  = 0.05;
+        const EMOJI_YOFFSET = 0.17;
+
         for (let rr = 0; rr < this.state.rows; rr += 1) {
             for (let cc = 0; cc < this.state.cols; cc += 1) {
                 let all_invis = true;
@@ -1073,8 +1076,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                             if (tile.length > 0 && tile[0] === '_') {
                                 // pass
                             } else {
+                                function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
+                                const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
                                 this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
-                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
+                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
                             }
                         }
                     }
@@ -1157,8 +1162,14 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         if (this.stepManual) {
-            this.ctx.lineWidth = 10;
+            this.ctx.lineWidth = 11;
             this.ctx.strokeStyle = '#ffdddd';
+            this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
+        }
+
+        if (this.state.gameResult !== null) {
+            this.ctx.lineWidth = 5;
+            this.ctx.strokeStyle = '#cc4444';
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
 
