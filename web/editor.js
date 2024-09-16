@@ -1364,6 +1364,8 @@ class TRRBTEditor {
             ed.innerHTML = '';
 
             appendText(ed, 'Editor', true, true);
+            appendText(ed, ' ');
+            appendText(ed, '(Hover for additional info)', false, false, true);
             appendBr(ed);
 
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
@@ -1373,14 +1375,12 @@ class TRRBTEditor {
             appendText(ed, ' ');
             appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
-            appendBr(ed);
-            appendBr(ed);
+            appendBr(ed, true);
 
             this.appendTextProperty(ed, 'gameprop_name', 'Game Title', 'A title for the game', this.game.name)
             appendText(ed, ' ');
             appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
-            appendBr(ed);
-            appendBr(ed);
+            appendBr(ed, true);
 
             this.appendThisEmojiPicker(ed);
 
@@ -1408,8 +1408,7 @@ class TRRBTEditor {
 
                 appendButton(ed, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
                 appendText(ed, ' ' + node.type, true);
-                appendBr(ed);
-                appendBr(ed);
+                appendBr(ed, true);
 
                 if (parent !== null) {
                     appendButton(ed, 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
@@ -1420,8 +1419,7 @@ class TRRBTEditor {
                         appendButton(ed, 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
                     }
                 }
-                appendBr(ed);
-                appendBr(ed);
+                appendBr(ed, true);
 
                 appendButton(ed, 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
                 if (node !== this.game.tree) {
@@ -1436,8 +1434,7 @@ class TRRBTEditor {
                         }
                     }
                 }
-                appendBr(ed);
-                appendBr(ed);
+                appendBr(ed, true);
 
                 if (node.hasOwnProperty('children') && node.children.length > 0) {
                     if (node !== this.game.tree) {
@@ -1445,10 +1442,11 @@ class TRRBTEditor {
                         appendButton(ed, 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
                     }
                     appendButton(ed, 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
+                    appendBr(ed, true);
                 } else if (node !== this.game.tree) {
                     appendButton(ed, 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
+                    appendBr(ed, true);
                 }
-                appendBr(ed);
 
                 let anyProperties = false;
 
@@ -1523,11 +1521,8 @@ class TRRBTEditor {
 
                 if (anyProperties) {
                     appendButton(ed, 'Save', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
-                    appendBr(ed);
+                    appendBr(ed, true);
                 }
-
-                appendBr(ed);
-                appendBr(ed);
 
                 appendText(ed, 'Add');
 
