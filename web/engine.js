@@ -883,11 +883,11 @@ class TRRBTWebEngine extends TRRBTEngine {
         const ed = this.engineDiv;
 
         ed.innerHTML = '';
-        appendText(ed, 'Hover for additional info', false, false, true);
-        appendBr(ed);
 
         appendText(ed, 'Engine', true, true);
-        appendBr(ed);
+        appendText(ed, ' ');
+        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendBr(ed, true);
 
         appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
         appendText(ed, ' ');
@@ -914,8 +914,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendButton(ed, 'Smaller', 'Make game smaller.', null, bind1(this, 'onCellSize', -1));
         appendButton(ed, 'Larger', 'Make game larger.', null, bind1(this, 'onCellSize', 1));
 
-        appendBr(ed);
-        appendBr(ed);
+        appendBr(ed, true);
 
         appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ');
