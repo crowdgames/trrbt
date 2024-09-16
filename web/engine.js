@@ -1211,7 +1211,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                     gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
                 }
                 this.gameResultText.innerHTML = gameOverText;
-                this.gameResultFrames = 30;
+                this.gameResultFrames = 10;
                 this.requestDraw();
             }
         } else {

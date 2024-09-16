@@ -1366,7 +1366,7 @@ class TRRBTEditor {
             appendText(ed, 'Editor', true, true);
             appendText(ed, ' ');
             appendText(ed, '(Hover for additional info)', false, false, true);
-            appendBr(ed);
+            appendBr(ed, true);
 
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
