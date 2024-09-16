@@ -7,7 +7,7 @@ function SEL_onLoad() {
 
     if (typeof onSelectGame !== 'undefined' && div) {
         appendText(div, 'Select Game', true, true);
-        appendBr(div);
+        appendBr(div, true);
 
         if (false) {
             for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
