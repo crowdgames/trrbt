@@ -705,6 +705,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.canvas = null;
         this.ctx = null;
+        this.gameResultText = null;
         this.breakResumeText = null;
         this.engineDiv = null;
 
@@ -722,7 +723,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseChoice = null;
         this.mouseAlt = false;
         this.delayUntil = null;
-        this.gameResultWait = null;
 
         this.stepManual = false;
 
@@ -740,6 +740,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
+        this.gameResultText = null;
         this.breakResumeText = null;
         this.engineDiv = this.divname ? document.getElementById(this.divname) : null;
 
@@ -757,7 +758,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseChoice = null;
         this.mouseAlt = false;
         this.delayUntil = null;
-        this.gameResultWait = null;
 
         this.stepManual = false;
 
@@ -890,10 +890,18 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendBr(ed);
 
         appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendText(ed, ' ');
+        this.gameResultText = document.createElement('span');
+        this.gameResultText.style.color = '#4444cc';
+        this.gameResultText.innerHTML = '';
+        this.gameResultText.title = 'Game is over.  Restart to play again.';
+        this.gameResultText.style.display = 'none';
+        ed.appendChild(this.gameResultText);
+        appendBr(ed);
 
-        appendText(ed, ' Size: ');
         /*
         // slider doesn't seem to work well when things move around on resize, isn't vertically centered
+        appendText(ed, ' Size: ');
         let sizeSlider = document.createElement('input');
         sizeSlider.type = 'range';
         sizeSlider.min = ENG_CELL_SIZE_MIN;
@@ -1169,34 +1177,33 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         if (this.state.gameResult !== null) {
             this.ctx.lineWidth = 5;
-            this.ctx.strokeStyle = '#cc4444';
+            this.ctx.strokeStyle = '#4444cc';
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
 
-        if (this.state.gameResult !== null) {
-            if (this.gameResultWait === null) {
-                this.gameResultWait = 10;
-                this.requestDraw();
-            } else if (this.gameResultWait > 0) {
-                this.gameResultWait -= 1;
-                this.requestDraw();
-                if (this.gameResultWait == 0) {
-                    if (this.state.gameResult.result === 'win') {
-                        let player = this.state.gameResult.player;
-                        alert('Game over, player ' + player + ' wins!');
-                    } else if (this.state.gameResult.result === 'lose') {
-                        let player = this.state.gameResult.player;
-                        alert('Game over, player ' + player + ' loses!');
-                    } else if (this.state.gameResult.result === 'draw') {
-                        alert('Game over, draw!');
-                    } else if (this.state.gameResult.result === 'stalemate') {
-                        alert('Game over, stalemate!');
-                    } else if (this.state.gameResult.result === 'stepout') {
-                        alert('Game over, too many steps before player input!');
-                    } else {
-                        alert('Game over, unknown result: ' + this.state.gameResult.result + '!');
-                    }
+        if (this.gameResultText.style.display === 'none') {
+            if (this.state.gameResult !== null) {
+                this.gameResultText.style.display = 'inline';
+                if (this.state.gameResult.result === 'win') {
+                    let player = this.state.gameResult.player;
+                    this.gameResultText.innerHTML = 'Game over, player ' + player + ' wins!';
+                } else if (this.state.gameResult.result === 'lose') {
+                    let player = this.state.gameResult.player;
+                    this.gameResultText.innerHTML = 'Game over, player ' + player + ' loses!';
+                } else if (this.state.gameResult.result === 'draw') {
+                    this.gameResultText.innerHTML = 'Game over, draw!';
+                } else if (this.state.gameResult.result === 'stalemate') {
+                    this.gameResultText.innerHTML = 'Game over, stalemate!';
+                } else if (this.state.gameResult.result === 'stepout') {
+                    this.gameResultText.innerHTML = 'Game over, too many steps before player input!';
+                } else {
+                    this.gameResultText.innerHTML = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
                 }
+            }
+        } else {
+            if (this.state.gameResult === null) {
+                this.gameResultText.style.display = 'none';
+                this.gameResultText.innerHTML = '';
             }
         }
     }
@@ -1238,7 +1245,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseChoice = null;
         this.mouseAlt = false;
         this.delayUntil = 0;
-        this.gameResultWait = null;
 
         this.updateEditor();
 
