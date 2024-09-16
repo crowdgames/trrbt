@@ -706,6 +706,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.canvas = null;
         this.ctx = null;
         this.gameResultText = null;
+        this.gameResultFrames = null;
         this.breakResumeText = null;
         this.engineDiv = null;
 
@@ -741,6 +742,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
         this.gameResultText = null;
+        this.gameResultFrames = null;
         this.breakResumeText = null;
         this.engineDiv = this.divname ? document.getElementById(this.divname) : null;
 
@@ -1180,24 +1182,37 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
 
+        if (this.gameResultFrames !== null && this.gameResultFrames > 0) {
+            this.gameResultFrames -= 1;
+            if (this.gameResultFrames === 0) {
+                alert(this.gameResultText.innerHTML);
+                this.gameResultFrames = null;
+            }
+            this.requestDraw();
+        }
+
         if (this.gameResultText.style.display === 'none') {
             if (this.state.gameResult !== null) {
+                let gameOverText = null;
                 this.gameResultText.style.display = 'inline';
                 if (this.state.gameResult.result === 'win') {
                     let player = this.state.gameResult.player;
-                    this.gameResultText.innerHTML = 'Game over, player ' + player + ' wins!';
+                    gameOverText = 'Game over, player ' + player + ' wins!';
                 } else if (this.state.gameResult.result === 'lose') {
                     let player = this.state.gameResult.player;
-                    this.gameResultText.innerHTML = 'Game over, player ' + player + ' loses!';
+                    gameOverText = 'Game over, player ' + player + ' loses!';
                 } else if (this.state.gameResult.result === 'draw') {
-                    this.gameResultText.innerHTML = 'Game over, draw!';
+                    gameOverText = 'Game over, draw!';
                 } else if (this.state.gameResult.result === 'stalemate') {
-                    this.gameResultText.innerHTML = 'Game over, stalemate!';
+                    gameOverText = 'Game over, stalemate!';
                 } else if (this.state.gameResult.result === 'stepout') {
-                    this.gameResultText.innerHTML = 'Game over, too many steps before player input!';
+                    gameOverText = 'Game over, too many steps before player input!';
                 } else {
-                    this.gameResultText.innerHTML = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
+                    gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
                 }
+                this.gameResultText.innerHTML = gameOverText;
+                this.gameResultFrames = 30;
+                this.requestDraw();
             }
         } else {
             if (this.state.gameResult === null) {
@@ -1240,6 +1255,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         } else {
             this.updateStepManual(true);
         }
+
+        this.gameResultFrames = null;
 
         this.mouseChoice = null;
         this.mouseAlt = false;
