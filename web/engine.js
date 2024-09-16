@@ -712,6 +712,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.padding = null;
         this.cell_size = null;
+        this.min_width = null;
         this.keysDown = null;
 
         this.spriteArrays = null;
@@ -748,6 +749,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.padding = (this.padding === null) ? 10 : this.padding;
         this.cell_size = (this.cell_size === null) ? ENG_CELL_SIZE_DEFAULT : this.cell_size;
+        this.min_width = 10 * ENG_CELL_SIZE_MAX;
         this.keysDown = new Set();
 
         this.spriteArrays = null;
@@ -947,6 +949,12 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.canvas.style.width = desiredWidth + 'px';
             this.canvas.style.height = desiredHeight + 'px';
             this.ctx.scale(ratio, ratio);
+
+            const parent = this.canvas.parentElement;
+            if (parent) {
+                this.min_width = Math.max(this.min_width, desiredWidth);
+                parent.style['min-width'] = this.min_width + 'px';
+            }
         }
     }
 
