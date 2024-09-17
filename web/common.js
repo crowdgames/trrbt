@@ -110,8 +110,13 @@ function appendButton(parent, text, tooltip, color, callback) {
     parent.appendChild(button)
 }
 
-function appendBr(parent) {
-    parent.appendChild(document.createElement('br'));
+function appendBr(parent, extraSpace=false) {
+    let elem = document.createElement('br');
+    if (extraSpace) {
+        elem.style.display = 'block';
+        elem.style.margin = '3px 0';
+    }
+    parent.appendChild(elem);
 }
 
 function appendList(parent) {
