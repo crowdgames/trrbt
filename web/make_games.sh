@@ -11,6 +11,7 @@ python copy_game.py games/games.js games_web soko_quest-emoji.json
 python copy_game.py games/games.js games_web soko_quest-emoji-incomplete.json
 python copy_game.py games/games.js games_web soko_enemy-emoji-incomplete.json
 python copy_game.py games/games.js games_web sweeper.json
+python copy_game.py games/games.js games_web lights_out.json
 
 python make_game.py games/games.js ../games ttt.yaml
 python make_game.py games/games.js ../games connect4.yaml
