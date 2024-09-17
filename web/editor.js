@@ -53,6 +53,7 @@ const EDT_XNODE_PROTOTYPES = [
     { type: 'x-flip', comment: '', nid: '', children: [], remorig: false },
     { type: 'x-swap', comment: '', nid: '', children: [], what: '', with: '' },
     { type: 'x-replace', comment: '', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-prune', comment: '', nid: '', children: [] },
     { type: 'x-link', comment: '', nid: '', target: '' },
 ];
 
@@ -159,6 +160,7 @@ class TRRBTEditor {
         this.layout_horizontal = null;
 
         this.tooltip = null;
+        this.emojiMessage = null;
         this.emojiPicker = null;
 
         this.engine = null;
@@ -260,6 +262,10 @@ class TRRBTEditor {
 
         if (this.emojiPicker === null) {
             if (window.customElements.get('emoji-picker') !== undefined) {
+                this.emojiMessage = document.createElement('span');
+                this.emojiMessage.style = 'font-size:small';
+                let emojiMessage = this.emojiMessage;
+
                 this.emojiPicker = document.createElement('emoji-picker');
                 this.emojiPicker.style.display = 'none';
                 this.emojiPicker.style.height = '200px';
@@ -268,12 +274,14 @@ class TRRBTEditor {
                         alert('ERROR: Cannot find clipboard.');
                     } else {
                         navigator.clipboard.writeText(e.detail.unicode).then(function () {
-                            alert('Emoji ' + e.detail.unicode + ' copied to clipboard.');
+                            emojiMessage.innerHTML = 'Emoji ' + e.detail.unicode + ' copied to clipboard.';
                         }, function (err) {
                             alert('ERROR: Could not copy to clipboard.');
                         });
                     }
                 });
+                this.emojiPicker.addEventListener('mousemove', e => { emojiMessage.innerHTML = '';});
+                this.emojiPicker.addEventListener('mouseout', e => { emojiMessage.innerHTML = '';});
             }
         }
 
@@ -774,7 +782,7 @@ class TRRBTEditor {
                 if (target) {
                     found_target = true;
 
-                    if (file === null) {
+                    if (file === null && nodePositions.has(target.dispid)) {
                         const tnrect = nodePositions.get(target.dispid);
                         const tnx = tnrect.x;
                         const tny = tnrect.y;
@@ -1226,9 +1234,12 @@ class TRRBTEditor {
     appendThisEmojiPicker(parent) {
         if (this.emojiPicker) {
             appendButton(parent, 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
+            appendText(parent, ' ');
+            parent.appendChild(this.emojiMessage);
             appendBr(parent);
             parent.appendChild(this.emojiPicker);
             appendBr(parent);
+
         }
     }
 
@@ -1353,7 +1364,9 @@ class TRRBTEditor {
             ed.innerHTML = '';
 
             appendText(ed, 'Editor', true, true);
-            appendBr(ed);
+            appendText(ed, ' ');
+            appendText(ed, '(Hover for additional info)', false, false, true);
+            appendBr(ed, true);
 
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
@@ -1362,14 +1375,12 @@ class TRRBTEditor {
             appendText(ed, ' ');
             appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
-            appendBr(ed);
-            appendBr(ed);
+            appendBr(ed, true);
 
             this.appendTextProperty(ed, 'gameprop_name', 'Game Title', 'A title for the game', this.game.name)
             appendText(ed, ' ');
             appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
-            appendBr(ed);
-            appendBr(ed);
+            appendBr(ed, true);
 
             this.appendThisEmojiPicker(ed);
 
@@ -1397,8 +1408,7 @@ class TRRBTEditor {
 
                 appendButton(ed, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
                 appendText(ed, ' ' + node.type, true);
-                appendBr(ed);
-                appendBr(ed);
+                appendBr(ed, true);
 
                 if (parent !== null) {
                     appendButton(ed, 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
@@ -1409,8 +1419,7 @@ class TRRBTEditor {
                         appendButton(ed, 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
                     }
                 }
-                appendBr(ed);
-                appendBr(ed);
+                appendBr(ed, true);
 
                 appendButton(ed, 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
                 if (node !== this.game.tree) {
@@ -1425,8 +1434,7 @@ class TRRBTEditor {
                         }
                     }
                 }
-                appendBr(ed);
-                appendBr(ed);
+                appendBr(ed, true);
 
                 if (node.hasOwnProperty('children') && node.children.length > 0) {
                     if (node !== this.game.tree) {
@@ -1434,10 +1442,11 @@ class TRRBTEditor {
                         appendButton(ed, 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
                     }
                     appendButton(ed, 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
+                    appendBr(ed, true);
                 } else if (node !== this.game.tree) {
                     appendButton(ed, 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
+                    appendBr(ed, true);
                 }
-                appendBr(ed);
 
                 let anyProperties = false;
 
@@ -1512,11 +1521,8 @@ class TRRBTEditor {
 
                 if (anyProperties) {
                     appendButton(ed, 'Save', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
-                    appendBr(ed);
+                    appendBr(ed, true);
                 }
-
-                appendBr(ed);
-                appendBr(ed);
 
                 appendText(ed, 'Add');
 

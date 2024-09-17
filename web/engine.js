@@ -5,6 +5,11 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 const ENG_LOOP_CHECK_MAX = 100000;
 
+const ENG_CELL_SIZE_MIN     =  15;
+const ENG_CELL_SIZE_MAX     =  60;
+const ENG_CELL_SIZE_DEFAULT =  50;
+const ENG_CELL_SIZE_STEP    =   5;
+
 
 
 class TRRBTState {
@@ -700,13 +705,17 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.canvas = null;
         this.ctx = null;
+        this.gameResultText = null;
+        this.gameResultFrames = null;
         this.breakResumeText = null;
         this.engineDiv = null;
 
         this.padding = null;
         this.cell_size = null;
+        this.min_width = null;
         this.keysDown = null;
 
+        this.spriteArrays = null;
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
@@ -716,7 +725,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseChoice = null;
         this.mouseAlt = false;
         this.delayUntil = null;
-        this.gameResultWait = null;
 
         this.stepManual = false;
 
@@ -734,13 +742,17 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.canvas = document.getElementById(this.canvasname);
         this.ctx = this.canvas.getContext('2d');
+        this.gameResultText = null;
+        this.gameResultFrames = null;
         this.breakResumeText = null;
         this.engineDiv = this.divname ? document.getElementById(this.divname) : null;
 
-        this.padding = 10;
-        this.cell_size = 50;
+        this.padding = (this.padding === null) ? 10 : this.padding;
+        this.cell_size = (this.cell_size === null) ? ENG_CELL_SIZE_DEFAULT : this.cell_size;
+        this.min_width = 10 * ENG_CELL_SIZE_MAX;
         this.keysDown = new Set();
 
+        this.spriteArrays = null;
         this.spriteImages = null;
         this.spriteTiles = null;
         this.back = null;
@@ -750,7 +762,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseChoice = null;
         this.mouseAlt = false;
         this.delayUntil = null;
-        this.gameResultWait = null;
 
         this.stepManual = false;
 
@@ -766,6 +777,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         if (this.game.sprites !== null) {
             if (this.game.sprites.images !== undefined) {
+                this.spriteArrays = Object.create(null);
                 this.spriteImages = Object.create(null);
                 for (let imageName in this.game.sprites.images) {
                     const image_info = this.game.sprites.images[imageName];
@@ -812,6 +824,7 @@ class TRRBTWebEngine extends TRRBTEngine {
     }
 
     loadSpriteImage(image_name, image_info) {
+        this.spriteArrays[image_name] = null;
         this.spriteImages[image_name] = null;
 
         const image_info_data = image_info.data;
@@ -837,11 +850,27 @@ class TRRBTWebEngine extends TRRBTEngine {
                 }
                 return image_reader.read().then(process);
             } else {
-                const image_data = this_engine.arrayToImageData(image_read_array, image_info.size[0], image_info.size[1], this_engine.cell_size, this_engine.cell_size);
-                let img_promise = createImageBitmap(image_data);
-                img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
+                this_engine.spriteArrays[image_name] = { array:image_read_array, size:image_info.size };
+                this_engine.resizeSpriteImage(image_name);
             }
         });
+    }
+
+    resizeSpriteImage(image_name) {
+        let this_engine = this;
+        const image_array = this_engine.spriteArrays[image_name];
+        const image_data = this_engine.arrayToImageData(image_array.array, image_array.size[0], image_array.size[1], this_engine.cell_size, this_engine.cell_size);
+        let img_promise = createImageBitmap(image_data);
+        img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
+    }
+
+    resizeAllSpriteImages() {
+        if (this.spriteImages !== null) {
+            for (const image_name of Object.keys(this.spriteArrays)) {
+                this.spriteImages[image_name] = null;
+                this.resizeSpriteImage(image_name);
+            }
+        }
     }
 
     updateEditor() {
@@ -858,16 +887,38 @@ class TRRBTWebEngine extends TRRBTEngine {
         const ed = this.engineDiv;
 
         ed.innerHTML = '';
-        appendText(ed, 'Hover for additional info', false, false, true);
-        appendBr(ed);
-        appendText(ed, '');
 
         appendText(ed, 'Engine', true, true);
-        appendBr(ed);
+        appendText(ed, ' ');
+        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendBr(ed, true);
 
         appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendText(ed, ' ');
+        this.gameResultText = document.createElement('span');
+        this.gameResultText.style.color = '#4444cc';
+        this.gameResultText.innerHTML = '';
+        this.gameResultText.title = 'Game is over.  Restart to play again.';
+        this.gameResultText.style.display = 'none';
+        ed.appendChild(this.gameResultText);
         appendBr(ed);
-        appendBr(ed);
+
+        /*
+        // slider doesn't seem to work well when things move around on resize, isn't vertically centered
+        appendText(ed, ' Size: ');
+        let sizeSlider = document.createElement('input');
+        sizeSlider.type = 'range';
+        sizeSlider.min = ENG_CELL_SIZE_MIN;
+        sizeSlider.max = ENG_CELL_SIZE_MAX;
+        sizeSlider.step =ENG_CELL_SIZE_STEP;
+        sizeSlider.value = this.cell_size;
+        sizeSlider.oninput = bind1(this, 'onCellSize', sizeSlider);
+        ed.appendChild(sizeSlider);
+        */
+        appendButton(ed, 'Smaller', 'Make game smaller.', null, bind1(this, 'onCellSize', -1));
+        appendButton(ed, 'Larger', 'Make game larger.', null, bind1(this, 'onCellSize', 1));
+
+        appendBr(ed, true);
 
         appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ');
@@ -898,6 +949,12 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.canvas.style.width = desiredWidth + 'px';
             this.canvas.style.height = desiredHeight + 'px';
             this.ctx.scale(ratio, ratio);
+
+            const parent = this.canvas.parentElement;
+            if (parent) {
+                this.min_width = Math.max(this.min_width, desiredWidth);
+                parent.style['min-width'] = this.min_width + 'px';
+            }
         }
     }
 
@@ -950,6 +1007,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
+
+        const TEXT_YOFFSET  = 0.05;
+        const EMOJI_YOFFSET = 0.17;
 
         for (let rr = 0; rr < this.state.rows; rr += 1) {
             for (let cc = 0; cc < this.state.cols; cc += 1) {
@@ -1033,8 +1093,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                             if (tile.length > 0 && tile[0] === '_') {
                                 // pass
                             } else {
+                                function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
+                                const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
                                 this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
-                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5));
+                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
                             }
                         }
                     }
@@ -1117,35 +1179,53 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
 
         if (this.stepManual) {
-            this.ctx.lineWidth = 10;
+            this.ctx.lineWidth = 11;
             this.ctx.strokeStyle = '#ffdddd';
             this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
         }
 
         if (this.state.gameResult !== null) {
-            if (this.gameResultWait === null) {
-                this.gameResultWait = 10;
-                this.requestDraw();
-            } else if (this.gameResultWait > 0) {
-                this.gameResultWait -= 1;
-                this.requestDraw();
-                if (this.gameResultWait == 0) {
-                    if (this.state.gameResult.result === 'win') {
-                        let player = this.state.gameResult.player;
-                        alert('Game over, player ' + player + ' wins!');
-                    } else if (this.state.gameResult.result === 'lose') {
-                        let player = this.state.gameResult.player;
-                        alert('Game over, player ' + player + ' loses!');
-                    } else if (this.state.gameResult.result === 'draw') {
-                        alert('Game over, draw!');
-                    } else if (this.state.gameResult.result === 'stalemate') {
-                        alert('Game over, stalemate!');
-                    } else if (this.state.gameResult.result === 'stepout') {
-                        alert('Game over, too many steps before player input!');
-                    } else {
-                        alert('Game over, unknown result: ' + this.state.gameResult.result + '!');
-                    }
+            this.ctx.lineWidth = 5;
+            this.ctx.strokeStyle = '#4444cc';
+            this.ctx.strokeRect(0, 0, this.canvas.width / PIXEL_RATIO, this.canvas.height / PIXEL_RATIO);
+        }
+
+        if (this.gameResultFrames !== null && this.gameResultFrames > 0) {
+            this.gameResultFrames -= 1;
+            if (this.gameResultFrames === 0) {
+                alert(this.gameResultText.innerHTML);
+                this.gameResultFrames = null;
+            }
+            this.requestDraw();
+        }
+
+        if (this.gameResultText.style.display === 'none') {
+            if (this.state.gameResult !== null) {
+                let gameOverText = null;
+                this.gameResultText.style.display = 'inline';
+                if (this.state.gameResult.result === 'win') {
+                    let player = this.state.gameResult.player;
+                    gameOverText = 'Game over, player ' + player + ' wins!';
+                } else if (this.state.gameResult.result === 'lose') {
+                    let player = this.state.gameResult.player;
+                    gameOverText = 'Game over, player ' + player + ' loses!';
+                } else if (this.state.gameResult.result === 'draw') {
+                    gameOverText = 'Game over, draw!';
+                } else if (this.state.gameResult.result === 'stalemate') {
+                    gameOverText = 'Game over, stalemate!';
+                } else if (this.state.gameResult.result === 'stepout') {
+                    gameOverText = 'Game over, too many steps before player input!';
+                } else {
+                    gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
                 }
+                this.gameResultText.innerHTML = gameOverText;
+                this.gameResultFrames = 10;
+                this.requestDraw();
+            }
+        } else {
+            if (this.state.gameResult === null) {
+                this.gameResultText.style.display = 'none';
+                this.gameResultText.innerHTML = '';
             }
         }
     }
@@ -1163,6 +1243,12 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
     }
 
+    onCellSize(by) {
+        this.cell_size = Math.max(ENG_CELL_SIZE_MIN, Math.min(ENG_CELL_SIZE_MAX, this.cell_size + by * ENG_CELL_SIZE_STEP));
+        this.resizeAllSpriteImages();
+        this.requestDraw();
+    }
+
     onBreakResume() {
         this.updateStepManual(!this.stepManual);
         this.requestDraw();
@@ -1178,10 +1264,11 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.updateStepManual(true);
         }
 
+        this.gameResultFrames = null;
+
         this.mouseChoice = null;
         this.mouseAlt = false;
         this.delayUntil = 0;
-        this.gameResultWait = null;
 
         this.updateEditor();
 
