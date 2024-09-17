@@ -1,0 +1,287 @@
+{
+    "name": "lights out",
+    "sprites": null,
+    "tree": {
+        "type": "order",
+        "comment": "",
+        "nid": "",
+        "children": [
+            {
+                "type": "set-board",
+                "comment": "",
+                "nid": "",
+                "pattern": {
+                    "main": [
+                        [
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f"
+                        ],
+                        [
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f"
+                        ],
+                        [
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f"
+                        ],
+                        [
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f",
+                            "\u2716\ufe0f"
+                        ]
+                    ],
+                    "active": [
+                        [
+                            "0",
+                            "0",
+                            "0",
+                            "0"
+                        ],
+                        [
+                            "0",
+                            "0",
+                            "0",
+                            "0"
+                        ],
+                        [
+                            "0",
+                            "0",
+                            "0",
+                            "0"
+                        ],
+                        [
+                            "0",
+                            "0",
+                            "0",
+                            "0"
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "loop-until-all",
+                "comment": "",
+                "nid": "",
+                "children": [
+                    {
+                        "type": "player",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\u2716\ufe0f"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "0"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udca1"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "1"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udca1"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "0"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\u2716\ufe0f"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "1"
+                                        ]
+                                    ]
+                                }
+                            }
+                        ],
+                        "pid": "1"
+                    },
+                    {
+                        "type": "x-spin",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "active": [
+                                        [
+                                            "1",
+                                            "0"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "active": [
+                                        [
+                                            "1",
+                                            "2"
+                                        ]
+                                    ]
+                                }
+                            }
+                        ],
+                        "remorig": false
+                    },
+                    {
+                        "type": "rewrite",
+                        "comment": "",
+                        "nid": "",
+                        "button": "",
+                        "lhs": {
+                            "active": [
+                                [
+                                    "1"
+                                ]
+                            ]
+                        },
+                        "rhs": {
+                            "active": [
+                                [
+                                    "0"
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "type": "loop-until-all",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\u2716\ufe0f"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "2"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udca1"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "0"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udca1"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "2"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\u2716\ufe0f"
+                                        ]
+                                    ],
+                                    "active": [
+                                        [
+                                            "0"
+                                        ]
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "win",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "none",
+                                "comment": "",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "match",
+                                        "pattern": {
+                                            "main": [
+                                                [
+                                                    "\u2716\ufe0f"
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        "pid": ""
+                    }
+                ]
+            }
+        ]
+    }
+}
