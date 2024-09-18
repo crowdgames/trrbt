@@ -14,7 +14,7 @@ if __name__ == '__main__':
     with open(os.path.join(args.gamefolder, args.filename), 'rt') as f:
         game_json = json.load(f)
 
-    game_entry = 'GAME_SETUPS[\'' + game_file + '\'] = ' + json.dumps(game_json) + ';\n'
+    game_entry = 'GAME_SETUPS[\'' + game_json['name'] + '\'] = ' + json.dumps(game_json) + ';\n'
 
     with open(args.appendfile, 'at') as f:
         f.write(game_entry);

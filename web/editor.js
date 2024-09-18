@@ -1588,6 +1588,7 @@ class TRRBTEditor {
     }
 
     onGameSaveName() {
+        this.hasChanged = true;
         const SAVE_PROPS = [['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT]];
 
         let new_props = new Map();
@@ -1615,6 +1616,7 @@ class TRRBTEditor {
     }
 
     onNodeSaveProperties() {
+        this.hasChanged = true;
         const SAVE_PROPS =
             [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
             ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],

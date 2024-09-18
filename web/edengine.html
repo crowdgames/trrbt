@@ -17,7 +17,18 @@
       var G_editor_x = new TRRBTEditor(G_game_x, SEL_getGameTree, 'editorxcanvas', null);
       var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
+          if (G_editor_u.hasChanged) {
+            // Add to options if not already
+            if (!LOCAL_GAME_SETUPS[G_editor_u.game.name]) {
+              SEL_addLocal(G_editor_u.game);
+            }
+            // Save local copy
+            var game = emptyGame();
+            copyIntoGame(game, G_editor_u.game);
+            LOCAL_GAME_SETUPS[G_editor_u.game.name] = game
+          }
           G_editor_u.importGame(gameSelected);
+          G_editor_u.hasChanged = false;
       }
       function onLoad() {
           copyIntoGame(G_game_u, SEL_startingGame());
