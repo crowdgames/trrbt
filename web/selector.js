@@ -21,9 +21,9 @@ function SEL_onLoad() {
                 select.selectedIndex = 0;
                 window.location.hash = game;
                 if (gameOp.classList.contains('local')) {
-                    onSelectGame(LOCAL_GAME_SETUPS[game])
+                    onSelectGame(LOCAL_GAME_SETUPS[game], false)
                 } else {
-                    onSelectGame(GAME_SETUPS[game]);
+                    onSelectGame(GAME_SETUPS[game], true);
                 }
             };
             div.appendChild(select);
@@ -50,6 +50,11 @@ function SEL_addLocal(game) {
     option.innerHTML = game.name + ' (local)';
     option.classList.add('local')
     select.add(option);
+}
+
+function SEL_removeLocal(game) {
+    select = document.getElementById('game-selector');
+    select.removeChild(select.querySelector('option[value="' + game +'"]'));
 }
 
 function SEL_startingGame() {

@@ -116,15 +116,19 @@ const EDT_PROP_NAMES = {
     rhs: { name: 'RHS', help: 'Right hand side tile pattern of a rewrite rule.' }
 };
 
-
+const EDT_GAME_PROP_NAMES = {
+    name: { name: 'Game Title', help: 'A unique title for the game'}
+}
 
 class TRRBTEditor {
 
-    constructor(game, file_to_game, canvasname, divname) {
+    constructor(game, file_to_game, canvasname, divname, beforeNameChange, afterNameChange) {
         this.game = game;
         this.file_to_game = file_to_game;
         this.canvasname = canvasname;
         this.divname = divname;
+        this.beforeNameChange = beforeNameChange;
+        this.afterNameChange = afterNameChange;
 
         this.canvas = null;
         this.ctx = null;
@@ -280,8 +284,8 @@ class TRRBTEditor {
                         });
                     }
                 });
-                this.emojiPicker.addEventListener('mousemove', e => { emojiMessage.innerHTML = '';});
-                this.emojiPicker.addEventListener('mouseout', e => { emojiMessage.innerHTML = '';});
+                this.emojiPicker.addEventListener('mousemove', e => { emojiMessage.innerHTML = ''; });
+                this.emojiPicker.addEventListener('mouseout', e => { emojiMessage.innerHTML = ''; });
             }
         }
 
@@ -1377,7 +1381,7 @@ class TRRBTEditor {
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed, true);
 
-            this.appendTextProperty(ed, 'gameprop_name', 'Game Title', 'A title for the game', this.game.name)
+            this.appendTextProperty(ed, 'gameprop_name', EDT_GAME_PROP_NAMES['name'].name,  + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
             appendText(ed, ' ');
             appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
             appendBr(ed, true);
@@ -1589,27 +1593,22 @@ class TRRBTEditor {
 
     onGameSaveName() {
         this.hasChanged = true;
-        const SAVE_PROPS = [['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT]];
 
-        let new_props = new Map();
-        let alert_strs = [];
-        for (let [propid, propfn, proparg] of SAVE_PROPS) {
-            let result = propfn('gameprop_' + propid, proparg);
+        let result = this.parseTextProperty('gameprop_name', EDT_PARSE_TEXT_TEXT);
+        if (!result.ok) {
+            this.highlightProperty('gameprop_name', true);
+            alert('Error saving ' + EDT_GAME_PROP_NAMES['name'].name + '.\n' + result.error);
+        } else {
+            let oldName = this.game['name']
+            let newName = result.value
+            result = this.beforeNameChange(oldName, newName);
             if (!result.ok) {
-                this.highlightProperty('gameprop_' + propid, true);
-                alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid].name + '.\n' + result.error);
+                this.highlightProperty('gameprop_name', true);
+                alert('Error saving ' + EDT_GAME_PROP_NAMES['name'].name + '.\n' + result.error);
             } else {
-                new_props.set(propid, result.value);
+                this.game['name'] = newName;
+                this.afterNameChange(oldName, newName);
             }
-        }
-
-        if (alert_strs.length > 0) {
-            alert(alert_strs.join('\n\n'));
-            return;
-        }
-
-        for (let [propid, value] of new_props.entries()) {
-            this.game[propid] = value;
         }
 
         this.updateTreeStructureAndDraw(false, false);

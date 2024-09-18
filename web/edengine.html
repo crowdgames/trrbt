@@ -13,22 +13,64 @@
     <script>
       var G_game_u = emptyGame();
       var G_game_x = emptyGame();
-      var G_editor_u = new TRRBTEditor(G_game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv');
+      var G_editor_u = new TRRBTEditor(G_game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv', beforeGameNameChange, afterGameNameChange, beforePropsChange, afterPropsChange);
       var G_editor_x = new TRRBTEditor(G_game_x, SEL_getGameTree, 'editorxcanvas', null);
       var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
-      function onSelectGame(gameSelected) {
+      var isTemplate = true;
+      function onSelectGame(gameSelected, selectedTemplate) {
+          isTemplate = selectedTemplate;
           if (G_editor_u.hasChanged) {
-            // Add to options if not already
-            if (!LOCAL_GAME_SETUPS[G_editor_u.game.name]) {
-              SEL_addLocal(G_editor_u.game);
-            }
             // Save local copy
             var game = emptyGame();
             copyIntoGame(game, G_editor_u.game);
-            LOCAL_GAME_SETUPS[G_editor_u.game.name] = game
+            LOCAL_GAME_SETUPS[game.name] = game;
           }
           G_editor_u.importGame(gameSelected);
           G_editor_u.hasChanged = false;
+      }
+      function beforeGameNameChange(oldName, newName) {
+        if (oldName === newName) {
+          return { ok: true };
+        }
+        if (LOCAL_GAME_SETUPS[newName]) {
+          return { ok: false, error: "A local game already exists with name " + newName }
+        }
+        return { ok: true }
+      }
+      function afterGameNameChange(oldName, newName) {
+        if (LOCAL_GAME_SETUPS[oldName]) {
+          delete LOCAL_GAME_SETUPS[oldName];
+          SEL_removeLocal(oldName);
+        }
+        // Save local copy
+        var game = emptyGame();
+        copyIntoGame(game, G_editor_u.game);
+        // Add to options if not already
+        if (!LOCAL_GAME_SETUPS[newName]) {
+          SEL_addLocal(game);
+        }
+        LOCAL_GAME_SETUPS[newName] = game;
+      }
+      function beforePropsChange() {
+        // Save local copy
+        var game = emptyGame();
+        copyIntoGame(game, G_editor_u.game);
+        if (isTemplate) {
+          result = beforeGameNameChange(undefined, game.name);
+          if (!result.ok) {
+            return { ok: false, error: result.error + " Select a new game name to save changes."}
+          }
+        }
+        return { ok: true };
+      }
+      function afterPropsChange() {
+        isTemplate = false;
+        var game = emptyGame();
+        copyIntoGame(game, G_editor_u.game);
+        if (!LOCAL_GAME_SETUPS[game.name]) {
+          SEL_addLocal(game);
+        }
+        LOCAL_GAME_SETUPS[game.name] = game;
       }
       function onLoad() {
           copyIntoGame(G_game_u, SEL_startingGame());
