@@ -1,6 +1,7 @@
 window.addEventListener('load', SEL_onLoad, false);
 
 var GAME_SETUPS = {}
+var LOCAL_GAME_SETUPS = {}
 
 function SEL_onLoad() {
     let div = document.getElementById('selectordiv');
@@ -10,17 +11,20 @@ function SEL_onLoad() {
         appendBr(div, true);
 
         if (false) {
-            for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
-                appendButton(div, game, 'Load game.', function() {onSelectGame(GAME_SETUPS[game]);});
-            }
         } else {
             const select = document.createElement('select');
             select.type = 'select';
-            select.onchange = function() {
-                const game = select.options[select.selectedIndex].value;
+            select.id = 'game-selector';
+            select.onchange = function () {
+                const gameOp = select.options[select.selectedIndex];
+                const game = gameOp.value
                 select.selectedIndex = 0;
                 window.location.hash = game;
-                onSelectGame(GAME_SETUPS[game]);
+                if (gameOp.classList.contains('local')) {
+                    onSelectGame(LOCAL_GAME_SETUPS[game])
+                } else {
+                    onSelectGame(GAME_SETUPS[game]);
+                }
             };
             div.appendChild(select);
 
@@ -37,6 +41,15 @@ function SEL_onLoad() {
             }
         }
     }
+}
+
+function SEL_addLocal(game) {
+    select = document.getElementById('game-selector');
+    var option = document.createElement('option');
+    option.value = game.name;
+    option.innerHTML = game.name + ' (local)';
+    option.classList.add('local')
+    select.add(option);
 }
 
 function SEL_startingGame() {
