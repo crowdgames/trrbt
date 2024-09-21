@@ -160,7 +160,7 @@ class TRRBTStepper {
         } else {
             let frame = state.callStack.at(-1);
 
-            if (frame.node.type === 'player') {
+            if (frame.node.type === 'player' || frame.node.type === 'display-board') {
                 state.loopCheck = 0;
             } else {
                 state.loopCheck += 1;
