@@ -620,6 +620,7 @@ class TRRBTEngine {
         this.state = null;
         this.stepper = null;
 
+        this.undoStackFirst = null;
         this.undoStackMove = null;
         this.undoStackRecent = null;
     }
@@ -630,6 +631,7 @@ class TRRBTEngine {
         this.state = new TRRBTState();
         this.stepper = new TRRBTStepper();
 
+        this.undoStackFirst = null;
         this.undoStackMove = [];
         this.undoStackRecent = [];
     }
@@ -637,16 +639,20 @@ class TRRBTEngine {
     undoPush() {
         let state = this.state.clone();
 
-        while (this.undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
-            let oldState = this.undoStackRecent.shift();
-            if (oldState.callStack !== null && oldState.callStack.length > 0 && (oldState.choiceWait === true || oldState.displayWait === true)) {
-                while (this.undoStackMove.length >= ENG_UNDO_PLAYER_MAX) {
-                    this.undoStackMove.shift();
+        if (this.undoStackFirst === null) {
+            this.undoStackFirst = state;
+        } else {
+            while (this.undoStackRecent.length >= ENG_UNDO_RECENT_MAX) {
+                let oldState = this.undoStackRecent.shift();
+                if (oldState.callStack !== null && oldState.callStack.length > 0 && (oldState.choiceWait === true || oldState.displayWait === true)) {
+                    while (this.undoStackMove.length >= ENG_UNDO_PLAYER_MAX) {
+                        this.undoStackMove.shift();
+                    }
+                    this.undoStackMove.push(oldState);
                 }
-                this.undoStackMove.push(oldState);
             }
+            this.undoStackRecent.push(state);
         }
-        this.undoStackRecent.push(state);
     }
 
     undoPop() {
@@ -655,6 +661,9 @@ class TRRBTEngine {
             state = this.undoStackRecent.pop();
         } else if (this.undoStackMove.length > 0) {
             state = this.undoStackMove.pop();
+        } else if (this.undoStackFirst !== null) {
+            state = this.undoStackFirst;
+            this.undoStackFirst = null;
         }
 
         if (state !== null) {
@@ -665,7 +674,7 @@ class TRRBTEngine {
     }
 
     undoEmpty() {
-        return (this.undoStackRecent.length + this.undoStackMove.length) === 0;
+        return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
     }
 
     gameOver() {
