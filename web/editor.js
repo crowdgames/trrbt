@@ -122,13 +122,15 @@ const EDT_GAME_PROP_NAMES = {
 
 class TRRBTEditor {
 
-    constructor(game, file_to_game, canvasname, divname, beforeNameChange, afterNameChange) {
+    constructor(game, file_to_game, canvasname, divname, beforeNameChange, afterNameChange, beforePropsChange, afterPropsChange) {
         this.game = game;
         this.file_to_game = file_to_game;
         this.canvasname = canvasname;
         this.divname = divname;
         this.beforeNameChange = beforeNameChange;
         this.afterNameChange = afterNameChange;
+        this.beforePropsChange = beforePropsChange;
+        this.afterPropsChange = afterPropsChange;
 
         this.canvas = null;
         this.ctx = null;
