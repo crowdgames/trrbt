@@ -19,7 +19,7 @@ function SEL_onLoad() {
                 const gameOp = select.options[select.selectedIndex];
                 const game = gameOp.value
                 select.selectedIndex = 0;
-                window.location.hash = game;
+                window.location.hash = encodeURIComponent(game);
                 if (gameOp.classList.contains('local')) {
                     onSelectGame(LOCAL_GAME_SETUPS[game], false)
                 } else {
@@ -58,9 +58,9 @@ function SEL_removeLocal(game) {
 }
 
 function SEL_startingGame() {
-    const hash = window.location.hash.substring(1);
-    if (hash !== '' && GAME_SETUPS.hasOwnProperty(hash)) {
-        return GAME_SETUPS[hash];
+    const game = decodeURIComponent(window.location.hash.substring(1));
+    if (game !== '' && GAME_SETUPS.hasOwnProperty(game)) {
+        return GAME_SETUPS[game];
     }
     return emptyGame();
 }
