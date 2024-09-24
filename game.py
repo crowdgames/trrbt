@@ -60,7 +60,7 @@ def run_game(filename, choice_order, random_players, clear_screen):
 
             delay(engine.state.displayDelay)
 
-            engine.clearDisplayWait()
+            engine.clearDisplayWait(True)
 
         elif engine.state.choiceWait:
             player_id = util.intify(engine.state.choicePlayer)
@@ -76,7 +76,7 @@ def run_game(filename, choice_order, random_players, clear_screen):
 
                 print(f'Player {player_id} choice: {lhs} → {rhs} at {row},{col}')
 
-                engine.clearChoiceWait(choiceIndex)
+                engine.clearChoiceWait(True, choiceIndex)
                 print()
 
                 if clear_screen is not None:
@@ -132,7 +132,7 @@ def run_game(filename, choice_order, random_players, clear_screen):
                             choiceIndex = inputToChoiceIndex[user_input]
                     except ValueError:
                         print('Error: Please enter a valid number.')
-                engine.clearChoiceWait(choiceIndex)
+                engine.clearChoiceWait(True, choiceIndex)
                 print()
 
 
