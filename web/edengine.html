@@ -58,7 +58,7 @@
         if (isTemplate) {
           result = beforeGameNameChange(undefined, game.name);
           if (!result.ok) {
-            return { ok: false, error: result.error + " Select a new game name to save changes."}
+            return { ok: false, error: result.error }
           }
         }
         return { ok: true };
