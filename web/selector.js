@@ -7,8 +7,7 @@ function SEL_onLoad() {
     let div = document.getElementById('selectordiv');
 
     if (typeof onSelectGame !== 'undefined' && div) {
-        appendText(div, 'Select Game', true, true);
-        appendBr(div, true);
+        appendText(div, 'Select Game ', true, true);
 
         if (false) {
         } else {
