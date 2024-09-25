@@ -53,8 +53,11 @@ function SEL_addLocal(game) {
 }
 
 function SEL_removeLocal(game) {
-    select = document.getElementById('game-selector');
-    select.removeChild(select.querySelector('option[value="' + game +'"]'));
+    let select = document.getElementById('game-selector');
+    let option = select.querySelector('option.local[value="' + game +'"]')
+    if (option) {
+        select.removeChild(option);
+    }
 }
 
 function SEL_startingGame() {
