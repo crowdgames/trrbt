@@ -98,7 +98,7 @@ const EDT_NODE_HELP = {
     'x-file': { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
 }
 
-const EDT_PROP_NAMES = {
+const EDT_NODE_PROP_NAMES = {
     comment: { name: 'comment', help: 'A comment about the node.' },
     nid: { name: 'node ID', help: 'ID of node that other nodes can use to refer to it.' },
     remorig: { name: 'remove original', help: 'Remove original pattern after transform applied.' },
@@ -117,20 +117,21 @@ const EDT_PROP_NAMES = {
 };
 
 const EDT_GAME_PROP_NAMES = {
-    name: { name: 'Game Title', help: 'A unique title for the game'}
+    name: { name: 'Game Title', help: 'A unique title for the game.' },
 }
 
 class TRRBTEditor {
 
-    constructor(game, file_to_game, canvasname, divname, beforeNameChange, afterNameChange, beforePropsChange, afterPropsChange) {
+    constructor(game, file_to_game, canvasname, divname, beforeSave, afterSave, onTemplate, onDeleteGame) {
         this.game = game;
         this.file_to_game = file_to_game;
         this.canvasname = canvasname;
         this.divname = divname;
-        this.beforeNameChange = beforeNameChange;
-        this.afterNameChange = afterNameChange;
-        this.beforePropsChange = beforePropsChange;
-        this.afterPropsChange = afterPropsChange;
+
+        this.beforeSave = beforeSave;
+        this.afterSave = afterSave;
+        this.onTemplate = onTemplate;
+        this.onDeleteGame = onDeleteGame;
 
         this.canvas = null;
         this.ctx = null;
@@ -564,47 +565,47 @@ class TRRBTEditor {
         }
 
         if (node.hasOwnProperty('nid') && node.nid != '') {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['nid'].name + ': ' + node.nid });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['nid'].name + ': ' + node.nid });
         }
 
         if (node.hasOwnProperty('remorig') && node.remorig) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['remorig'].name });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['remorig'].name });
         }
 
         if (node.hasOwnProperty('file')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['file'].name + ': ' + node.file });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['file'].name + ': ' + node.file });
         }
 
         if (node.hasOwnProperty('target')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['target'].name + ': ' + node.target });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['target'].name + ': ' + node.target });
         }
 
         if (node.hasOwnProperty('pid')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['pid'].name + ': ' + node.pid });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['pid'].name + ': ' + node.pid });
         }
 
         if (node.hasOwnProperty('layer')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['layer'].name + ': ' + node.layer });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['layer'].name + ': ' + node.layer });
         }
 
         if (node.hasOwnProperty('times')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['times'].name + ': ' + node.times });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['times'].name + ': ' + node.times });
         }
 
         if (node.hasOwnProperty('what')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['what'].name + ': ' + node.what });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['what'].name + ': ' + node.what });
         }
 
         if (node.hasOwnProperty('with')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['with'].name + ': ' + node.with });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['with'].name + ': ' + node.with });
         }
 
         if (node.hasOwnProperty('withs')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['withs'].name + ': ' + node.withs.join(' ') });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['withs'].name + ': ' + node.withs.join(' ') });
         }
 
         if (node.hasOwnProperty('button') && node.button !== '') {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_PROP_NAMES['button'].name + ': ' + node.button });
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['button'].name + ': ' + node.button });
         }
 
         if (node.hasOwnProperty('pattern')) {
@@ -1383,9 +1384,10 @@ class TRRBTEditor {
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed, true);
 
-            this.appendTextProperty(ed, 'gameprop_name', EDT_GAME_PROP_NAMES['name'].name,  + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
-            appendText(ed, ' ');
-            appendButton(ed, 'Save', 'Save name change.', null, bind0(this, 'onGameSaveName'));
+            this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES['name'].name, + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
+            appendBr(ed, true);
+            appendButton(ed, 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
+            appendButton(ed, 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
             appendBr(ed, true);
 
             this.appendThisEmojiPicker(ed);
@@ -1454,81 +1456,63 @@ class TRRBTEditor {
                     appendBr(ed, true);
                 }
 
-                let anyProperties = false;
-
                 const list = appendList(ed);
 
                 if (node.hasOwnProperty('comment')) {
-                    this.appendTextProperty(list, 'prop_comment', EDT_PROP_NAMES['comment'].name, EDT_PROP_NAMES['comment'].help, node.comment);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_comment', EDT_NODE_PROP_NAMES['comment'].name, EDT_NODE_PROP_NAMES['comment'].help, node.comment);
                 }
                 if (node.hasOwnProperty('nid')) {
-                    this.appendTextProperty(list, 'prop_nid', EDT_PROP_NAMES['nid'].name, EDT_PROP_NAMES['nid'].help, node.nid);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_nid', EDT_NODE_PROP_NAMES['nid'].name, EDT_NODE_PROP_NAMES['nid'].help, node.nid);
                 }
                 if (node.hasOwnProperty('remorig')) {
-                    this.appendBoolProperty(list, 'prop_remorig', EDT_PROP_NAMES['remorig'].name, EDT_PROP_NAMES['remorig'].help, node.remorig);
-                    anyProperties = true;
+                    this.appendBoolProperty(list, 'prop_remorig', EDT_NODE_PROP_NAMES['remorig'].name, EDT_NODE_PROP_NAMES['remorig'].help, node.remorig);
                 }
                 if (node.hasOwnProperty('file')) {
-                    this.appendTextProperty(list, 'prop_file', EDT_PROP_NAMES['file'].name, EDT_PROP_NAMES['file'].help, node.file);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_file', EDT_NODE_PROP_NAMES['file'].name, EDT_NODE_PROP_NAMES['file'].help, node.file);
                 }
                 if (node.hasOwnProperty('target')) {
-                    this.appendTextProperty(list, 'prop_target', EDT_PROP_NAMES['target'].name, EDT_PROP_NAMES['target'].help, node.target);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_target', EDT_NODE_PROP_NAMES['target'].name, EDT_NODE_PROP_NAMES['target'].help, node.target);
                 }
                 if (node.hasOwnProperty('pid')) {
-                    this.appendTextProperty(list, 'prop_pid', EDT_PROP_NAMES['pid'].name, EDT_PROP_NAMES['pid'].help, node.pid);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_pid', EDT_NODE_PROP_NAMES['pid'].name, EDT_NODE_PROP_NAMES['pid'].help, node.pid);
                 }
                 if (node.hasOwnProperty('layer')) {
-                    this.appendTextProperty(list, 'prop_layer', EDT_PROP_NAMES['layer'].name, EDT_PROP_NAMES['layer'].help, node.layer);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_layer', EDT_NODE_PROP_NAMES['layer'].name, EDT_NODE_PROP_NAMES['layer'].help, node.layer);
                 }
                 if (node.hasOwnProperty('times')) {
-                    this.appendTextProperty(list, 'prop_times', EDT_PROP_NAMES['times'].name, EDT_PROP_NAMES['times'].help, node.times);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_times', EDT_NODE_PROP_NAMES['times'].name, EDT_NODE_PROP_NAMES['times'].help, node.times);
                 }
                 if (node.hasOwnProperty('what')) {
-                    this.appendTextProperty(list, 'prop_what', EDT_PROP_NAMES['what'].name, EDT_PROP_NAMES['what'].help, node.what);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_what', EDT_NODE_PROP_NAMES['what'].name, EDT_NODE_PROP_NAMES['what'].help, node.what);
                 }
                 if (node.hasOwnProperty('with')) {
-                    this.appendTextProperty(list, 'prop_with', EDT_PROP_NAMES['with'].name, EDT_PROP_NAMES['with'].help, node.with);
-                    anyProperties = true;
+                    this.appendTextProperty(list, 'prop_with', EDT_NODE_PROP_NAMES['with'].name, EDT_NODE_PROP_NAMES['with'].help, node.with);
                 }
                 if (node.hasOwnProperty('withs')) {
-                    this.appendListProperty(list, 'prop_withs', EDT_PROP_NAMES['withs'].name, EDT_PROP_NAMES['withs'].help, node.withs);
-                    anyProperties = true;
+                    this.appendListProperty(list, 'prop_withs', EDT_NODE_PROP_NAMES['withs'].name, EDT_NODE_PROP_NAMES['withs'].help, node.withs);
                 }
                 if (node.hasOwnProperty('button')) {
-                    this.appendChoiceProperty(list, 'prop_button', EDT_PROP_NAMES['button'].name, EDT_PROP_NAMES['button'].help, node.button, EDT_BUTTONS);
-                    anyProperties = true;
+                    this.appendChoiceProperty(list, 'prop_button', EDT_NODE_PROP_NAMES['button'].name, EDT_NODE_PROP_NAMES['button'].help, node.button, EDT_BUTTONS);
                 }
                 if (node.hasOwnProperty('pattern')) {
                     const tileSize = getTileSize([node.pattern]);
-                    this.appendPatternProperty(list, 'prop_pattern', EDT_PROP_NAMES['pattern'].name, EDT_PROP_NAMES['pattern'].help, node.pattern, tileSize);
-                    anyProperties = true;
+                    this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize);
                 }
                 if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                     const hasLHS = node.hasOwnProperty('lhs');
                     const hasRHS = node.hasOwnProperty('rhs');
                     const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                     if (hasLHS) {
-                        this.appendPatternProperty(list, 'prop_lhs', EDT_PROP_NAMES['lhs'].name, EDT_PROP_NAMES['lhs'].help, node.lhs, tileSize);
-                        anyProperties = true;
+                        this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize);
                     }
                     if (hasRHS) {
-                        this.appendPatternProperty(list, 'prop_rhs', EDT_PROP_NAMES['rhs'].name, EDT_PROP_NAMES['rhs'].help, node.rhs, tileSize);
-                        anyProperties = true;
+                        this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize);
                     }
                 }
 
-                if (anyProperties) {
-                    appendButton(ed, 'Save', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
-                    appendBr(ed, true);
-                }
+                appendBr(ed, true);
+                appendButton(ed, 'Save Changes', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
+                appendBr(ed, true);
 
                 appendText(ed, 'Add');
 
@@ -1589,65 +1573,59 @@ class TRRBTEditor {
                         appendBr(elem);
                     }
                 }
-            }
-        }
-    }
-
-    onGameSaveName() {
-        this.hasChanged = true;
-
-        let result = this.parseTextProperty('gameprop_name', EDT_PARSE_TEXT_TEXT);
-        if (!result.ok) {
-            this.highlightProperty('gameprop_name', true);
-            alert('Error saving ' + EDT_GAME_PROP_NAMES['name'].name + '.\n' + result.error);
-        } else {
-            let oldName = this.game['name']
-            let newName = result.value
-            result = this.beforeNameChange(oldName, newName);
-            if (!result.ok) {
-                this.highlightProperty('gameprop_name', true);
-                alert('Error saving ' + EDT_GAME_PROP_NAMES['name'].name + '.\n' + result.error);
             } else {
-                this.game['name'] = newName;
-                this.afterNameChange(oldName, newName);
+                appendBr(ed, true);
+                appendButton(ed, 'Save Changes', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
+                appendBr(ed, true);
             }
         }
-
-        this.updateTreeStructureAndDraw(false, false);
     }
 
     onNodeSaveProperties() {
-        this.hasChanged = true;
         const SAVE_PROPS =
-            [['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-            ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-            ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-            ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['withs', bind0(this, 'parseListProperty'), false],
-            ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-            ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-            ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-            ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
+            [
+                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['withs', bind0(this, 'parseListProperty'), false],
+                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
 
-        let node = this.propertyNodes.node;
+        let node = this.propertyNodes?.node;
 
         let new_props = new Map();
         let alert_strs = [];
 
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
-            if (node.hasOwnProperty(propid)) {
+            if (EDT_GAME_PROP_NAMES[propid]
+                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid))) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     this.highlightProperty('prop_' + propid, true);
-                    alert_strs.push('Error saving ' + EDT_PROP_NAMES[propid].name + '.\n' + result.error);
+                    let propname = ""
+                    if (EDT_NODE_PROP_NAMES[propid]) {
+                        propname = EDT_NODE_PROP_NAMES[propid]
+                    } else {
+                        propname = EDT_GAME_PROP_NAMES[propid]
+                    }
+                    alert_strs.push('Error saving ' + propName + '.\n' + result.error);
                 } else {
-                    new_props.set(propid, result.value);
+                    let new_value = result.value;
+                    let old_value = EDT_NODE_PROP_NAMES[propid] ? node[propid] : this.game[propid]
+
+                    if (new_value != old_value) {
+                        new_props.set(propid, result.value);
+                    }
                 }
             }
         }
@@ -1663,7 +1641,7 @@ class TRRBTEditor {
                 }
                 document.getElementById('prop_lhs').oninput = reset_colors;
                 document.getElementById('prop_rhs').oninput = reset_colors;
-                alert_strs.push('Error saving ' + EDT_PROP_NAMES['lhs'].name + ' and ' + EDT_PROP_NAMES['rhs'].name + '.\n' + result.error);
+                alert_strs.push('Error saving ' + EDT_NODE_PROP_NAMES['lhs'].name + ' and ' + EDT_NODE_PROP_NAMES['rhs'].name + '.\n' + result.error);
             }
         }
 
@@ -1672,10 +1650,35 @@ class TRRBTEditor {
             return;
         }
 
-        for (let [propid, value] of new_props.entries()) {
-            node[propid] = value;
+        let old_props = new Map();
+        for (let propid of new_props.keys()) {
+            if (EDT_NODE_PROP_NAMES[propid]) {
+                old_props.set(propid, node[propid]);
+            } else {
+                old_props.set(propid, this.game[propid]);
+            }
         }
 
+        if (new_props.size == 0) {
+            // No changes to save.
+            return;
+        }
+
+        let result = this.beforeSave(new_props);
+        if (!result.ok) {
+            this.highlightProperty('prop_name', true);
+            alert('Error saving.\n' + result.error);
+            return;
+        }
+
+        for (let [propid, value] of new_props.entries()) {
+            if (EDT_NODE_PROP_NAMES[propid]) {
+                node[propid] = value;
+            } else {
+                this.game[propid] = value;
+            }
+        }
+        this.afterSave(old_props);
         this.updateTreeStructureAndDraw(false, false);
     }
 
