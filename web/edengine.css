@@ -1,0 +1,13 @@
+.card {
+    resize: both;
+    overflow: auto;
+    outline: 1px solid;
+}
+
+.card-button-group {
+    float: right;
+}
+
+#selectordiv {
+    float: right;
+}

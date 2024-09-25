@@ -8,6 +8,7 @@
     <script src="engine.js"></script>
     <script src="games/games.js"></script>
     <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+    <link rel="stylesheet" href="edengine.css">
   </head>
   <body>
     <script>
@@ -87,36 +88,85 @@
       window.addEventListener('load', onLoad, false);
     </script>
     <center>
+      <div id="toolbar">
+        <span>Toolbar</span> 
+        <div id="selectordiv"></div>
+      </div>
       <table>
         <tbody>
           <tr style="vertical-align:top">
             <td>
-              <canvas id="editorucanvas" width="800px" height="350px" tabindex="1">
-                Browser does not support canvas.
-              </canvas>
-            </td>
-            <td rowspan="2">
-              <div id="editorudiv" style="width:400px; height:700px" tabindex="4">
+              <div class="card" id="ucanvascard">
+                <div class="card-bar">
+                  <span class="card-title">Transformed Tree</span>
+                  <div class="card-button-group">
+                    <button class="card-button" onclick="moveCard('ucanvascard', 'left')"><</button>
+                    <button class="card-button" onclick="moveCard('ucanvascard', 'right')">></button>
+                    <button class="card-button" onclick="hideCard('ucanvascard')">-</button>
+                  </div>
+                </div>
+                <canvas id="editorucanvas" width="800px" height="350px" tabindex="1">
+                  Browser does not support canvas.
+                </canvas>
               </div>
             </td>
             <td rowspan="2">
-              <div id="selectordiv" style="width:400px; height:50px" tabindex="1">
-              </div>
-              <hr style="width:25%; margin-left:0"/>
-              <div id="enginediv" style="width:400px; height:140px" tabindex="3">
+              <div id="editorcard" class="card" style="width:400px; height:700px" tabindex="4">
+                <div class="card-bar">
+                  <span class="card-title">Editor</span>
+                  <div class="card-button-group">
+                    <button class="card-button" onclick="moveCard('editorcard', 'left')"><</button>
+                    <button class="card-button" onclick="moveCard('editorcard', 'right')">></button>
+                    <button class="card-button" onclick="hideCard('editorcard')">-</button>
+                  </div>
+                </div>
+                <div id="editorudiv"></div>
               </div>
             </td>
             <td rowspan="2">
-              <canvas id="enginecanvas" width="600px" height="600px" tabindex="5">
-                Browser does not support canvas.
-              </canvas>
+              <div id="enginecanvascard" class="card">
+                <div class="card-bar">
+                  <span class="card-title">Engine</span>
+                  <div class="card-button-group">
+                    <button class="card-button" onclick="moveCard('enginecanvascard', 'left')"><</button>
+                    <button class="card-button" onclick="moveCard('enginecanvascard', 'right')">></button>
+                    <button class="card-button" onclick="hideCard('enginecanvascard')">-</button>
+                  </div>
+                </div>
+                <canvas id="enginecanvas" width="600px" height="600px" tabindex="5">
+                  Browser does not support canvas.
+                </canvas>
+              </div>
             </td>
           </tr>
           <tr style="vertical-align:top">
             <td>
-              <canvas id="editorxcanvas" width="800px" height="350px" tabindex="2">
-                Browser does not support canvas.
-              </canvas>
+              <div id="xcanvascard" class="card">
+                <div class="card-bar">
+                  <span class="card-title">Untransformed Tree</span>
+                  <div class="card-button-group">
+                    <button class="card-button" onclick="moveCard('xcanvascard', 'left')"><</button>
+                    <button class="card-button" onclick="moveCard('xcanvascard', 'right')">></button>
+                    <button class="card-button" onclick="hideCard('xcanvascard')">-</button>
+                  </div>
+                </div>
+                <canvas id="editorxcanvas" width="800px" height="350px" tabindex="2">
+                  Browser does not support canvas.
+                </canvas>
+              </div>
+            </td>
+            <td rowspan="2"></td>
+              <div id="enginecontrolscard" class="card" style="width:400px; height:140px" tabindex="6">
+                <div class="card-bar">
+                  <span class="card-title">Engine Controls</span>
+                  <div class="card-button-group">
+                    <button class="card-button" onclick="moveCard('enginecontrolscard', 'left')"><</button>
+                    <button class="card-button" onclick="moveCard('enginecontrolscard', 'right')">></button>
+                    <button class="card-button" onclick="hideCard('enginecontrolscard')">-</button>
+                  </div>
+                </div>
+                <div id="enginediv"></div>
+              </div>
             </td>
           </tr>
         </tbody>
