@@ -20,7 +20,7 @@ const EDT_PARSE_TEXT_TEXT = 2;
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
 
-const EDT_BUTTONS = ['', 'up', 'down', 'left', 'right', 'action1', 'action2'];
+const EDT_BUTTONS = {'':'\u2205', 'up':'\u2191', 'down':'\u2193', 'left':'\u2190', 'right':'\u2192', 'action1':'Z', 'action2':'X'};
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
@@ -605,7 +605,11 @@ class TRRBTEditor {
         }
 
         if (node.hasOwnProperty('button') && node.button !== '') {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['button'].name + ': ' + node.button });
+            let button_name = node.button;
+            if (EDT_BUTTONS.hasOwnProperty(button_name)) {
+                button_name = EDT_BUTTONS[button_name];
+            }
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['button'].name + ': ' + button_name });
         }
 
         if (node.hasOwnProperty('pattern')) {
@@ -1193,7 +1197,7 @@ class TRRBTEditor {
         return { ok: true, value: value };
     }
 
-    appendChoiceProperty(parent, id, name, help, value, values) {
+    appendChoiceProperty(parent, id, name, help, value, values_and_texts) {
         const item = document.createElement('li');
 
         const label = document.createElement('label');
@@ -1206,8 +1210,7 @@ class TRRBTEditor {
         span.id = id;
         item.appendChild(span);
 
-        for (const choice_value of values) {
-            const choice_text = (choice_value === '') ? 'none' : choice_value;
+        for (const [choice_value, choice_text] of Object.entries(values_and_texts)) {
             const choice_id = id + '_' + choice_value;
 
             const input = document.createElement('input');
@@ -1219,7 +1222,7 @@ class TRRBTEditor {
             input.onclick = () => { this.highlightProperty(id, false); };
 
             const label = document.createElement('label');
-            label.innerHTML = choice_text;
+            label.innerHTML = choice_text + ' ';
             label.htmlFor = choice_id;
 
             span.appendChild(input);
@@ -1228,8 +1231,8 @@ class TRRBTEditor {
         parent.appendChild(item);
     }
 
-    parseChoiceProperty(id, values) {
-        for (const choice_value of values) {
+    parseChoiceProperty(id, values_and_texts) {
+        for (const [choice_value, choice_text] of Object.entries(values_and_texts)) {
             let elem = document.getElementById(id + '_' + choice_value);
             if (elem.checked) {
                 return { ok: true, value: elem.value };
