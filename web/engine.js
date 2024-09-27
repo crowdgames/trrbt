@@ -521,6 +521,10 @@ class TRRBTStepper {
     matchLayerPattern(state, lpattern, row, col) {
         const [prows, pcols] = this.layerPatternSize(lpattern);
 
+        if (prows === 0 || pcols === 0) {
+            return false;
+        }
+
         for (let rr = 0; rr < prows; rr += 1) {
             for (let cc = 0; cc < pcols; cc += 1) {
                 for (let layer in lpattern) {
@@ -557,7 +561,7 @@ class TRRBTStepper {
     findLayerPattern(state, lpattern) {
         const [prows, pcols] = this.layerPatternSize(lpattern);
 
-        let ret = []
+        let ret = [];
         for (let rr = 0; rr < state.rows - prows + 1; rr += 1) {
             for (let cc = 0; cc < state.cols - pcols + 1; cc += 1) {
                 if (this.matchLayerPattern(state, lpattern, rr, cc)) {
