@@ -4,6 +4,19 @@
     outline: 1px solid;
 }
 
+.card-bar {
+    outline: 1px solid;
+    overflow: auto;
+}
+
+.card-column {
+    outline: 1px solid;
+}
+
+.card-group > * {
+    margin: 5px;
+}
+
 .card-button-group {
     float: right;
 }
