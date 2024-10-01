@@ -1381,8 +1381,16 @@ class TRRBTEditor {
             appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
             appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
             appendText(ed, ' ');
-            appendButton(ed, 'Hrz/Vrt', 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
-            appendText(ed, ' ');
+            let treecolumnbuttons = document.getElementById("treecolumnbuttons");
+            let hasHrz = false;
+            for (var i = 0; i < treecolumnbuttons.children.length; i++) {
+                if (treecolumnbuttons.children[i].innerHTML == "Switch Layout") {
+                    hasHrz = true;
+                }
+            }
+            if (!hasHrz) {
+                appendButton(treecolumnbuttons, "Switch Layout", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
+            }
             appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
             appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed, true);
