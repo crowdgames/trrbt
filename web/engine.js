@@ -974,8 +974,8 @@ class TRRBTWebEngine extends TRRBTEngine {
 
             const parent = this.canvas.parentElement;
             if (parent) {
-                this.min_width = Math.max(this.min_width, desiredWidth);
-                parent.style['min-width'] = this.min_width + 'px';
+                this.width = Math.max(this.width, desiredWidth);
+                parent.style['width'] = this.width + 'px';
             }
         }
     }
