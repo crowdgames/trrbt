@@ -9,10 +9,6 @@
     overflow: auto;
 }
 
-.card-column {
-    outline: 1px solid;
-}
-
 .card-group > * {
     margin: 5px;
 }
@@ -23,6 +19,7 @@
 
 .card-column {
     display: table-cell;
+    outline: 1px solid;
 }
 
 #editwindow {
