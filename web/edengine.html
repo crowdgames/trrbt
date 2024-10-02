@@ -43,11 +43,8 @@
           }
         }
         
-        // Add to options if not already
-        if (!LOCAL_GAME_SETUPS[game['name']]) {
-          SEL_addLocal(game['name']);
-        }
         LOCAL_GAME_SETUPS[game['name']] = game;
+        SEL_update();
         localStorage.setItem("LOCAL_GAME_SETUPS", JSON.stringify(LOCAL_GAME_SETUPS));
         isTemplate = false;
       }
@@ -60,8 +57,8 @@
           game['name'] = name + " (" + numCopies++ + ")";
         }
         
-        SEL_addLocal(game['name']);
         LOCAL_GAME_SETUPS[game['name']] = game;
+        SEL_update();
         localStorage.setItem("LOCAL_GAME_SETUPS", JSON.stringify(LOCAL_GAME_SETUPS))
         // console.log("local storage: ", JSON.stringify(localStorage.getItem("LOCAL_GAME_SETUPS")))
         // TODO: local storage needs strings.

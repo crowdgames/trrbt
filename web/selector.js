@@ -27,39 +27,38 @@ function SEL_onLoad() {
             };
             div.appendChild(select);
 
-            var option = document.createElement('option');
-            option.value = '';
-            option.innerHTML = '--';
-            select.add(option);
-
-            for (const game of Object.getOwnPropertyNames(GAME_SETUPS)) {
-                var option = document.createElement('option');
-                option.value = game;
-                option.innerHTML = game;
-                select.add(option);
-            }
-            for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS)) {
-                SEL_addLocal(game);
-            }
+            setOptions(select);
         }
     }
 }
 
-function SEL_addLocal(game) {
+function setOptions(select){
+    select.options.length = 0;
+
+    SEL_addOption('--', '');
+    SEL_addOption('NEW', 'NEW');
+
+    for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS).sort()) {
+        SEL_addOption(game + " (local)", game);
+    }
+    for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
+        if (game != "NEW") {
+            SEL_addOption(game, game);
+        }
+    }
+}
+
+function SEL_addOption(innerHTML, value) {
     select = document.getElementById('game-selector');
     var option = document.createElement('option');
-    option.value = game;
-    option.innerHTML = game + ' (local)';
-    option.classList.add('local')
+    option.innerHTML = innerHTML;
+    option.value = value;
     select.add(option);
 }
 
-function SEL_removeLocal(game) {
+function SEL_update() {
     let select = document.getElementById('game-selector');
-    let option = select.querySelector('option.local[value="' + game + '"]')
-    if (option) {
-        select.removeChild(option);
-    }
+    setOptions(select);
 }
 
 function SEL_startingGame() {
@@ -67,7 +66,7 @@ function SEL_startingGame() {
     if (game !== '' && GAME_SETUPS.hasOwnProperty(game)) {
         return GAME_SETUPS[game];
     }
-    return emptyGame();
+    return GAME_SETUPS['NEW'] || emptyGame();
 }
 
 function SEL_getGameTree(game) {
