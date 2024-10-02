@@ -917,7 +917,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendText(ed, '(Hover for additional info)', false, false, true);
         appendBr(ed, true);
 
-        appendButton(ed, 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
         appendText(ed, ' ');
         this.gameResultText = document.createElement('span');
         this.gameResultText.style.color = '#4444cc';
@@ -939,12 +939,12 @@ class TRRBTWebEngine extends TRRBTEngine {
         sizeSlider.oninput = bind1(this, 'onCellSize', sizeSlider);
         ed.appendChild(sizeSlider);
         */
-        appendButton(ed, 'Smaller', 'Make game smaller.', null, bind1(this, 'onCellSize', -1));
-        appendButton(ed, 'Larger', 'Make game larger.', null, bind1(this, 'onCellSize', 1));
+        appendButton(ed, 'engine-smaller', 'Smaller', 'Make game smaller.', null, bind1(this, 'onCellSize', -1));
+        appendButton(ed, 'engine-larger', 'Larger', 'Make game larger.', null, bind1(this, 'onCellSize', 1));
 
         appendBr(ed, true);
 
-        appendButton(ed, 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
+        appendButton(ed, 'engine-breakresume', 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ');
         this.breakResumeText = document.createElement('span');
         this.breakResumeText.style.color = '#fc5d5d';
@@ -954,14 +954,14 @@ class TRRBTWebEngine extends TRRBTEngine {
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
-        appendButton(ed, 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
-        appendButton(ed, 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
-        appendButton(ed, 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
+        appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
+        appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
+        appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
         appendBr(ed);
 
-        appendButton(ed, 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
-        appendButton(ed, 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
-        appendButton(ed, 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
+        appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
+        appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
+        appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
     }
 
