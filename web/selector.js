@@ -17,9 +17,11 @@ function SEL_onLoad() {
             select.onchange = function () {
                 const gameOp = select.options[select.selectedIndex];
                 const game = gameOp.value
+                telemetry("select-" + game);
                 select.selectedIndex = 0;
                 window.location.hash = encodeURIComponent(game);
                 if (gameOp.classList.contains('local')) {
+                    console.log(LOCAL_GAME_SETUPS[game])
                     onSelectGame(LOCAL_GAME_SETUPS[game], false)
                 } else {
                     onSelectGame(GAME_SETUPS[game], true);
@@ -39,7 +41,7 @@ function setOptions(select){
     SEL_addOption('NEW', 'NEW');
 
     for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS).sort()) {
-        SEL_addOption(game + " (local)", game);
+        SEL_addOption(game + " (local)", game,  ['local']);
     }
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
         if (game != "NEW") {
@@ -48,17 +50,32 @@ function setOptions(select){
     }
 }
 
-function SEL_addOption(innerHTML, value) {
+function SEL_addOption(innerHTML, value, classList=[]) {
     select = document.getElementById('game-selector');
     var option = document.createElement('option');
     option.innerHTML = innerHTML;
     option.value = value;
+    if (classList.length > 0) {
+        option.classList.add(classList);
+    }
     select.add(option);
 }
 
 function SEL_update() {
     let select = document.getElementById('game-selector');
     setOptions(select);
+}
+
+function SEL_upsert(game) {
+    LOCAL_GAME_SETUPS[game['name']] = game;
+    SEL_update();
+    localStorage.setItem("LOCAL_GAME_SETUPS", JSON.stringify(LOCAL_GAME_SETUPS));
+}
+
+function SEL_removeLocal(game) {
+    delete LOCAL_GAME_SETUPS[game];
+    localStorage.setItem("LOCAL_GAME_SETUPS", JSON.stringify(LOCAL_GAME_SETUPS))
+    SEL_update();
 }
 
 function SEL_startingGame() {

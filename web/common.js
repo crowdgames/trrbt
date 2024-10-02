@@ -7,6 +7,8 @@ const TAU = 2 * Math.PI;
 
 const SEGMENTER = new Intl.Segmenter();
 
+var TELEMETRY_DATA = JSON.parse(localStorage.getItem("TELEMETRY_DATA")) || [];
+
 let G_nextId = 0;
 
 function getNextId() {
@@ -97,7 +99,7 @@ function appendText(parent, text, bold = false, underline = false, italic = fals
     parent.appendChild(elem);
 }
 
-function appendButton(parent, text, tooltip, color, callback) {
+function appendButton(parent, id, text, tooltip, color, callback) {
     const button = document.createElement('button');
     button.innerHTML = text;
     button.title = tooltip;
@@ -106,8 +108,17 @@ function appendButton(parent, text, tooltip, color, callback) {
     } else {
         button.style.backgroundColor = '#dddddd';
     }
-    button.onclick = callback;
+    button.onclick = () => {
+        telemetry("button-" + id)
+        callback();
+    };
     parent.appendChild(button)
+}
+
+function telemetry(action) {
+    console.log(action);
+    TELEMETRY_DATA.push({"action": action, "time": Date()});
+    localStorage.setItem("TELEMETRY_DATA", JSON.stringify(TELEMETRY_DATA));
 }
 
 function appendBr(parent, extraSpace=false) {

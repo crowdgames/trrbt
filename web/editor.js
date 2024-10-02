@@ -20,7 +20,7 @@ const EDT_PARSE_TEXT_TEXT = 2;
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
 
-const EDT_BUTTONS = {'':'\u2205', 'up':'\u2191', 'down':'\u2193', 'left':'\u2190', 'right':'\u2192', 'action1':'Z', 'action2':'X'};
+const EDT_BUTTONS = { '': '\u2205', 'up': '\u2191', 'down': '\u2193', 'left': '\u2190', 'right': '\u2192', 'action1': 'Z', 'action2': 'X' };
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
@@ -1136,7 +1136,11 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'text';
         input.value = value;
-        input.oninput = () => { this.highlightProperty(id); };
+        input.oninput = () => this.highlightProperty(id);
+        input.onchange = () => {
+            telemetry("text-" + name + "-set-" + input.value);
+            this.nodeSaveProperties();
+        }
 
         item.appendChild(label);
         if (inList) { appendBr(item) } else { appendText(item, ' '); }
@@ -1177,7 +1181,11 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'checkbox';
         input.checked = value;
-        input.onclick = () => { this.highlightProperty(id, false); };
+        input.onclick = () => { 
+            telemetry("check-" + id + "-set-" + value); 
+            this.highlightProperty(id, false); 
+            this.nodeSaveProperties();
+        };
 
         const labelCheck = document.createElement('label');
         labelCheck.innerHTML = 'set as true';
@@ -1219,7 +1227,11 @@ class TRRBTEditor {
             input.type = 'radio';
             input.value = choice_value;
             input.checked = (choice_value === value);
-            input.onclick = () => { this.highlightProperty(id, false); };
+            input.onclick = () => { 
+                telemetry("choice-" + name + "-choose-" + choice_text)
+                this.highlightProperty(id, false); 
+                this.nodeSaveProperties();
+            };
 
             const label = document.createElement('label');
             label.innerHTML = choice_text + ' ';
@@ -1243,7 +1255,7 @@ class TRRBTEditor {
 
     appendThisEmojiPicker(parent) {
         if (this.emojiPicker) {
-            appendButton(parent, 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
+            appendButton(parent, 'emoji-picker', 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
             appendText(parent, ' ');
             parent.appendChild(this.emojiMessage);
             appendBr(parent);
@@ -1295,7 +1307,12 @@ class TRRBTEditor {
         input.name = id;
         input.innerHTML = text;
         input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
-        input.oninput = () => { this.highlightProperty(id, false); };
+
+        input.oninput = () => this.highlightProperty(id, false);
+        input.onchange = () => {
+            this.nodeSaveProperties();
+            telemetry("pattern-" + name + "-set-" + input.value);
+        }
 
         item.appendChild(label)
         appendBr(item)
@@ -1378,8 +1395,8 @@ class TRRBTEditor {
             appendText(ed, '(Hover for additional info)', false, false, true);
             appendBr(ed, true);
 
-            appendButton(ed, 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
-            appendButton(ed, 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
+            appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
+            appendButton(ed, 'redo-edit', 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
             appendText(ed, ' ');
             let treecolumnbuttons = document.getElementById("treecolumnbuttons");
             let hasHrz = false;
@@ -1389,16 +1406,16 @@ class TRRBTEditor {
                 }
             }
             if (!hasHrz) {
-                appendButton(treecolumnbuttons, "Switch Layout", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
+                appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
             }
-            appendButton(ed, 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
-            appendButton(ed, 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
+            appendButton(ed, 'import', 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
+            appendButton(ed, 'export', 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
             appendBr(ed, true);
 
             this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES['name'].name, + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
             appendBr(ed, true);
-            appendButton(ed, 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
-            appendButton(ed, 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
+            appendButton(ed, 'template', 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
+            appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
             appendBr(ed, true);
 
             this.appendThisEmojiPicker(ed);
@@ -1430,26 +1447,26 @@ class TRRBTEditor {
                 appendBr(ed, true);
 
                 if (parent !== null) {
-                    appendButton(ed, 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
-                    appendButton(ed, 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
+                    appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
+                    appendButton(ed, 'node-shift-right', 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
                     if (node.type === 'player') {
                         // pass
                     } else if (node.hasOwnProperty('children')) {
-                        appendButton(ed, 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
+                        appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
                     }
                 }
                 appendBr(ed, true);
 
-                appendButton(ed, 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
+                appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
                 if (node !== this.game.tree) {
-                    appendButton(ed, 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
+                    appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
                 }
                 if (this.clipboard !== null) {
                     if (node.hasOwnProperty('children')) {
                         if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
                             // pass
                         } else {
-                            appendButton(ed, 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
+                            appendButton(ed, 'node-paste-subtree', 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
                         }
                     }
                 }
@@ -1457,13 +1474,13 @@ class TRRBTEditor {
 
                 if (node.hasOwnProperty('children') && node.children.length > 0) {
                     if (node !== this.game.tree) {
-                        appendButton(ed, 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
-                        appendButton(ed, 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
+                        appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
+                        appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
                     }
-                    appendButton(ed, 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
+                    appendButton(ed, 'node-del-children', 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
                     appendBr(ed, true);
                 } else if (node !== this.game.tree) {
-                    appendButton(ed, 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
+                    appendButton(ed, 'node-delete', 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
                     appendBr(ed, true);
                 }
 
@@ -1522,9 +1539,6 @@ class TRRBTEditor {
                 }
 
                 appendBr(ed, true);
-                appendButton(ed, 'Save Changes', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
-                appendBr(ed, true);
-
                 appendText(ed, 'Add');
 
                 const table = document.createElement('table');
@@ -1549,10 +1563,10 @@ class TRRBTEditor {
                                 // pass
                             } else {
                                 if (node.children.length === 0) {
-                                    appendButton(elem, '\u2193', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                                    appendButton(elem, 'node-add-child-front-' + proto.type, '\u2193', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
                                 } else {
-                                    appendButton(elem, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
-                                    appendButton(elem, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
+                                    appendButton(elem, 'node-add-child-left-' + proto.type, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                                    appendButton(elem, 'node-add-child-right-' + proto.type, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
                                 }
                             }
                         }
@@ -1564,7 +1578,7 @@ class TRRBTEditor {
                                 // pass
                             } else {
                                 if (node.children.length > 0) {
-                                    appendButton(elem, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
+                                    appendButton(elem, 'node-add-child-below-' + proto.type, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
                                 }
                             }
                         }
@@ -1575,24 +1589,22 @@ class TRRBTEditor {
                             } else if (parent.type === 'player' && !can_be_player_children([proto])) {
                                 // pass
                             } else {
-                                appendButton(elem, '\u2912', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
+                                appendButton(elem, 'node-add-parent-' + proto.type, '\u2912', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
                             }
                         }
 
-                        appendButton(elem, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
+                        appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
                         appendText(elem, ' ' + proto.type);
                         appendBr(elem);
                     }
                 }
             } else {
                 appendBr(ed, true);
-                appendButton(ed, 'Save Changes', 'Save node changes.', null, bind0(this, 'onNodeSaveProperties'));
-                appendBr(ed, true);
             }
         }
     }
 
-    onNodeSaveProperties() {
+    nodeSaveProperties() {
         const SAVE_PROPS =
             [
                 ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
@@ -1629,7 +1641,7 @@ class TRRBTEditor {
                     } else {
                         propname = EDT_GAME_PROP_NAMES[propid]
                     }
-                    alert_strs.push('Error saving ' + propName + '.\n' + result.error);
+                    alert_strs.push('Error saving ' + propname + '.\n' + result.error);
                 } else {
                     let new_value = result.value;
                     let old_value = EDT_NODE_PROP_NAMES[propid] ? node[propid] : this.game[propid]
