@@ -328,6 +328,8 @@ class TRRBTEditor {
         this.canvas.addEventListener('keydown', bind0(this, 'onKeyDown'));
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
 
+        this.canvas.parentElement.style.width = this.canvas.width + "px";
+        this.canvas.parentElement.style.height = this.canvas.height + "px";
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
         this.updateTreeStructure(false);
@@ -336,6 +338,7 @@ class TRRBTEditor {
         this.drawRequested = false;
 
         this.requestDraw();
+        new ResizeObserver(bind0(this, 'onGrandParentResize')).observe(this.canvas.closest(".card"));
     }
 
     requestDraw() {
@@ -836,6 +839,9 @@ class TRRBTEditor {
 
     drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
         const nrect = nodePositions.get(node.dispid);
+        // if (nrect == undefined) {
+        //     return;
+        // }
         const nx = nrect.x;
         const ny = nrect.y;
         const nw = nrect.w;
@@ -879,6 +885,9 @@ class TRRBTEditor {
                 let nonStackEdges = [];
                 for (let child of node.children) {
                     const cnrect = nodePositions.get(child.dispid);
+                    // if (cnrect == undefined) {
+                    //     continue;
+                    // }
                     const cnx = cnrect.x;
                     const cny = cnrect.y;
                     const cnw = cnrect.w;
@@ -2100,4 +2109,28 @@ class TRRBTEditor {
         evt.preventDefault();
     }
 
+    onGrandParentResize() {
+        let parent = this.canvas.parentElement;
+        let grandparent = parent.parentNode;
+        let pebbles = grandparent.children;
+
+        let pebbleHeight = 0;
+        for (let pebble of pebbles) {
+            console.log(pebble)
+            if (pebble != parent) {
+                pebbleHeight += pebble.offsetHeight;
+            }
+        }
+        parent.style.outline = "1px solid blue"
+        
+        let targetHeight = grandparent.clientHeight - pebbleHeight;
+        console.log("total height: " + grandparent.clientHeight);
+        console.log("target: " + targetHeight);
+
+        let targetWidth = grandparent.clientWidth;
+        parent.style.height = targetHeight + "px";
+        parent.style.width = targetWidth + "px";
+        this.updateCanvasSize(targetWidth - 4, targetHeight - 4);
+        this.requestDraw();
+    }
 };
