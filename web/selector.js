@@ -21,7 +21,6 @@ function SEL_onLoad() {
                 select.selectedIndex = 0;
                 window.location.hash = encodeURIComponent(game);
                 if (gameOp.classList.contains('local')) {
-                    console.log(LOCAL_GAME_SETUPS[game])
                     onSelectGame(LOCAL_GAME_SETUPS[game], false)
                 } else {
                     onSelectGame(GAME_SETUPS[game], true);
@@ -34,14 +33,14 @@ function SEL_onLoad() {
     }
 }
 
-function setOptions(select){
+function setOptions(select) {
     select.options.length = 0;
 
     SEL_addOption('--', '');
     SEL_addOption('NEW', 'NEW');
 
     for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS).sort()) {
-        SEL_addOption(game + " (local)", game,  ['local']);
+        SEL_addOption(game + " (local)", game, ['local']);
     }
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
         if (game != "NEW") {
@@ -50,7 +49,7 @@ function setOptions(select){
     }
 }
 
-function SEL_addOption(innerHTML, value, classList=[]) {
+function SEL_addOption(innerHTML, value, classList = []) {
     select = document.getElementById('game-selector');
     var option = document.createElement('option');
     option.innerHTML = innerHTML;
