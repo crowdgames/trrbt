@@ -839,9 +839,6 @@ class TRRBTEditor {
 
     drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
         const nrect = nodePositions.get(node.dispid);
-        // if (nrect == undefined) {
-        //     return;
-        // }
         const nx = nrect.x;
         const ny = nrect.y;
         const nw = nrect.w;
@@ -1145,7 +1142,10 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'text';
         input.value = value;
-        input.oninput = () => this.highlightProperty(id);
+        input.oninput = () => {
+            this.highlightProperty(id);
+            this.validate(false);
+        }
         input.onchange = () => {
             telemetry("text-" + name + "-set-" + input.value);
             this.nodeSaveProperties();
@@ -1317,7 +1317,10 @@ class TRRBTEditor {
         input.innerHTML = text;
         input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
 
-        input.oninput = () => this.highlightProperty(id, false);
+        input.oninput = () => {
+            this.highlightProperty(id, false);
+            this.validate(false);
+        }
         input.onchange = () => {
             this.nodeSaveProperties();
             telemetry("pattern-" + name + "-set-" + input.value);
@@ -1394,261 +1397,277 @@ class TRRBTEditor {
             (this.propertyNodes === null && node !== null) ||
             (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
-        if (changed) {
-            const ed = this.propertyEditor;
+        if (!changed) {
+            return;
+        }
 
-            ed.innerHTML = '';
+        let changeNode = true;
+        let [_, __, alert_strs] = this.validate(false);
+        if (alert_strs.length > 0) {
+            changeNode = confirm("The following errors were found when attempting to save: " + alert_strs.join('\n\n') + "\nClick cancel to continue editing, or OK to continue without saving.");
+        }
 
-            appendText(ed, 'Editor', true, true);
-            appendText(ed, ' ');
-            appendText(ed, '(Hover for additional info)', false, false, true);
-            appendBr(ed, true);
+        if (!changeNode) {
+            return false;
+        }
+        const ed = this.propertyEditor;
 
-            appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
-            appendButton(ed, 'redo-edit', 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
-            appendText(ed, ' ');
-            let treecolumnbuttons = document.getElementById("treecolumnbuttons");
-            let hasHrz = false;
-            for (var i = 0; i < treecolumnbuttons.children.length; i++) {
-                if (treecolumnbuttons.children[i].innerHTML == "Switch Layout") {
-                    hasHrz = true;
-                }
-            }
-            if (!hasHrz) {
-                appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
-            }
-            appendButton(ed, 'import', 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
-            appendButton(ed, 'export', 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
-            appendBr(ed, true);
+        ed.innerHTML = '';
 
-            this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES['name'].name, + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
-            appendBr(ed, true);
-            appendButton(ed, 'template', 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
-            appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
-            appendBr(ed, true);
+        appendText(ed, 'Editor', true, true);
+        appendText(ed, ' ');
+        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendBr(ed, true);
 
-            this.appendThisEmojiPicker(ed);
-
-            this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(this.game.tree, node) } : null;
-            if (this.propertyNodes) {
-                const parent = this.propertyNodes.parent;
-
-                const proto = this.getNodePrototype(node.type);
-                if (proto) {
-                    for (const prop of Object.getOwnPropertyNames(proto)) {
-                        if (!node.hasOwnProperty(prop)) {
-                            node[prop] = deepcopyobj(proto[prop]);
-                        }
-                    }
-                }
-
-                const tooltip_help = 'Get more information about this node type.';
-                const tooltip_add_front = 'Add new node at front of children.';
-                const tooltip_add_back = 'Add new node at back of children.';
-                const tooltip_add_below = 'Add new child node, and move current children to new node.';
-                const tooltip_add_above = 'Add node as new parent to current node.';
-
-                const node_clr = this.nodeColor(node.type, false);
-                const node_help_str = EDT_NODE_HELP[node.type].help;
-
-                appendButton(ed, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
-                appendText(ed, ' ' + node.type, true);
-                appendBr(ed, true);
-
-                if (parent !== null) {
-                    appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
-                    appendButton(ed, 'node-shift-right', 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
-                    if (node.type === 'player') {
-                        // pass
-                    } else if (node.hasOwnProperty('children')) {
-                        appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
-                    }
-                }
-                appendBr(ed, true);
-
-                appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
-                if (node !== this.game.tree) {
-                    appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
-                }
-                if (this.clipboard !== null) {
-                    if (node.hasOwnProperty('children')) {
-                        if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
-                            // pass
-                        } else {
-                            appendButton(ed, 'node-paste-subtree', 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
-                        }
-                    }
-                }
-                appendBr(ed, true);
-
-                if (node.hasOwnProperty('children') && node.children.length > 0) {
-                    if (node !== this.game.tree) {
-                        appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
-                        appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
-                    }
-                    appendButton(ed, 'node-del-children', 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
-                    appendBr(ed, true);
-                } else if (node !== this.game.tree) {
-                    appendButton(ed, 'node-delete', 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
-                    appendBr(ed, true);
-                }
-
-                const list = appendList(ed);
-
-                if (node.hasOwnProperty('comment')) {
-                    this.appendTextProperty(list, 'prop_comment', EDT_NODE_PROP_NAMES['comment'].name, EDT_NODE_PROP_NAMES['comment'].help, node.comment);
-                }
-                if (node.hasOwnProperty('nid')) {
-                    this.appendTextProperty(list, 'prop_nid', EDT_NODE_PROP_NAMES['nid'].name, EDT_NODE_PROP_NAMES['nid'].help, node.nid);
-                }
-                if (node.hasOwnProperty('remorig')) {
-                    this.appendBoolProperty(list, 'prop_remorig', EDT_NODE_PROP_NAMES['remorig'].name, EDT_NODE_PROP_NAMES['remorig'].help, node.remorig);
-                }
-                if (node.hasOwnProperty('file')) {
-                    this.appendTextProperty(list, 'prop_file', EDT_NODE_PROP_NAMES['file'].name, EDT_NODE_PROP_NAMES['file'].help, node.file);
-                }
-                if (node.hasOwnProperty('target')) {
-                    this.appendTextProperty(list, 'prop_target', EDT_NODE_PROP_NAMES['target'].name, EDT_NODE_PROP_NAMES['target'].help, node.target);
-                }
-                if (node.hasOwnProperty('pid')) {
-                    this.appendTextProperty(list, 'prop_pid', EDT_NODE_PROP_NAMES['pid'].name, EDT_NODE_PROP_NAMES['pid'].help, node.pid);
-                }
-                if (node.hasOwnProperty('layer')) {
-                    this.appendTextProperty(list, 'prop_layer', EDT_NODE_PROP_NAMES['layer'].name, EDT_NODE_PROP_NAMES['layer'].help, node.layer);
-                }
-                if (node.hasOwnProperty('times')) {
-                    this.appendTextProperty(list, 'prop_times', EDT_NODE_PROP_NAMES['times'].name, EDT_NODE_PROP_NAMES['times'].help, node.times);
-                }
-                if (node.hasOwnProperty('what')) {
-                    this.appendTextProperty(list, 'prop_what', EDT_NODE_PROP_NAMES['what'].name, EDT_NODE_PROP_NAMES['what'].help, node.what);
-                }
-                if (node.hasOwnProperty('with')) {
-                    this.appendTextProperty(list, 'prop_with', EDT_NODE_PROP_NAMES['with'].name, EDT_NODE_PROP_NAMES['with'].help, node.with);
-                }
-                if (node.hasOwnProperty('withs')) {
-                    this.appendListProperty(list, 'prop_withs', EDT_NODE_PROP_NAMES['withs'].name, EDT_NODE_PROP_NAMES['withs'].help, node.withs);
-                }
-                if (node.hasOwnProperty('button')) {
-                    this.appendChoiceProperty(list, 'prop_button', EDT_NODE_PROP_NAMES['button'].name, EDT_NODE_PROP_NAMES['button'].help, node.button, EDT_BUTTONS);
-                }
-                if (node.hasOwnProperty('pattern')) {
-                    const tileSize = getTileSize([node.pattern]);
-                    this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize);
-                }
-                if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
-                    const hasLHS = node.hasOwnProperty('lhs');
-                    const hasRHS = node.hasOwnProperty('rhs');
-                    const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
-                    if (hasLHS) {
-                        this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize);
-                    }
-                    if (hasRHS) {
-                        this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize);
-                    }
-                }
-
-                appendBr(ed, true);
-                appendText(ed, 'Add');
-
-                const table = document.createElement('table');
-                ed.appendChild(table);
-                const tbody = document.createElement('tbody');
-                table.appendChild(tbody);
-                const tr = document.createElement('tr');
-                tr.style = 'vertical-align:top; font-size:small';
-                tbody.appendChild(tr);
-                const td1 = document.createElement('td');
-                tr.appendChild(td1);
-                const td2 = document.createElement('td');
-                tr.appendChild(td2);
-
-                for (let [elem, protos] of [[td1, EDT_NODE_PROTOTYPES], [td2, EDT_XNODE_PROTOTYPES]]) {
-                    for (const proto of protos) {
-                        const clr = this.nodeColor(proto.type, false);
-                        const help_str = EDT_NODE_HELP[proto.type].help;
-
-                        if (node.hasOwnProperty('children')) {
-                            if (node.type === 'player' && !can_be_player_children([proto])) {
-                                // pass
-                            } else {
-                                if (node.children.length === 0) {
-                                    appendButton(elem, 'node-add-child-front-' + proto.type, '\u2193', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
-                                } else {
-                                    appendButton(elem, 'node-add-child-left-' + proto.type, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
-                                    appendButton(elem, 'node-add-child-right-' + proto.type, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
-                                }
-                            }
-                        }
-
-                        if (node.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
-                            if (proto.type === 'player' && !can_be_player_children(node.children)) {
-                                // pass
-                            } else if (node.type === 'player' && !can_be_player_children([proto])) {
-                                // pass
-                            } else {
-                                if (node.children.length > 0) {
-                                    appendButton(elem, 'node-add-child-below-' + proto.type, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
-                                }
-                            }
-                        }
-
-                        if (parent !== null && parent.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
-                            if (proto.type === 'player' && !can_be_player_children([node])) {
-                                // pass
-                            } else if (parent.type === 'player' && !can_be_player_children([proto])) {
-                                // pass
-                            } else {
-                                appendButton(elem, 'node-add-parent-' + proto.type, '\u2912', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
-                            }
-                        }
-
-                        appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
-                        appendText(elem, ' ' + proto.type);
-                        appendBr(elem);
-                    }
-                }
-            } else {
-                appendBr(ed, true);
+        appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
+        appendButton(ed, 'redo-edit', 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
+        appendText(ed, ' ');
+        let treecolumnbuttons = document.getElementById("treecolumnbuttons");
+        let hasHrz = false;
+        for (var i = 0; i < treecolumnbuttons.children.length; i++) {
+            if (treecolumnbuttons.children[i].innerHTML == "Switch Layout") {
+                hasHrz = true;
             }
         }
+        if (!hasHrz) {
+            appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
+        }
+        appendButton(ed, 'import', 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
+        appendButton(ed, 'export', 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
+        appendBr(ed, true);
+
+        this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES['name'].name, + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
+        appendBr(ed, true);
+        appendButton(ed, 'template', 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
+        appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
+        appendBr(ed, true);
+
+        this.appendThisEmojiPicker(ed);
+
+        this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(this.game.tree, node) } : null;
+        if (this.propertyNodes) {
+            const parent = this.propertyNodes.parent;
+
+            const proto = this.getNodePrototype(node.type);
+            if (proto) {
+                for (const prop of Object.getOwnPropertyNames(proto)) {
+                    if (!node.hasOwnProperty(prop)) {
+                        node[prop] = deepcopyobj(proto[prop]);
+                    }
+                }
+            }
+
+            const tooltip_help = 'Get more information about this node type.';
+            const tooltip_add_front = 'Add new node at front of children.';
+            const tooltip_add_back = 'Add new node at back of children.';
+            const tooltip_add_below = 'Add new child node, and move current children to new node.';
+            const tooltip_add_above = 'Add node as new parent to current node.';
+
+            const node_clr = this.nodeColor(node.type, false);
+            const node_help_str = EDT_NODE_HELP[node.type].help;
+
+            appendButton(ed, 'help-' + node.type, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
+            appendText(ed, ' ' + node.type, true);
+            appendBr(ed, true);
+
+            if (parent !== null) {
+                appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
+                appendButton(ed, 'node-shift-right', 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
+                if (node.type === 'player') {
+                    // pass
+                } else if (node.hasOwnProperty('children')) {
+                    appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
+                }
+            }
+            appendBr(ed, true);
+
+            appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
+            if (node !== this.game.tree) {
+                appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
+            }
+            if (this.clipboard !== null) {
+                if (node.hasOwnProperty('children')) {
+                    if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
+                        // pass
+                    } else {
+                        appendButton(ed, 'node-paste-subtree', 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
+                    }
+                }
+            }
+            appendBr(ed, true);
+
+            if (node.hasOwnProperty('children') && node.children.length > 0) {
+                if (node !== this.game.tree) {
+                    appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
+                    appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
+                }
+                appendButton(ed, 'node-del-children', 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
+                appendBr(ed, true);
+            } else if (node !== this.game.tree) {
+                appendButton(ed, 'node-delete', 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
+                appendBr(ed, true);
+            }
+
+            const list = appendList(ed);
+
+            if (node.hasOwnProperty('comment')) {
+                this.appendTextProperty(list, 'prop_comment', EDT_NODE_PROP_NAMES['comment'].name, EDT_NODE_PROP_NAMES['comment'].help, node.comment);
+            }
+            if (node.hasOwnProperty('nid')) {
+                this.appendTextProperty(list, 'prop_nid', EDT_NODE_PROP_NAMES['nid'].name, EDT_NODE_PROP_NAMES['nid'].help, node.nid);
+            }
+            if (node.hasOwnProperty('remorig')) {
+                this.appendBoolProperty(list, 'prop_remorig', EDT_NODE_PROP_NAMES['remorig'].name, EDT_NODE_PROP_NAMES['remorig'].help, node.remorig);
+            }
+            if (node.hasOwnProperty('file')) {
+                this.appendTextProperty(list, 'prop_file', EDT_NODE_PROP_NAMES['file'].name, EDT_NODE_PROP_NAMES['file'].help, node.file);
+            }
+            if (node.hasOwnProperty('target')) {
+                this.appendTextProperty(list, 'prop_target', EDT_NODE_PROP_NAMES['target'].name, EDT_NODE_PROP_NAMES['target'].help, node.target);
+            }
+            if (node.hasOwnProperty('pid')) {
+                this.appendTextProperty(list, 'prop_pid', EDT_NODE_PROP_NAMES['pid'].name, EDT_NODE_PROP_NAMES['pid'].help, node.pid);
+            }
+            if (node.hasOwnProperty('layer')) {
+                this.appendTextProperty(list, 'prop_layer', EDT_NODE_PROP_NAMES['layer'].name, EDT_NODE_PROP_NAMES['layer'].help, node.layer);
+            }
+            if (node.hasOwnProperty('times')) {
+                this.appendTextProperty(list, 'prop_times', EDT_NODE_PROP_NAMES['times'].name, EDT_NODE_PROP_NAMES['times'].help, node.times);
+            }
+            if (node.hasOwnProperty('what')) {
+                this.appendTextProperty(list, 'prop_what', EDT_NODE_PROP_NAMES['what'].name, EDT_NODE_PROP_NAMES['what'].help, node.what);
+            }
+            if (node.hasOwnProperty('with')) {
+                this.appendTextProperty(list, 'prop_with', EDT_NODE_PROP_NAMES['with'].name, EDT_NODE_PROP_NAMES['with'].help, node.with);
+            }
+            if (node.hasOwnProperty('withs')) {
+                this.appendListProperty(list, 'prop_withs', EDT_NODE_PROP_NAMES['withs'].name, EDT_NODE_PROP_NAMES['withs'].help, node.withs);
+            }
+            if (node.hasOwnProperty('button')) {
+                this.appendChoiceProperty(list, 'prop_button', EDT_NODE_PROP_NAMES['button'].name, EDT_NODE_PROP_NAMES['button'].help, node.button, EDT_BUTTONS);
+            }
+            if (node.hasOwnProperty('pattern')) {
+                const tileSize = getTileSize([node.pattern]);
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize);
+            }
+            if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
+                const hasLHS = node.hasOwnProperty('lhs');
+                const hasRHS = node.hasOwnProperty('rhs');
+                const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
+                if (hasLHS) {
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize);
+                }
+                if (hasRHS) {
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize);
+                }
+            }
+
+            appendBr(ed, true);
+            appendText(ed, 'Add');
+
+            const table = document.createElement('table');
+            ed.appendChild(table);
+            const tbody = document.createElement('tbody');
+            table.appendChild(tbody);
+            const tr = document.createElement('tr');
+            tr.style = 'vertical-align:top; font-size:small';
+            tbody.appendChild(tr);
+            const td1 = document.createElement('td');
+            tr.appendChild(td1);
+            const td2 = document.createElement('td');
+            tr.appendChild(td2);
+
+            for (let [elem, protos] of [[td1, EDT_NODE_PROTOTYPES], [td2, EDT_XNODE_PROTOTYPES]]) {
+                for (const proto of protos) {
+                    const clr = this.nodeColor(proto.type, false);
+                    const help_str = EDT_NODE_HELP[proto.type].help;
+
+                    if (node.hasOwnProperty('children')) {
+                        if (node.type === 'player' && !can_be_player_children([proto])) {
+                            // pass
+                        } else {
+                            if (node.children.length === 0) {
+                                appendButton(elem, 'node-add-child-front-' + proto.type, '\u2193', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                            } else {
+                                appendButton(elem, 'node-add-child-left-' + proto.type, '\u2199', tooltip_add_front, clr, bind2(this, 'onNodeAddChild', proto.type, 'front'));
+                                appendButton(elem, 'node-add-child-right-' + proto.type, '\u2198', tooltip_add_back, clr, bind2(this, 'onNodeAddChild', proto.type, 'back'));
+                            }
+                        }
+                    }
+
+                    if (node.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
+                        if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                            // pass
+                        } else if (node.type === 'player' && !can_be_player_children([proto])) {
+                            // pass
+                        } else {
+                            if (node.children.length > 0) {
+                                appendButton(elem, 'node-add-child-below-' + proto.type, '\u2913', tooltip_add_below, clr, bind2(this, 'onNodeAddChild', proto.type, 'below'));
+                            }
+                        }
+                    }
+
+                    if (parent !== null && parent.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
+                        if (proto.type === 'player' && !can_be_player_children([node])) {
+                            // pass
+                        } else if (parent.type === 'player' && !can_be_player_children([proto])) {
+                            // pass
+                        } else {
+                            appendButton(elem, 'node-add-parent-' + proto.type, '\u2912', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
+                        }
+                    }
+
+                    appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
+                    appendText(elem, ' ' + proto.type);
+                    appendBr(elem);
+                }
+            }
+        } else {
+            appendBr(ed, true);
+        }
+        return true;
     }
 
-    nodeSaveProperties() {
+    validate(do_alert) {
         const SAVE_PROPS =
-            [
-                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-                ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['withs', bind0(this, 'parseListProperty'), false],
-                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-                ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
+        [
+            ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+            ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+            ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+            ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+            ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+            ['withs', bind0(this, 'parseListProperty'), false],
+            ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+            ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+            ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+            ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
 
         let node = this.propertyNodes?.node;
 
+        let old_props = new Map();
         let new_props = new Map();
         let alert_strs = [];
 
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
-            if (EDT_GAME_PROP_NAMES[propid]
-                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid))) {
+            let full_id = 'prop_' + propid
+            if ((EDT_GAME_PROP_NAMES[propid]
+                    || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid))) 
+                && document.getElementById(full_id)
+            ) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     this.highlightProperty('prop_' + propid, true);
                     let propname = ""
                     if (EDT_NODE_PROP_NAMES[propid]) {
-                        propname = EDT_NODE_PROP_NAMES[propid]
+                        propname = EDT_NODE_PROP_NAMES[propid].name
                     } else {
-                        propname = EDT_GAME_PROP_NAMES[propid]
+                        propname = EDT_GAME_PROP_NAMES[propid].name
                     }
                     alert_strs.push('Error saving ' + propname + '.\n' + result.error);
                 } else {
@@ -1657,6 +1676,7 @@ class TRRBTEditor {
 
                     if (new_value != old_value) {
                         new_props.set(propid, result.value);
+                        old_props.set(propid, old_value)
                     }
                 }
             }
@@ -1667,42 +1687,36 @@ class TRRBTEditor {
             if (!result.ok) {
                 this.highlightProperty('prop_lhs', true);
                 this.highlightProperty('prop_rhs', true);
-                let reset_colors = () => {
+                let on_pattern_input = () => {
                     this.highlightProperty('prop_lhs', false);
                     this.highlightProperty('prop_rhs', false);
+                    this.validate(false);
                 }
-                document.getElementById('prop_lhs').oninput = reset_colors;
-                document.getElementById('prop_rhs').oninput = reset_colors;
+                document.getElementById('prop_lhs').oninput = on_pattern_input;
+                document.getElementById('prop_rhs').oninput = on_pattern_input;
                 alert_strs.push('Error saving ' + EDT_NODE_PROP_NAMES['lhs'].name + ' and ' + EDT_NODE_PROP_NAMES['rhs'].name + '.\n' + result.error);
             }
         }
 
-        if (alert_strs.length > 0) {
-            alert(alert_strs.join('\n\n'));
-            return;
-        }
-
-        let old_props = new Map();
-        for (let propid of new_props.keys()) {
-            if (EDT_NODE_PROP_NAMES[propid]) {
-                old_props.set(propid, node[propid]);
-            } else {
-                old_props.set(propid, this.game[propid]);
-            }
-        }
-
-        if (new_props.size == 0) {
-            // No changes to save.
-            return;
-        }
-
         let result = this.beforeSave(new_props);
         if (!result.ok) {
-            this.highlightProperty('prop_name', true);
-            alert('Error saving.\n' + result.error);
-            return;
+            if (document.getElementById('prop_name')){
+                this.highlightProperty('prop_name', true);
+            }
+            alert_strs.push('Error saving local game.\n' + result.error)
         }
 
+        if (do_alert && alert_strs.length > 0) {
+            alert(alert_strs.join('\n\n'));
+        }
+        return [old_props, new_props, alert_strs];
+    }
+
+    nodeSaveProperties() {
+        let [old_props, new_props, _] = this.validate(true);
+        if (new_props.size == 0) {
+            return;
+        }
         for (let [propid, value] of new_props.entries()) {
             if (EDT_NODE_PROP_NAMES[propid]) {
                 node[propid] = value;
@@ -1975,7 +1989,9 @@ class TRRBTEditor {
                 }
             }
 
-            this.updatePropertyEditor(this.mouseNode, false);
+            if (!this.updatePropertyEditor(this.mouseNode, false)) {
+                evt.stopImmediatePropagation();
+            }
             this.mouseClearProp = false;
         } else {
             if (isDouble) {
@@ -1997,7 +2013,9 @@ class TRRBTEditor {
         const mouseButton = evt.button;
 
         if (this.mouseClearProp) {
-            this.updatePropertyEditor(null, false);
+            if (!this.updatePropertyEditor(null, false)) {
+                evt.stopImmediatePropagation();
+            }
         }
 
         this.mousePan = null;
@@ -2116,7 +2134,6 @@ class TRRBTEditor {
 
         let pebbleHeight = 0;
         for (let pebble of pebbles) {
-            console.log(pebble)
             if (pebble != parent) {
                 pebbleHeight += pebble.offsetHeight;
             }
@@ -2124,8 +2141,6 @@ class TRRBTEditor {
         parent.style.outline = "1px solid blue"
         
         let targetHeight = grandparent.clientHeight - pebbleHeight;
-        console.log("total height: " + grandparent.clientHeight);
-        console.log("target: " + targetHeight);
 
         let targetWidth = grandparent.clientWidth;
         parent.style.height = targetHeight + "px";

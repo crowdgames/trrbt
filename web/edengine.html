@@ -23,6 +23,9 @@
           G_editor_u.importGame(gameSelected);
       }
       function beforeSave(newProps) {
+        if (newProps.size == 0) {
+            return { ok: true };
+        }
         if (newProps.has('name') && LOCAL_GAME_SETUPS[newProps.get('name')] 
         || isTemplate && !newProps.has('name') && LOCAL_GAME_SETUPS[G_editor_u.game['name']]) {
           let newName = G_editor_u.game['name'];
@@ -90,7 +93,6 @@
         }
       }
       function hideshow(id) {
-        console.log(id);
         btn = document.getElementById("hide-" + id);
         if (btn.innerHTML == "-") {
           btn.innerHTML = "+";
