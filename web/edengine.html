@@ -1,207 +1,215 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <script src="common.js"></script>
-    <script src="selector.js"></script>
-    <script src="editor.js"></script>
-    <script src="engine.js"></script>
-    <script src="games/games.js"></script>
-    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
-    <link rel="stylesheet" href="edengine.css">
-  </head>
-  <body>
-    <script>
-      var G_game_u = emptyGame();
-      var G_game_x = emptyGame();
-      var G_editor_u = new TRRBTEditor(G_game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv', beforeSave, afterSave, onTemplate, onDeleteGame);
-      var G_editor_x = new TRRBTEditor(G_game_x, SEL_getGameTree, 'editorxcanvas', null);
-      var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
-      var isTemplate = true;
-      function onSelectGame(gameSelected, selectedTemplate) {
-          if (G_editor_u.importGame(gameSelected)) {
-            isTemplate = selectedTemplate;
-          }
+
+<head>
+  <meta charset="UTF-8">
+  <script src="common.js"></script>
+  <script src="selector.js"></script>
+  <script src="editor.js"></script>
+  <script src="engine.js"></script>
+  <script src="games/games.js"></script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+  <link rel="stylesheet" href="edengine.css">
+</head>
+
+<body>
+  <script>
+    var G_game_u = emptyGame();
+    var G_game_x = emptyGame();
+    var G_editor_u = new TRRBTEditor(G_game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv', beforeSave, afterSave, onTemplate, onDeleteGame);
+    var G_editor_x = new TRRBTEditor(G_game_x, SEL_getGameTree, 'editorxcanvas', null);
+    var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
+    var isTemplate = true;
+    function onSelectGame(gameSelected, selectedTemplate) {
+      if (G_editor_u.importGame(gameSelected)) {
+        isTemplate = selectedTemplate;
       }
-      function beforeSave(newName) {
-        if (LOCAL_GAME_SETUPS[newName] 
+    }
+    function beforeSave(newName) {
+      if (LOCAL_GAME_SETUPS[newName]
         || isTemplate && newName == "" && LOCAL_GAME_SETUPS[G_editor_u.game['name']]) {
+        if (newName == "") {
           newName = G_editor_u.game['name'];
-          return { ok: false, error: "A local game already exists with name \"" + newName + "\""}
         }
-        return { ok: true }
+        return { ok: false, error: "A local game already exists with name \"" + newName + "\"" }
       }
-      function afterSave(oldProps) {
-        var game = emptyGame();
-        copyIntoGame(game, G_editor_u.game);
-        if (!isTemplate && oldProps.has('name')) {
-          if (LOCAL_GAME_SETUPS[oldProps.get('name')]) {
-            delete LOCAL_GAME_SETUPS[oldProps.get('name')];
-            SEL_removeLocal(oldProps.get('name'));
-          }
+      return { ok: true }
+    }
+    function afterSave(oldProps) {
+      var game = emptyGame();
+      copyIntoGame(game, G_editor_u.game);
+      if (!isTemplate && oldProps.has('name')) {
+        if (LOCAL_GAME_SETUPS[oldProps.get('name')]) {
+          delete LOCAL_GAME_SETUPS[oldProps.get('name')];
+          SEL_removeLocal(oldProps.get('name'));
         }
-        
-        SEL_upsert(game);
-        isTemplate = false;
       }
-      function onTemplate() {
-        var game = emptyGame();
-        copyIntoGame(game, G_editor_u.game);
-        let numCopies = 1;
-        name = game['name'];
-        while (LOCAL_GAME_SETUPS[game['name']]) {
-          game['name'] = name + " (" + numCopies++ + ")";
-        }
-        
-        SEL_upsert(game);
-        G_editor_u.importGame(game);
-        isTemplate = false;
-      }
-      function onDeleteGame() {
-        if (isTemplate) {
-          alert("Can't delete template game " + G_editor_u.game['name'] + ".");
-          return;
-        } 
-        SEL_removeLocal(G_editor_u.game['name'])
-        G_editor_u.importGame(emptyGame())
-      }
-      function onLoad() {
-          copyIntoGame(G_game_u, SEL_startingGame());
 
-          G_editor_u.xform_editor = G_editor_x;
+      SEL_upsert(game);
+      isTemplate = false;
+    }
+    function onTemplate() {
+      var game = emptyGame();
+      copyIntoGame(game, G_editor_u.game);
+      let numCopies = 1;
+      name = game['name'];
+      while (LOCAL_GAME_SETUPS[game['name']]) {
+        game['name'] = name + " (" + numCopies++ + ")";
+      }
 
-          G_editor_x.engine = G_engine;
-          G_engine.editor = G_editor_x;
+      SEL_upsert(game);
+      G_editor_u.importGame(game);
+      isTemplate = false;
+    }
+    function onDeleteGame() {
+      if (isTemplate) {
+        alert("Can't delete template game " + G_editor_u.game['name'] + ".");
+        return;
+      }
+      SEL_removeLocal(G_editor_u.game['name'])
+      G_editor_u.importGame(emptyGame())
+    }
+    function onLoad() {
+      copyIntoGame(G_game_u, SEL_startingGame());
 
-          G_engine.onLoad();
-          G_engine.stepManual = true;
-          G_editor_x.onLoad();
-          G_editor_u.onLoad();
+      G_editor_u.xform_editor = G_editor_x;
+
+      G_editor_x.engine = G_engine;
+      G_engine.editor = G_editor_x;
+
+      G_engine.onLoad();
+      G_engine.stepManual = true;
+      G_editor_x.onLoad();
+      G_editor_u.onLoad();
+    }
+    function moveCard(id, dir) {
+      telemetry("button-" + id + "-" + dir);
+      card = document.getElementById(id);
+      if (["left", "up"].includes(dir)) {
+        card.parentNode.insertBefore(card, card.previousElementSibling);
+      } else {
+        card.parentNode.insertBefore(card, card.nextElementSibling?.nextElementSibling);
       }
-      function moveCard(id, dir) {
-        telemetry("button-" + id + "-" + dir);
-        card = document.getElementById(id);
-        if (["left", "up"].includes(dir)) {
-          card.parentNode.insertBefore(card, card.previousElementSibling);
-        } else {
-          card.parentNode.insertBefore(card, card.nextElementSibling?.nextElementSibling);
-        }
+    }
+    function hideshow(id) {
+      btn = document.getElementById("hide-" + id);
+      if (btn.innerHTML == "-") {
+        btn.innerHTML = "+";
+      } else {
+        btn.innerHTML = "-";
       }
-      function hideshow(id) {
-        btn = document.getElementById("hide-" + id);
-        if (btn.innerHTML == "-") {
-          btn.innerHTML = "+";
-        } else {
-          btn.innerHTML = "-";
-        }
-        el = document.getElementById(id);
-        if (el.style.display == "none") {
-          el.style.display = "table-cell";
-        } else {
-          el.style.display = "none";
-        }
+      el = document.getElementById(id);
+      if (el.style.display == "none") {
+        el.style.display = "table-cell";
+      } else {
+        el.style.display = "none";
       }
-      window.addEventListener('load', onLoad, false);
-    </script>
-    <center>
-      <div id="toolbar">
-        <div id="selectordiv"></div>
-      </div>
-      <div id="editwindow">
-        <div class="card-group">
-          <div class="card-column" id="treecolumn">
-            <div class="card-bar">
-              <span class="card-title">Tree Views</span>
-              <div class="card-button-group" id="treecolumnbuttons">
-                <button class="card-button" onclick="moveCard('treecolumn', 'left')">⬅️</button>
-                <button class="card-button" onclick="moveCard('treecolumn', 'right')">➡️</button>
-              </div>
-            </div>
-            <div id="tree-card-group" class="card-group">
-              <div class="card" id="ucanvascard">
-                <div class="card-bar">
-                  <span class="card-title">Transformed Tree</span>
-                  <div class="card-button-group">
-                    <button class="card-button" onclick="moveCard('ucanvascard', 'up')">⬆️</button>
-                    <button class="card-button" onclick="moveCard('ucanvascard', 'down')">⬇️</button>
-                    <button id="hide-div-editorucanvas" class="card-button" onclick="hideshow('div-editorucanvas')">-</button>
-                  </div>
-                </div>
-                <div id="div-editorucanvas">
-                  <canvas id="editorucanvas" width="800px" height="350px">
-                    Browser does not support canvas.
-                  </canvas>
-                </div>
-              </div>
-              <div id="xcanvascard" class="card">
-                <div class="card-bar">
-                  <span class="card-title">Untransformed Tree</span>
-                  <div class="card-button-group">
-                    <button class="card-button" onclick="moveCard('xcanvascard', 'up')">⬆️</button>
-                    <button class="card-button" onclick="moveCard('xcanvascard', 'down')">⬇️</button>
-                    <button id="hide-div-editorxcanvas" class="card-button" onclick="hideshow('div-editorxcanvas')">-</button>
-                  </div>
-                </div>
-                <div id="div-editorxcanvas">
-                  <canvas id="editorxcanvas" width="800px" height="350px">
-                    Browser does not support canvas.
-                  </canvas>
-                </div>
-              </div>
+    }
+    window.addEventListener('load', onLoad, false);
+  </script>
+  <center>
+    <div id="toolbar">
+      <div id="selectordiv"></div>
+    </div>
+    <div id="editwindow">
+      <div class="card-group">
+        <div class="card-column" id="treecolumn">
+          <div class="card-bar">
+            <span class="card-title">Tree Views</span>
+            <div class="card-button-group" id="treecolumnbuttons">
+              <button class="card-button" onclick="moveCard('treecolumn', 'left')">⬅️</button>
+              <button class="card-button" onclick="moveCard('treecolumn', 'right')">➡️</button>
             </div>
           </div>
-          <div class="card-column" id="editorcolumn">
-            <div id="editorcard" class="card" style="width: 400px">
+          <div id="tree-card-group" class="card-group">
+            <div class="card" id="ucanvascard">
               <div class="card-bar">
-                <span class="card-title">Editor</span>
+                <span class="card-title">Transformed Tree</span>
                 <div class="card-button-group">
-                  <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
-                  <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
-                  <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button>
+                  <button class="card-button" onclick="moveCard('ucanvascard', 'up')">⬆️</button>
+                  <button class="card-button" onclick="moveCard('ucanvascard', 'down')">⬇️</button>
+                  <button id="hide-div-editorucanvas" class="card-button"
+                    onclick="hideshow('div-editorucanvas')">-</button>
                 </div>
               </div>
-              <div id="editorudiv"></div>
-            </div>
-          </div>
-          <div class="card-column" id="enginecolumn">
-            <div class="card-bar">
-              <span class="card-title">Engine</span>
-              <div class="card-button-group">
-                <button class="card-button" onclick="moveCard('enginecolumn', 'left')">⬅️</button>
-                <button class="card-button" onclick="moveCard('enginecolumn', 'right')">➡️</button>
+              <div id="div-editorucanvas">
+                <canvas id="editorucanvas" width="800px" height="350px">
+                  Browser does not support canvas.
+                </canvas>
               </div>
             </div>
-            <div id="engine-card-group" class="card-group">
-              <div id="enginecanvascard" class="card">
-                <div class="card-bar">
-                  <span class="card-title">Game</span>
-                  <div class="card-button-group">
-                    <button class="card-button" onclick="moveCard('enginecanvascard', 'up')">⬆️</button>
-                    <button class="card-button" onclick="moveCard('enginecanvascard', 'down')">⬇️</button>
-                    <button id="hide-div-enginecanvas" class="card-button" onclick="hideshow('div-enginecanvas')">-</button>
-                  </div>
+            <div id="xcanvascard" class="card">
+              <div class="card-bar">
+                <span class="card-title">Untransformed Tree</span>
+                <div class="card-button-group">
+                  <button class="card-button" onclick="moveCard('xcanvascard', 'up')">⬆️</button>
+                  <button class="card-button" onclick="moveCard('xcanvascard', 'down')">⬇️</button>
+                  <button id="hide-div-editorxcanvas" class="card-button"
+                    onclick="hideshow('div-editorxcanvas')">-</button>
                 </div>
-                <div id="div-enginecanvas">
-                  <canvas id="enginecanvas" width="600px" height="600px" tabindex="5">
-                    Browser does not support canvas.
-                  </canvas>
-                </div>
-              </div>        
-              <div id="enginecontrolscard" class="card">
-                <div class="card-bar">
-                  <span class="card-title">Controls</span>
-                  <div class="card-button-group">
-                    <button class="card-button" onclick="moveCard('enginecontrolscard', 'up')">⬆️</button>
-                    <button class="card-button" onclick="moveCard('enginecontrolscard', 'down')">⬇️</button>
-                    <button id="hide-enginediv" class="card-button" onclick="hideshow('enginediv')">-</button>
-                  </div>
-                </div>
-                <div id="enginediv"></div>
+              </div>
+              <div id="div-editorxcanvas">
+                <canvas id="editorxcanvas" width="800px" height="350px">
+                  Browser does not support canvas.
+                </canvas>
               </div>
             </div>
           </div>
         </div>
+        <div class="card-column" id="editorcolumn">
+          <div id="editorcard" class="card" style="width: 400px">
+            <div class="card-bar">
+              <span class="card-title">Editor</span>
+              <div class="card-button-group">
+                <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
+                <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
+                <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button>
+              </div>
+            </div>
+            <div id="editorudiv"></div>
+          </div>
+        </div>
+        <div class="card-column" id="enginecolumn">
+          <div class="card-bar">
+            <span class="card-title">Engine</span>
+            <div class="card-button-group">
+              <button class="card-button" onclick="moveCard('enginecolumn', 'left')">⬅️</button>
+              <button class="card-button" onclick="moveCard('enginecolumn', 'right')">➡️</button>
+            </div>
+          </div>
+          <div id="engine-card-group" class="card-group">
+            <div id="enginecanvascard" class="card">
+              <div class="card-bar">
+                <span class="card-title">Game</span>
+                <div class="card-button-group">
+                  <button class="card-button" onclick="moveCard('enginecanvascard', 'up')">⬆️</button>
+                  <button class="card-button" onclick="moveCard('enginecanvascard', 'down')">⬇️</button>
+                  <button id="hide-div-enginecanvas" class="card-button"
+                    onclick="hideshow('div-enginecanvas')">-</button>
+                </div>
+              </div>
+              <div id="div-enginecanvas">
+                <canvas id="enginecanvas" width="600px" height="600px" tabindex="5">
+                  Browser does not support canvas.
+                </canvas>
+              </div>
+            </div>
+            <div id="enginecontrolscard" class="card">
+              <div class="card-bar">
+                <span class="card-title">Controls</span>
+                <div class="card-button-group">
+                  <button class="card-button" onclick="moveCard('enginecontrolscard', 'up')">⬆️</button>
+                  <button class="card-button" onclick="moveCard('enginecontrolscard', 'down')">⬇️</button>
+                  <button id="hide-enginediv" class="card-button" onclick="hideshow('enginediv')">-</button>
+                </div>
+              </div>
+              <div id="enginediv"></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </center>
-  </body>
+    </div>
+  </center>
+</body>
+
 </html>

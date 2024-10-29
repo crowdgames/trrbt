@@ -1656,8 +1656,8 @@ class TRRBTEditor {
                     let new_value = result.value;
                     let old_value = EDT_NODE_PROP_NAMES[propid] ? node[propid] : this.game[propid]
 
-                    if (new_value != old_value) {
-                        new_props.set(propid, result.value);
+                    if (JSON.stringify(new_value) != JSON.stringify(old_value)) {
+                        new_props.set(propid, new_value);
                         old_props.set(propid, old_value)
                     }
                 }
@@ -1712,6 +1712,7 @@ class TRRBTEditor {
 
     nodeSaveProperties(do_alert = true) {
         let [old_props, new_props, alert_strs] = this.validateProperties();
+        let node = this.propertyNodes?.node;
 
         if (do_alert && alert_strs.length > 0) {
             this.displayAlert(alert_strs);
@@ -1736,9 +1737,9 @@ class TRRBTEditor {
         if (alert_strs.length > 0) {
             let joined_alerts = alert_strs.join('\n\n');
             if (doConfirm) {
-                confirm("The following errors were found when attempting to save: " + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
+                return confirm("The following errors were found when attempting to save: " + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
             } else {
-                alert();
+                alert("The following errors were found when attempting to save: " + joined_alerts);
             }
         }
     }
