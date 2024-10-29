@@ -35,7 +35,7 @@
       }
       return { ok: true }
     }
-    function afterSave(oldProps) {
+    function afterSave(oldProps = new Map()) {
       var game = emptyGame();
       copyIntoGame(game, G_editor_u.game);
       if (!isTemplate && oldProps.has('name')) {

@@ -1391,6 +1391,16 @@ class TRRBTEditor {
             return;
         }
 
+        if (!force) {
+            let alert_strs = this.nodeSaveProperties(false);
+            if (alert_strs.length > 0) {
+                console.log("update property editor error...")
+                if (!this.displayAlert(alert_strs, true)) {
+                    return;
+                }
+            }
+        }
+
         const ed = this.propertyEditor;
 
         ed.innerHTML = '';
@@ -2049,12 +2059,6 @@ class TRRBTEditor {
         this.mouseClearProp = true;
 
         if (this.mouseNode !== null) {
-            let alert_strs = this.nodeSaveProperties(false);
-            if (alert_strs.length > 0) {
-                if (!this.displayAlert(alert_strs, true)) {
-                    return;
-                }
-            }
             if (this.propertyEditor === null || (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node)) {
                 if (isDouble) {
                     this.collapseNodes(this.mouseNode, true, this.collapsedNodes.has(this.mouseNode.dispid));
@@ -2084,12 +2088,6 @@ class TRRBTEditor {
     }
 
     onMouseUp(evt) {
-        let alert_strs = this.nodeSaveProperties(false);
-        if (alert_strs.length > 0) {
-            if (!this.displayAlert(alert_strs, true)) {
-                return;
-            }
-        }
         const mouseButton = evt.button;
 
         if (this.mouseClearProp) {
