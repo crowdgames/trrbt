@@ -190,8 +190,6 @@ class TRRBTEditor {
 
         this.undoStack.push(state);
         this.undoStackPos = this.undoStack.length - 1;
-
-        //console.log('push <-', this.undoStackPos, this.undoStack.length, this.undoStack);
     }
 
     undoUndo() {
@@ -212,7 +210,8 @@ class TRRBTEditor {
             this.updateTreeStructureAndDraw(true, true);
             this.updatePropertyEditor(this.mouseNode);
 
-            //console.log('undo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
+            this.afterSave();
+            telemetry('undo');
         }
     }
 
@@ -234,7 +233,8 @@ class TRRBTEditor {
             this.updateTreeStructureAndDraw(true, true);
             this.updatePropertyEditor(this.mouseNode);
 
-            //console.log('redo <-', this.undoStackPos, this.undoStack.length, this.undoStack);
+            this.afterSave();
+            telemetry('redo');
         }
     }
 
@@ -661,13 +661,6 @@ class TRRBTEditor {
                 }
                 patterns.push(node.rhs);
             }
-            /*
-            const mainIndex = layers.indexOf('main');
-            if (mainIndex > 0) {
-                layers.splice(mainIndex, 1);
-                layers.unshift('main');
-            }
-            */
 
             const tileSize = getTileSize(patterns);
 
@@ -715,9 +708,6 @@ class TRRBTEditor {
                 nh += EDT_FONT_LINE_SIZE;
             }
         }
-
-        //nw = Math.max(nw, 40);
-        //nh = Math.max(nh, 40);
 
         if (align !== null) {
             if (this.layout_horizontal) {
@@ -1144,7 +1134,7 @@ class TRRBTEditor {
         input.value = value;
         input.oninput = () => {
             this.highlightProperty(id);
-            this.validate(false);
+            this.validateProperties();
         }
         input.onchange = () => {
             telemetry("text-" + name + "-set-" + input.value);
@@ -1190,9 +1180,9 @@ class TRRBTEditor {
         input.name = id;
         input.type = 'checkbox';
         input.checked = value;
-        input.onclick = () => { 
-            telemetry("check-" + id + "-set-" + value); 
-            this.highlightProperty(id, false); 
+        input.onclick = () => {
+            telemetry("check-" + id + "-set-" + value);
+            this.highlightProperty(id, false);
             this.nodeSaveProperties();
         };
 
@@ -1236,9 +1226,9 @@ class TRRBTEditor {
             input.type = 'radio';
             input.value = choice_value;
             input.checked = (choice_value === value);
-            input.onclick = () => { 
+            input.onclick = () => {
                 telemetry("choice-" + name + "-choose-" + choice_text)
-                this.highlightProperty(id, false); 
+                this.highlightProperty(id, false);
                 this.nodeSaveProperties();
             };
 
@@ -1319,7 +1309,7 @@ class TRRBTEditor {
 
         input.oninput = () => {
             this.highlightProperty(id, false);
-            this.validate(false);
+            this.validateProperties();
         }
         input.onchange = () => {
             this.nodeSaveProperties();
@@ -1401,15 +1391,6 @@ class TRRBTEditor {
             return;
         }
 
-        let changeNode = true;
-        let [_, __, alert_strs] = this.validate(false);
-        if (alert_strs.length > 0) {
-            changeNode = confirm("The following errors were found when attempting to save: " + alert_strs.join('\n\n') + "\nClick cancel to continue editing, or OK to continue without saving.");
-        }
-
-        if (!changeNode) {
-            return false;
-        }
         const ed = this.propertyEditor;
 
         ed.innerHTML = '';
@@ -1628,25 +1609,26 @@ class TRRBTEditor {
         return true;
     }
 
-    validate(do_alert) {
+    validateProperties() {
         const SAVE_PROPS =
-        [
-            ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-            ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-            ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-            ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-            ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-            ['withs', bind0(this, 'parseListProperty'), false],
-            ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-            ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-            ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-            ['rhs', bind0(this, 'parsePatternProperty'), undefined]];
+            [
+                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['withs', bind0(this, 'parseListProperty'), false],
+                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                ['rhs', bind0(this, 'parsePatternProperty'), undefined]
+            ];
 
         let node = this.propertyNodes?.node;
 
@@ -1657,7 +1639,7 @@ class TRRBTEditor {
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             let full_id = 'prop_' + propid
             if ((EDT_GAME_PROP_NAMES[propid]
-                    || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid))) 
+                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
                 && document.getElementById(full_id)
             ) {
                 let result = propfn('prop_' + propid, proparg);
@@ -1690,7 +1672,7 @@ class TRRBTEditor {
                 let on_pattern_input = () => {
                     this.highlightProperty('prop_lhs', false);
                     this.highlightProperty('prop_rhs', false);
-                    this.validate(false);
+                    this.validateProperties();
                 }
                 document.getElementById('prop_lhs').oninput = on_pattern_input;
                 document.getElementById('prop_rhs').oninput = on_pattern_input;
@@ -1698,24 +1680,45 @@ class TRRBTEditor {
             }
         }
 
-        let result = this.beforeSave(new_props);
+        if (new_props.size > 0) {
+            let new_name = ""
+            if (new_props.has('name')) {
+                new_name = new_props.get('name')
+            }
+            let game_alerts = this.validateGame(new_name);
+            if (game_alerts.length > 0) {
+                for (let [propid] of new_props) {
+                    this.highlightProperty('prop_' + propid, true);
+                }
+                new_props = new Map()
+                alert_strs.push(...game_alerts)
+            }
+        }
+
+        return [old_props, new_props, alert_strs];
+    }
+
+    validateGame(new_name) {
+        let alert_strs = [];
+        let result = this.beforeSave(new_name);
         if (!result.ok) {
-            if (document.getElementById('prop_name')){
+            if (document.getElementById('prop_name')) {
                 this.highlightProperty('prop_name', true);
             }
             alert_strs.push('Error saving local game.\n' + result.error)
         }
-
-        if (do_alert && alert_strs.length > 0) {
-            alert(alert_strs.join('\n\n'));
-        }
-        return [old_props, new_props, alert_strs];
+        return alert_strs;
     }
 
-    nodeSaveProperties() {
-        let [old_props, new_props, _] = this.validate(true);
+    nodeSaveProperties(do_alert = true) {
+        let [old_props, new_props, alert_strs] = this.validateProperties();
+
+        if (do_alert && alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+        }
+
         if (new_props.size == 0) {
-            return;
+            return alert_strs;
         }
         for (let [propid, value] of new_props.entries()) {
             if (EDT_NODE_PROP_NAMES[propid]) {
@@ -1726,6 +1729,18 @@ class TRRBTEditor {
         }
         this.afterSave(old_props);
         this.updateTreeStructureAndDraw(false, false);
+        return alert_strs
+    }
+
+    displayAlert(alert_strs, doConfirm) {
+        if (alert_strs.length > 0) {
+            let joined_alerts = alert_strs.join('\n\n');
+            if (doConfirm) {
+                confirm("The following errors were found when attempting to save: " + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
+            } else {
+                alert();
+            }
+        }
     }
 
     findNodeParent(from, node) {
@@ -1744,6 +1759,12 @@ class TRRBTEditor {
     }
 
     onNodeCopy(cut) {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
+
         let node = this.propertyNodes.node;
 
         this.clipboard = deepcopyobj(node);
@@ -1757,6 +1778,11 @@ class TRRBTEditor {
     }
 
     onNodePaste() {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
 
         if (this.clipboard !== null) {
@@ -1766,6 +1792,11 @@ class TRRBTEditor {
     }
 
     onNodeDelete(reparentChildren) {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
         let parent = this.propertyNodes.parent;
 
@@ -1784,6 +1815,11 @@ class TRRBTEditor {
     }
 
     onNodeDeleteChildren() {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
 
         node.children = [];
@@ -1807,6 +1843,11 @@ class TRRBTEditor {
     }
 
     onNodeAddChild(type, where) {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
 
         let new_node = deepcopyobj(this.getNodePrototype(type));
@@ -1822,6 +1863,11 @@ class TRRBTEditor {
     }
 
     onNodeAddParent(type) {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
         let parent = this.propertyNodes.parent;
 
@@ -1839,6 +1885,11 @@ class TRRBTEditor {
     }
 
     onNodeShift(earlier) {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
         let parent = this.propertyNodes.parent;
 
@@ -1859,6 +1910,11 @@ class TRRBTEditor {
     }
 
     onNodeSwapUp() {
+        let alert_strs = this.validateGame("");
+        if (alert_strs.length > 0) {
+            this.displayAlert(alert_strs);
+            return false;
+        }
         let node = this.propertyNodes.node;
         let parent = this.propertyNodes.parent;
 
@@ -1912,6 +1968,12 @@ class TRRBTEditor {
     }
 
     importGame(game) {
+        let alert_strs = this.nodeSaveProperties(false);
+        if (alert_strs.length > 0) {
+            if (!this.displayAlert(alert_strs, true)) {
+                return false;
+            }
+        }
         copyIntoGame(this.game, game);
 
         this.mousePan = null;
@@ -1928,9 +1990,16 @@ class TRRBTEditor {
         if (this.xform_editor !== null) {
             this.xform_editor.resetXform();
         }
+        return true;
     }
 
     onImport() {
+        let alert_strs = this.nodeSaveProperties(false);
+        if (alert_strs.length > 0) {
+            if (!this.displayAlert(alert_strs, true)) {
+                return;
+            }
+        }
         if (!navigator.clipboard) {
             alert('ERROR: Cannot find clipboard.');
         } else {
@@ -1979,6 +2048,12 @@ class TRRBTEditor {
         this.mouseClearProp = true;
 
         if (this.mouseNode !== null) {
+            let alert_strs = this.nodeSaveProperties(false);
+            if (alert_strs.length > 0) {
+                if (!this.displayAlert(alert_strs, true)) {
+                    return;
+                }
+            }
             if (this.propertyEditor === null || (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node)) {
                 if (isDouble) {
                     this.collapseNodes(this.mouseNode, true, this.collapsedNodes.has(this.mouseNode.dispid));
@@ -1989,9 +2064,7 @@ class TRRBTEditor {
                 }
             }
 
-            if (!this.updatePropertyEditor(this.mouseNode, false)) {
-                evt.stopImmediatePropagation();
-            }
+            this.updatePropertyEditor(this.mouseNode, false)
             this.mouseClearProp = false;
         } else {
             if (isDouble) {
@@ -2010,12 +2083,16 @@ class TRRBTEditor {
     }
 
     onMouseUp(evt) {
+        let alert_strs = this.nodeSaveProperties(false);
+        if (alert_strs.length > 0) {
+            if (!this.displayAlert(alert_strs, true)) {
+                return;
+            }
+        }
         const mouseButton = evt.button;
 
         if (this.mouseClearProp) {
-            if (!this.updatePropertyEditor(null, false)) {
-                evt.stopImmediatePropagation();
-            }
+            this.updatePropertyEditor(null, false);
         }
 
         this.mousePan = null;
@@ -2139,7 +2216,7 @@ class TRRBTEditor {
             }
         }
         parent.style.outline = "1px solid blue"
-        
+
         let targetHeight = grandparent.clientHeight - pebbleHeight;
 
         let targetWidth = grandparent.clientWidth;
