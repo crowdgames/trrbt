@@ -19,19 +19,14 @@
       var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
       var isTemplate = true;
       function onSelectGame(gameSelected, selectedTemplate) {
-          isTemplate = selectedTemplate;
-          G_editor_u.importGame(gameSelected);
-      }
-      function beforeSave(newProps) {
-        if (newProps.size == 0) {
-            return { ok: true };
-        }
-        if (newProps.has('name') && LOCAL_GAME_SETUPS[newProps.get('name')] 
-        || isTemplate && !newProps.has('name') && LOCAL_GAME_SETUPS[G_editor_u.game['name']]) {
-          let newName = G_editor_u.game['name'];
-          if (newProps.has('name')) {
-            newName = newProps.get('name');
+          if (G_editor_u.importGame(gameSelected)) {
+            isTemplate = selectedTemplate;
           }
+      }
+      function beforeSave(newName) {
+        if (LOCAL_GAME_SETUPS[newName] 
+        || isTemplate && newName == "" && LOCAL_GAME_SETUPS[G_editor_u.game['name']]) {
+          newName = G_editor_u.game['name'];
           return { ok: false, error: "A local game already exists with name \"" + newName + "\""}
         }
         return { ok: true }
