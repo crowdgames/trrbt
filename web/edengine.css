@@ -9,7 +9,7 @@
     overflow: auto;
 }
 
-.card-group > * {
+.card-group>* {
     margin: 5px;
 }
 
@@ -24,4 +24,12 @@
 
 #editwindow {
     display: table-row;
+}
+
+#toolbar {
+    text-align: center;
+}
+
+#toolbar>* {
+    display: inline-block;
 }

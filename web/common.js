@@ -8,6 +8,10 @@ const TAU = 2 * Math.PI;
 const SEGMENTER = new Intl.Segmenter();
 
 var TELEMETRY_DATA = JSON.parse(localStorage.getItem("TELEMETRY_DATA")) || [];
+const TELEMETRY_SESSION = TELEMETRY_DATA.length
+TELEMETRY_DATA.push([]);
+const START_TIME = Date.now();
+telemetry("newSession");
 
 let G_nextId = 0;
 
@@ -116,8 +120,9 @@ function appendButton(parent, id, text, tooltip, color, callback) {
 }
 
 function telemetry(action) {
-    console.log(action);
-    TELEMETRY_DATA.push({"action": action, "time": Date()});
+    let elapsed = Date.now() - START_TIME;
+    console.log(action + " at " + elapsed);
+    TELEMETRY_DATA[TELEMETRY_SESSION].push({"action": action, "time": elapsed});
     localStorage.setItem("TELEMETRY_DATA", JSON.stringify(TELEMETRY_DATA));
 }
 

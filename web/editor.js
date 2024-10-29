@@ -1746,6 +1746,7 @@ class TRRBTEditor {
     displayAlert(alert_strs, doConfirm) {
         if (alert_strs.length > 0) {
             let joined_alerts = alert_strs.join('\n\n');
+            telemetry("alert-" + joined_alerts);
             if (doConfirm) {
                 return confirm("The following errors were found when attempting to save: " + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
             } else {

@@ -105,11 +105,32 @@
         el.style.display = "none";
       }
     }
+    function exportStudyData() {
+      telemetryData = JSON.parse(localStorage.getItem("TELEMETRY_DATA"));
+      gameData = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS"));
+      data = {
+        "telemetryData": telemetryData,
+        "gameData": gameData,
+      };
+      stringData = JSON.stringify(data);
+
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(stringData));
+      element.setAttribute('download', 'studyData.json');
+
+      element.style.display = 'none';
+      document.body.appendChild(element);
+
+      element.click();
+
+      document.body.removeChild(element);
+    }
     window.addEventListener('load', onLoad, false);
   </script>
   <center>
     <div id="toolbar">
       <div id="selectordiv"></div>
+      <div><button onclick="exportStudyData()">Export Study Data</button></div>
     </div>
     <div id="editwindow">
       <div class="card-group">

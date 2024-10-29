@@ -5,10 +5,10 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 const ENG_LOOP_CHECK_MAX = 100000;
 
-const ENG_CELL_SIZE_MIN     =  15;
-const ENG_CELL_SIZE_MAX     =  60;
-const ENG_CELL_SIZE_DEFAULT =  50;
-const ENG_CELL_SIZE_STEP    =   5;
+const ENG_CELL_SIZE_MIN = 15;
+const ENG_CELL_SIZE_MAX = 60;
+const ENG_CELL_SIZE_DEFAULT = 50;
+const ENG_CELL_SIZE_STEP = 5;
 
 
 
@@ -116,7 +116,7 @@ class TRRBTStepper {
 
         while (this.stepReady(tree, state)) {
             this.step(tree, state, stepout);
-            ++ stepped;
+            ++stepped;
         }
 
         return stepped;
@@ -188,7 +188,7 @@ class TRRBTStepper {
 
     stepNodeOrder(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-                               ['index', 0]]);
+        ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
 
@@ -201,8 +201,8 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-                               ['anyThisLoop', false],
-                               ['index', 0]]);
+        ['anyThisLoop', false],
+        ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
         this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
@@ -221,8 +221,8 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(state, frame, lastResult) {
         this.localInit(frame, [['any', false],
-                               ['times', 0],
-                               ['index', 0]]);
+        ['times', 0],
+        ['index', 0]]);
 
         this.localSetIfTrue(frame, 'any', lastResult);
 
@@ -709,7 +709,7 @@ class TRRBTEngine {
 
         while (this.stepReady()) {
             this.step();
-            ++ stepped;
+            ++stepped;
         }
 
         return stepped;
@@ -874,7 +874,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 }
                 return image_reader.read().then(process);
             } else {
-                this_engine.spriteArrays[image_name] = { array:image_read_array, size:image_info.size };
+                this_engine.spriteArrays[image_name] = { array: image_read_array, size: image_info.size };
                 this_engine.resizeSpriteImage(image_name);
             }
         });
@@ -955,12 +955,12 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendBr(ed);
 
         appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
-        appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
+        // appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
         appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
         appendBr(ed);
 
         appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
-        appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
+        // appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
         appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
     }
@@ -1033,7 +1033,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
-        const TEXT_YOFFSET  = 0.05;
+        const TEXT_YOFFSET = 0.05;
         const EMOJI_YOFFSET = 0.17;
 
         for (let rr = 0; rr < this.state.rows; rr += 1) {
