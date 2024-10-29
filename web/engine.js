@@ -914,7 +914,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         appendText(ed, 'Engine', true, true);
         appendText(ed, ' ');
-        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendText(ed, '(Hover for additional info. Click the board or use the arrow keys to play the game.)', false, false, true);
         appendBr(ed, true);
 
         appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));

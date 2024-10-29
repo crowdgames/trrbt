@@ -3,6 +3,18 @@ window.addEventListener('load', SEL_onLoad, false);
 var GAME_SETUPS = {}
 var LOCAL_GAME_SETUPS = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS")) || {};
 
+const TEMPLATES = [
+    'connect four',
+    'conway',
+    'dungeon',
+    'dungeon_chase',
+    'dungeon_patrol',
+    'lights out',
+    'soko-emoji',
+    'soko_enemy-emoji-incomplete',
+    'sweeper',
+]
+
 function SEL_onLoad() {
     let div = document.getElementById('selectordiv');
 
@@ -43,7 +55,7 @@ function setOptions(select) {
         SEL_addOption(game + " (local)", game, ['local']);
     }
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
-        if (game != "NEW") {
+        if (TEMPLATES.includes(game)) {
             SEL_addOption(game, game);
         }
     }

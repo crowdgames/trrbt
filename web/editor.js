@@ -328,8 +328,6 @@ class TRRBTEditor {
         this.canvas.addEventListener('keydown', bind0(this, 'onKeyDown'));
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
 
-        this.canvas.parentElement.style.width = this.canvas.width + "px";
-        this.canvas.parentElement.style.height = this.canvas.height + "px";
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
         this.updateTreeStructure(false);
@@ -1407,7 +1405,7 @@ class TRRBTEditor {
 
         appendText(ed, 'Editor', true, true);
         appendText(ed, ' ');
-        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendText(ed, '(Hover for additional info.)', false, false, true);
         appendBr(ed, true);
 
         appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
