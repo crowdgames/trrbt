@@ -116,9 +116,9 @@ function appendButton(parent, id, text, tooltip, color, callback) {
 }
 
 function telemetry(action) {
-    console.log(action);
-    TELEMETRY_DATA.push({"action": action, "time": Date()});
-    localStorage.setItem("TELEMETRY_DATA", JSON.stringify(TELEMETRY_DATA));
+    // console.log(action);
+    // TELEMETRY_DATA.push({"action": action, "time": Date()});
+    // localStorage.setItem("TELEMETRY_DATA", JSON.stringify(TELEMETRY_DATA));
 }
 
 function appendBr(parent, extraSpace=false) {
