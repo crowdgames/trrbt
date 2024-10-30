@@ -110,7 +110,7 @@ const EDT_NODE_PROP_NAMES = {
     what: { name: 'what', help: 'Character to be swapped/replaced.' },
     with: { name: 'with', help: 'Other character to use.' },
     withs: { name: 'withs', help: 'Space-separated other characters to use.' },
-    button: { name: 'button', help: 'Button to press to apply rewrite.' },
+    button: { name: 'button', help: 'Button to press to apply rewrite. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
     lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
     rhs: { name: 'RIGHT', help: 'Right hand side tile pattern of a rewrite rule.' }
