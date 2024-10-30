@@ -948,21 +948,23 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendText(ed, ' ');
         this.breakResumeText = document.createElement('span');
         this.breakResumeText.style.color = '#fc5d5d';
-        this.breakResumeText.innerHTML = 'In step mode (resume or restart).';
-        this.breakResumeText.title = 'Click Next Code Step / Undo Code Step to follow the transformed code tree through gameplay. Resume or restart to play as normal.';
+        this.breakResumeText.innerHTML = 'Click Next / Undo Tree Step to progress, or Resume to execute without stepping.';
+        this.breakResumeText.title = 'Click Next Tree Step / Undo Tree Step to follow the transformed tree through gameplay. Resume or restart to play as normal.';
         this.breakResumeText.style.display = 'none';
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
         // appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last player choice or display.', null, bind1(this, 'onUndo', 'move'));
         appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
-        appendButton(ed, 'engine-undo-step', 'Undo Code Step', 'Undo a single step (Step Mode).', null, bind1(this, 'onUndo', 'step'));
+        appendButton(ed, 'engine-undo-step', 'Undo Tree Step', 'Undo a single step in the transformed tree (Step Mode).', null, bind1(this, 'onUndo', 'step'));
         appendBr(ed);
 
         // appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next player choice or display.', null, bind1(this, 'onNext', 'move'));
         appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
-        appendButton(ed, 'engine-next-step', 'Next Code Step', 'Run a single step (Step Mode).', null, bind1(this, 'onNext', 'step'));
+        appendButton(ed, 'engine-next-step', 'Next Tree Step', 'Run a single step in the transformed tree(Step Mode).', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
+
+        this.updateStepManual(true, true);
     }
 
     resizeCanvas() {
@@ -1255,11 +1257,11 @@ class TRRBTWebEngine extends TRRBTEngine {
         }
     }
 
-    updateStepManual(setting) {
+    updateStepManual(setting, force = false) {
         let breakBtn = document.getElementById("button-engine-breakresume");
         let undoStepBtn = document.getElementById("button-engine-undo-step");
         let nextStepBtn = document.getElementById("button-engine-next-step");
-        if (setting != this.stepManual) {
+        if (force || setting != this.stepManual) {
             this.stepManual = setting;
             if (this.breakResumeText !== null) {
                 if (this.stepManual) {

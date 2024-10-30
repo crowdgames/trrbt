@@ -28,14 +28,14 @@ const EDT_NODE_PROTOTYPES = [
 
     { type: 'win', comment: '', nid: '', children: [], pid: '' },
     { type: 'lose', comment: '', nid: '', children: [], pid: '' },
-    { type: 'draw', comment: '', nid: '', children: [] },
+    { type: 'draw', friendly: 'tie', comment: '', nid: '', children: [] },
 
     { type: 'order', comment: '', nid: '', children: [] },
     { type: 'all', comment: '', nid: '', children: [] },
     { type: 'none', comment: '', nid: '', children: [] },
     { type: 'random-try', comment: '', nid: '', children: [] },
-    { type: 'loop-until-all', comment: '', nid: '', children: [] },
-    { type: 'loop-times', comment: '', nid: '', children: [], times: 1 },
+    { type: 'loop-until-all', friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
+    { type: 'loop-times', friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
 
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
@@ -45,20 +45,20 @@ const EDT_NODE_PROTOTYPES = [
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type: 'x-ident', comment: '', nid: '', children: [] },
-    { type: 'x-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-skew', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-rotate', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-spin', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-flip', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-swap', comment: '', nid: '', children: [], what: '', with: '' },
-    { type: 'x-replace', comment: '', nid: '', children: [], what: '', withs: [] },
-    { type: 'x-prune', comment: '', nid: '', children: [] },
-    { type: 'x-link', comment: '', nid: '', target: '' },
+    { type: 'x-ident', friendly: 'group-only', comment: '', nid: '', children: [] },
+    { type: 'x-mirror', friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-skew', friendly: 'col-skew', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-rotate', comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
+    { type: 'x-spin', comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
+    { type: 'x-flip', friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-swap', comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
+    { type: 'x-replace', comment: '', friendly: 'replace-chars', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-prune', comment: '', friendly: 'delete', nid: '', children: [] },
+    { type: 'x-link', comment: '', friendly: 'copy-subtree', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
-    'player': { color: [0, 0, 1], help: 'If any LHS of any child matches, given player can choose which RHS rewrite to apply. Succeeds if there were any matches, otherwise, fails.' },
+    'player': { color: [0, 0, 1], help: 'If any LEFT of any child matches, given player can choose which RIGHT rewrite to apply. Succeeds if there were any matches, otherwise, fails.' },
 
     'win': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
     'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
@@ -71,7 +71,7 @@ const EDT_NODE_HELP = {
     'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.' },
     'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.' },
 
-    'rewrite': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'rewrite': { color: [0, 1, 0], help: 'If there are any LEFT pattern matches, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
     'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
     'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
     'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
@@ -112,8 +112,8 @@ const EDT_NODE_PROP_NAMES = {
     withs: { name: 'withs', help: 'Space-separated other characters to use.' },
     button: { name: 'button', help: 'Button to press to apply rewrite.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
-    lhs: { name: 'LHS', help: 'Left hand side tile pattern of a rewrite rule.' },
-    rhs: { name: 'RHS', help: 'Right hand side tile pattern of a rewrite rule.' }
+    lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
+    rhs: { name: 'RIGHT', help: 'Right hand side tile pattern of a rewrite rule.' }
 };
 
 const EDT_GAME_PROP_NAMES = {
@@ -175,6 +175,8 @@ class TRRBTEditor {
         this.drawRequested = false;
 
         this.xform_editor = null;
+
+        this.confirmedAlerts = "";
     }
 
     undoPush() {
@@ -548,9 +550,11 @@ class TRRBTEditor {
 
     updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
         let texts = [];
+        const proto = this.getNodePrototype(node.type);
+        const node_friendly_name = proto?.friendly || node.type;
         texts.push({ type: EDT_TEXT_FONT, data: 'bold 10px sans-serif' });
         texts.push({ type: EDT_TEXT_COLOR, data: '#222222' });
-        texts.push({ type: EDT_TEXT_LINE, data: node.type });
+        texts.push({ type: EDT_TEXT_LINE, data: node_friendly_name });
         texts.push({ type: EDT_TEXT_FONT, data: '10px sans-serif' });
 
         //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
@@ -1151,11 +1155,11 @@ class TRRBTEditor {
         value = value.trim();
         if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
             if (value.match(/\s+/) !== null) {
-                return { ok: false, error: 'Cannot have spaces' };
+                return { ok: false, error: 'Cannot have spaces', value: value };
             } else if (how === EDT_PARSE_TEXT_INT && value != '') {
                 const asInt = parseInt(value, 10);
                 if (isNaN(asInt) || asInt < 1 || asInt > 100) {
-                    return { ok: false, error: 'Must be an integer between 1 and 100' };
+                    return { ok: false, error: 'Must be an integer between 1 and 100', value: value };
                 }
                 return { ok: true, value: asInt };
             }
@@ -1271,7 +1275,7 @@ class TRRBTEditor {
         return { ok: true, value: value.split(/\s+/) };
     }
 
-    appendPatternProperty(parent, id, name, help, value, tileSize) {
+    appendPatternProperty(parent, id, name, help, value, tileSize, minRows = 0, minCols = 0) {
         let rows = 0;
         let cols = 0;
         let text = '';
@@ -1293,6 +1297,9 @@ class TRRBTEditor {
                 cols = Math.max(cols, graphemeLength(row_text));
             }
         }
+
+        cols = Math.max(minCols, cols);
+        rows = Math.max(minRows, rows);
 
         const item = document.createElement('li');
         const label = document.createElement('label');
@@ -1346,28 +1353,69 @@ class TRRBTEditor {
     }
 
     checkPatterns(patterns) {
-        let rows = null;
-        let cols = null;
+        let overallErrMsg = "Patterns must be the same size.";
+        let patternErrMsg = "Layers must be the same size.";
+        let layerErrMsg = "Rows must be the same length."
 
+        let overallErr = false;
+        let patternErr = false;
+        let layerErr = false;
+
+        let overallRows = null;
+        let overallCols = null;
         for (const pattern of patterns) {
+            let patternRows = null;
+            let patternCols = null;
             for (const layer of Object.getOwnPropertyNames(pattern)) {
-                if (rows === null) {
-                    rows = pattern[layer].length;
+                if (overallRows === null) {
+                    overallRows = pattern[layer].length;
                 }
-                if (rows !== pattern[layer].length) {
-                    return { ok: false, error: 'Layer row count mismatch.' };
+                if (patternRows === null) {
+                    patternRows = pattern[layer].length;
                 }
+                if (pattern[layer].length != overallRows) {
+                    overallErr = true;
+                }
+                if (pattern[layer].length != patternRows) {
+                    patternErr = true;
+                }
+                let layerCols = null;
                 for (const row of pattern[layer]) {
-                    if (cols === null) {
-                        cols = row.length;
+                    if (overallCols === null) {
+                        overallCols = row.length;
                     }
-                    if (cols !== row.length) {
-                        return { ok: false, error: 'Layer column count mismatch.' };
+                    if (patternCols === null) {
+                        patternCols = row.length;
+                    }
+                    if (layerCols === null) {
+                        layerCols = row.length;
+                    }
+                    if (row.length != overallCols) {
+                        overallErr = true;
+                    }
+                    if (row.length != patternCols) {
+                        patternErr = true;
+                    }
+                    if (row.length != layerCols) {
+                        layerErr = true;
                     }
                 }
             }
         }
 
+        let errMsg = "";
+        if (layerErr) {
+            errMsg = layerErrMsg;
+        } else if (patternErr) {
+            errMsg = patternErrMsg;
+        } else if (overallErr) {
+            errMsg = overallErrMsg;
+        }
+
+        if (layerErr || patternErr || overallErr) {
+            return { ok: false, error: errMsg, value: patterns };
+        }
+        
         if (patterns.length === 1) {
             return { ok: true, value: patterns[0] };
         } else {
@@ -1392,7 +1440,6 @@ class TRRBTEditor {
         if (!force) {
             let alert_strs = this.nodeSaveProperties(false);
             if (alert_strs.length > 0) {
-                console.log("update property editor error...")
                 if (!this.displayAlert(alert_strs, true)) {
                     return;
                 }
@@ -1454,9 +1501,10 @@ class TRRBTEditor {
 
             const node_clr = this.nodeColor(node.type, false);
             const node_help_str = EDT_NODE_HELP[node.type].help;
+            const node_friendly = proto.friendly || node.type;
 
-            appendButton(ed, 'help-' + node.type, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
-            appendText(ed, ' ' + node.type, true);
+            appendButton(ed, 'help-' + node.type, '?', tooltip_help, node_clr, () => { alert(node_friendly + ': ' + node_help_str); });
+            appendText(ed, ' ' + node_friendly, true);
             appendBr(ed, true);
 
             if (parent !== null) {
@@ -1537,17 +1585,17 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = getTileSize([node.pattern]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize);
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5);
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                 const hasLHS = node.hasOwnProperty('lhs');
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize);
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2);
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize);
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2);
                 }
             }
 
@@ -1606,8 +1654,9 @@ class TRRBTEditor {
                         }
                     }
 
-                    appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
-                    appendText(elem, ' ' + proto.type);
+                    let friendlyName = (proto.friendly || proto.type);
+                    appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(friendlyName + ': ' + help_str); });
+                    appendText(elem, ' ' + friendlyName);
                     appendBr(elem);
                 }
             }
@@ -1659,7 +1708,7 @@ class TRRBTEditor {
                     } else {
                         propname = EDT_GAME_PROP_NAMES[propid].name
                     }
-                    alert_strs.push('Error saving ' + propname + '.\n' + result.error);
+                    alert_strs.push('Error saving ' + propname + ' as ' + JSON.stringify(result.value) + '.\n' + result.error);
                 } else {
                     let new_value = result.value;
                     let old_value = EDT_NODE_PROP_NAMES[propid] ? node[propid] : this.game[propid]
@@ -1672,8 +1721,16 @@ class TRRBTEditor {
             }
         }
 
-        if (new_props.has('lhs') && new_props.has('rhs')) {
-            let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
+        if (new_props.has('lhs') || new_props.has('rhs')) {
+            let lhs_val = node['lhs'];
+            let rhs_val = node['rhs'];
+            if (new_props.has('lhs')) {
+                lhs_val = new_props.get('lhs');
+            }
+            if (new_props.has('rhs')) {
+                rhs_val = new_props.get('rhs');
+            }
+            let result = this.checkPatterns([lhs_val, rhs_val]);
             if (!result.ok) {
                 this.highlightProperty('prop_lhs', true);
                 this.highlightProperty('prop_rhs', true);
@@ -1684,7 +1741,9 @@ class TRRBTEditor {
                 }
                 document.getElementById('prop_lhs').oninput = on_pattern_input;
                 document.getElementById('prop_rhs').oninput = on_pattern_input;
-                alert_strs.push('Error saving ' + EDT_NODE_PROP_NAMES['lhs'].name + ' and ' + EDT_NODE_PROP_NAMES['rhs'].name + '.\n' + result.error);
+                alert_strs.push('Error saving ' + EDT_NODE_PROP_NAMES['lhs'].name + ' as ' + JSON.stringify(lhs_val) + ' and ' + EDT_NODE_PROP_NAMES['rhs'].name + ' as ' + JSON.stringify(rhs_val) + '.\n' + result.error);
+                new_props.delete('lhs');
+                new_props.delete('rhs');
             }
         }
 
@@ -1746,9 +1805,13 @@ class TRRBTEditor {
             let joined_alerts = alert_strs.join('\n\n');
             telemetry("alert-" + joined_alerts);
             if (doConfirm) {
-                return confirm("The following errors were found when attempting to save: " + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
+                this.confirmedAlerts = joined_alerts;
+                return confirm("The following errors were found when attempting to save: \n" + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
             } else {
-                alert("The following errors were found when attempting to save: " + joined_alerts);
+                if (this.confirmedAlerts != joined_alerts) {
+                    alert("The following errors were found when attempting to save: " + joined_alerts);
+                }
+                this.confirmedAlerts = "";
             }
         }
     }
@@ -2213,13 +2276,10 @@ class TRRBTEditor {
                 pebbleHeight += pebble.offsetHeight;
             }
         }
-        parent.style.outline = "1px solid blue"
 
         let targetHeight = grandparent.clientHeight - pebbleHeight;
 
         let targetWidth = grandparent.clientWidth;
-        parent.style.height = targetHeight + "px";
-        parent.style.width = targetWidth + "px";
         this.updateCanvasSize(targetWidth - 4, targetHeight - 4);
         this.requestDraw();
     }

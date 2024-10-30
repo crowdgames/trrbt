@@ -26,37 +26,41 @@
       }
     }
     function beforeSave(newName) {
-      if (LOCAL_GAME_SETUPS[newName]
-        || isTemplate && newName == "" && LOCAL_GAME_SETUPS[G_editor_u.game['name']]) {
-        if (newName == "") {
-          newName = G_editor_u.game['name'];
-        }
+      if (newName != "" && LOCAL_GAME_SETUPS[newName]) {
+        newName = G_editor_u.game['name'];
         return { ok: false, error: "A local game already exists with name \"" + newName + "\"" }
       }
       return { ok: true }
     }
     function afterSave(oldProps = new Map()) {
-      var game = emptyGame();
-      copyIntoGame(game, G_editor_u.game);
-      if (!isTemplate && oldProps.has('name')) {
-        if (LOCAL_GAME_SETUPS[oldProps.get('name')]) {
-          delete LOCAL_GAME_SETUPS[oldProps.get('name')];
-          SEL_removeLocal(oldProps.get('name'));
+      if (isTemplate) {
+        onTemplate();
+      }
+      else {
+        var game = emptyGame();
+        copyIntoGame(game, G_editor_u.game);
+        if (!isTemplate && oldProps.has('name')) {
+          if (LOCAL_GAME_SETUPS[oldProps.get('name')]) {
+            delete LOCAL_GAME_SETUPS[oldProps.get('name')];
+            SEL_removeLocal(oldProps.get('name'));
+          }
         }
+        SEL_upsert(game);
       }
 
-      SEL_upsert(game);
       isTemplate = false;
     }
     function onTemplate() {
       var game = emptyGame();
       copyIntoGame(game, G_editor_u.game);
       let numCopies = 1;
-      name = game['name'];
+      name = game['name'] + " (from template)";
+      game['name'] = name;
       while (LOCAL_GAME_SETUPS[game['name']]) {
         game['name'] = name + " (" + numCopies++ + ")";
       }
 
+      alert("Creating local game from template");
       SEL_upsert(game);
       G_editor_u.importGame(game);
       isTemplate = false;
@@ -92,17 +96,16 @@
       }
     }
     function hideshow(id) {
-      btn = document.getElementById("hide-" + id);
+      let btn = document.getElementById("hide-" + id);
+      let el = document.getElementById(id);
+      let card = el.closest(".card");
+
       if (btn.innerHTML == "-") {
+        card.style.height = (card.clientHeight - el.clientHeight) + "px";
         btn.innerHTML = "+";
       } else {
+        card.style.height = (card.clientHeight + el.clientHeight) + "px";
         btn.innerHTML = "-";
-      }
-      el = document.getElementById(id);
-      if (el.style.display == "none") {
-        el.style.display = "table-cell";
-      } else {
-        el.style.display = "none";
       }
     }
     function exportStudyData() {
@@ -169,7 +172,8 @@
                   <button id="hide-div-editorxcanvas" class="card-button"
                     onclick="hideshow('div-editorxcanvas')">-</button>
                 </div>
-                <div><span><i>Use with Step Mode to see step-by-step progress through the tree during gameplay.</i></span></div>
+                <div><span><i>Use with Step Mode to see step-by-step progress through the tree during
+                      gameplay.</i></span></div>
               </div>
               <div id="div-editorxcanvas">
                 <canvas id="editorxcanvas" width="800px" height="350px">
@@ -180,7 +184,7 @@
           </div>
         </div>
         <div class="card-column" id="editorcolumn">
-          <div id="editorcard" class="card" style="width: 400px">
+          <div id="editorcard" class="card" style="width: 430px">
             <div class="card-bar">
               <span class="card-title">Editor</span>
               <div class="card-button-group">
