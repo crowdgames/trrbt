@@ -944,24 +944,24 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         appendBr(ed, true);
 
-        appendButton(ed, 'engine-breakresume', 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
+        appendButton(ed, 'engine-breakresume', 'Enter Step Mode', 'Use step mode to see the runtime progress through the transformed tree.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ');
         this.breakResumeText = document.createElement('span');
         this.breakResumeText.style.color = '#fc5d5d';
-        this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
-        this.breakResumeText.title = 'Game is currently in break mode, where you must manually step. Resume or restart to play as normal.';
+        this.breakResumeText.innerHTML = 'In step mode (resume or restart).';
+        this.breakResumeText.title = 'Click Next Code Step / Undo Code Step to follow the transformed code tree through gameplay. Resume or restart to play as normal.';
         this.breakResumeText.style.display = 'none';
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
-        appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
-        // appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
-        appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
+        // appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last player choice or display.', null, bind1(this, 'onUndo', 'move'));
+        appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
+        appendButton(ed, 'engine-undo-step', 'Undo Code Step', 'Undo a single step (Step Mode).', null, bind1(this, 'onUndo', 'step'));
         appendBr(ed);
 
-        appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
-        // appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
-        appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
+        // appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next player choice or display.', null, bind1(this, 'onNext', 'move'));
+        appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
+        appendButton(ed, 'engine-next-step', 'Next Code Step', 'Run a single step (Step Mode).', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
     }
 
@@ -1256,13 +1256,22 @@ class TRRBTWebEngine extends TRRBTEngine {
     }
 
     updateStepManual(setting) {
+        let breakBtn = document.getElementById("button-engine-breakresume");
+        let undoStepBtn = document.getElementById("button-engine-undo-step");
+        let nextStepBtn = document.getElementById("button-engine-next-step");
         if (setting != this.stepManual) {
             this.stepManual = setting;
             if (this.breakResumeText !== null) {
                 if (this.stepManual) {
                     this.breakResumeText.style.display = 'inline';
+                    breakBtn.innerHTML = "Resume";
+                    undoStepBtn.style.display = 'inline';
+                    nextStepBtn.style.display = 'inline';
                 } else {
                     this.breakResumeText.style.display = 'none';
+                    breakBtn.innerHTML = "Enter Step Mode";
+                    undoStepBtn.style.display = 'none';
+                    nextStepBtn.style.display = 'none';
                 }
             }
         }

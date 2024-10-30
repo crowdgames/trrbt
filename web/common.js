@@ -105,6 +105,7 @@ function appendText(parent, text, bold = false, underline = false, italic = fals
 
 function appendButton(parent, id, text, tooltip, color, callback) {
     const button = document.createElement('button');
+    button.id = "button-" + id;
     button.innerHTML = text;
     button.title = tooltip;
     if (color !== null) {
