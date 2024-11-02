@@ -168,7 +168,7 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_nid_to_nod
     }
 }
 
-const ALLOWED_PLAYER_CHILDREN = ['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap', 'x-replace']
+const ALLOWED_PLAYER_CHILDREN = ['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap', 'x-replace', 'rewrite']
 function can_be_player_children(nodes) {
     for (const node of nodes) {
         if (!ALLOWED_PLAYER_CHILDREN.includes(node.type)) {
