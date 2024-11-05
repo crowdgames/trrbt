@@ -1862,6 +1862,7 @@ class TRRBTEditor {
             node.children.push(deepcopyobj(this.clipboard));
             this.updateTreeStructureAndDraw(false, false);
         }
+        this.afterSave();
     }
 
     onNodeDelete(reparentChildren) {
@@ -1885,6 +1886,7 @@ class TRRBTEditor {
                 this.updatePropertyEditor(null);
             }
         }
+        this.afterSave();
     }
 
     onNodeDeleteChildren() {
@@ -1899,6 +1901,7 @@ class TRRBTEditor {
 
         this.collapseNodes(node, false);
         this.updateTreeStructureAndDraw(false, false);
+        this.afterSave();
     }
 
     getNodePrototype(type) {
@@ -1933,6 +1936,7 @@ class TRRBTEditor {
             node.children.unshift(new_node);
         }
         this.updateTreeStructureAndDraw(false, false);
+        this.afterSave();
     }
 
     onNodeAddParent(type) {
@@ -1955,6 +1959,7 @@ class TRRBTEditor {
 
             this.updateTreeStructureAndDraw(false, false);
         }
+        this.afterSave();
     }
 
     onNodeShift(earlier) {
@@ -1980,6 +1985,7 @@ class TRRBTEditor {
                 }
             }
         }
+        this.afterSave();
     }
 
     onNodeSwapUp() {
@@ -2010,6 +2016,7 @@ class TRRBTEditor {
             reassignnode(node, tmp);
             this.updateTreeStructureAndDraw(false, false);
         }
+        this.afterSave();
     }
 
     onUndo() {
@@ -2277,9 +2284,9 @@ class TRRBTEditor {
             }
         }
 
-        let targetHeight = grandparent.clientHeight - pebbleHeight;
+        let targetHeight = min(grandparent.clientHeight - pebbleHeight, 2000);
 
-        let targetWidth = grandparent.clientWidth;
+        let targetWidth = min(grandparent.clientWidth, 2000);
         this.updateCanvasSize(targetWidth - 4, targetHeight - 4);
         this.requestDraw();
     }
