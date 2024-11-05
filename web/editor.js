@@ -2284,9 +2284,9 @@ class TRRBTEditor {
             }
         }
 
-        let targetHeight = min(grandparent.clientHeight - pebbleHeight, 2000);
+        let targetHeight = Math.min(grandparent.clientHeight - pebbleHeight, 2000);
 
-        let targetWidth = min(grandparent.clientWidth, 2000);
+        let targetWidth = Math.min(grandparent.clientWidth, 2000);
         this.updateCanvasSize(targetWidth - 4, targetHeight - 4);
         this.requestDraw();
     }

@@ -10,8 +10,8 @@ const TEMPLATES = [
     'dungeon_chase',
     'dungeon_patrol',
     'lights out',
-    'soko-emoji',
-    'soko_enemy-emoji-incomplete',
+    'soko-demo',
+    'soko_enemy-incomplete',
     'sweeper',
 ]
 
