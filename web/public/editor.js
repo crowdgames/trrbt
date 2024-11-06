@@ -1465,7 +1465,7 @@ class TRRBTEditor {
         let treecolumnbuttons = document.getElementById("treecolumnbuttons");
         let hasHrz = false;
         for (var i = 0; i < treecolumnbuttons.children.length; i++) {
-            if (treecolumnbuttons.children[i].innerHTML == "Switch Layout") {
+            if (treecolumnbuttons.children[i].innerHTML == "Switch Layout Hrz/Vrt") {
                 hasHrz = true;
             }
         }
@@ -2196,7 +2196,6 @@ class TRRBTEditor {
                 this.mouseClearProp = false;
             }
         } else if (this.mouseZoom !== null) {
-            console.log("mouse zoom is active");
             if (this.mousePos !== null) {
                 this.zoomAroundXform(this.mouseZoom, 1 + ((mousePos_u.y - this.mousePos_u.y) / 400));
                 mousePos = this.xformInv.transformPoint(mousePos_u);
@@ -2266,10 +2265,28 @@ class TRRBTEditor {
                     this.updatePositionsAndDraw(false);
                 }
             }
-            if (key === 'v' || key === 'V') {
+            if (key === 'v' || key === 'V' || key === 'h' || key === 'H') {
                 this.layout_horizontal = !this.layout_horizontal;
                 this.updatePositionsAndDraw(false);
             }
+        }
+
+        if (key === 'ArrowLeft') {
+            // left
+            this.translateXform(10, 0);
+        }
+        if (key === 'ArrowUp') {
+            // up
+            this.translateXform(0, 10);
+        }
+        if (key === 'ArrowRight') {
+            // right
+            console.log("right")
+            this.translateXform(-10, 0);
+        }
+        if (key === 'ArrowDown') {
+            // down
+            this.translateXform(0, -10);
         }
 
         evt.preventDefault();
