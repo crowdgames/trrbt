@@ -630,3 +630,16 @@ function copyIntoGame(game, fromGame) {
 function emptyGame() {
     return { name: 'empty', sprites: null, tree: null };
 }
+
+async function readClipboard() {
+    if (!navigator.clipboard) {
+        throw 'Cannot find clipboard.';
+    }
+
+    const permissionStatus = await navigator.permissions.query({ name: 'clipboard-read' });
+    if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
+      return await navigator.clipboard.readText();
+    } else {
+      throw 'Clipboard permission denied.';
+    }
+}

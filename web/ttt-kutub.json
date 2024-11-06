@@ -1,0 +1,213 @@
+{
+    "name": "TicTacToe (from template)",
+    "sprites": null,
+    "tree": {
+        "type": "order",
+        "comment": "",
+        "nid": "",
+        "children": [
+            {
+                "type": "set-board",
+                "comment": "",
+                "nid": "",
+                "pattern": {
+                    "main": [
+                        [
+                            "_",
+                            "_",
+                            "_"
+                        ],
+                        [
+                            "_",
+                            "_",
+                            "_"
+                        ],
+                        [
+                            "_",
+                            "_",
+                            "_"
+                        ]
+                    ]
+                },
+                "dispid": 49
+            },
+            {
+                "type": "loop-until-all",
+                "friendly": "loop-until-all-fail",
+                "comment": "",
+                "nid": "",
+                "children": [
+                    {
+                        "type": "player",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "_"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "X"
+                                        ]
+                                    ]
+                                },
+                                "dispid": 69
+                            }
+                        ],
+                        "pid": "X",
+                        "dispid": 68
+                    },
+                    {
+                        "type": "win",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "x-spin",
+                                "comment": "",
+                                "friendly": "rotate-all",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "match",
+                                        "pattern": {
+                                            "main": [
+                                                [
+                                                    "X",
+                                                    "X",
+                                                    "X"
+                                                ]
+                                            ]
+                                        },
+                                        "dispid": 75
+                                    }
+                                ],
+                                "remorig": false,
+                                "dispid": 74
+                            }
+                        ],
+                        "pid": "X",
+                        "dispid": 72
+                    },
+                    {
+                        "type": "win",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "x-swap",
+                                "comment": "",
+                                "friendly": "swap-chars",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "match",
+                                        "pattern": {
+                                            "main": [
+                                                [
+                                                    "?",
+                                                    "?",
+                                                    "X"
+                                                ],
+                                                [
+                                                    "?",
+                                                    "X",
+                                                    "?"
+                                                ],
+                                                [
+                                                    "X",
+                                                    "?",
+                                                    "?"
+                                                ]
+                                            ]
+                                        },
+                                        "dispid": 80
+                                    }
+                                ],
+                                "what": "i",
+                                "with": "_ O",
+                                "dispid": 78
+                            }
+                        ],
+                        "pid": "X",
+                        "dispid": 76
+                    },
+                    {
+                        "type": "player",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "_"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "O"
+                                        ]
+                                    ]
+                                },
+                                "dispid": 71
+                            }
+                        ],
+                        "pid": "O",
+                        "dispid": 70
+                    },
+                    {
+                        "type": "win",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "x-spin",
+                                "comment": "",
+                                "friendly": "rotate-all",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "match",
+                                        "pattern": {
+                                            "main": [
+                                                [
+                                                    "O",
+                                                    "O",
+                                                    "O"
+                                                ]
+                                            ]
+                                        },
+                                        "dispid": 83
+                                    }
+                                ],
+                                "remorig": false,
+                                "dispid": 82
+                            }
+                        ],
+                        "pid": "O",
+                        "dispid": 81
+                    }
+                ],
+                "dispid": 50
+            }
+        ],
+        "dispid": 48
+    }
+}

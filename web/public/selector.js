@@ -5,10 +5,6 @@ var LOCAL_GAME_SETUPS = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS")) ||
 
 const TEMPLATES = [
     'connect four',
-    'conway',
-    'dungeon',
-    'dungeon_chase',
-    'dungeon_patrol',
     'lights out',
     'soko-demo',
     'soko_enemy-incomplete',
