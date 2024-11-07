@@ -2306,17 +2306,25 @@ class TRRBTEditor {
         let grandparent = parent.parentNode;
         let pebbles = grandparent.children;
 
-        let pebbleHeight = 0;
+        let pebbleHeight = grandparent.clientHeight;
         for (let pebble of pebbles) {
             if (pebble != parent) {
                 pebbleHeight += pebble.offsetHeight;
             }
         }
 
-        let targetHeight = Math.min(grandparent.clientHeight - pebbleHeight, 2000);
+        console.log(grandparent.offsetHeight)
+        parent.style.height = grandparent.offsetHeight + "px";
+        parent.style.width = grandparent.offsetWidth + "px";
 
-        let targetWidth = Math.min(grandparent.clientWidth, 2000);
-        this.updateCanvasSize(targetWidth - 4, targetHeight - 4);
-        this.requestDraw();
+        if (!this.resizing) {
+            this.resizing = true;
+            let targetHeight = Math.min(parent.clientHeight, 1500);
+
+            let targetWidth = Math.min(parent.clientWidth, 1500);
+            this.updateCanvasSize(targetWidth, targetHeight);
+            this.requestDraw();
+            this.resizing = false;
+        }
     }
 };

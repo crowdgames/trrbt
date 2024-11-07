@@ -140,7 +140,7 @@
         <div class="card-column" id="treecolumn">
           <div class="card-bar">
             <span class="card-title">Tree Views</span>
-            <br/>
+            <br />
             <i>Right click, left click and drag, or use arrow keys to pan.</i>
             <div class="card-button-group" id="treecolumnbuttons">
               <button class="card-button" onclick="moveCard('treecolumn', 'left')">⬅️</button>
@@ -148,7 +148,7 @@
             </div>
           </div>
           <div id="tree-card-group" class="card-group">
-            <div class="card" id="ucanvascard">
+            <div class="card" id="ucanvascard" style="height: 500px; width: 500px">
               <div class="card-bar">
                 <span class="card-title">Untransformed Tree</span>
                 <div class="card-button-group">
@@ -159,13 +159,13 @@
                 </div>
                 <div><span><i>Click on a node to make changes.</i></span></div>
               </div>
-              <div id="div-editorucanvas">
+              <div id="div-editorucanvas" class="canvasdiv">
                 <canvas id="editorucanvas" width="800px" height="350px" tabindex="1">
                   Browser does not support canvas.
                 </canvas>
               </div>
             </div>
-            <div id="xcanvascard" class="card">
+            <div id="xcanvascard" class="card" style="height: 500px; width: 500px">
               <div class="card-bar">
                 <span class="card-title">Transformed Tree</span>
                 <div class="card-button-group">
@@ -177,7 +177,7 @@
                 <div><span><i>Use with Step Mode to see step-by-step progress through the tree during
                       gameplay.</i></span></div>
               </div>
-              <div id="div-editorxcanvas">
+              <div id="div-editorxcanvas" class="canvasdiv">
                 <canvas id="editorxcanvas" width="800px" height="350px" tabindex="1">
                   Browser does not support canvas.
                 </canvas>

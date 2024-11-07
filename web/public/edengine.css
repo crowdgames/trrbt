@@ -1,12 +1,17 @@
 .card {
     resize: both;
-    overflow: auto;
+    overflow: hidden;
     outline: 1px solid;
+}
+
+.canvasdiv {
+    height: 100%;
+    width: 100%;
 }
 
 .card-bar {
     outline: 1px solid;
-    overflow: auto;
+    overflow: hidden;
 }
 
 .card-group>* {
