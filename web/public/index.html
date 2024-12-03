@@ -115,17 +115,17 @@
         "gameData": gameData,
       };
       stringData = JSON.stringify(data);
+      b64Data = btoa(unescape(encodeURIComponent(stringData)));
 
-      var element = document.createElement('a');
-      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(stringData));
-      element.setAttribute('download', 'studyData.json');
-
-      element.style.display = 'none';
-      document.body.appendChild(element);
-
-      element.click();
-
-      document.body.removeChild(element);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(data).then(function () {
+          alert('Study data copied to clipboard. Data: \n' + b64Data);
+        }, function (err) {
+          alert('Unable to copy to clipboard. Data: \n' + b64Data);
+        });
+      } else {
+        alert('Data: \n' + b64Data);
+      }
     }
     window.addEventListener('load', onLoad, false);
   </script>
