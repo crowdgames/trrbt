@@ -38,3 +38,51 @@
 #toolbar>* {
     display: inline-block;
 }
+
+*,
+*::before,
+*::after { 
+  box-sizing: border-box;
+}
+
+.input-sizer {
+  display: inline-grid;
+  vertical-align: top;
+  align-items: center;
+  position: relative;
+  border: solid 1px;
+  
+  &::after,
+  input,
+  textarea {
+    width: auto;
+    min-width: 1em;
+    grid-area: 1 / 2;
+    font: inherit;
+    margin: 0;
+    resize: none;
+    background: none;
+    appearance: none;
+    border: none;
+    text-align: center;
+  }
+  
+  &::after {
+    content: attr(data-value) ' ';
+    visibility: hidden;
+    white-space: pre-wrap;
+  }
+  
+  &:focus-within {
+    outline: solid 1px;
+    
+    textarea:focus,
+    input:focus {
+      outline: none;
+    }
+  }
+}
+
+.pattern-table {
+    outline: solid 1px;
+}

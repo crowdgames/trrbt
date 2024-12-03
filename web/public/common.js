@@ -339,6 +339,9 @@ function xform_rule_rotate_fn(remorig) {
 function xform_rule_spin_fn(remorig) {
     function xform_rule_spin(node) {
         function pattern_func(patt) {
+            if (patt.length == 0) {
+                return [];
+            }
             return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
         }
         let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };

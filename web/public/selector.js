@@ -9,6 +9,7 @@ const TEMPLATES = [
     'soko-demo',
     'soko_enemy-incomplete',
     'sweeper',
+    'soko2'
 ]
 
 function SEL_onLoad() {
@@ -85,12 +86,16 @@ function SEL_removeLocal(game) {
     SEL_update();
 }
 
-function SEL_startingGame() {
+function SEL_selectStartingGame() {
     const game = decodeURIComponent(window.location.hash.substring(1));
+
     if (game !== '' && GAME_SETUPS.hasOwnProperty(game)) {
-        return GAME_SETUPS[game];
+        onSelectGame(GAME_SETUPS[game], true);
+    } else if (game !== '' && LOCAL_GAME_SETUPS.hasOwnProperty(game)) {
+        onSelectGame(LOCAL_GAME_SETUPS[game], false);
+    } else {
+        onSelectGame(GAME_SETUPS['NEW'] || emptyGame(), true)
     }
-    return GAME_SETUPS['NEW'] || emptyGame();
 }
 
 function SEL_getGameTree(game) {

@@ -74,8 +74,6 @@
       G_editor_u.importGame(emptyGame())
     }
     function onLoad() {
-      copyIntoGame(G_game_u, SEL_startingGame());
-
       G_editor_u.xform_editor = G_editor_x;
 
       G_editor_x.engine = G_engine;
@@ -85,6 +83,7 @@
       G_engine.stepManual = true;
       G_editor_x.onLoad();
       G_editor_u.onLoad();
+      SEL_selectStartingGame();
     }
     function moveCard(id, dir) {
       telemetry("button-" + id + "-" + dir);
@@ -141,7 +140,7 @@
           <div class="card-bar">
             <span class="card-title">Tree Views</span>
             <br />
-            <i>Right click, left click and drag, or use arrow keys to pan.</i>
+            <i>Left click and drag or use arrow keys to pan, or right click once to pan without dragging.</i>
             <div class="card-button-group" id="treecolumnbuttons">
               <button class="card-button" onclick="moveCard('treecolumn', 'left')">⬅️</button>
               <button class="card-button" onclick="moveCard('treecolumn', 'right')">➡️</button>
