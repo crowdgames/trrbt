@@ -7,6 +7,11 @@ const EDT_FONT_SIZE = 10;
 const EDT_FONT_CHAR_SIZE = 7;
 const EDT_FONT_LINE_SIZE = 12;
 
+const EDT_KEY_PAN_DELAY = 10;
+const EDT_KEY_PAN_AMOUNT_MIN = 1;
+const EDT_KEY_PAN_AMOUNT_MAX = 10;
+const EDT_KEY_PAN_AMOUNT_SCL = 1.05;
+
 const EDT_TEXT_FONT = 0;
 const EDT_TEXT_COLOR = 1;
 const EDT_TEXT_LINE = 2;
@@ -137,6 +142,7 @@ class TRRBTEditor {
         this.ctx = null;
         this.propertyEditor = null;
         this.keysDown = new Set();
+        this.keysPanning = false;
 
         this.undoStack = null;
         this.undoStackPos = null;
@@ -260,6 +266,7 @@ class TRRBTEditor {
         this.ctx = this.canvas.getContext('2d');
         this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
+        this.keysPanning = false;
 
         this.tooltip = document.getElementById('tooltip');
         if (this.tooltip === null) {
@@ -1455,7 +1462,7 @@ class TRRBTEditor {
                             r -= 1;
                             this.updatePatternText(id, pattern, layer, r, c);
                             return false;
-                        } 
+                        }
                         break;
                     }
                 }
@@ -1565,7 +1572,7 @@ class TRRBTEditor {
                 } else {
                     pattern[layer].splice(r + 1, 0, ["."]);
                 }
-                
+
                 c = 0;
                 r += 1;
                 this.updatePatternText(id, pattern, layer, r, c, 0, 0);
@@ -2627,6 +2634,46 @@ class TRRBTEditor {
         this.requestDraw();
     }
 
+    keyPan(evt) {
+        const left = this.keysDown.has('ArrowLeft');
+        const right = this.keysDown.has('ArrowRight');
+        const up = this.keysDown.has('ArrowUp');
+        const down = this.keysDown.has('ArrowDown');
+
+        let xpan = 0.0;
+        let ypan = 0.0;
+
+        if (left) {
+            if (!right) {
+                xpan = -1.0;
+            }
+        } else if (right) {
+            xpan = 1.0;
+        }
+
+        if (up) {
+            if (!down) {
+                ypan = -1.0;
+            }
+        } else if (down) {
+            ypan = 1.0;
+        }
+
+        const len = Math.sqrt(xpan * xpan + ypan * ypan);
+        if (len > 0.0001) {
+            this.translateXform(this.xformInv.a * this.keysPanning * xpan / len, this.xformInv.d * this.keysPanning * ypan / len);
+        }
+
+        if (left || right || up || down) {
+            this.keysPanning = Math.min(EDT_KEY_PAN_AMOUNT_MAX, this.keysPanning * EDT_KEY_PAN_AMOUNT_SCL);
+            setTimeout(bind0(this, 'keyPan'), EDT_KEY_PAN_DELAY);
+        } else {
+            this.keysPanning = false;
+        }
+
+        this.requestDraw();
+    }
+
     onKeyDown(evt) {
         let key = evt.key;
 
@@ -2643,23 +2690,12 @@ class TRRBTEditor {
                 this.layout_horizontal = !this.layout_horizontal;
                 this.updatePositionsAndDraw(false);
             }
-        }
-
-        if (key === 'ArrowLeft') {
-            // left
-            this.translateXform(10, 0);
-        }
-        if (key === 'ArrowUp') {
-            // up
-            this.translateXform(0, 10);
-        }
-        if (key === 'ArrowRight') {
-            // right
-            this.translateXform(-10, 0);
-        }
-        if (key === 'ArrowDown') {
-            // down
-            this.translateXform(0, -10);
+            if (key === 'ArrowLeft' || key === 'ArrowUp' || key === 'ArrowRight' || key === 'ArrowDown') {
+                if (this.keysPanning === false) {
+                    this.keysPanning = EDT_KEY_PAN_AMOUNT_MIN;
+                    setTimeout(bind0(this, 'keyPan'), EDT_KEY_PAN_DELAY);
+                }
+            }
         }
 
         evt.preventDefault();
