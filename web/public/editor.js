@@ -2645,18 +2645,18 @@ class TRRBTEditor {
 
         if (left) {
             if (!right) {
-                xpan = -1.0;
+                xpan = 1.0;
             }
         } else if (right) {
-            xpan = 1.0;
+            xpan = -1.0;
         }
 
         if (up) {
             if (!down) {
-                ypan = -1.0;
+                ypan = 1.0;
             }
         } else if (down) {
-            ypan = 1.0;
+            ypan = -1.0;
         }
 
         const len = Math.sqrt(xpan * xpan + ypan * ypan);
