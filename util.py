@@ -114,12 +114,18 @@ def require_js():
         dirname = os.path.dirname(os.path.realpath(__file__))
 
         js = ''
+
+        js += 'localStorage = new Map();\n'
+        js += 'localStorage.getItem = (key) => { var ret = localStorage.get(key); return (ret === undefined) ? null : ret; };\n'
+        js += 'localStorage.setItem = localStorage.set;\n'
+
         js += open(os.path.join(dirname, 'web/common.js')).read() + '\n'
         js += open(os.path.join(dirname, 'web/engine.js')).read() + '\n'
-        js += '() => { return { '
-        js += 'xform_apply_to_tree:xform_apply_to_tree,'
-        js += 'new_engine:(game)=>{ let engine = new TRRBTEngine(game); engine.onLoad(); return engine; }'
-        js += ' } };\n'
+
+        js += '() => { return {\n'
+        js += '  xform_apply_to_tree:xform_apply_to_tree,\n'
+        js += '  new_engine:(game)=>{ let engine = new TRRBTEngine(game); engine.onLoad(); return engine; }\n'
+        js += '} };\n'
 
         _js_common = pythonmonkey.eval(js)()
 
