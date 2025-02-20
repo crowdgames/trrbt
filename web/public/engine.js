@@ -1122,6 +1122,11 @@ class TRRBTWebEngine extends TRRBTEngine {
                             } else {
                                 function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
                                 const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
+                                if (tile == '?') {
+                                    this.ctx.fillStyle = 'red';
+                                } else {
+                                    this.ctx.fillStyle = 'black';
+                                }
                                 this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
                                 this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
                             }

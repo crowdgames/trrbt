@@ -110,12 +110,12 @@ const EDT_NODE_PROP_NAMES = {
     file: { name: 'file name', help: 'Name of file to link to.' },
     target: { name: 'target ID', help: 'Target node ID to link to.' },
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
-    layer: { name: 'layer', help: 'Name of layer to use.' },
+    // layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
     what: { name: 'what', help: 'Character to be swapped/replaced.' },
     with: { name: 'with', help: 'Other character to use.' },
     withs: { name: 'with (space separated list)', help: 'Space-separated other characters to replace with.' },
-    button: { name: 'button', help: 'Button to press to apply rewrite. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
+    button: { name: 'action button', help: 'Button to press to apply rewrite. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
     lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
     rhs: { name: 'RIGHT', help: 'Right hand side tile pattern of a rewrite rule.' }
@@ -597,9 +597,9 @@ class TRRBTEditor {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['pid'].name + ': ' + node.pid });
         }
 
-        if (node.hasOwnProperty('layer')) {
-            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['layer'].name + ': ' + node.layer });
-        }
+        // if (node.hasOwnProperty('layer')) {
+        //     texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['layer'].name + ': ' + node.layer });
+        // }
 
         if (node.hasOwnProperty('times')) {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['times'].name + ': ' + node.times });
@@ -1132,6 +1132,12 @@ class TRRBTEditor {
         this.setErrText(elem, errText);
     }
 
+    unhighlightProperty(id) {
+        console.log('unhighlight')
+        let elem = document.getElementById(id);
+        elem.style.backgroundColor = 'transparent';
+    }
+
     setErrText(elem, errText) {
         parent = elem.parentNode;
 
@@ -1174,6 +1180,9 @@ class TRRBTEditor {
         input.onchange = () => {
             telemetry("text-" + name + "-set-" + input.value);
             this.nodeSaveProperties();
+        }
+        input.onblur = () => {
+            this.unhighlightProperty(id);
         }
 
         item.appendChild(label);
@@ -1289,7 +1298,7 @@ class TRRBTEditor {
 
     appendThisEmojiPicker(parent) {
         if (this.emojiPicker) {
-            appendButton(parent, 'emoji-picker', 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
+            appendButton(parent, 'emoji-picker', 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHideEmojiPicker'));
             appendText(parent, ' ');
             parent.appendChild(this.emojiMessage);
             appendBr(parent);
@@ -1311,7 +1320,7 @@ class TRRBTEditor {
     equalizeCells() {
         const tables = document.getElementsByClassName('pattern-table');
         for (const table of tables) {
-            const cells = table.querySelectorAll('.input-sizer');
+            const cells = table.querySelectorAll('.pattern-table-cell');
             let maxWidth = 0;
             let maxHeight = 0;
             for (const cell of cells) {
@@ -1333,26 +1342,83 @@ class TRRBTEditor {
     renderTableInputs(id, pattern, flayer = "", fr = 0, fc = 0, fis = 0, fie = 0) {
         let tableInput = document.getElementById(id + "_tableview");
         tableInput.innerHTML = "";
+        console.log("pattern og")
+        console.log(pattern)
+        if (pattern == undefined || pattern.length == 0) {
+            pattern = {
+                'main': [
+                    [""]
+                ]
+            }
+        }
+        console.log(pattern['main'])
         let layers = Object.getOwnPropertyNames(pattern);
         let focusInput = null;
         let textPattern = this.textFromPattern(pattern).patternText;
         pattern = this.patternFromString(textPattern);
         for (const layer of layers) {
+            // if (pattern[layer].length == 0) {
+            //     pattern[layer].push([" "]);
+            // }
             const inputTable = document.createElement('table');
             inputTable.classList.add('pattern-table');
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            const input = document.createElement('input');
-            input.type = "text";
-            input.value = layer;
-            cell.appendChild(input);
-            row.appendChild(cell);
+            if (layers.length === 1 && layers[0] === 'main') {
+                // pass
+            } else {
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = "text";
+                input.value = layer;
+                cell.appendChild(input);
+                row.appendChild(cell);
+                inputTable.appendChild(row);
+            }
+            if (pattern[layer].length == 0) {
+                pattern[layer] = [[""]]
+            }
+            if (pattern[layer][0].length > 1) {
+                let row = document.createElement('tr');
+                const blankCell = document.createElement('td');
+                blankCell.classList.add('pattern-table-cell');
+                row.appendChild(blankCell);
+                for (let c = 0; c < pattern[layer][0].length; c++) {
+                    const removeColTd = document.createElement('td');
+                    removeColTd.classList.add('pattern-table-cell');
+                    appendButton(removeColTd, 'remove-pattern-col-' + id + c, '-', 'Remove column', 'red;white', bind4(this, 'onRemovePatternCol', id, pattern, layer, c));
+                    row.appendChild(removeColTd);
+                }
+                inputTable.appendChild(row);
+            }
+            let row = document.createElement('tr');
+            for (let c = -1; c < pattern[layer][0].length; c++) {
+                const addColTd = document.createElement('td');
+                addColTd.classList.add('pattern-table-cell');
+                let desc = 'Add column to right';
+                if (c == -1) {
+                    desc = "Add column left"
+                }
+                appendButton(addColTd, 'add-pattern-col-' + id + c, '+', desc, 'green;white', bind4(this, 'onAddPatternCol', id, pattern, layer, c));
+                row.appendChild(addColTd);
+            }
+            const blankCell = document.createElement('td');
+            blankCell.classList.add('pattern-table-cell');
+            row.appendChild(blankCell);
+            const addRowTd = document.createElement('td');
+            addRowTd.classList.add('pattern-table-cell');
+            appendButton(addRowTd, 'add-pattern-row-' + id + -1, '+', 'Add row top', 'green;white', bind4(this, 'onAddPatternRow', id, pattern, layer, -1));
+            row.appendChild(addRowTd);
             inputTable.appendChild(row);
             for (let r = 0; r < pattern[layer].length; r++) {
-                const row = document.createElement('tr');
+                row = document.createElement('tr');
 
+                // blank cell makes room for remove column.
+                const blankCell = document.createElement('td');
+                blankCell.classList.add('pattern-table-cell');
+                row.appendChild(blankCell);
                 for (let c = 0; c < pattern[layer][r].length; c++) {
                     const cell = document.createElement('td');
+                    cell.classList.add('pattern-table-cell')
                     cell.classList.add('input-sizer');
                     const input = document.createElement('input');
                     if (layer == flayer && r == fr && c == fc) {
@@ -1362,16 +1428,29 @@ class TRRBTEditor {
                     input.oninput = (e) => this.patternCellOnInput(id, inputTable, input, pattern, layer, r, c, e);
                     input.onkeydown = (e) => this.patternCellOnKeyDown(id, inputTable, input, pattern, layer, r, c, e);
                     input.onfocus = () => {
-                        if (input.value.trim() == "?" || input.value.trim() == ".") {
-                            input.setSelectionRange(0, 1);
-                        }
+                        input.setSelectionRange(0, input.value.length);
                     }
                     input.size = 1;
-                    input.value = pattern[layer][r][c];
+                    input.value = pattern[layer][r][c] == "_" ? " " : pattern[layer][r][c];
                     cell.dataset.value = input.value;
                     cell.appendChild(input)
                     row.appendChild(cell);
                 }
+
+                if (pattern[layer].length > 1) {
+                    const removeTd = document.createElement('td');
+                    removeTd.classList.add("pattern-table-cell");
+                    appendText(removeTd, " ");
+                    appendButton(removeTd, 'remove-pattern-row-' + id + r, '-', 'Remove row', 'red;white', bind4(this, 'onRemovePatternRow', id, pattern, layer, r));
+                    row.appendChild(removeTd);
+                }
+
+                const addTd = document.createElement('td');
+                addTd.classList.add("pattern-table-cell");
+                appendText(addTd, " ");
+                appendButton(addTd, 'add-pattern-row-' + id + r, '+', 'Add row below', 'green;white', bind4(this, 'onAddPatternRow', id, pattern, layer, r));
+                row.appendChild(addTd);
+
                 inputTable.appendChild(row);
             }
             tableInput.appendChild(inputTable);
@@ -1388,7 +1467,7 @@ class TRRBTEditor {
                     }
                     focusInput.setSelectionRange(fis, fie);
                 }
-                if (focusInput.value.trim() == "?" || focusInput.value.trim() == ".") {
+                if (focusInput.value.trim() == "?" || focusInput.value.trim() == "." || focusInput.value == " ") {
                     focusInput.setSelectionRange(0, 1);
                 }
             }, 10)
@@ -1398,109 +1477,153 @@ class TRRBTEditor {
         }
     }
 
+    onAddPatternCol(id, pattern, layer, c) {
+        for (let r = 0; r < pattern[layer].length; r++) {
+            pattern[layer][r].splice(c + 1, 0, " ");
+        }
+        this.updatePatternText(id, pattern, layer, 0, c + 1);
+    }
+    onAddPatternRow(id, pattern, layer, r) {
+        let newRow = [];
+        for (let c = 0; c < pattern[layer][0].length; c++) {
+            newRow.push(" ")
+        }
+        pattern[layer].splice(r + 1, 0, newRow);
+        this.updatePatternText(id, pattern, layer, r + 1, 0);
+    }
+    onRemovePatternCol(id, pattern, layer, c) {
+        for (let r = 0; r < pattern[layer].length; r++) {
+            pattern[layer][r].splice(c, 1);
+        }
+        this.updatePatternText(id, pattern, layer, 0, Math.max(c - 1, 0));
+    }
+    onRemovePatternRow(id, pattern, layer, r) {
+        pattern[layer].splice(r, 1);
+        this.updatePatternText(id, pattern, layer, Math.max(r - 1, 0), 0);
+    }
+
     patternCellOnKeyDown(id, inputTable, input, pattern, layer, r, c, e) {
         switch (e.key) {
-            // case "Tab":
-            //     // go to next cell to the right
-            //     // at the end of the row, go to the next cell down
-            //     // at the end of the layer, go to the next layer
-            //     // at the end of the pattern, stop
-            //     if (value[layer][r][c + 1]) {
+            // case " ":
+            //     if (input.selectionEnd == pattern[layer][r][c].length) {
             //         c += 1;
-            //     } else if (value[layer][r + 1]) {
-            //         r += 1;
-            //         c = 0;
-            //     } else {
-            //         const layers = Object.getOwnPropertyNames(value);
-            //         let found = false;
-            //         for (const layerName of layers) {
-            //             if (found) {
-            //                 layer = layerName;
-            //                 r = 0;
-            //                 c = 0;
-            //                 break;
-            //             }
-            //             if (layerName == layer) {
-            //                 found = true;
-            //             }
+            //         if (c < pattern[layer][r].length) {
+            //             pattern[layer][r].splice(c, 0, " ");
             //         }
+            //         else {
+            //             pattern[layer][r].push(" ");
+            //         }
+            //         this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+            //     } else if (input.selectionStart == 0) {
+            //         pattern[layer][r].splice(c, 0, " ");
+            //         c += 1;
+            //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+            //     } else {
+            //         let before = pattern[layer][r][c].slice(0, input.selectionStart);
+            //         let after = pattern[layer][r][c].slice(input.selectionStart)
+            //         pattern[layer][r].splice(c, 0, before);
+            //         c += 1;
+            //         pattern[layer][r][c] = after;
+            //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
             //     }
-            //     break;
-            case " ":
-                if (input.selectionEnd == pattern[layer][r][c].length) {
-                    c += 1;
-                    if (c < pattern[layer][r].length) {
-                        pattern[layer][r].splice(c, 0, ".");
-                    }
-                    else {
-                        pattern[layer][r].push(".");
-                    }
-                    this.updatePatternText(id, pattern, layer, r, c, 0, 1);
-                } else if (input.selectionStart == 0) {
-                    pattern[layer][r].splice(c, 0, ".");
-                    c += 1;
-                    this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                } else {
-                    let before = pattern[layer][r][c].slice(0, input.selectionStart);
-                    let after = pattern[layer][r][c].slice(input.selectionStart)
-                    pattern[layer][r].splice(c, 0, before);
-                    c += 1;
-                    pattern[layer][r][c] = after;
-                    this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                }
 
-                return false;
+            //     return false;
             case "Backspace":
-                if (input.selectionEnd == 0) {
+                if (input.selectionEnd == 0 && [...(pattern[layer][r][c].trim())].length > 0) {
+                    // Move to previous cell.
                     c -= 1;
                     if (c < 0) {
                         if (r > 0) {
-                            console.log("concat rows")
-                            c = pattern[layer][r].length - 1;
-                            pattern[layer][r-1].push(...pattern[layer][r]);
-                            pattern[layer].splice(r, 1);
-                            r -= 1;
-                            this.updatePatternText(id, pattern, layer, r, c);
-                            return false;
-                        }
-                        break;
-                    }
-                }
-                if ([...(pattern[layer][r][c].trim())].length == 1) {
-                    // if cell is empty, delete and move to the cell to the left.
-                    pattern[layer][r].splice(c, 1);
-                    c -= 1;
-                    if (c < 0) {
-                        if (r > 0) {
-                            // move up one row, deleting this row if it is empty.
-                            let delRow = true;
-                            for (let c = 0; c < pattern[layer][r].length; c++) {
-                                if (pattern[layer][r][c] != "?") {
-                                    delRow = false;
-                                }
-                            }
-                            if (delRow) {
-                                pattern[layer].splice(r, 1);
-                            }
                             r -= 1;
                             c = pattern[layer][r].length - 1;
                         }
                         else {
-                            console.log("update for c = 0; r = 0")
                             c = 0;
-                            this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                            break;
                         }
                     }
-                    this.updatePatternText(id, pattern, layer, r, c);
+                    this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    return false;
+                    // c -= 1;
+                    // if (c < 0) {
+                    //     if (r > 0) {
+                    //         c = pattern[layer][r].length;
+                    //         pattern[layer][r - 1].push(...pattern[layer][r]);
+                    //         pattern[layer].splice(r, 1);
+                    //         r -= 1;
+                    //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                    //         return false;
+                    //     }
+                    //     break;
+                    // }
+                }
+                else if ([...(pattern[layer][r][c].trim())].length <= 1) {
+                    // if (pattern[layer][r][c].trim() == "." || pattern[layer][r][c].trim() == "?" || pattern[layer][r][c] == " ") {
+                    //     // if cell is empty, delete and move to the cell to the left.
+                    //     pattern[layer][r].splice(c, 1);
+                    //     c -= 1;
+                    //     if (c < 0) {
+                    //         if (r > 0) {
+                    //             // move up one row, deleting this row if it is empty.
+                    //             let delRow = true;
+                    //             for (let c = 0; c < pattern[layer][r].length; c++) {
+                    //                 if (pattern[layer][r][c] != "?") {
+                    //                     delRow = false;
+                    //                 }
+                    //             }
+                    //             if (delRow) {
+                    //                 pattern[layer].splice(r, 1);
+                    //                 r -= 1;
+                    //                 c = pattern[layer][r].length - 1;
+                    //             }
+                    //             else {
+                    //                 c = 0;
+                    //                 this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                    //                 break;
+                    //             }
+                    //         }
+                    //         else {
+                    //             console.log("update for c = 0; r = 0")
+                    //             c = 0;
+                    //             this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                    //             break;
+                    //         }
+                    //     }
+                    // } else {
+                    //     // Remove contents and allow putting something else in.
+                    //     pattern[layer][r][c] = " ";
+                    //     this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+                    //     return false;
+                    // }
+
+                    if (pattern[layer][r][c] == "_") {
+                        // Move to previous cell.
+                        c -= 1;
+                        if (c < 0) {
+                            if (r > 0) {
+                                r -= 1;
+                                c = pattern[layer][r].length - 1;
+                            }
+                            else {
+                                c = 0;
+                            }
+                        }
+                    } else {
+                        // Remove contents and allow putting something else in.
+                        pattern[layer][r][c] = "_";
+                        this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+                        return false;
+                    }
+                    this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                     return false;
                 }
                 break;
+            case "Enter":
+                c = 0;
             case "ArrowDown":
                 // go to the next cell down (or otherwise the next layer) if one exists
                 if (pattern[layer][r + 1]) {
                     r += 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 } else {
                     const layers = Object.getOwnPropertyNames(pattern);
                     let found = false;
@@ -1508,20 +1631,22 @@ class TRRBTEditor {
                         if (found) {
                             layer = layerName;
                             r = 0;
-                            this.renderTableInputs(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+                            this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                             break;
                         }
                         if (layerName == layer) {
                             found = true;
                         }
                     }
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    break;
                 }
                 break;
             case "ArrowUp":
                 // go to the next cell/layer up, if one exists
                 if (pattern[layer][r - 1]) {
                     r -= 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 } else {
                     const layers = Object.getOwnPropertyNames(pattern);
                     let newLayer = layer;
@@ -1532,7 +1657,7 @@ class TRRBTEditor {
                         newLayer = layerName;
                     }
                     layer = newLayer;
-                    this.renderTableInputs(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 }
                 break;
             case "ArrowLeft":
@@ -1540,43 +1665,55 @@ class TRRBTEditor {
                     // go to the next cell to the left, if one exists
                     if (pattern[layer][r][c - 1]) {
                         c -= 1;
-                        this.renderTableInputs(id, pattern, layer, r, c, pattern[layer][r][c].length, -1);
+                        this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                     }
                 }
                 break;
+            case " ":
+                pattern[layer][r][c] = pattern[layer][r][c].trim();
+                c += 1;
+                if (c >= pattern[layer][r].length) {
+                    c = 0;
+                    r += 1;
+                    if (r >= pattern[layer].length) {
+                        r -= 1;
+                        c = pattern[layer][r].length - 1;
+                    }
+                }
+                this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                break;
             case "ArrowRight":
                 // go to the next cell to the right, if one exists
-                if (input.selectionStart == pattern[layer][r][c].length
-                    && pattern[layer][r][c + 1]) {
-                    c += 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, 0);
+                if (input.selectionEnd == pattern[layer][r][c].length) {
+                    c = Math.min(c + 1, pattern[layer][r].length - 1);
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 }
                 break;
-            case "Enter":
-                // new line (split in middle)
-                if (input.selectionStart == pattern[layer][r][c].length) {
-                    c += 1;
-                } else if (input.selectionStart !== 0) {
-                    let before = pattern[layer][r][c].slice(0, input.selectionStart);
-                    let after = pattern[layer][r][c].slice(input.selectionStart)
-                    pattern[layer][r].splice(c, 0, before);
-                    c += 1;
-                    pattern[layer][r][c] = after;
-                }
+            // case "Enter":
+            //     // new line (split in middle)
+            //     if (input.selectionStart == pattern[layer][r][c].length) {
+            //         c += 1;
+            //     } else if (input.selectionStart !== 0) {
+            //         let before = pattern[layer][r][c].slice(0, input.selectionStart);
+            //         let after = pattern[layer][r][c].slice(input.selectionStart)
+            //         pattern[layer][r].splice(c, 0, before);
+            //         c += 1;
+            //         pattern[layer][r][c] = after;
+            //     }
 
-                if (c < pattern[layer][r].length - 1) {
-                    let oldRow = pattern[layer][r].slice(0, c);
-                    let newRow = pattern[layer][r].slice(c);
-                    pattern[layer][r] = oldRow;
-                    pattern[layer].splice(r + 1, 0, newRow);
-                } else {
-                    pattern[layer].splice(r + 1, 0, ["."]);
-                }
+            //     if (c < pattern[layer][r].length - 1) {
+            //         let oldRow = pattern[layer][r].slice(0, c);
+            //         let newRow = pattern[layer][r].slice(c);
+            //         pattern[layer][r] = oldRow;
+            //         pattern[layer].splice(r + 1, 0, newRow);
+            //     } else {
+            //         pattern[layer].splice(r + 1, 0, [" "]);
+            //     }
 
-                c = 0;
-                r += 1;
-                this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                break;
+            //     c = 0;
+            //     r += 1;
+            //     this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+            //     break;
             default:
                 break;
         }
@@ -1588,26 +1725,34 @@ class TRRBTEditor {
             this.preventInput = false;
             return;
         }
-        pattern[layer][r][c] = input.value;
-        if ([...pattern[layer][r][c].trim()].length == 0) {
-            // if cell is empty, delete and move to the cell to the left.
-            pattern[layer][r].splice(c, 1);
-            c -= 1;
-            this.updatePatternText(id, pattern, layer, r, c);
-        } else {
-            this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
-        }
+        pattern[layer][r][c] = input.value.trim() == "" ? "_" : input.value.trim();
+        // if ([...pattern[layer][r][c].trim()].length == 0) {
+        //     // if cell is empty, delete and move to the cell to the left.
+        //     pattern[layer][r].splice(c, 1);
+        //     c -= 1;
+        //     this.updatePatternText(id, pattern, layer, r, c);
+        // } else {
+        //     this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+        // }
+        this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
     }
 
     updatePatternText(id, pattern, layer, r = 0, c = 0, fis = -1, fie = -1) {
         let patternText = this.textFromPattern(pattern).patternText
         let textInput = document.getElementById(id);
-        textInput.value = patternText;
-        telemetry("pattern-" + id + "-set-" + textInput.value);
-        this.highlightProperty(id, false);
-        this.validateProperties();
-        this.nodeSaveProperties();
-        this.renderTableInputs(id, pattern, layer, r, c, fis, fie);
+        if (textInput != null) {
+            let scrollToX = window.scrollX;
+            let scrollToY = window.scrollY;
+            if (this.patternTextInput !== null && this.patternTextInput.style.display !== 'none') {
+                this.patternTextVisible = true;
+            }
+            textInput.value = patternText;
+            telemetry("pattern-" + id + "-set-" + textInput.value);
+            this.validateProperties();
+            this.nodeSaveProperties();
+            this.renderTableInputs(id, pattern, layer, r, c, fis, fie);
+            setTimeout(() => { window.scrollTo(scrollToX, scrollToY) }, 0);
+        }
     }
 
     patternTextOnInput(id) {
@@ -1619,7 +1764,28 @@ class TRRBTEditor {
         textInput.setSelectionRange(pos, pos);
     }
 
+    onShowHidePatternText(id, show = null) {
+        let textInput = document.getElementById(id);
+        if (textInput !== null) {
+            if (textInput.style.display === 'none' || show) {
+                console.log('show')
+                textInput.style.display = 'block';
+            } else {
+                console.log('hide')
+                textInput.style.display = 'none';
+            }
+        }
+    }
+
     appendPatternProperty(parent, id, name, help, pattern, tileSize, minRows = 0, minCols = 0, sublabel = "") {
+        let textPattern = this.textFromPattern(pattern).patternText;
+        pattern = this.patternFromString(textPattern);
+        let layers = Object.getOwnPropertyNames(pattern);
+        for (const layer of layers) {
+            if (pattern[layer].length == 0) {
+                pattern[layer].push([" "]);
+            }
+        }
         let patternTextInfo = this.textFromPattern(pattern, tileSize, minRows, minCols);
         let patternText = patternTextInfo.patternText;
         let rows = patternTextInfo.rows;
@@ -1631,30 +1797,12 @@ class TRRBTEditor {
         label.htmlFor = id;
         label.title = help;
 
-        const textInput = document.createElement('textarea');
-        textInput.id = id;
-        textInput.name = id;
-        textInput.innerHTML = patternText;
-        textInput.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
-
-        textInput.oninput = () => {
-            this.patternTextOnInput(id);
-        }
-        textInput.onchange = () => {
-            let pattern = this.patternFromString(textInput.value)
-            this.renderTableInputs(id, pattern);
-            this.updatePatternText(id, pattern);
-            this.nodeSaveProperties();
-            telemetry("pattern-" + name + "-set-" + textInput.value);
-        }
-
         item.appendChild(label)
         appendBr(item)
         if (sublabel != "") {
             appendText(item, sublabel, false, false, true)
             appendBr(item)
         }
-        item.appendChild(textInput);
 
         const tableInput = document.createElement('div');
         tableInput.id = id + "_tableview";
@@ -1662,6 +1810,35 @@ class TRRBTEditor {
         appendBr(item)
         parent.appendChild(item);
         this.renderTableInputs(id, pattern);
+
+        const patternTextInputDiv = document.createElement('div');
+        appendButton(patternTextInputDiv, 'showHidePatternText', 'Show/Hide Text Editor', 'Show/Hide Text-based Pattern Editor', null, bind1(this, 'onShowHidePatternText', id))
+        const patternTextInput = document.createElement('textarea');
+        patternTextInput.id = id;
+        patternTextInput.name = id;
+        patternTextInput.innerHTML = patternText;
+        patternTextInput.style = 'display: none; font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
+        patternTextInput.oninput = () => {
+            this.patternTextOnInput(id);
+        }
+        patternTextInput.onchange = () => {
+            let pattern = this.patternFromString(patternTextInput.value)
+            this.renderTableInputs(id, pattern);
+            this.updatePatternText(id, pattern);
+            this.nodeSaveProperties();
+            telemetry("pattern-" + name + "-set-" + patternTextInput.value);
+        }
+        patternTextInput.onblur = () => {
+            this.unhighlightProperty(id);
+        }
+        this.patternTextInput = patternTextInput;
+        patternTextInputDiv.appendChild(patternTextInput);
+
+        item.appendChild(patternTextInputDiv);
+        if (this.patternTextVisible) {
+            this.onShowHidePatternText(id);
+            setTimeout(() => this.patternTextVisible = false, 10);
+        }
     }
 
     textFromPattern(pattern, tileSize, minRows, minCols) {
@@ -1672,12 +1849,17 @@ class TRRBTEditor {
         let patternText = "";
         const layers = Object.getOwnPropertyNames(pattern);
         for (const layer of layers) {
-            patternText += ' ' + layer + '\n';
-            rows += 1;
+            if (layers.length === 1 && layers[0] === 'main') {
+                // pass
+            } else {
+                patternText += ' ' + layer + '\n';
+                rows += 1;
+            }
             cols = Math.max(cols, graphemeLength(layer) + 1);
 
             for (const row of pattern[layer]) {
-                const row_text = joinRow(row, tileSize, false);
+                let rowCopy = row.map(tile => tile.trim() == "" ? "_" : tile);
+                const row_text = joinRow(rowCopy, tileSize, false);
                 patternText += row_text + '\n';
                 rows += 1;
                 cols = Math.max(cols, graphemeLength(row_text));
@@ -1723,7 +1905,7 @@ class TRRBTEditor {
             }
             for (let r = 0; r < pattern[layer].length; r++) {
                 for (let c = 0; c < maxCols; c++) {
-                    if (!pattern[layer][r][c] || pattern[layer][r][c].trim() == "") {
+                    if (!pattern[layer][r][c] || pattern[layer][r][c] == "") {
                         pattern[layer][r][c] = "?";
                     }
                 }
@@ -1973,17 +2155,17 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = getTileSize([node.pattern]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Edit using either the text field or the table. Tiles must be separated by spaces and cannot be empty; \'.\' is a wildcard (matches everything in rewrites).');
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️⬇️➡️⬅️. \' \' is represented by \'_\' in text; \'.\' is empty space (and matches everything in rewrites), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                 const hasLHS = node.hasOwnProperty('lhs');
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Edit using either the text field or the table. Tiles must be separated by spaces and cannot be empty; \'.\' is a wildcard (matches everything)');
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️⬇️➡️⬅️. \' \' is represented by \'_\' in text; \'.\' is empty space (and matches everything in rewrites), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Edit using either the text field or the table. Tiles must be separated by spaces and cannot be empty; \'.\' is a wildcard (no change)');
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️⬇️➡️⬅️. \' \' is represented by \'_\' in text; \'.\' is empty space (and matches everything in rewrites), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
                 }
             }
 
@@ -2415,7 +2597,7 @@ class TRRBTEditor {
         this.undoRedo();
     }
 
-    onShowHidEmojiPicker() {
+    onShowHideEmojiPicker() {
         if (this.emojiPicker !== null) {
             if (this.emojiPicker.style.display === 'none') {
                 this.emojiPicker.style.display = 'block';
@@ -2715,19 +2897,20 @@ class TRRBTEditor {
         let grandparent = parent.parentNode;
         let pebbles = grandparent.children;
 
-        let pebbleHeight = grandparent.clientHeight;
+        let pebbleHeight = 0;
         for (let pebble of pebbles) {
             if (pebble != parent) {
                 pebbleHeight += pebble.offsetHeight;
             }
         }
 
-        parent.style.height = grandparent.offsetHeight + "px";
+        parent.style.height = grandparent.offsetHeight - pebbleHeight + "px";
         parent.style.width = grandparent.offsetWidth + "px";
 
         if (!this.resizing) {
             this.resizing = true;
             let targetHeight = Math.min(parent.clientHeight, 1500);
+            console.log("target Height: " + targetHeight)
 
             let targetWidth = Math.min(parent.clientWidth, 1500);
             this.updateCanvasSize(targetWidth, targetHeight);

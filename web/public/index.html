@@ -116,15 +116,39 @@
       };
       stringData = JSON.stringify(data);
       b64Data = btoa(unescape(encodeURIComponent(stringData)));
+      console.log('study data: ' + b64Data);
+      msg = "Data can also be found in the JavaScript console logs (Chrome: View > Developer > JavaScript Console; Firefox: Tools > Browser Tools > Web Developer Tools > Console)";
+      failmsg = "Unable to copy data to clipboard. " + msg;
 
       if (navigator.clipboard) {
-        navigator.clipboard.writeText(data).then(function () {
-          alert('Study data copied to clipboard. Data: \n' + b64Data);
+        navigator.clipboard.writeText(b64Data).then(function () {
+          alert('Study data copied to clipboard. ' + msg);
         }, function (err) {
-          alert('Unable to copy to clipboard. Data: \n' + b64Data);
+          alert(failmsg);
         });
       } else {
-        alert('Data: \n' + b64Data);
+        alert(failmsg);
+      }
+    }
+    function downloadIntroMaterials() {
+
+      // Create a link and set the URL using `createObjectURL`
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = 'Introductory Materials.zip';
+      link.download = 'Introductory Materials.zip';
+
+      if (confirm("Download Introductory Materials.zip? This may occur in the background and could take up to a minute.")) {
+        // It needs to be added to the DOM so it can be clicked
+        document.body.appendChild(link);
+        link.click();
+
+        // To make this work on Firefox we need to wait
+        // a little while before removing it.
+        setTimeout(() => {
+          URL.revokeObjectURL(link.href);
+          link.parentNode.removeChild(link);
+        }, 0);
       }
     }
     window.addEventListener('load', onLoad, false);
@@ -132,7 +156,10 @@
   <center>
     <div id="toolbar">
       <div id="selectordiv"></div>
-      <div><button onclick="exportStudyData()">Export Study Data</button></div>
+      <div>
+        <button onclick="exportStudyData()">Export Study Data</button>
+        <button onclick="downloadIntroMaterials()">Download Introductory Materials</button>
+      </div>
     </div>
     <div id="editwindow">
       <div class="card-group">
@@ -153,8 +180,8 @@
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('ucanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('ucanvascard', 'down')">⬇️</button>
-                  <button id="hide-div-editorucanvas" class="card-button"
-                    onclick="hideshow('div-editorucanvas')">-</button>
+                  <!-- <button id="hide-div-editorucanvas" class="card-button"
+                    onclick="hideshow('div-editorucanvas')">-</button> -->
                 </div>
                 <div><span><i>Click on a node to make changes.</i></span></div>
               </div>
@@ -170,8 +197,8 @@
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('xcanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('xcanvascard', 'down')">⬇️</button>
-                  <button id="hide-div-editorxcanvas" class="card-button"
-                    onclick="hideshow('div-editorxcanvas')">-</button>
+                  <!-- <button id="hide-div-editorxcanvas" class="card-button"
+                    onclick="hideshow('div-editorxcanvas')">-</button> -->
                 </div>
                 <div><span><i>Use with Step Mode to see step-by-step progress through the tree during
                       gameplay.</i></span></div>
@@ -191,7 +218,7 @@
               <div class="card-button-group">
                 <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
                 <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
-                <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button>
+                <!-- <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button> -->
               </div>
             </div>
             <div id="editorudiv"></div>
@@ -212,8 +239,8 @@
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('enginecanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('enginecanvascard', 'down')">⬇️</button>
-                  <button id="hide-div-enginecanvas" class="card-button"
-                    onclick="hideshow('div-enginecanvas')">-</button>
+                  <!-- <button id="hide-div-enginecanvas" class="card-button"
+                    onclick="hideshow('div-enginecanvas')">-</button> -->
                 </div>
               </div>
               <div id="div-enginecanvas">
@@ -228,7 +255,7 @@
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('enginecontrolscard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('enginecontrolscard', 'down')">⬇️</button>
-                  <button id="hide-enginediv" class="card-button" onclick="hideshow('enginediv')">-</button>
+                  <!-- <button id="hide-enginediv" class="card-button" onclick="hideshow('enginediv')">-</button> -->
                 </div>
               </div>
               <div id="enginediv"></div>

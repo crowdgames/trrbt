@@ -81,6 +81,14 @@ function bind2(obj, fn, arg1, arg2) {
     return obj[fn].bind(obj, arg1, arg2);
 }
 
+function bind3(obj, fn, arg1, arg2, arg3) {
+    return obj[fn].bind(obj, arg1, arg2, arg3);
+}
+
+function bind4(obj, fn, arg1, arg2, arg3, arg4) {
+    return obj[fn].bind(obj, arg1, arg2, arg3, arg4);
+}
+
 
 
 function appendText(parent, text, bold = false, underline = false, italic = false) {
@@ -109,7 +117,11 @@ function appendButton(parent, id, text, tooltip, color, callback) {
     button.innerHTML = text;
     button.title = tooltip;
     if (color !== null) {
-        button.style.backgroundColor = color
+        let colors = color.split(";");
+        button.style.backgroundColor = colors[0];
+        if (colors.length > 1) {
+            button.style.color = colors[1];
+        }
     } else {
         button.style.backgroundColor = '#dddddd';
     }

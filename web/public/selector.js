@@ -5,11 +5,8 @@ var LOCAL_GAME_SETUPS = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS")) ||
 
 const TEMPLATES = [
     'connect four',
-    'lights out',
     'soko-demo',
     'soko_enemy-incomplete',
-    'sweeper',
-    'soko2'
 ]
 
 function SEL_onLoad() {
