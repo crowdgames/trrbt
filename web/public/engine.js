@@ -914,15 +914,15 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         appendText(ed, 'Engine', true, true);
         appendText(ed, ' ');
-        appendText(ed, '(Hover for additional info. Click the board or use the arrow keys to play the game.)', false, false, true);
+        appendText(ed, '(Hover over buttons for helptext.)', false, false, true);
         appendBr(ed, true);
 
-        appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendButton(ed, 'restart-engine', 'Reset', 'Reset game.', null, bind0(this, 'onLoad'));
         appendText(ed, ' ');
         this.gameResultText = document.createElement('span');
         this.gameResultText.style.color = '#4444cc';
         this.gameResultText.innerHTML = '';
-        this.gameResultText.title = 'Game is over.  Restart to play again.';
+        this.gameResultText.title = 'Game is over. Reset to play again.';
         this.gameResultText.style.display = 'none';
         ed.appendChild(this.gameResultText);
         appendBr(ed);
@@ -944,24 +944,24 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         appendBr(ed, true);
 
-        appendButton(ed, 'engine-breakresume', 'Enter Step Mode', 'Use step mode to see the runtime progress through the transformed tree.', null, bind0(this, 'onBreakResume'));
+        appendButton(ed, 'engine-breakresume', 'Step Through Tree', 'Use step mode to see the runtime progress through the transformed tree.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ');
         this.breakResumeText = document.createElement('span');
         this.breakResumeText.style.color = '#fc5d5d';
-        this.breakResumeText.innerHTML = 'Click Next / Undo Tree Step to progress, or Resume to execute without stepping.';
-        this.breakResumeText.title = 'Click Next Tree Step / Undo Tree Step to follow the transformed tree through gameplay. Resume or restart to play as normal.';
+        this.breakResumeText.innerHTML = 'Click Start/Continue to play without stopping.';
+        this.breakResumeText.title = 'Click Next Tree Node / Undo Tree Node to follow the transformed tree through gameplay. Start/Continue to play as normal.';
         this.breakResumeText.style.display = 'none';
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
         // appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last player choice or display.', null, bind1(this, 'onUndo', 'move'));
-        appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
-        appendButton(ed, 'engine-undo-step', 'Undo Tree Step', 'Undo a single step in the transformed tree (Step Mode).', null, bind1(this, 'onUndo', 'step'));
+        appendButton(ed, 'engine-undo-choice', 'Undo Player Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
+        appendButton(ed, 'engine-undo-step', 'Undo Tree Node', 'Undo a single node in the transformed tree (Step Mode).', null, bind1(this, 'onUndo', 'step'));
         appendBr(ed);
 
         // appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next player choice or display.', null, bind1(this, 'onNext', 'move'));
-        appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
-        appendButton(ed, 'engine-next-step', 'Next Tree Step', 'Run a single step in the transformed tree(Step Mode).', null, bind1(this, 'onNext', 'step'));
+        appendButton(ed, 'engine-next-choice', 'Next Player Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
+        appendButton(ed, 'engine-next-step', 'Next Tree Node', 'Run a single node in the transformed tree(Step Mode).', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
 
         this.updateStepManual(true, true);
@@ -1271,12 +1271,12 @@ class TRRBTWebEngine extends TRRBTEngine {
             if (this.breakResumeText !== null) {
                 if (this.stepManual) {
                     this.breakResumeText.style.display = 'inline';
-                    breakBtn.innerHTML = "Resume";
+                    breakBtn.innerHTML = "Start/Continue";
                     undoStepBtn.style.display = 'inline';
                     nextStepBtn.style.display = 'inline';
                 } else {
                     this.breakResumeText.style.display = 'none';
-                    breakBtn.innerHTML = "Enter Step Mode";
+                    breakBtn.innerHTML = "Step Through Tree";
                     undoStepBtn.style.display = 'none';
                     nextStepBtn.style.display = 'none';
                 }

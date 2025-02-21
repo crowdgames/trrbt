@@ -1619,56 +1619,56 @@ class TRRBTEditor {
                 break;
             case "Enter":
                 c = 0;
-            case "ArrowDown":
-                // go to the next cell down (or otherwise the next layer) if one exists
-                if (pattern[layer][r + 1]) {
-                    r += 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                } else {
-                    const layers = Object.getOwnPropertyNames(pattern);
-                    let found = false;
-                    for (const layerName of layers) {
-                        if (found) {
-                            layer = layerName;
-                            r = 0;
-                            this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                            break;
-                        }
-                        if (layerName == layer) {
-                            found = true;
-                        }
-                    }
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                    break;
-                }
-                break;
-            case "ArrowUp":
-                // go to the next cell/layer up, if one exists
-                if (pattern[layer][r - 1]) {
-                    r -= 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                } else {
-                    const layers = Object.getOwnPropertyNames(pattern);
-                    let newLayer = layer;
-                    for (const layerName of layers) {
-                        if (layerName == layer) {
-                            break;
-                        }
-                        newLayer = layerName;
-                    }
-                    layer = newLayer;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                }
-                break;
-            case "ArrowLeft":
-                if (input.selectionStart == 0) {
-                    // go to the next cell to the left, if one exists
-                    if (pattern[layer][r][c - 1]) {
-                        c -= 1;
-                        this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                    }
-                }
-                break;
+            // case "ArrowDown":
+            //     // go to the next cell down (or otherwise the next layer) if one exists
+            //     if (pattern[layer][r + 1]) {
+            //         r += 1;
+            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //     } else {
+            //         const layers = Object.getOwnPropertyNames(pattern);
+            //         let found = false;
+            //         for (const layerName of layers) {
+            //             if (found) {
+            //                 layer = layerName;
+            //                 r = 0;
+            //                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //                 break;
+            //             }
+            //             if (layerName == layer) {
+            //                 found = true;
+            //             }
+            //         }
+            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //         break;
+            //     }
+            //     break;
+            // case "ArrowUp":
+            //     // go to the next cell/layer up, if one exists
+            //     if (pattern[layer][r - 1]) {
+            //         r -= 1;
+            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //     } else {
+            //         const layers = Object.getOwnPropertyNames(pattern);
+            //         let newLayer = layer;
+            //         for (const layerName of layers) {
+            //             if (layerName == layer) {
+            //                 break;
+            //             }
+            //             newLayer = layerName;
+            //         }
+            //         layer = newLayer;
+            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //     }
+            //     break;
+            // case "ArrowLeft":
+            //     if (input.selectionStart == 0) {
+            //         // go to the next cell to the left, if one exists
+            //         if (pattern[layer][r][c - 1]) {
+            //             c -= 1;
+            //             this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //         }
+            //     }
+            //     break;
             case " ":
                 pattern[layer][r][c] = pattern[layer][r][c].trim();
                 c += 1;
@@ -1682,13 +1682,13 @@ class TRRBTEditor {
                 }
                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 break;
-            case "ArrowRight":
-                // go to the next cell to the right, if one exists
-                if (input.selectionEnd == pattern[layer][r][c].length) {
-                    c = Math.min(c + 1, pattern[layer][r].length - 1);
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                }
-                break;
+            // case "ArrowRight":
+            //     // go to the next cell to the right, if one exists
+            //     if (input.selectionEnd == pattern[layer][r][c].length) {
+            //         c = Math.min(c + 1, pattern[layer][r].length - 1);
+            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            //     }
+            //     break;
             // case "Enter":
             //     // new line (split in middle)
             //     if (input.selectionStart == pattern[layer][r][c].length) {
@@ -2021,7 +2021,7 @@ class TRRBTEditor {
 
         appendText(ed, 'Editor', true, true);
         appendText(ed, ' ');
-        appendText(ed, '(Hover for additional info.)', false, false, true);
+        appendText(ed, '(Hover over buttons or labels for helptext.)', false, false, true);
         appendBr(ed, true);
 
         appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
@@ -2155,7 +2155,7 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = getTileSize([node.pattern]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️⬇️➡️⬅️. \' \' is represented by \'_\' in text; \'.\' is empty space (and matches everything in rewrites), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                 const hasLHS = node.hasOwnProperty('lhs');

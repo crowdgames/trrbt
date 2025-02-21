@@ -88,6 +88,8 @@
 
 .pattern-table {
   outline: solid 1px;
+  resize: both;
+  overflow: hidden;
 }
 
 .pattern-table-cell > button {

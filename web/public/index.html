@@ -163,7 +163,7 @@
     </div>
     <div id="editwindow">
       <div class="card-group">
-        <div class="card-column" id="treecolumn">
+        <div class="card-column" id="treecolumn" style="width: 500px">
           <div class="card-bar">
             <span class="card-title">Tree Views</span>
             <br />
@@ -200,8 +200,7 @@
                   <!-- <button id="hide-div-editorxcanvas" class="card-button"
                     onclick="hideshow('div-editorxcanvas')">-</button> -->
                 </div>
-                <div><span><i>Use with Step Mode to see step-by-step progress through the tree during
-                      gameplay.</i></span></div>
+                <div><span><i>During gameplay, the current node is outlined in pink.</i></span></div>
               </div>
               <div id="div-editorxcanvas" class="canvasdiv">
                 <canvas id="editorxcanvas" width="800px" height="350px" tabindex="1">
@@ -212,17 +211,15 @@
           </div>
         </div>
         <div class="card-column" id="editorcolumn">
-          <div id="editorcard" class="card" style="width: 430px">
-            <div class="card-bar">
-              <span class="card-title">Editor</span>
-              <div class="card-button-group">
-                <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
-                <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
-                <!-- <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button> -->
-              </div>
+          <div class="card-bar">
+            <span class="card-title">Editor</span>
+            <div class="card-button-group">
+              <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
+              <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
+              <!-- <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button> -->
             </div>
-            <div id="editorudiv"></div>
           </div>
+          <div id="editorudiv"></div>
         </div>
         <div class="card-column" id="enginecolumn">
           <div class="card-bar">
@@ -236,6 +233,8 @@
             <div id="enginecanvascard" class="card">
               <div class="card-bar">
                 <span class="card-title">Game</span>
+                <br />
+                <i>Click board or use rewrite node action buttons to play.</i>
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('enginecanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('enginecanvascard', 'down')">⬇️</button>
