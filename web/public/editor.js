@@ -45,7 +45,7 @@ const EDT_NODE_PROTOTYPES = [
 
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
-    { type: 'display-board', comment: '', nid: '' , delay: .1},
+    { type: 'display-board', comment: '', nid: '', delay: .1 },
     { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
 
     { type: 'match', friendly: 'find-pattern', pattern: EDT_EMPTY_PATTERN },
@@ -107,17 +107,17 @@ const EDT_NODE_HELP = {
 
 const EDT_NODE_PROP_NAMES = {
     comment: { name: 'comment', help: 'A comment about the node.' },
-    nid: { name: 'node ID', help: 'ID of node that other nodes can use to refer to it.' },
-    remorig: { name: 'remove original', help: 'Remove original pattern after transform applied.' },
+    nid: { name: 'node ID', help: 'Unique ID for the node, optional unless other nodes need to refer to it.' },
+    remorig: { name: 'remove original', help: 'Remove the original pattern after transform is applied.' },
     file: { name: 'file name', help: 'Name of file to link to.' },
-    target: { name: 'target ID', help: 'Target node ID to link to.' },
+    target: { name: 'target ID', help: 'Node ID of the node to copy.' },
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
     // layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
-    delay: { name: 'delay (seconds)', help: 'Delay (in seconds) before continuing.'},
+    delay: { name: 'delay (seconds)', help: 'Delay (in seconds) before continuing.' },
     what: { name: 'what', help: 'Character to be swapped/replaced.' },
-    with: { name: 'with', help: 'Other character to use.' },
-    withs: { name: 'with (space separated list)', help: 'Space-separated other characters to replace with.' },
+    with: { name: 'with', help: 'Character to swap for the what character.' },
+    withs: { name: 'with (space separated list)', help: 'Space-separated characters to replace the what with.' },
     button: { name: 'action button', help: 'Button to press to apply rewrite on player choice. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
     lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
@@ -1825,12 +1825,19 @@ class TRRBTEditor {
         this.renderTableInputs(id, pattern);
 
         const patternTextInputDiv = document.createElement('div');
-        appendButton(patternTextInputDiv, 'showHidePatternText', 'Show/Hide Text Editor', 'Show/Hide Text-based Pattern Editor', null, bind1(this, 'onShowHidePatternText', id))
+        appendButton(patternTextInputDiv, 'showHidePatternText', 'Show/Hide Text Editor', 'Show/Hide Text-based Pattern Editor', null, bind1(this, 'onShowHidePatternText', id + 'showhide'));
+        const patternTextInputHideable = document.createElement('div');
+        patternTextInputHideable.id = id + 'showhide';
+        patternTextInputHideable.style = 'display: none';
+        const patternTextInputDesc = document.createElement('div');
+        patternTextInputDesc.innerHTML = "<i>Separate cells with spaces. Special characters: use '_' for an empty cell, '.' is a wildcard (matches everything in rewrites), and '?' is padding.</i>";
+        patternTextInputHideable.appendChild(patternTextInputDesc);
+
         const patternTextInput = document.createElement('textarea');
         patternTextInput.id = id;
         patternTextInput.name = id;
         patternTextInput.innerHTML = patternText;
-        patternTextInput.style = 'display: none; font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
+        patternTextInput.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
         patternTextInput.oninput = () => {
             this.patternTextOnInput(id);
         }
@@ -1845,7 +1852,8 @@ class TRRBTEditor {
             this.unhighlightProperty(id);
         }
         this.patternTextInput = patternTextInput;
-        patternTextInputDiv.appendChild(patternTextInput);
+        patternTextInputHideable.appendChild(patternTextInput);
+        patternTextInputDiv.appendChild(patternTextInputHideable)
 
         item.appendChild(patternTextInputDiv);
         if (this.patternTextVisible) {
@@ -2180,17 +2188,17 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = getTileSize([node.pattern]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding.');
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                 const hasLHS = node.hasOwnProperty('lhs');
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding.');
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding.');
                 }
             }
 
