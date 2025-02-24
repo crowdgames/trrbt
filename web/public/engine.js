@@ -1244,11 +1244,11 @@ class TRRBTWebEngine extends TRRBTEngine {
                 } else if (this.state.gameResult.result === 'draw') {
                     gameOverText = 'Game over, draw!';
                 } else if (this.state.gameResult.result === 'stalemate') {
-                    gameOverText = 'Game over, stalemate!';
+                    gameOverText = 'Game over, no more moves!';
                 } else if (this.state.gameResult.result === 'stepout') {
-                    gameOverText = 'Game over, too many steps before move!';
+                    gameOverText = 'Game over, too many steps before move! To find out which nodes are causing the problem, use "Step Through Tree" while playing the game. This often occurs when a loop-until-all node is unable to terminate because at least one child succeeds each time.';
                 } else {
-                    gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
+                    gameOverText = 'Game over, unexpected result: ' + this.state.gameResult.result + '!';
                 }
                 this.gameResultText.innerHTML = gameOverText;
                 this.gameResultFrames = 10;

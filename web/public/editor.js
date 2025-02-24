@@ -21,6 +21,7 @@ const EDT_TEXT_RECT_END = 4;
 const EDT_PARSE_TEXT_INT = 0;
 const EDT_PARSE_TEXT_WORD = 1;
 const EDT_PARSE_TEXT_TEXT = 2;
+const EDT_PARSE_TEXT_DEC = 3;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
@@ -29,73 +30,74 @@ const EDT_BUTTONS = { '': '\u2205', 'up': '\u2191', 'down': '\u2193', 'left': '\
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type: 'player', comment: '', nid: '', children: [], pid: '' },
+    { type: 'player', friendly: 'player-choice', comment: '', nid: '', children: [], pid: '' },
 
     { type: 'win', comment: '', nid: '', children: [], pid: '' },
     { type: 'lose', comment: '', nid: '', children: [], pid: '' },
     { type: 'draw', friendly: 'tie', comment: '', nid: '', children: [] },
 
     { type: 'order', comment: '', nid: '', children: [] },
-    { type: 'all', comment: '', nid: '', children: [] },
-    { type: 'none', comment: '', nid: '', children: [] },
-    { type: 'random-try', comment: '', nid: '', children: [] },
+    { type: 'all', friendly: 'order-until-fail', comment: '', nid: '', children: [] },
+    { type: 'none', friendly: 'order-until-pass', comment: '', nid: '', children: [] },
+    { type: 'random-try', friendly: 'random', comment: '', nid: '', children: [] },
     { type: 'loop-until-all', friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
     { type: 'loop-times', friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
 
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: 'display-board', comment: '', nid: '' , delay: .1},
     { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
 
-    { type: 'match', pattern: EDT_EMPTY_PATTERN },
+    { type: 'match', friendly: 'find-pattern', pattern: EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type: 'x-ident', friendly: 'group-only', comment: '', nid: '', children: [] },
+    { type: 'x-ident', friendly: 'group', comment: '', nid: '', children: [] },
     { type: 'x-mirror', friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
-    // { type: 'x-skew', friendly: 'col-skew', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-skew', friendly: 'skew', comment: '', nid: '', children: [], remorig: false },
     { type: 'x-rotate', comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
     { type: 'x-spin', comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
     { type: 'x-flip', friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
-    // { type: 'x-swap', comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
+    { type: 'x-swap', comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
     { type: 'x-replace', comment: '', friendly: 'replace-chars', nid: '', children: [], what: '', withs: [] },
     { type: 'x-prune', comment: '', friendly: 'delete', nid: '', children: [] },
     { type: 'x-link', comment: '', friendly: 'copy-subtree', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
-    'player': { color: [0, 0, 1], help: 'If any LEFT of any child matches, given player can choose which RIGHT rewrite to apply. Succeeds if there were any matches, otherwise, fails.' },
+    'player': { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise..' },
 
     'win': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
-    'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
-    'draw': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
+    'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player losing; otherwise fails.' },
+    'draw': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with a draw; otherwise fails.' },
 
     'order': { color: [1, 1, 0], help: 'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.' },
-    'all': { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Fails if any child fails, otherwise succeeds.' },
-    'none': { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Fails if any child succeeds, otherwise succeeds.' },
+    'all': { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Succeeds if all children are successful, otherwise fails.' },
+    'none': { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Succeeds if all children fail, otherwise fails.' },
     'random-try': { color: [1, 1, 0], help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
-    'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.' },
-    'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.' },
+    'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds at least once, otherwise fails.' },
+    'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds at least once, otherwise fails.' },
 
-    'rewrite': { color: [0, 1, 0], help: 'If there are any LEFT pattern matches, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'rewrite': { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
     'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
     'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
     'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
     'layer-template': { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
-    'display-board': { color: [0, 1, 0], help: 'Causes the board to be displayed. Always succeeds.' },
+    'display-board': { color: [0, 1, 0], help: 'Causes the board display to update. Always succeeds.' },
 
-    'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
+    'match': { color: [0, 1, 1], help: 'Succeeds if the pattern is found anywhere on the board, otherwise fails.' },
 
-    'x-ident': { color: [1, 1, 1], help: 'Do not apply any transform.' },
-    'x-prune': { color: [1, 1, 1], help: 'Remove nodes.' },
+    'x-ident': { color: [1, 1, 1], help: 'No effect. Nodes are visually grouped only.' },
+    'x-prune': { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
 
-    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right.' },
-    'x-skew': { color: [1, 1, 1], help: 'Skew patterns along columns.' },
-    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees.' },
-    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns 90, 180, and 270 degrees.' },
-    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom.' },
+    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right, e.g x y => x y, y x' },
+    'x-skew': { color: [1, 1, 1], help: 'Skew patterns along columns, e.g x y z => x y z, x . ./. y ./. . z' },
+    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
+    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
+    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
 
-    'x-swap': { color: [1, 1, 1], help: 'Swap "what" with "with" in patterns and player IDs (removing original).' },
-    'x-replace': { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement character in "withs" replacing the "what" in all patterns and player IDs.' },
+    'x-swap': { color: [1, 1, 1], help: 'Swap "what" with "with" in patterns and player IDs (removing original), e.g x => y' },
+    'x-replace': { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement character in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
 
     'x-unroll-replace': { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
 
@@ -112,10 +114,11 @@ const EDT_NODE_PROP_NAMES = {
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
     // layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
+    delay: { name: 'delay (seconds)', help: 'Delay (in seconds) before continuing.'},
     what: { name: 'what', help: 'Character to be swapped/replaced.' },
     with: { name: 'with', help: 'Other character to use.' },
     withs: { name: 'with (space separated list)', help: 'Space-separated other characters to replace with.' },
-    button: { name: 'action button', help: 'Button to press to apply rewrite. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
+    button: { name: 'action button', help: 'Button to press to apply rewrite on player choice. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
     lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
     rhs: { name: 'RIGHT', help: 'Right hand side tile pattern of a rewrite rule.' }
@@ -603,6 +606,10 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('times')) {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['times'].name + ': ' + node.times });
+        }
+
+        if (node.hasOwnProperty('delay')) {
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['delay'].name + ': ' + node.delay });
         }
 
         if (node.hasOwnProperty('what')) {
@@ -1195,7 +1202,7 @@ class TRRBTEditor {
     parseTextProperty(id, how) {
         let value = document.getElementById(id).value;
         value = value.trim();
-        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
+        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD || how === EDT_PARSE_TEXT_DEC) {
             if (value.match(/\s+/) !== null) {
                 return { ok: false, error: 'Cannot have spaces', value: value };
             } else if (how === EDT_PARSE_TEXT_INT && value != '') {
@@ -1204,6 +1211,12 @@ class TRRBTEditor {
                     return { ok: false, error: 'Must be an integer between 1 and 100', value: value };
                 }
                 return { ok: true, value: asInt };
+            } else if (how === EDT_PARSE_TEXT_DEC && value != '') {
+                const asDec = parseFloat(value);
+                if (isNaN(asDec) || asDec < .001 || asDec > 60) {
+                    return { ok: false, error: 'Must be a decimal between .001 and 60', value: value };
+                }
+                return { ok: true, value: asDec };
             }
         }
         return { ok: true, value: value };
@@ -2024,8 +2037,8 @@ class TRRBTEditor {
         appendText(ed, '(Hover over buttons or labels for helptext.)', false, false, true);
         appendBr(ed, true);
 
-        appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
-        appendButton(ed, 'redo-edit', 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
+        appendButton(ed, 'undo-edit', 'Undo', 'Undo the last edit.', null, bind0(this, 'onUndo'));
+        appendButton(ed, 'redo-edit', 'Redo', 'Redo the last undo.', null, bind0(this, 'onRedo'));
         appendText(ed, ' ');
         let treecolumnbuttons = document.getElementById("treecolumnbuttons");
         let hasHrz = false;
@@ -2035,7 +2048,7 @@ class TRRBTEditor {
             }
         }
         if (!hasHrz) {
-            appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout Hrz/Vrt", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
+            appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout Hrz/Vrt", 'Toggle between horizontal and vertical layout for the trees.', null, bind0(this, 'onHrzVrt'));
         }
         appendButton(ed, 'import', 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
         appendButton(ed, 'export', 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
@@ -2043,7 +2056,7 @@ class TRRBTEditor {
 
         this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES['name'].name, + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
         appendBr(ed, true);
-        appendButton(ed, 'template', 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
+        appendButton(ed, 'template', 'Use as Template', 'Create a local copy of the game to edit.', null, bind0(this, 'onTemplate'));
         appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
         appendBr(ed, true);
 
@@ -2063,10 +2076,10 @@ class TRRBTEditor {
             }
 
             const tooltip_help = 'Get more information about this node type.';
-            const tooltip_add_front = 'Add new node at front of children.';
-            const tooltip_add_back = 'Add new node at back of children.';
-            const tooltip_add_below = 'Add new child node, and move current children to new node.';
-            const tooltip_add_above = 'Add node as new parent to current node.';
+            const tooltip_add_front = 'Add new node to beginning of children.';
+            const tooltip_add_back = 'Add new node to end of children.';
+            const tooltip_add_below = 'Add node as a child, and move current children below it.';
+            const tooltip_add_above = 'Add node as the parent, below the current parent.';
 
             const node_clr = this.nodeColor(node.type, false);
             const node_help_str = EDT_NODE_HELP[node.type].help;
@@ -2078,26 +2091,35 @@ class TRRBTEditor {
             appendBr(ed, true);
 
             if (parent !== null) {
-                appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
-                appendButton(ed, 'node-shift-right', 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
+                appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node one child earlier under parent.', null, bind1(this, 'onNodeShift', true));
+                appendButton(ed, 'node-shift-right', 'Move Later', 'Move node one child later under parent.', null, bind1(this, 'onNodeShift', false));
                 if (node.type === 'player') {
                     // pass
                 } else if (node.hasOwnProperty('children')) {
-                    appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
+                    appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent, such that its children become the children of the parent.', null, bind0(this, 'onNodeSwapUp'));
                 }
             }
             appendBr(ed, true);
 
-            appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
-            if (node !== this.game.tree) {
-                appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
+            if (node.hasOwnProperty('children') && node.children.length > 0) {
+                appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Copy this subtree. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', false));
+                if (node !== this.game.tree) {
+                    appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Copy this subtree and delete the original. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', true));
+                }
+            } else {
+                appendButton(ed, 'node-copy-subtree', 'Copy Node', 'Copy this node. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', false));
+
+                if (node !== this.game.tree) {
+                    appendButton(ed, 'node-cut-subtree', 'Cut Node', 'Copy this node and delete the original. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', true));
+                }
             }
+
             if (this.clipboard !== null) {
                 if (node.hasOwnProperty('children')) {
                     if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
                         // pass
                     } else {
-                        appendButton(ed, 'node-paste-subtree', 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
+                        appendButton(ed, 'node-paste-subtree', 'Paste Node/Subtree', 'Paste the remembered node/subtree to the end of the children.', null, bind1(this, 'onNodePaste', true));
                     }
                 }
             }
@@ -2105,13 +2127,13 @@ class TRRBTEditor {
 
             if (node.hasOwnProperty('children') && node.children.length > 0) {
                 if (node !== this.game.tree) {
-                    appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
-                    appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
+                    appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent node.', null, bind1(this, 'onNodeDelete', true));
+                    appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and all its children.', null, bind1(this, 'onNodeDelete', false));
                 }
                 appendButton(ed, 'node-del-children', 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
                 appendBr(ed, true);
             } else if (node !== this.game.tree) {
-                appendButton(ed, 'node-delete', 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
+                appendButton(ed, 'node-delete', 'Delete Node', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
                 appendBr(ed, true);
             }
 
@@ -2141,6 +2163,9 @@ class TRRBTEditor {
             if (node.hasOwnProperty('times')) {
                 this.appendTextProperty(list, 'prop_times', EDT_NODE_PROP_NAMES['times'].name, EDT_NODE_PROP_NAMES['times'].help, node.times);
             }
+            if (node.hasOwnProperty('delay')) {
+                this.appendTextProperty(list, 'prop_delay', EDT_NODE_PROP_NAMES['delay'].name, EDT_NODE_PROP_NAMES['delay'].help, node.delay);
+            }
             if (node.hasOwnProperty('what')) {
                 this.appendTextProperty(list, 'prop_what', EDT_NODE_PROP_NAMES['what'].name, EDT_NODE_PROP_NAMES['what'].help, node.what);
             }
@@ -2162,10 +2187,10 @@ class TRRBTEditor {
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️⬇️➡️⬅️. \' \' is represented by \'_\' in text; \'.\' is empty space (and matches everything in rewrites), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️⬇️➡️⬅️. \' \' is represented by \'_\' in text; \'.\' is empty space (and matches everything in rewrites), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra ?s at the ends of rows will be automatically removed).');
                 }
             }
 
@@ -2248,6 +2273,7 @@ class TRRBTEditor {
                 ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_DEC],
                 ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['withs', bind0(this, 'parseListProperty'), false],

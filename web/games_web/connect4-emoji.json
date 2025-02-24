@@ -150,7 +150,8 @@
                                             },
                                             {
                                                 "type": "display-board",
-                                                "delay": 0.01
+                                                "delay": 0.01,
+                                                "comment": "show the chip falling"
                                             }
                                         ]
                                     }
