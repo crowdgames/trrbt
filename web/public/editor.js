@@ -54,7 +54,7 @@ const EDT_NODE_PROTOTYPES = [
 const EDT_XNODE_PROTOTYPES = [
     { type: 'x-ident', friendly: 'group', comment: '', nid: '', children: [] },
     { type: 'x-mirror', friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-skew', friendly: 'skew', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-skew', friendly: 'slant', comment: '', nid: '', children: [], remorig: false },
     { type: 'x-rotate', comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
     { type: 'x-spin', comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
     { type: 'x-flip', friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
@@ -91,13 +91,13 @@ const EDT_NODE_HELP = {
     'x-prune': { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
 
     'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right, e.g x y => x y, y x' },
-    'x-skew': { color: [1, 1, 1], help: 'Skew patterns along columns, e.g x y z => x y z, x . ./. y ./. . z' },
+    'x-skew': { color: [1, 1, 1], help: 'Slant patterns down, e.g x y z => x y z, x . ./. y ./. . z' },
     'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
     'x-spin': { color: [1, 1, 1], help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
     'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
 
-    'x-swap': { color: [1, 1, 1], help: 'Swap "what" with "with" in patterns and player IDs (removing original), e.g x => y' },
-    'x-replace': { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement character in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
+    'x-swap': { color: [1, 1, 1], help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
+    'x-replace': { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
 
     'x-unroll-replace': { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
 
@@ -115,9 +115,9 @@ const EDT_NODE_PROP_NAMES = {
     // layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
     delay: { name: 'delay (seconds)', help: 'Delay (in seconds) before continuing.' },
-    what: { name: 'what', help: 'Character to be swapped/replaced.' },
-    with: { name: 'with', help: 'Character to swap for the what character.' },
-    withs: { name: 'with (space separated list)', help: 'Space-separated characters to replace the what with.' },
+    what: { name: 'what', help: 'Text to be swapped/replaced.' },
+    with: { name: 'with', help: 'Text to swap for the what text.' },
+    withs: { name: 'with (space separated list)', help: 'Text(s) to replace the what with (separated by spaces).' },
     button: { name: 'action button', help: 'Button to press to apply rewrite on player choice. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
     lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
@@ -1632,56 +1632,56 @@ class TRRBTEditor {
                 break;
             case "Enter":
                 c = 0;
-            // case "ArrowDown":
-            //     // go to the next cell down (or otherwise the next layer) if one exists
-            //     if (pattern[layer][r + 1]) {
-            //         r += 1;
-            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //     } else {
-            //         const layers = Object.getOwnPropertyNames(pattern);
-            //         let found = false;
-            //         for (const layerName of layers) {
-            //             if (found) {
-            //                 layer = layerName;
-            //                 r = 0;
-            //                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //                 break;
-            //             }
-            //             if (layerName == layer) {
-            //                 found = true;
-            //             }
-            //         }
-            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //         break;
-            //     }
-            //     break;
-            // case "ArrowUp":
-            //     // go to the next cell/layer up, if one exists
-            //     if (pattern[layer][r - 1]) {
-            //         r -= 1;
-            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //     } else {
-            //         const layers = Object.getOwnPropertyNames(pattern);
-            //         let newLayer = layer;
-            //         for (const layerName of layers) {
-            //             if (layerName == layer) {
-            //                 break;
-            //             }
-            //             newLayer = layerName;
-            //         }
-            //         layer = newLayer;
-            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //     }
-            //     break;
-            // case "ArrowLeft":
-            //     if (input.selectionStart == 0) {
-            //         // go to the next cell to the left, if one exists
-            //         if (pattern[layer][r][c - 1]) {
-            //             c -= 1;
-            //             this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //         }
-            //     }
-            //     break;
+            case "ArrowDown":
+                // go to the next cell down (or otherwise the next layer) if one exists
+                if (pattern[layer][r + 1]) {
+                    r += 1;
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                } else {
+                    const layers = Object.getOwnPropertyNames(pattern);
+                    let found = false;
+                    for (const layerName of layers) {
+                        if (found) {
+                            layer = layerName;
+                            r = 0;
+                            this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                            break;
+                        }
+                        if (layerName == layer) {
+                            found = true;
+                        }
+                    }
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    break;
+                }
+                break;
+            case "ArrowUp":
+                // go to the next cell/layer up, if one exists
+                if (pattern[layer][r - 1]) {
+                    r -= 1;
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                } else {
+                    const layers = Object.getOwnPropertyNames(pattern);
+                    let newLayer = layer;
+                    for (const layerName of layers) {
+                        if (layerName == layer) {
+                            break;
+                        }
+                        newLayer = layerName;
+                    }
+                    layer = newLayer;
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                }
+                break;
+            case "ArrowLeft":
+                if (input.selectionStart == 0) {
+                    // go to the next cell to the left, if one exists
+                    if (pattern[layer][r][c - 1]) {
+                        c -= 1;
+                        this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    }
+                }
+                break;
             case " ":
                 pattern[layer][r][c] = pattern[layer][r][c].trim();
                 c += 1;
@@ -1695,13 +1695,13 @@ class TRRBTEditor {
                 }
                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 break;
-            // case "ArrowRight":
-            //     // go to the next cell to the right, if one exists
-            //     if (input.selectionEnd == pattern[layer][r][c].length) {
-            //         c = Math.min(c + 1, pattern[layer][r].length - 1);
-            //         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-            //     }
-            //     break;
+            case "ArrowRight":
+                // go to the next cell to the right, if one exists
+                if (input.selectionEnd == pattern[layer][r][c].length) {
+                    c = Math.min(c + 1, pattern[layer][r].length - 1);
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                }
+                break;
             // case "Enter":
             //     // new line (split in middle)
             //     if (input.selectionStart == pattern[layer][r][c].length) {
@@ -1905,13 +1905,13 @@ class TRRBTEditor {
             if (tline.length === 0) {
                 continue;
             }
-            if (tline[0] === ' ') {
-                layer = tline.trim();
-                pattern[layer] = [];
-            } else {
-                let row = tline.split(/\s+/);
-                pattern[layer].push(row);
-            }
+            // if (tline[0] === ' ') {
+            //     layer = tline.trim();
+            //     pattern[layer] = [];
+            // } else {
+            let row = tline.trim().split(/\s+/);
+            pattern[layer].push(row);
+            // }
         }
         let maxCols = 0;
         if (pattern[layer] != undefined) {
@@ -2188,17 +2188,17 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = getTileSize([node.pattern]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding.');
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                 const hasLHS = node.hasOwnProperty('lhs');
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding.');
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB or SPACE. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding.');
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
                 }
             }
 
