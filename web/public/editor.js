@@ -36,10 +36,10 @@ const EDT_NODE_PROTOTYPES = [
     { type: 'lose', comment: '', nid: '', children: [], pid: '' },
     { type: 'draw', friendly: 'tie', comment: '', nid: '', children: [] },
 
-    { type: 'order', comment: '', nid: '', children: [] },
-    { type: 'all', friendly: 'order-until-fail', comment: '', nid: '', children: [] },
-    { type: 'none', friendly: 'order-until-pass', comment: '', nid: '', children: [] },
-    { type: 'random-try', friendly: 'random', comment: '', nid: '', children: [] },
+    { type: 'order', friendly: 'do-all', comment: '', nid: '', children: [] },
+    { type: 'all', friendly: 'all', comment: '', nid: '', children: [] },
+    { type: 'none', friendly: 'none', comment: '', nid: '', children: [] },
+    { type: 'random-try', friendly: 'random-until-pass', comment: '', nid: '', children: [] },
     { type: 'loop-until-all', friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
     { type: 'loop-times', friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
 
