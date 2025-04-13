@@ -37,11 +37,13 @@ tree:
         children:
         - type: rewrite
           button: right
+          mouse: false
           anim: true
           lhs: P _
           rhs: _ P
         - type: rewrite
           button: right
+          mouse: false
           anim: true
           lhs: P @ _
           rhs: _ P @

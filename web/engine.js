@@ -472,7 +472,9 @@ class TRRBTStepper {
                 if (child.type === 'rewrite') {
                     let matches = this.findLayerPattern(state, child.lhs);
                     for (let match of matches) {
-                        choices.push({ desc: child.desc, anim: child.anim, button: child.button, lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col });
+                        choices.push({ desc: child.desc, anim: child.anim, button: child.button, mouse: child.mouse,
+                                       lhs: child.lhs, rhs: child.rhs,
+                                       row: match.row, col: match.col });
                     }
                 }
             }
@@ -498,17 +500,19 @@ class TRRBTStepper {
                 for (let choiceIndex = 0; choiceIndex < state.choices.length; choiceIndex += 1) {
                     const choice = state.choices[choiceIndex];
 
-                    let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
-                    let rct = { row: choice.row, col: choice.col, rows: rowsChoice, cols: colsChoice };
-                    let rctk = JSON.stringify(rct);
+                    if (choice.mouse !== false) {
+                        let [rowsChoice, colsChoice] = this.layerPatternSize(choice.rhs);
+                        let rct = { row: choice.row, col: choice.col, rows: rowsChoice, cols: colsChoice };
+                        let rctk = JSON.stringify(rct);
 
-                    let mapChoices = [];
-                    if (Object.hasOwn(state.choicesByRct, rctk)) {
-                        mapChoices = state.choicesByRct[rctk].choices;
+                        let mapChoices = [];
+                        if (Object.hasOwn(state.choicesByRct, rctk)) {
+                            mapChoices = state.choicesByRct[rctk].choices;
+                        }
+
+                        mapChoices.push(choiceIndex);
+                        state.choicesByRct[rctk] = { rct: rct, choices: mapChoices };
                     }
-
-                    mapChoices.push(choiceIndex);
-                    state.choicesByRct[rctk] = { rct: rct, choices: mapChoices };
 
                     if (choice.button !== undefined) {
                         state.choicesByBtn[choice.button] = choiceIndex;
