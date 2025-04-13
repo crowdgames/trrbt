@@ -27,6 +27,7 @@ class TRRBTState {
         this.displayWait = false;
         this.displayDone = false;
         this.displayDelay = null;
+        this.displayOverwrite = null;
 
         this.choiceWait = false;
         this.choiceMade = null;
@@ -61,6 +62,7 @@ class TRRBTState {
         state.displayWait = this.displayWait;
         state.displayDone = this.displayDone;
         state.displayDelay = this.displayDelay;
+        state.displayOverwrite = deepcopyobj(this.displayOverwrite);
 
         state.choiceWait = this.choiceWait;
         state.choiceMade = deepcopyobj(this.choiceMade);
@@ -82,6 +84,7 @@ class TRRBTStepper {
         state.displayWait = false;
         state.displayDone = true;
         state.displayDelay = null;
+        state.displayOverwrite = null;
 
         if (clearLoopCheck) {
             state.loopCheck = 0;
@@ -431,6 +434,7 @@ class TRRBTStepper {
             state.displayWait = true;
             state.displayDone = false;
             state.displayDelay = 0;
+            state.displayOverwrite = null;
 
             if (frame.node.hasOwnProperty('delay')) {
                 state.displayDelay = frame.node.delay;
@@ -443,8 +447,17 @@ class TRRBTStepper {
         if (state.choiceWait === true) {
             return null;
         } else if (state.choiceMade !== null) {
+            const displayOverwrite = this.setupDisplayOverwrite(state.choiceMade);
+            if (displayOverwrite !== null) {
+                state.displayWait = true;
+                state.displayDone = false;
+                state.displayDelay = 0.15;
+                state.displayOverwrite = displayOverwrite;
+            }
+
             this.rewriteLayerPattern(state, state.choiceMade.rhs, state.choiceMade.row, state.choiceMade.col);
             state.choiceMade = null;
+
             return true;
         } else {
             state.choiceWait = false;
@@ -459,7 +472,7 @@ class TRRBTStepper {
                 if (child.type === 'rewrite') {
                     let matches = this.findLayerPattern(state, child.lhs);
                     for (let match of matches) {
-                        choices.push({ desc: child.desc, button: child.button, lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col });
+                        choices.push({ desc: child.desc, anim: child.anim, button: child.button, lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col });
                     }
                 }
             }
@@ -508,6 +521,62 @@ class TRRBTStepper {
             } else {
                 return false;
             }
+        }
+    }
+
+    setupDisplayOverwrite(choice) {
+        if (choice.anim === undefined) {
+            return null;
+        }
+
+        const [prows, pcols] = this.layerPatternSize(choice.lhs);
+        if (prows === 0 || pcols === 0) {
+            return null;
+        }
+
+        let useDelta = null;
+        for (const [dr, dc] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+            let mismatch = false;
+
+            for (let rr = 0; rr < prows; rr += 1) {
+                for (let cc = 0; cc < pcols; cc += 1) {
+                    for (const layer in choice.lhs) {
+                        if (choice.lhs[layer][rr][cc] === '.') {
+                            continue;
+                        }
+                        if (!choice.rhs.hasOwnProperty(layer)) {
+                            mismatch = true;
+                            break;
+                        }
+                        const rhsTile = choice.rhs[layer][(dr + rr + prows) % prows][(dc + cc + pcols) % pcols];
+                        const lhsTile = choice.lhs[layer][rr][cc];
+                        if (rhsTile !== lhsTile) {
+                            mismatch = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!mismatch) {
+                useDelta = [dr, dc];
+                break;
+            }
+        }
+
+        if (useDelta !== null) {
+            const [dr, dc] = useDelta;
+            let deltas = [];
+            for (let rr = 0; rr < prows; rr += 1) {
+                let deltaRow = [];
+                for (let cc = 0; cc < pcols; cc += 1) {
+                    deltaRow.push([(dr + rr + prows) % prows - rr, (dc + cc + pcols) % pcols - cc])
+                }
+                deltas.push(deltaRow);
+            }
+            return { row: choice.row, col: choice.col, rows: prows, cols: pcols, pattern: choice.lhs, deltas: deltas };
+        } else {
+            return null;
         }
     }
 
@@ -748,6 +817,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.delayStart = null;
         this.delayUntil = null;
 
         this.stepManual = false;
@@ -785,6 +855,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         this.mouseChoice = null;
         this.mouseAlt = false;
+        this.delayStart = null;
         this.delayUntil = null;
 
         this.stepManual = false;
@@ -1012,12 +1083,15 @@ class TRRBTWebEngine extends TRRBTEngine {
                 this.requestDraw();
                 if (this.delayUntil === null) {
                     if (this.stepManual) {
+                        this.delayStart = 0;
                         this.delayUntil = 0;
                     } else {
-                        this.delayUntil = Date.now() + 1000 * this.state.displayDelay;
+                        this.delayStart = Date.now();
+                        this.delayUntil = this.delayStart + 1000 * this.state.displayDelay;
                     }
                 } else {
                     if (Date.now() >= this.delayUntil) {
+                        this.delayStart = null;
                         this.delayUntil = null;
                         this.clearDisplayWait(true);
                     }
@@ -1062,66 +1136,73 @@ class TRRBTWebEngine extends TRRBTEngine {
             }
         }
 
+        const OVERWRITE_ALPHA = 0.5;
+        const delayAnim = (Date.now() - this.delayStart) / (this.delayUntil - this.delayStart);
+
         let choiceOverwrite = null;
         if (this.mouseChoice !== null && !this.mouseAlt) {
             choiceOverwrite = { rct: this.mouseChoice.rct, rhs: this.state.choices[this.state.choicesByRct[JSON.stringify(this.mouseChoice.rct)].choices[this.mouseChoice.idx]].rhs };
         }
 
+        let displayOverwrite = this.state.displayOverwrite;
+
         this.ctx.fillStyle = '#000000';
 
-        for (let rr = 0; rr < this.state.rows; rr += 1) {
-            for (let cc = 0; cc < this.state.cols; cc += 1) {
-                let tiles = [];
-                let overwrites = [];
-                if (choiceOverwrite !== null &&
-                    choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
-                    choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
-                    for (const [layer, pattern] of Object.entries(this.state.board)) {
-                        if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
-                            const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
-                            if (tileOverwrite !== '.') {
-                                tiles.push(tileOverwrite);
-                                overwrites.push(true);
-                            } else {
-                                tiles.push(pattern[rr][cc]);
-                                overwrites.push(false);
+        if (this.state.board !== null) {
+            let layers = Object.keys(this.state.board);
+            layers = layers.reverse()
+
+            for (const layer of layers) {
+                const pattern = this.state.board[layer];
+                for (let rr = 0; rr < this.state.rows; rr += 1) {
+                    for (let cc = 0; cc < this.state.cols; cc += 1) {
+                        let tile = pattern[rr][cc];
+                        let alpha = null;
+                        let offset = null;
+
+                        if (choiceOverwrite !== null &&
+                            choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
+                            choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
+                            if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
+                                const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                                if (tileOverwrite !== '.') {
+                                    tile = tileOverwrite;
+                                    alpha = OVERWRITE_ALPHA;
+                                }
                             }
-                        } else {
-                            tiles.push(pattern[rr][cc]);
-                            overwrites.push(false);
+                        } else if (displayOverwrite !== null &&
+                                   displayOverwrite.row <= rr && rr < displayOverwrite.row + displayOverwrite.rows &&
+                                   displayOverwrite.col <= cc && cc < displayOverwrite.col + displayOverwrite.cols) {
+                            if (displayOverwrite.pattern.hasOwnProperty(layer)) {
+                                const or = rr - displayOverwrite.row;
+                                const oc = cc - displayOverwrite.col;
+                                const tileOverwrite = displayOverwrite.pattern[layer][or][oc];
+                                if (tileOverwrite !== '.') {
+                                    const [dr, dc] = displayOverwrite.deltas[or][oc];
+                                    tile = tileOverwrite;
+                                    offset = [delayAnim * dr, delayAnim * dc];
+                                }
+                            }
                         }
-                    }
-                } else {
-                    for (const [layer, pattern] of Object.entries(this.state.board)) {
-                        tiles.push(pattern[rr][cc]);
-                        overwrites.push(false);
-                    }
-                }
-                tiles = tiles.reverse();
-                overwrites = overwrites.reverse();
-                for (let ii in tiles) {
-                    const tile = tiles[ii];
-                    const overwrite = overwrites[ii];
-                    if (overwrite) {
-                        this.ctx.globalAlpha = 0.5;
-                    } else {
-                        this.ctx.globalAlpha = 1.0;
-                    }
-                    if (tile !== '.') {
-                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, tile)) {
-                            const imgName = this.spriteTiles[tile];
-                            if (imgName !== null) {
-                                const img = this.spriteImages[imgName];
-                                this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
-                            }
-                        } else {
-                            if (tile.length > 0 && tile[0] === '_') {
-                                // pass
+
+                        if (tile !== '.') {
+                            this.ctx.globalAlpha = (alpha === null) ? 1.0 : alpha;
+                            const [orr, occ] = (offset === null) ? [rr, cc] : [rr + offset[0], cc + offset[1]];
+                            if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, tile)) {
+                                const imgName = this.spriteTiles[tile];
+                                if (imgName !== null) {
+                                    const img = this.spriteImages[imgName];
+                                    this.ctx.drawImage(img, this.tocvsx(occ), this.tocvsy(orr));
+                                }
                             } else {
-                                function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
-                                const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
-                                this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
-                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
+                                if (tile.length > 0 && tile[0] === '_') {
+                                    // pass
+                                } else {
+                                    function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
+                                    const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
+                                    this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
+                                    this.ctx.fillText(tile, this.tocvsx(occ + 0.5), this.tocvsy(orr + 0.5 + offset));
+                                }
                             }
                         }
                     }
@@ -1299,8 +1380,10 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.mouseAlt = false;
 
         if (this.state.displayWait) {
-            this.delayUntil = Date.now() + 1000;
+            this.delayStart = Date.now();
+            this.delayUntil = this.delayUntil + 1000;
         } else {
+            this.delayStart = null;
             this.delayUntil = null;
         }
 

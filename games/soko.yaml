@@ -37,10 +37,12 @@ tree:
         children:
         - type: rewrite
           button: right
+          anim: true
           lhs: P _
           rhs: _ P
         - type: rewrite
           button: right
+          anim: true
           lhs: P @ _
           rhs: _ P @
     - type: win
