@@ -417,6 +417,9 @@ class TRRBTStepper {
         let matches = this.findLayerPattern(state, frame.node.lhs);
         if (matches.length > 0) {
             let match = matches[Math.floor(Math.random() * matches.length)];
+            if (frame.node.anim) {
+                this.setupDisplayOverwrite(state, frame.node.lhs, frame.node.rhs, match.row, match.col);
+            }
             this.rewriteLayerPattern(state, frame.node.rhs, match.row, match.col);
             return true;
         } else {
@@ -447,14 +450,9 @@ class TRRBTStepper {
         if (state.choiceWait === true) {
             return null;
         } else if (state.choiceMade !== null) {
-            const displayOverwrite = this.setupDisplayOverwrite(state.choiceMade);
-            if (displayOverwrite !== null) {
-                state.displayWait = true;
-                state.displayDone = false;
-                state.displayDelay = 0.15;
-                state.displayOverwrite = displayOverwrite;
+            if (state.choiceMade.anim) {
+                this.setupDisplayOverwrite(state, state.choiceMade.lhs, state.choiceMade.rhs, state.choiceMade.row, state.choiceMade.col);
             }
-
             this.rewriteLayerPattern(state, state.choiceMade.rhs, state.choiceMade.row, state.choiceMade.col);
             state.choiceMade = null;
 
@@ -528,12 +526,8 @@ class TRRBTStepper {
         }
     }
 
-    setupDisplayOverwrite(choice) {
-        if (choice.anim === undefined) {
-            return null;
-        }
-
-        const [prows, pcols] = this.layerPatternSize(choice.lhs);
+    setupDisplayOverwrite(state, lhs, rhs, row, col) {
+        const [prows, pcols] = this.layerPatternSize(lhs);
         if (prows === 0 || pcols === 0) {
             return null;
         }
@@ -544,16 +538,16 @@ class TRRBTStepper {
 
             for (let rr = 0; rr < prows; rr += 1) {
                 for (let cc = 0; cc < pcols; cc += 1) {
-                    for (const layer in choice.lhs) {
-                        if (choice.lhs[layer][rr][cc] === '.') {
+                    for (const layer in lhs) {
+                        if (lhs[layer][rr][cc] === '.') {
                             continue;
                         }
-                        if (!choice.rhs.hasOwnProperty(layer)) {
+                        if (!rhs.hasOwnProperty(layer)) {
                             mismatch = true;
                             break;
                         }
-                        const rhsTile = choice.rhs[layer][(dr + rr + prows) % prows][(dc + cc + pcols) % pcols];
-                        const lhsTile = choice.lhs[layer][rr][cc];
+                        const rhsTile = rhs[layer][(dr + rr + prows) % prows][(dc + cc + pcols) % pcols];
+                        const lhsTile = lhs[layer][rr][cc];
                         if (rhsTile !== lhsTile) {
                             mismatch = true;
                             break;
@@ -568,20 +562,24 @@ class TRRBTStepper {
             }
         }
 
-        if (useDelta !== null) {
-            const [dr, dc] = useDelta;
-            let deltas = [];
-            for (let rr = 0; rr < prows; rr += 1) {
-                let deltaRow = [];
-                for (let cc = 0; cc < pcols; cc += 1) {
-                    deltaRow.push([(dr + rr + prows) % prows - rr, (dc + cc + pcols) % pcols - cc])
-                }
-                deltas.push(deltaRow);
-            }
-            return { row: choice.row, col: choice.col, rows: prows, cols: pcols, pattern: choice.lhs, deltas: deltas };
-        } else {
-            return null;
+        if (useDelta === null) {
+            return;
         }
+
+        const [dr, dc] = useDelta;
+        let deltas = [];
+        for (let rr = 0; rr < prows; rr += 1) {
+            let deltaRow = [];
+            for (let cc = 0; cc < pcols; cc += 1) {
+                deltaRow.push([(dr + rr + prows) % prows - rr, (dc + cc + pcols) % pcols - cc])
+            }
+            deltas.push(deltaRow);
+        }
+
+        state.displayWait = true;
+        state.displayDone = false;
+        state.displayDelay = 0.15;
+        state.displayOverwrite = { row: row, col: col, rows: prows, cols: pcols, pattern: lhs, deltas: deltas };
     }
 
     layerPatternSize(lpattern) {
