@@ -36,7 +36,7 @@ const EDT_NODE_PROTOTYPES = [
     { type: 'lose', comment: '', nid: '', children: [], pid: '' },
     { type: 'draw', friendly: 'tie', comment: '', nid: '', children: [] },
 
-    { type: 'order', friendly: 'do-all', comment: '', nid: '', children: [] },
+    { type: 'order', friendly: 'order', comment: '', nid: '', children: [] },
     { type: 'all', friendly: 'all', comment: '', nid: '', children: [] },
     { type: 'none', friendly: 'none', comment: '', nid: '', children: [] },
     { type: 'random-try', friendly: 'random-until-pass', comment: '', nid: '', children: [] },
@@ -112,7 +112,7 @@ const EDT_NODE_PROP_NAMES = {
     file: { name: 'file name', help: 'Name of file to link to.' },
     target: { name: 'target ID', help: 'Node ID of the node to copy.' },
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
-    // layer: { name: 'layer', help: 'Name of layer to use.' },
+    layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
     delay: { name: 'delay (seconds)', help: 'Delay (in seconds) before continuing.' },
     what: { name: 'what', help: 'Text to be swapped/replaced.' },
@@ -600,9 +600,9 @@ class TRRBTEditor {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['pid'].name + ': ' + node.pid });
         }
 
-        // if (node.hasOwnProperty('layer')) {
-        //     texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['layer'].name + ': ' + node.layer });
-        // }
+        if (node.hasOwnProperty('layer')) {
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['layer'].name + ': ' + node.layer });
+        }
 
         if (node.hasOwnProperty('times')) {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['times'].name + ': ' + node.times });
@@ -1370,9 +1370,9 @@ class TRRBTEditor {
         let textPattern = this.textFromPattern(pattern).patternText;
         pattern = this.patternFromString(textPattern);
         for (const layer of layers) {
-            // if (pattern[layer].length == 0) {
-            //     pattern[layer].push([" "]);
-            // }
+            if (pattern[layer].length == 0) {
+                pattern[layer].push([" "]);
+            }
             const inputTable = document.createElement('table');
             inputTable.classList.add('pattern-table');
             if (layers.length === 1 && layers[0] === 'main') {
@@ -1896,7 +1896,7 @@ class TRRBTEditor {
     patternFromString(patternStr) {
         let pattern = deepcopyobj(EDT_EMPTY_PATTERN);
         let layer = 'main';
-        if (!pattern.hasOwnProperty(layer)) {
+        if (!pattern.hasOwnProperty(layer) && patternStr[0] != ' ') {
             pattern[layer] = [];
         }
 
@@ -1905,13 +1905,13 @@ class TRRBTEditor {
             if (tline.length === 0) {
                 continue;
             }
-            // if (tline[0] === ' ') {
-            //     layer = tline.trim();
-            //     pattern[layer] = [];
-            // } else {
-            let row = tline.trim().split(/\s+/);
-            pattern[layer].push(row);
-            // }
+            if (tline[0] === ' ') {
+                layer = tline.trim();
+                pattern[layer] = [];
+            } else {
+                let row = tline.trim().split(/\s+/);
+                pattern[layer].push(row);
+            }
         }
         let maxCols = 0;
         if (pattern[layer] != undefined) {
