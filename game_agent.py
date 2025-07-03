@@ -1,6 +1,5 @@
 import util as util
 import random
-import numpy as np
 import argparse
 import time
 import copy
@@ -11,11 +10,18 @@ from game_py import GameOverException, END_WIN
 
 
 def manhattan(board, a, b):
-    ai = np.argwhere(board == a)
-    bi = np.argwhere(board == b)
-    if len(ai) == 0 or len(bi) == 0:
+    ai, bi = None, None
+    for rr, row in enumerate(board):
+        for cc, tile in enumerate(row):
+            if ai is None and tile == a:
+                ai = rr, cc
+            if bi is None and tile == b:
+                bi = rr, cc
+
+    if ai is None or bi is None:
         return -1
-    return (ai[0][0] - bi[0][0]) + (ai[0][1] - bi[0][1])
+
+    return abs(ai[0] - bi[0]) + abs(ai[1] - bi[1])
 
 
 def blockdude_heuristic(board):
