@@ -57,7 +57,7 @@ class Frontier:
 
 class AgentGameProcessor(game_py.GameProcessor):
     def __init__(self, filename, agent_id, agent_heuristic, timeout):
-        super().__init__(filename, True, [], False)
+        super().__init__(filename, True, [], None)
         self.agent_id = agent_id
         self.agent_heuristic = agent_heuristic
         self.timeout = timeout
