@@ -24,6 +24,10 @@ def manhattan(board, a, b):
     return abs(ai[0] - bi[0]) + abs(ai[1] - bi[1])
 
 
+def generic_heuristic(board):
+    return 0
+
+
 def blockdude_heuristic(board):
     dist = manhattan(board[util.DEFAULT_LAYER], "P", "D")
     if dist == -1:
@@ -221,35 +225,27 @@ class AgentGameProcessor(game_py.GameProcessor):
         return True
 
 
-class AgentBlockdudeProcessor(AgentGameProcessor):
-    def __init__(self, filename, timeout):
-        super().__init__(filename, "1", blockdude_heuristic, timeout)
-
-
-class AgentLimeRickProcessor(AgentGameProcessor):
-    def __init__(self, filename, timeout):
-        super().__init__(filename, "1", limerick_heuristic, timeout)
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Play game YAML.")
     parser.add_argument("filename", type=str, help="Filename to process.")
-    parser.add_argument(
-        "--player-agent", type=str, help="Player ID to play as the solver."
-    )
+    parser.add_argument("--player-agent", type=str, help="Player ID to play as the solver.", default="1")
     parser.add_argument("--random", type=int, help="Random seed.")
-    parser.add_argument(
-        "--game", type=str, help="game (one of 'blockdude', 'limerick')"
-    )
+    parser.add_argument("--game", type=str, help="game (one of 'blockdude', 'limerick')")
     args = parser.parse_args()
 
     random_seed = args.random if args.random is not None else int(time.time()) % 10000
     random.seed(random_seed)
 
-    if args.game == "blockdude":
-        game = AgentBlockdudeProcessor(args.filename, 7200)
+    if args.game is None:
+        heuristic = generic_heuristic
+    elif args.game == "blockdude":
+        heuristic = blockdude_heuristic
     elif args.game == "limerick":
-        game = AgentLimeRickProcessor(args.filename, 7200)
+        heuristic = limerick_heuristic
+
+    game = AgentGameProcessor(args.filename, args.player_agent, heuristic, 7200)
+
     game.game_play()
 
     soln = game.solution
