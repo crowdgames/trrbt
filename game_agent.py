@@ -77,9 +77,13 @@ class AgentGameProcessor(game_py.GameProcessor):
 
     def display_board(self, delay):
         super().display_board(0)
-        # if delay != 0:
-        #     super().display_board(0)
-        return
+
+    def set_board(self, new_board):
+        self.board = copy.deepcopy(new_board)
+        self.m, self.n = util.layer_pattern_size(self.board)
+
+    def print_board(self, board):
+        print(util.layer_pattern_to_string(board, None, '-', '-\n', '\n', '', '', ' ', '\n', self.max_tile_width))
 
     def get_valid_moves(self, node):
         valid_moves = []
@@ -111,31 +115,32 @@ class AgentGameProcessor(game_py.GameProcessor):
         player = str(node[util.NKEY_PID])
         for child in children:
             if self.execute_node(child):
-                if self.agent_current == self.board:
+                if True:
                     # We've found the shortest path.
                     goal_key = str(self.agent_current)
                     prev_board = self.agent_came_from[goal_key]
-                    path = deque([self.agent_current["main"]])
+                    path = deque([self.agent_current])
                     while prev_board != None:
-                        path.appendleft(prev_board["main"])
+                        path.appendleft(prev_board)
                         prev_board = self.agent_came_from[str(prev_board)]
                     self.solution = list(path)
                     raise GameOverException(END_WIN, player)
-                current_key = str(self.agent_current)
-                cost = self.agent_cost[current_key] + 1
-                neighbor_key = str(self.board)
-                if (
-                    neighbor_key not in self.agent_cost
-                    or cost < self.agent_cost[neighbor_key]
-                ):
-                    self.agent_cost[neighbor_key] = cost
-                    priority = cost + 0  # This is the goal
-                    self.agent_frontier.put(
-                        Frontier(priority, copy.deepcopy(self.board))
-                    )
-                    self.agent_unroll()
-                    self.agent_previous_move[neighbor_key] = self.agent_current_move
-                self.board = self.agent_current  # Set board to current
+                else:
+                    current_key = str(self.agent_current)
+                    cost = self.agent_cost[current_key] + 1
+                    neighbor_key = str(self.board)
+                    if (
+                        neighbor_key not in self.agent_cost
+                        or cost < self.agent_cost[neighbor_key]
+                    ):
+                        self.agent_cost[neighbor_key] = cost
+                        priority = cost + 0  # This is the goal
+                        self.agent_frontier.put(
+                            Frontier(priority, copy.deepcopy(self.board))
+                        )
+                        self.agent_unroll()
+                        self.agent_previous_move[neighbor_key] = self.agent_current_move
+                    self.set_board(self.agent_current)  # Set board to current
         return False
 
     def agent_unroll(self):
@@ -189,7 +194,7 @@ class AgentGameProcessor(game_py.GameProcessor):
                 self.agent_current = copy.deepcopy(self.agent_frontier.get().item)
 
             # Reset board to the current frontier
-            self.board = copy.deepcopy(self.agent_current)
+            self.set_board(self.agent_current)
 
         # Get valid moves from board.
         valid_moves = self.get_valid_moves(node)
@@ -248,6 +253,7 @@ if __name__ == "__main__":
     game.game_play()
 
     soln = game.solution
-    for state in soln:
-        for row in state:
-            print(row)
+    for board in game.solution:
+        game.print_board(board)
+        print()
+    game.print_board(game.board)
