@@ -166,7 +166,7 @@ tree:
             - type: x-spin
               children:
               - type: player
-                pid: 1
+                pid: "1"
                 children:
                 - type: rewrite
                   button: right
@@ -581,12 +581,12 @@ tree:
               comment: end conditions
               children:
               - type: win
-                pid: 1
+                pid: "1"
                 children:
                 - type: match
                   pattern: W
               - type: lose
-                pid: 1
+                pid: "1"
                 children:
                 - type: none
                   children:

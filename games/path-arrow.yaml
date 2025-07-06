@@ -51,7 +51,7 @@ tree:
           - type: x-spin
             children:
             - type: player
-              pid: 1
+              pid: "1"
               children:
               - type: rewrite
                 lhs: P
@@ -213,7 +213,7 @@ tree:
               lhs: F'
               rhs: F
           - type: lose
-            pid: 1
+            pid: "1"
             children:
             - type: none
               children:
@@ -228,7 +228,7 @@ tree:
               - type: match
                 pattern: F
             - type: win
-              pid: 1
+              pid: "1"
               children:
               - type: rewrite
                 lhs: P

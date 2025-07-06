@@ -99,7 +99,7 @@ tree:
             file: blockdude_levels/blockdude_11
             target: board_11
         - type: win
-          pid: 1
+          pid: "1"
           children:
           - type: none
             children:
