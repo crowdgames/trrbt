@@ -32,7 +32,7 @@ tree:
           - type: order
             children:
             - type: player
-              pid: 1
+              pid: "1"
               children:
               - type: rewrite
                 comment: wait

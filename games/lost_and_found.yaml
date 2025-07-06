@@ -35,7 +35,7 @@ tree:
     - type: all
       children:
       - type: player
-        pid: 1
+        pid: "1"
         children:
         - type: rewrite
           lhs: ACT .
