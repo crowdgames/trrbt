@@ -211,6 +211,7 @@ class TRRBTStepper {
             if (this.localGet(frame, 'anyThisLoop')) {
                 this.localSet(frame, 'anyThisLoop', false);
                 this.localSet(frame, 'index', 0);
+                return null;
             } else {
                 return this.localGet(frame, 'any');
             }
@@ -232,6 +233,7 @@ class TRRBTStepper {
                 return this.localGet(frame, 'any');
             } else {
                 this.localSet(frame, 'index', 0);
+                return null;
             }
         } else {
             return this.pushCallStackNextChild(state, frame);
