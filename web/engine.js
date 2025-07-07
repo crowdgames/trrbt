@@ -643,6 +643,14 @@ class TRRBTEngine {
 	}
     }
 
+    getState() {
+        return this.state.clone();
+    }
+
+    setState(state) {
+	this.state = state.clone();
+    }
+
     undoPush() {
 	if (!this.undoEnabled) {
 	    return;
