@@ -618,12 +618,13 @@ class TRRBTStepper {
 
 class TRRBTEngine {
 
-    constructor(game) {
+    constructor(game, undoEnabled) {
         this.game = game;
 
         this.state = null;
         this.stepper = null;
 
+	this.undoEnabled = undoEnabled;
         this.undoStackFirst = null;
         this.undoStackMove = null;
         this.undoStackRecent = null;
@@ -635,12 +636,18 @@ class TRRBTEngine {
         this.state = new TRRBTState();
         this.stepper = new TRRBTStepper();
 
-        this.undoStackFirst = null;
-        this.undoStackMove = [];
-        this.undoStackRecent = [];
+	if (this.undoEnabled) {
+            this.undoStackFirst = null;
+            this.undoStackMove = [];
+            this.undoStackRecent = [];
+	}
     }
 
     undoPush() {
+	if (!this.undoEnabled) {
+	    return;
+	}
+
         let state = this.state.clone();
 
         if (this.undoStackFirst === null) {
@@ -660,6 +667,10 @@ class TRRBTEngine {
     }
 
     undoPop() {
+	if (!this.undoEnabled) {
+	    return;
+	}
+
         let state = null;
         if (this.undoStackRecent.length > 0) {
             state = this.undoStackRecent.pop();
@@ -678,7 +689,11 @@ class TRRBTEngine {
     }
 
     undoEmpty() {
-        return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
+	if (this.undoEnabled) {
+	    return true;
+	} else {
+            return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
+	}
     }
 
     gameOver() {
@@ -722,7 +737,7 @@ class TRRBTEngine {
 class TRRBTWebEngine extends TRRBTEngine {
 
     constructor(game, canvasname, divname) {
-        super(game);
+        super(game, true);
 
         this.canvasname = canvasname;
         this.divname = divname;
