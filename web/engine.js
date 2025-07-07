@@ -626,7 +626,7 @@ class TRRBTEngine {
         this.state = null;
         this.stepper = null;
 
-	this.undoEnabled = undoEnabled;
+        this.undoEnabled = undoEnabled;
         this.undoStackFirst = null;
         this.undoStackMove = null;
         this.undoStackRecent = null;
@@ -638,11 +638,15 @@ class TRRBTEngine {
         this.state = new TRRBTState();
         this.stepper = new TRRBTStepper();
 
-	if (this.undoEnabled) {
+        if (!this.undoEnabled) {
+            this.undoStackFirst = null;
+            this.undoStackMove = null;
+            this.undoStackRecent = null;
+        } else {
             this.undoStackFirst = null;
             this.undoStackMove = [];
             this.undoStackRecent = [];
-	}
+        }
     }
 
     getState() {
@@ -650,13 +654,13 @@ class TRRBTEngine {
     }
 
     setState(state) {
-	this.state = state.clone();
+        this.state = state.clone();
     }
 
     undoPush() {
-	if (!this.undoEnabled) {
-	    return;
-	}
+        if (!this.undoEnabled) {
+            return;
+        }
 
         let state = this.state.clone();
 
@@ -677,9 +681,9 @@ class TRRBTEngine {
     }
 
     undoPop() {
-	if (!this.undoEnabled) {
-	    return;
-	}
+        if (!this.undoEnabled) {
+            return;
+        }
 
         let state = null;
         if (this.undoStackRecent.length > 0) {
@@ -699,11 +703,11 @@ class TRRBTEngine {
     }
 
     undoEmpty() {
-	if (this.undoEnabled) {
-	    return true;
-	} else {
+        if (!this.undoEnabled) {
+            return true;
+        } else {
             return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
-	}
+        }
     }
 
     gameOver() {
