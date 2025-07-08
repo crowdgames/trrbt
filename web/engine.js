@@ -71,37 +71,6 @@ class TRRBTStepper {
         return nodeLookup !== null && state.gameResult === null && state.displayWait === false && state.choiceWait === false;
     }
 
-    stepToWait(nodeLookup, state, stepout) {
-        let stepped = 0;
-
-        if (nodeLookup === null) {
-            return stepped;
-        }
-
-        while (this.stepReady(nodeLookup, state)) {
-            this.step(nodeLookup, state, stepout);
-            ++ stepped;
-        }
-
-        return stepped;
-    }
-
-    stepToWaitChoiceOrResult(nodeLookup, state, stepout) {
-        let stepped = 0;
-
-        if (nodeLookup === null) {
-            return stepped;
-        }
-
-        stepped += this.stepToWait(nodeLookup, state, stepout);
-        while (state.displayWait) {
-            this.clearDisplayWait(nodeLookup, state, false);
-            stepped += this.stepToWait(nodeLookup, state, stepout);
-        }
-
-        return stepped;
-    }
-
     step(nodeLookup, state, stepout) {
         const NODE_FN_MAP = {
             'display-board': bind0(this, 'stepNodeDisplayBoard'),
@@ -725,6 +694,18 @@ class TRRBTEngine {
         while (this.stepReady()) {
             this.step();
             ++ stepped;
+        }
+
+        return stepped;
+    }
+
+    stepToWaitChoiceOrResult() {
+        let stepped = 0;
+
+        stepped += this.stepToWait();
+        while (this.state.displayWait) {
+            this.clearDisplayWait(false);
+            stepped += this.stepToWait();
         }
 
         return stepped;
