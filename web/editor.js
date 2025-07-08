@@ -953,7 +953,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
+        } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
             ctx.fill();
