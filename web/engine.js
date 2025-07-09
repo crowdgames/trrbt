@@ -957,8 +957,10 @@ class TRRBTWebEngine extends TRRBTEngine {
         sizeSlider.oninput = bind1(this, 'onCellSize', sizeSlider);
         ed.appendChild(sizeSlider);
         */
+        appendButton(ed, 'engine-smallest', 'Smallest', 'Make game smallest.', null, bind1(this, 'onCellSize', -999));
         appendButton(ed, 'engine-smaller', 'Smaller', 'Make game smaller.', null, bind1(this, 'onCellSize', -1));
         appendButton(ed, 'engine-larger', 'Larger', 'Make game larger.', null, bind1(this, 'onCellSize', 1));
+        appendButton(ed, 'engine-largest', 'Largest', 'Make game largest.', null, bind1(this, 'onCellSize', 999));
 
         appendBr(ed, true);
 
