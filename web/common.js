@@ -220,6 +220,39 @@ function joinRow(row, tileSize, alwaysPad) {
     return rowStr;
 }
 
+function patternReplace(patt, regex, func) {
+    let ret = [];
+    for (let row of patt) {
+        let ret_row = [];
+        for (let tile of row) {
+            ret_row.push(tile.replace(regex, func));
+        }
+        ret.push(ret_row);
+    }
+    return ret;
+}
+
+function patternReplaceRotate(patt) {
+    const regex = new RegExp('(\u2190|\u2191|\u2192|\u2193)', 'g');
+    const func = function (mm) { if (mm == '\u2190') return '\u2191'; else if (mm == '\u2191') return '\u2192'; else if (mm == '\u2192') return '\u2193'; else return '\u2190'};
+
+    return patternReplace(patt, regex, func);
+}
+
+function patternReplaceMirror(patt) {
+    const regex = new RegExp('(\u2190|\u2192)', 'g');
+    const func = function (mm) { if (mm == '\u2190') return '\u2192'; else return '\u2190'};
+
+    return patternReplace(patt, regex, func);
+}
+
+function patternReplaceFlip(patt) {
+    const regex = new RegExp('(\u2191|\u2193)', 'g');
+    const func = function (mm) { if (mm == '\u2191') return '\u2193'; else return '\u2191'};
+
+    return patternReplace(patt, regex, func);
+}
+
 
 
 function xform_node_shallowequal(node1, node2) {
@@ -315,7 +348,7 @@ function xform_rule_prune(node) {
 function xform_rule_mirror_fn(remorig) {
     function xform_rule_mirror(node) {
         function pattern_func(patt) {
-            return patt.slice(0).map(row => row.slice(0).reverse());
+            return patternReplaceMirror(patt.slice(0).map(row => row.slice(0).reverse()));
         }
         let button_obj = { 'left': 'right', 'right': 'left' };
 
@@ -327,7 +360,7 @@ function xform_rule_mirror_fn(remorig) {
 function xform_rule_rotate_fn(remorig) {
     function xform_rule_rotate(node) {
         function pattern_func(patt) {
-            return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
+            return patternReplaceRotate(patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse()));
         }
         let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
 
@@ -339,7 +372,7 @@ function xform_rule_rotate_fn(remorig) {
 function xform_rule_spin_fn(remorig) {
     function xform_rule_spin(node) {
         function pattern_func(patt) {
-            return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
+            return patternReplaceRotate(patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse()));
         }
         let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
 
@@ -384,7 +417,7 @@ function xform_rule_skew_fn(remorig) {
 function xform_rule_flip_fn(remorig) {
     function xform_rule_flip(node) {
         function pattern_func(patt) {
-            return patt.slice(0).reverse();
+            return patternReplaceFlip(patt.slice(0).reverse());
         }
         let button_obj = { 'up': 'down', 'down': 'up' };
 
@@ -395,22 +428,14 @@ function xform_rule_flip_fn(remorig) {
 
 function xform_rule_swap_only_fn(wht, wth) {
     const swap_regex = new RegExp('(' + wht + '|' + wth + ')', 'g');
-    const swap_fn = function (mm) { return mm === wht ? wth : wht; };
+    const swap_func = function (mm) { return mm === wht ? wth : wht; };
 
     function pattern_func(patt) {
-        let ret = [];
-        for (let row of patt) {
-            let ret_row = [];
-            for (let tile of row) {
-                ret_row.push(tile.replace(swap_regex, swap_fn));
-            }
-            ret.push(ret_row);
-        }
-        return ret;
+        return patternReplace(patt, swap_regex, swap_func);
     }
 
     function pid_func(pid) {
-        return pid.replace(swap_regex, swap_fn);
+        return pid.replace(swap_regex, swap_func);
     }
 
     function rule_swap_only(node) {
@@ -421,24 +446,19 @@ function xform_rule_swap_only_fn(wht, wth) {
 }
 
 function xform_rule_replace_only_fn(wht, wths) {
-    function pattern_func_fn(which) {
+    function pattern_func_fn(wth) {
         function pattern_func(patt) {
-            let ret = [];
-            for (let row of patt) {
-                let ret_row = [];
-                for (let tile of row) {
-                    ret_row.push(tile.replaceAll(wht, which));
-                }
-                ret.push(ret_row);
-            }
-            return ret;
+            const repl_regex = new RegExp(wht, 'g');
+            const repl_func = function (mm) { return wth; };
+
+            return patternReplace(patt, repl_regex, repl_func);
         }
         return pattern_func;
     }
 
-    function pid_func_fn(which) {
+    function pid_func_fn(wth) {
         function pid_func(pid) {
-            return pid.replaceAll(wht, which);
+            return pid.replaceAll(wht, wth);
         }
         return pid_func;
     }
@@ -448,16 +468,16 @@ function xform_rule_replace_only_fn(wht, wths) {
         if (node.type === 'x-unroll-replace') {
             if (node.what === wht) {
                 let new_node = { type: 'order', children: [] };
-                for (const which of wths) {
-                    new_node.children.push({ type: 'x-replace', what: node.what, withs: [which], children: deepcopyobj(node.children) });
+                for (const wth of wths) {
+                    new_node.children.push({ type: 'x-replace', what: node.what, withs: [wth], children: deepcopyobj(node.children) });
                 }
                 ret.push(new_node);
             } else {
                 ret.push(node);
             }
         } else {
-            for (const which of wths) {
-                ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
+            for (const wth of wths) {
+                ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(wth), pid_func_fn(wth), null));
             }
         }
         return xform_unique(ret);
