@@ -156,6 +156,7 @@ class TRRBTStepper {
             'draw': bind0(this, 'stepNodeDraw'),
             'match': bind0(this, 'stepNodeMatch'),
             'rewrite': bind0(this, 'stepNodeRewrite'),
+            'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
             'player': bind0(this, 'stepNodePlayer'),
         };
 
@@ -417,6 +418,21 @@ class TRRBTStepper {
         if (matches.length > 0) {
             let match = matches[Math.floor(Math.random() * matches.length)];
             this.rewriteLayerPattern(state, frame.node.rhs, match.row, match.col);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodeRewriteAll(state, frame, lastResult) {
+        let matches = this.findLayerPattern(state, frame.node.lhs);
+        if (matches.length > 0) {
+            matches.sort((a, b) => 0.5 - Math.random());
+            for (let match of matches) {
+		if (this.matchLayerPattern(state, frame.node.lhs, match.row, match.col)) {
+		    this.rewriteLayerPattern(state, frame.node.rhs, match.row, match.col);
+		}
+	    }
             return true;
         } else {
             return false;

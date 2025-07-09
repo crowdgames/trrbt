@@ -38,6 +38,7 @@ const EDT_NODE_PROTOTYPES = [
     { type: 'loop-times', comment: '', nid: '', children: [], times: 1 },
 
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
+    { type: 'rewrite-all', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
     { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
 
@@ -73,6 +74,7 @@ const EDT_NODE_HELP = {
     'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.' },
 
     'rewrite': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'rewrite-all': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, rewrites as many as possible in random order with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
     'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
     'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
     'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
@@ -953,7 +955,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
+        } else if (['rewrite', 'rewrite-all', 'match', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
             ctx.fill();
