@@ -744,6 +744,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.gameResultText = null;
         this.gameResultFrames = null;
         this.breakResumeText = null;
+        this.layersDiv = null;
         this.engineDiv = null;
 
         this.padding = null;
@@ -765,6 +766,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
+        this.hiddenLayers = null;
 
         this.editor = null;
     }
@@ -802,6 +804,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
+        this.hiddenLayers = Object.create(null);
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
         this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
@@ -935,6 +938,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.editor !== null) {
             this.editor.updatePositionsAndDraw();
         }
+        this.updateLayersDiv();
     }
 
     updateEngineEditor() {
@@ -999,6 +1003,10 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
         appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
+
+        this.layersDiv = document.createElement('div');
+        ed.appendChild(this.layersDiv);
+        this.updateLayersDiv()
     }
 
     resizeCanvas() {
@@ -1113,6 +1121,9 @@ class TRRBTWebEngine extends TRRBTEngine {
                     choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                     choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
+                        if (Object.hasOwn(this.hiddenLayers, layer)) {
+                            continue;
+                        }
                         if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
                             const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
                             if (tileOverwrite !== '.') {
@@ -1129,6 +1140,9 @@ class TRRBTWebEngine extends TRRBTEngine {
                     }
                 } else {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
+                        if (Object.hasOwn(this.hiddenLayers, layer)) {
+                            continue;
+                        }
                         tiles.push(pattern[rr][cc]);
                         overwrites.push(false);
                     }
@@ -1289,6 +1303,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 this.gameResultText.innerHTML = '';
             }
         }
+        this.updateLayersDiv();
     }
 
     updateStepManual(setting) {
@@ -1300,6 +1315,42 @@ class TRRBTWebEngine extends TRRBTEngine {
                 } else {
                     this.breakResumeText.style.display = 'none';
                 }
+            }
+        }
+    }
+
+    updateLayersDiv() {
+        this.layersDiv.innerHTML = '';
+
+        if (this.state.board !== null) {
+            appendBr(this.layersDiv);
+            appendText(this.layersDiv, 'Layers', true, true);
+            appendBr(this.layersDiv);
+            for (let layer in this.state.board) {
+                const layerHidden = Object.hasOwn(this.hiddenLayers, layer);
+                const input = document.createElement('input');
+                input.id = 'layer_' + layer;
+                input.type = 'checkbox';
+                input.checked = !layerHidden;
+                input.onclick = () => {
+                    if (layerHidden) {
+                        delete this.hiddenLayers[layer];
+                    } else {
+                        this.hiddenLayers[layer] = true;
+                    }
+                    console.log(layer, layerHidden, this.hiddenLayers);
+                    this.requestDraw();
+                };
+
+                const label = document.createElement('label');
+                label.innerHTML = layer;
+                label.htmlFor = 'layer_' + layer;;
+
+                const span = document.createElement('span');
+                span.appendChild(input);
+                span.appendChild(label);
+                appendBr(span);
+                this.layersDiv.appendChild(span);
             }
         }
     }
