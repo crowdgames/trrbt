@@ -1338,7 +1338,6 @@ class TRRBTWebEngine extends TRRBTEngine {
                     } else {
                         this.hiddenLayers[layer] = true;
                     }
-                    console.log(layer, layerHidden, this.hiddenLayers);
                     this.requestDraw();
                 };
 
