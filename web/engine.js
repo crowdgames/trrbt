@@ -1222,7 +1222,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.gameResultFrames !== null && this.gameResultFrames > 0) {
             this.gameResultFrames -= 1;
             if (this.gameResultFrames === 0) {
-                alert(this.gameResultText.innerHTML);
+                //alert(this.gameResultText.innerHTML);
                 this.gameResultFrames = null;
             }
             this.requestDraw();
