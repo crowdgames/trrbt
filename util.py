@@ -124,7 +124,7 @@ def require_js():
 
         js += '() => { return {\n'
         js += '  xform_apply_to_tree:xform_apply_to_tree,\n'
-        js += '  new_engine:(game)=>{ let engine = new TRRBTEngine(game); engine.onLoad(); return engine; }\n'
+        js += '  new_engine:(game, undoEnabled)=>{ let engine = new TRRBTEngine(game, undoEnabled); engine.onLoad(); return engine; }\n'
         js += '} };\n'
 
         _js_common = pythonmonkey.eval(js)()
@@ -135,11 +135,11 @@ def xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispids):
 
     return _js_common['xform_apply_to_tree'](tree, resolve_file_to_game, apply_xform, use_dispids)
 
-def new_engine(game):
+def new_engine(game, undoEnabled):
     global _js_common
     require_js()
 
-    return _js_common['new_engine'](game)
+    return _js_common['new_engine'](game, undoEnabled)
 
 
 

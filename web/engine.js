@@ -36,49 +36,13 @@ class TRRBTState {
         this.choicesByBtn = null;
     }
 
-    clone() {
-        let state = new TRRBTState();
-
-        let callStackCopy = null;
-
-        if (this.callStack !== null) {
-            callStackCopy = [];
-            for (let frame of this.callStack) {
-                let frameCopy = { node: frame.node, local: deepcopyobj(frame.local) };
-                callStackCopy.push(frameCopy);
-            }
-        }
-
-        state.callStack = callStackCopy;
-        state.callResult = this.callResult;
-        state.gameResult = deepcopyobj(this.gameResult);
-        state.loopCheck = this.loopCheck;
-
-        state.board = deepcopyobj(this.board);
-        state.rows = this.rows;
-        state.cols = this.cols;
-
-        state.displayWait = this.displayWait;
-        state.displayDone = this.displayDone;
-        state.displayDelay = this.displayDelay;
-
-        state.choiceWait = this.choiceWait;
-        state.choiceMade = deepcopyobj(this.choiceMade);
-        state.choicePlayer = this.choicePlayer;
-        state.choices = deepcopyobj(this.choices);
-        state.choicesByRct = deepcopyobj(this.choicesByRct);
-        state.choicesByBtn = deepcopyobj(this.choicesByBtn);
-
-        return state;
-    }
-
 };
 
 
 
 class TRRBTStepper {
 
-    clearDisplayWait(tree, state, clearLoopCheck) {
+    clearDisplayWait(nodeLookup, state, clearLoopCheck) {
         state.displayWait = false;
         state.displayDone = true;
         state.displayDelay = null;
@@ -88,7 +52,7 @@ class TRRBTStepper {
         }
     }
 
-    clearChoiceWait(tree, state, clearLoopCheck, choiceIndex) {
+    clearChoiceWait(nodeLookup, state, clearLoopCheck, choiceIndex) {
         state.choiceWait = false;
         state.choiceMade = state.choices[choiceIndex];
         state.choicePlayer = null;
@@ -103,42 +67,11 @@ class TRRBTStepper {
         this.rewriteLayerPattern(state, state.choiceMade.rhs, state.choiceMade.row, state.choiceMade.col);
     }
 
-    stepReady(tree, state) {
-        return tree !== null && state.gameResult === null && state.displayWait === false && state.choiceWait === false;
+    stepReady(nodeLookup, state) {
+        return nodeLookup !== null && state.gameResult === null && state.displayWait === false && state.choiceWait === false;
     }
 
-    stepToWait(tree, state, stepout) {
-        let stepped = 0;
-
-        if (tree === null) {
-            return stepped;
-        }
-
-        while (this.stepReady(tree, state)) {
-            this.step(tree, state, stepout);
-            ++ stepped;
-        }
-
-        return stepped;
-    }
-
-    stepToWaitChoiceOrResult(tree, state, stepout) {
-        let stepped = 0;
-
-        if (tree === null) {
-            return stepped;
-        }
-
-        stepped += this.stepToWait(tree, state, stepout);
-        while (state.displayWait) {
-            this.clearDisplayWait(tree, state, false);
-            stepped += this.stepToWait(tree, state, stepout);
-        }
-
-        return stepped;
-    }
-
-    step(tree, state, stepout) {
+    step(nodeLookup, state, stepout) {
         const NODE_FN_MAP = {
             'display-board': bind0(this, 'stepNodeDisplayBoard'),
             'set-board': bind0(this, 'stepNodeSetBoard'),
@@ -160,25 +93,26 @@ class TRRBTStepper {
             'player': bind0(this, 'stepNodePlayer'),
         };
 
-        if (tree === null) {
+        if (nodeLookup === null) {
             // pass
         } else if (state.gameResult !== null) {
             // pass
         } else if (state.callStack === null) {
             state.callStack = [];
-            this.pushCallStack(state, tree);
+            this.pushCallStack(nodeLookup.nodeToId, state, nodeLookup.idToNode.get(0));
         } else if (state.callStack.length === 0) {
             state.gameResult = { result: 'stalemate' };
         } else {
-            let frame = state.callStack.at(-1);
+            let stateFrame = state.callStack.at(-1);
+            let stateNode = nodeLookup.idToNode.get(stateFrame.nodeId);
 
             state.loopCheck += 1;
 
             if (stepout !== null && state.loopCheck >= stepout) {
                 state.gameResult = { result: 'stepout' };
             } else {
-                let fn = NODE_FN_MAP[frame.node.type];
-                state.callResult = fn(state, frame, state.callResult);
+                let fn = NODE_FN_MAP[stateNode.type];
+                state.callResult = fn(nodeLookup.nodeToId, state, stateFrame, stateNode, state.callResult);
 
                 if (state.callResult === true || state.callResult === false) {
                     state.callStack.pop();
@@ -187,148 +121,148 @@ class TRRBTStepper {
         }
     }
 
-    stepNodeOrder(state, frame, lastResult) {
-        this.localInit(frame, [['any', false],
-                               ['index', 0]]);
+    stepNodeOrder(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['any', false],
+                                    ['index', 0]]);
 
-        this.localSetIfTrue(frame, 'any', lastResult);
+        this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
-        if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            return this.localGet(frame, 'any');
+        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+            return this.localGet(stateFrame, 'any');
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeLoopUntilAll(state, frame, lastResult) {
-        this.localInit(frame, [['any', false],
-                               ['anyThisLoop', false],
-                               ['index', 0]]);
+    stepNodeLoopUntilAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['any', false],
+                                    ['anyThisLoop', false],
+                                    ['index', 0]]);
 
-        this.localSetIfTrue(frame, 'any', lastResult);
-        this.localSetIfTrue(frame, 'anyThisLoop', lastResult);
+        this.localSetIfTrue(stateFrame, 'any', stateCallResult);
+        this.localSetIfTrue(stateFrame, 'anyThisLoop', stateCallResult);
 
-        if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            if (this.localGet(frame, 'anyThisLoop')) {
-                this.localSet(frame, 'anyThisLoop', false);
-                this.localSet(frame, 'index', 0);
+        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+            if (this.localGet(stateFrame, 'anyThisLoop')) {
+                this.localSet(stateFrame, 'anyThisLoop', false);
+                this.localSet(stateFrame, 'index', 0);
                 return null;
             } else {
-                return this.localGet(frame, 'any');
+                return this.localGet(stateFrame, 'any');
             }
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeLoopTimes(state, frame, lastResult) {
-        this.localInit(frame, [['any', false],
-                               ['times', 0],
-                               ['index', 0]]);
+    stepNodeLoopTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['any', false],
+                                    ['times', 0],
+                                    ['index', 0]]);
 
-        this.localSetIfTrue(frame, 'any', lastResult);
+        this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
-        if (this.localEqual(frame, 'index', frame.node.children.length)) {
-            this.localIncrement(frame, 'times');
-            if (this.localEqual(frame, 'times', frame.node.times)) {
-                return this.localGet(frame, 'any');
+        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+            this.localIncrement(stateFrame, 'times');
+            if (this.localEqual(stateFrame, 'times', stateNode.times)) {
+                return this.localGet(stateFrame, 'any');
             } else {
-                this.localSet(frame, 'index', 0);
+                this.localSet(stateFrame, 'index', 0);
                 return null;
             }
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeRandomTry(state, frame, lastResult) {
-        this.localInit(frame, [['order', null]]);
+    stepNodeRandomTry(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['order', null]]);
 
-        if (this.localEqual(frame, 'order', null)) {
+        if (this.localEqual(stateFrame, 'order', null)) {
             let order = [];
-            for (let ii = 0; ii < frame.node.children.length; ++ii) {
+            for (let ii = 0; ii < stateNode.children.length; ++ii) {
                 order.push(ii);
             }
             order.sort((a, b) => 0.5 - Math.random());
-            this.localSet(frame, 'order', order);
+            this.localSet(stateFrame, 'order', order);
         }
 
-        if (lastResult === true) {
+        if (stateCallResult === true) {
             return true;
-        } else if (this.localGet(frame, 'order').length == 0) {
+        } else if (this.localGet(stateFrame, 'order').length == 0) {
             return false;
         } else {
-            const index = this.localGet(frame, 'order').pop();
-            this.pushCallStack(state, frame.node.children[index]);
+            const index = this.localGet(stateFrame, 'order').pop();
+            this.pushCallStack(nodeToId, state, stateNode.children[index]);
             return null;
         }
     }
 
-    stepNodeAll(state, frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
+    stepNodeAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['index', 0]]);
 
-        if (lastResult === false) {
+        if (stateCallResult === false) {
             return false;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
             return true;
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeNone(state, frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
+    stepNodeNone(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['index', 0]]);
 
-        if (lastResult === true) {
+        if (stateCallResult === true) {
             return false;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
             return true;
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeWin(state, frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
+    stepNodeWin(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['index', 0]]);
 
-        if (lastResult === true) {
-            state.gameResult = { result: 'win', player: frame.node.pid };
+        if (stateCallResult === true) {
+            state.gameResult = { result: 'win', player: stateNode.pid };
             return null;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
             return false;
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeLose(state, frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
+    stepNodeLose(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['index', 0]]);
 
-        if (lastResult === true) {
-            state.gameResult = { result: 'lose', player: frame.node.pid };
+        if (stateCallResult === true) {
+            state.gameResult = { result: 'lose', player: stateNode.pid };
             return null;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
             return false;
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeDraw(state, frame, lastResult) {
-        this.localInit(frame, [['index', 0]]);
+    stepNodeDraw(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        this.localInit(stateFrame, [['index', 0]]);
 
-        if (lastResult === true) {
+        if (stateCallResult === true) {
             state.gameResult = { result: 'draw' };
             return null;
-        } else if (this.localEqual(frame, 'index', frame.node.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
             return false;
         } else {
-            return this.pushCallStackNextChild(state, frame);
+            return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
         }
     }
 
-    stepNodeSetBoard(state, frame, lastResult) {
-        state.board = deepcopyobj(frame.node.pattern);
+    stepNodeSetBoard(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        state.board = deepcopyobj(stateNode.pattern);
 
         const [newRows, newCols] = this.layerPatternSize(state.board);
         state.rows = newRows;
@@ -337,7 +271,7 @@ class TRRBTStepper {
         return true;
     }
 
-    stepNodeLayerTemplate(state, frame, lastResult) {
+    stepNodeLayerTemplate(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let newLayer = [];
         for (let row of state.board['main']) {
             let newRow = [];
@@ -345,22 +279,22 @@ class TRRBTStepper {
                 if (tile === '.') {
                     newRow.push('.');
                 } else {
-                    newRow.push(frame.node.with);
+                    newRow.push(stateNode.with);
                 }
             }
             newLayer.push(newRow);
         }
 
-        state.board[frame.node.layer] = newLayer;
+        state.board[stateNode.layer] = newLayer;
 
         return true;
     }
 
-    stepNodeAppendRows(state, frame, lastResult) {
+    stepNodeAppendRows(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.board === null) {
-            state.board = deepcopyobj(frame.node.pattern);
+            state.board = deepcopyobj(stateNode.pattern);
         } else {
-            const patt = frame.node.pattern;
+            const patt = stateNode.pattern;
             if (!samepropsobj(state.board, patt)) {
                 return false;
             }
@@ -383,11 +317,11 @@ class TRRBTStepper {
         return true;
     }
 
-    stepNodeAppendCols(state, frame, lastResult) {
+    stepNodeAppendCols(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.board === null) {
-            state.board = deepcopyobj(frame.node.pattern);
+            state.board = deepcopyobj(stateNode.pattern);
         } else {
-            const patt = frame.node.pattern;
+            const patt = stateNode.pattern;
             if (!samepropsobj(state.board, patt)) {
                 return false;
             }
@@ -405,41 +339,41 @@ class TRRBTStepper {
         return true;
     }
 
-    stepNodeMatch(state, frame, lastResult) {
-        if (this.findLayerPattern(state, frame.node.pattern).length > 0) {
+    stepNodeMatch(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        if (this.findLayerPattern(state, stateNode.pattern).length > 0) {
             return true;
         } else {
             return false;
         }
     }
 
-    stepNodeRewrite(state, frame, lastResult) {
-        let matches = this.findLayerPattern(state, frame.node.lhs);
+    stepNodeRewrite(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
             let match = matches[Math.floor(Math.random() * matches.length)];
-            this.rewriteLayerPattern(state, frame.node.rhs, match.row, match.col);
+            this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
             return true;
         } else {
             return false;
         }
     }
 
-    stepNodeRewriteAll(state, frame, lastResult) {
-        let matches = this.findLayerPattern(state, frame.node.lhs);
+    stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
             matches.sort((a, b) => 0.5 - Math.random());
             for (let match of matches) {
-		if (this.matchLayerPattern(state, frame.node.lhs, match.row, match.col)) {
-		    this.rewriteLayerPattern(state, frame.node.rhs, match.row, match.col);
-		}
-	    }
+                if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
+                    this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+                }
+            }
             return true;
         } else {
             return false;
         }
     }
 
-    stepNodeDisplayBoard(state, frame, lastResult) {
+    stepNodeDisplayBoard(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.displayWait === true) {
             return null;
         } else if (state.displayDone) {
@@ -450,14 +384,14 @@ class TRRBTStepper {
             state.displayDone = false;
             state.displayDelay = 0;
 
-            if (frame.node.hasOwnProperty('delay')) {
-                state.displayDelay = frame.node.delay;
+            if (stateNode.hasOwnProperty('delay')) {
+                state.displayDelay = stateNode.delay;
             }
             return null;
         }
     }
 
-    stepNodePlayer(state, frame, lastResult) {
+    stepNodePlayer(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.choiceWait === true) {
             return null;
         } else if (state.choiceMade !== null) {
@@ -473,7 +407,7 @@ class TRRBTStepper {
             state.choicesByBtn = null;
 
             let choices = [];
-            for (let child of frame.node.children) {
+            for (let child of stateNode.children) {
                 if (child.type === 'rewrite') {
                     let matches = this.findLayerPattern(state, child.lhs);
                     for (let match of matches) {
@@ -494,7 +428,7 @@ class TRRBTStepper {
             choices = choicesUnique;
 
             if (choices.length > 0) {
-                state.choicePlayer = frame.node.pid;
+                state.choicePlayer = stateNode.pid;
 
                 state.choices = choices;
                 state.choicesByRct = Object.create(null);
@@ -527,6 +461,16 @@ class TRRBTStepper {
                 return false;
             }
         }
+    }
+
+    pushCallStack(nodeToId, state, stateNode) {
+        state.callStack.push({ nodeId: nodeToId.get(stateNode), local: null });
+    }
+
+    pushCallStackNextChild(nodeToId, state, stateFrame, stateNode) {
+        this.pushCallStack(nodeToId, state, stateNode.children[stateFrame.local['index']]);
+        stateFrame.local['index'] = stateFrame.local['index'] + 1;
+        return null;
     }
 
     layerPatternSize(lpattern) {
@@ -620,28 +564,21 @@ class TRRBTStepper {
     localEqual(frame, name, val) {
         return frame.local[name] === val;
     }
-
-    pushCallStack(state, node) {
-        state.callStack.push({ node: node, local: null });
-    }
-
-    pushCallStackNextChild(state, frame) {
-        this.pushCallStack(state, frame.node.children[frame.local['index']]);
-        frame.local['index'] = frame.local['index'] + 1;
-        return null;
-    }
 };
 
 
 
 class TRRBTEngine {
 
-    constructor(game) {
+    constructor(game, undoEnabled) {
         this.game = game;
+
+        this.nodeLookup = null;
 
         this.state = null;
         this.stepper = null;
 
+        this.undoEnabled = undoEnabled;
         this.undoStackFirst = null;
         this.undoStackMove = null;
         this.undoStackRecent = null;
@@ -650,16 +587,53 @@ class TRRBTEngine {
     onLoad() {
         this.game = this.game;
 
+        if (this.game.tree === null) {
+            this.nodeLookup = null;
+        } else {
+            this.nodeLookup = { idToNode:new Map(), nodeToId:new WeakMap() };
+            this.initializeNodeLookup(this.nodeLookup, this.game.tree, [0]);
+        }
+
         this.state = new TRRBTState();
         this.stepper = new TRRBTStepper();
 
-        this.undoStackFirst = null;
-        this.undoStackMove = [];
-        this.undoStackRecent = [];
+        if (!this.undoEnabled) {
+            this.undoStackFirst = null;
+            this.undoStackMove = null;
+            this.undoStackRecent = null;
+        } else {
+            this.undoStackFirst = null;
+            this.undoStackMove = [];
+            this.undoStackRecent = [];
+        }
+    }
+
+    initializeNodeLookup(nodeLookup, node, id) {
+        nodeLookup.idToNode.set(id[0], node);
+        nodeLookup.nodeToId.set(node, id[0]);
+
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                id[0] += 1;
+                this.initializeNodeLookup(nodeLookup, child, id);
+            }
+        }
+    }
+
+    getState() {
+        return deepcopyobj(this.state);
+    }
+
+    setState(state) {
+        this.state = deepcopyobj(state);
     }
 
     undoPush() {
-        let state = this.state.clone();
+        if (!this.undoEnabled) {
+            return;
+        }
+
+        let state = deepcopyobj(this.state);
 
         if (this.undoStackFirst === null) {
             this.undoStackFirst = state;
@@ -678,6 +652,10 @@ class TRRBTEngine {
     }
 
     undoPop() {
+        if (!this.undoEnabled) {
+            return;
+        }
+
         let state = null;
         if (this.undoStackRecent.length > 0) {
             state = this.undoStackRecent.pop();
@@ -696,7 +674,11 @@ class TRRBTEngine {
     }
 
     undoEmpty() {
-        return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
+        if (!this.undoEnabled) {
+            return true;
+        } else {
+            return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
+        }
     }
 
     gameOver() {
@@ -705,21 +687,21 @@ class TRRBTEngine {
 
     clearDisplayWait(clearLoopCheck) {
         this.undoPush();
-        this.stepper.clearDisplayWait(this.game.tree, this.state, clearLoopCheck);
+        this.stepper.clearDisplayWait(this.nodeLookup, this.state, clearLoopCheck);
     }
 
     clearChoiceWait(clearLoopCheck, choiceIndex) {
         this.undoPush();
-        this.stepper.clearChoiceWait(this.game.tree, this.state, clearLoopCheck, choiceIndex);
+        this.stepper.clearChoiceWait(this.nodeLookup, this.state, clearLoopCheck, choiceIndex);
     }
 
     step() {
         this.undoPush();
-        this.stepper.step(this.game.tree, this.state, ENG_LOOP_CHECK_MAX);
+        this.stepper.step(this.nodeLookup, this.state, ENG_LOOP_CHECK_MAX);
     }
 
     stepReady() {
-        return this.stepper.stepReady(this.game.tree, this.state);
+        return this.stepper.stepReady(this.nodeLookup, this.state);
     }
 
     stepToWait() {
@@ -733,6 +715,18 @@ class TRRBTEngine {
         return stepped;
     }
 
+    stepToWaitChoiceOrResult() {
+        let stepped = 0;
+
+        stepped += this.stepToWait();
+        while (this.state.displayWait) {
+            this.clearDisplayWait(false);
+            stepped += this.stepToWait();
+        }
+
+        return stepped;
+    }
+
 };
 
 
@@ -740,7 +734,7 @@ class TRRBTEngine {
 class TRRBTWebEngine extends TRRBTEngine {
 
     constructor(game, canvasname, divname) {
-        super(game);
+        super(game, true);
 
         this.canvasname = canvasname;
         this.divname = divname;
@@ -913,6 +907,28 @@ class TRRBTWebEngine extends TRRBTEngine {
                 this.resizeSpriteImage(image_name);
             }
         }
+    }
+
+    setState(state) {
+        super.setState(state);
+        this.stateSetUpdate(false);
+    }
+
+    stateSetUpdate(useDelay) {
+        this.gameResultFrames = null;
+
+        this.mouseChoice = null;
+        this.mouseAlt = false;
+
+        if (this.state.displayWait && useDelay) {
+            this.delayUntil = Date.now() + 1000;
+        } else {
+            this.delayUntil = null;
+        }
+
+        this.updateEditor();
+
+        this.requestDraw();
     }
 
     updateEditor() {
@@ -1313,20 +1329,7 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.updateStepManual(true);
         }
 
-        this.gameResultFrames = null;
-
-        this.mouseChoice = null;
-        this.mouseAlt = false;
-
-        if (this.state.displayWait) {
-            this.delayUntil = Date.now() + 1000;
-        } else {
-            this.delayUntil = null;
-        }
-
-        this.updateEditor();
-
-        this.requestDraw();
+        this.stateSetUpdate(true);
     }
 
     onNext(toWhat) {

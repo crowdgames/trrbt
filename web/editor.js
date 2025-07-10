@@ -495,7 +495,7 @@ class TRRBTEditor {
         let stackNodes = new Set();
         if (this.hasEngine() && this.engine.state.callStack !== null) {
             for (let frame of this.engine.state.callStack) {
-                stackNodes.add(frame.node.dispid);
+                stackNodes.add(this.engine.nodeLookup.idToNode.get(frame.nodeId).dispid);
             }
         }
         return stackNodes;
