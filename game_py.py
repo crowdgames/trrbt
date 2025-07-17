@@ -34,7 +34,7 @@ class GameOverException(Exception):
 
 class GameProcessor:
     def __init__(self, filename, choice_order, random_players, clear_screen):
-        bt = util.yaml2bt(filename, True)
+        bt = util.yaml2bt(filename, True, True)
 
         self.name = bt.name
         self.filename = filename

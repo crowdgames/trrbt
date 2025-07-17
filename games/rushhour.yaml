@@ -27,7 +27,7 @@ tree:
     nid: gameloop
     children:
     - type: player
-      pid: 1
+      pid: "1"
       children:
       - type: x-ident
         nid: move
@@ -56,7 +56,7 @@ tree:
               rhs: __ Ta Ta Ta
     - type: win
       comment: win if red car at exit
-      pid: 1
+      pid: "1"
       children:
       - type: match
         pattern: CR CR OO

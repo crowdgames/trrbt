@@ -18,7 +18,7 @@ tree:
     nid: gameloop
     children:
     - type: player
-      pid: 1
+      pid: "1"
       children:
       - type: x-replace
         what: a
@@ -39,7 +39,7 @@ tree:
             lhs: _ a
             rhs: a _
     - type: win
-      pid: 1
+      pid: "1"
       children:
       - type: match
         pattern: 1 2 3;

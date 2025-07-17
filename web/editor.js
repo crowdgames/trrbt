@@ -53,6 +53,7 @@ const EDT_XNODE_PROTOTYPES = [
     { type: 'x-flip', comment: '', nid: '', children: [], remorig: false },
     { type: 'x-swap', comment: '', nid: '', children: [], what: '', with: '' },
     { type: 'x-replace', comment: '', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-unroll-replace', comment: '', nid: '', children: [], what: '', withs: [] },
     { type: 'x-prune', comment: '', nid: '', children: [] },
     { type: 'x-link', comment: '', nid: '', target: '' },
 ];
@@ -492,7 +493,7 @@ class TRRBTEditor {
         let stackNodes = new Set();
         if (this.hasEngine() && this.engine.state.callStack !== null) {
             for (let frame of this.engine.state.callStack) {
-                stackNodes.add(frame.node.dispid);
+                stackNodes.add(this.engine.nodeLookup.idToNode.get(frame.nodeId).dispid);
             }
         }
         return stackNodes;
@@ -952,7 +953,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
+        } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
             ctx.fill();

@@ -1,0 +1,7 @@
+---
+name: tic-tac-toe
+tree:
+  type: set-board
+  pattern: _ _ _;
+           _ _ _;
+           _ _ _;

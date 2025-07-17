@@ -298,6 +298,13 @@ function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
 }
 
 function xform_rule_identity(node) {
+    if (node.type === 'x-unroll-replace') {
+        let new_node = { type: 'order', children: [] };
+        for (const which of node.withs) {
+            new_node.children.push({ type: 'x-replace', what: node.what, withs: [which], children: deepcopyobj(node.children) });
+        }
+        return [new_node]
+    }
     return [node];
 }
 
@@ -563,7 +570,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                     ret_nodes.push(child_xformed);
                 }
             }
-        } else if (['x-unroll-replace', 'player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'display-board'].indexOf(ntype) >= 0) {
+        } else if (['player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'display-board', 'x-unroll-replace'].indexOf(ntype) >= 0) {
             let xformed = [node];
             for (let xform of xforms) {
                 let new_xformed = [];
