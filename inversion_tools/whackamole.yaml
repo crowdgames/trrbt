@@ -1,0 +1,26 @@
+---
+name: simple-whackamole 
+tree: 
+  type: order
+  children: 
+  - type: set-board
+    pattern: M M X;
+             M X M;
+  - type: loop-until-all
+    nid: gameloop 
+    children:
+    - type: player 
+      pid: "1"
+      children:   
+      - type: rewrite
+        lhs: M 
+        rhs: X
+    - type: win
+      pid: 1
+      children: 
+      - type: match
+        pattern: X X X;
+                 X X X; 
+      - type: none
+        pattern: X X X;
+                 X X X;
