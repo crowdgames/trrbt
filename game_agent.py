@@ -1,4 +1,4 @@
-import argparse, json, os, random, sys, time
+import argparse, json
 import util
 
 
@@ -30,8 +30,7 @@ def agent_game(filename, enum):
                 if enum:
                     pass
                 else:
-                    print(json.dumps({'result':True, 'board':dict(state.board)}))
-                    sys.stdout.flush()
+                    print(json.dumps({'result':True, 'board':dict(state.board)}), flush=True)
                     return
             else:
                 continue
@@ -50,14 +49,12 @@ def agent_game(filename, enum):
                 nextStateStr = str(nextState)
                 if nextStateStr not in seen:
                     if enum:
-                        print(json.dumps({'board':dict(state.board)}))
-                        sys.stdout.flush()
+                        print(json.dumps({'board':dict(state.board)}), flush=True)
                     queue.append(nextState)
                     seen[nextStateStr] = None
 
     if not enum:
-        print(json.dumps({'result':False}))
-        sys.stdout.flush()
+        print(json.dumps({'result':False}), flush=True)
 
 
 
