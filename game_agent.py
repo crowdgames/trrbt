@@ -49,7 +49,7 @@ def agent_game(filename, enum):
                 nextStateStr = str(nextState)
                 if nextStateStr not in seen:
                     if enum:
-                        print(json.dumps({'board':dict(state.board)}), flush=True)
+                        print(json.dumps({'board':dict(nextState.board)}), flush=True)
                     queue.append(nextState)
                     seen[nextStateStr] = None
 
