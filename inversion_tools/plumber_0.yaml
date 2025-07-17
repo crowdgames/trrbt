@@ -1,0 +1,145 @@
+---
+name: plumber game
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern:  lr dl __ __ ;
+              __ dr dl __ ; 
+              __ __ ur dl ; 
+              __ __ __ ud ; 
+              __ __ __ ud ; 
+              __ __ __ ur ;    
+
+  - type: loop-until-all
+    nid: gameloop
+    children:
+    - type: player
+      pid: "1"
+      children:
+      - type: rewrite 
+        lhs: ud 
+        rhs: lr
+      - type: rewrite
+        lhs: lr
+        rhs: ud
+      - type: rewrite
+        lhs: dr 
+        rhs: dl
+      - type: rewrite
+        lhs: dl
+        rhs: ul
+      - type: rewrite
+        lhs: ul
+        rhs: ur
+      - type: rewrite
+        lhs: ur
+        rhs: dr
+
+    - type: win
+      pid: 1
+      children:
+        - type: match
+          pattern:  lr dl __ __ ; 
+                    __ ur dl __ ; 
+                    __ __ ur dl ; 
+                    __ __ __ ud ; 
+                    __ __ __ ud ; 
+                    __ __ __ ur ;
+
+
+# # FLowing water through the pipes, need to loop once we have a system to time the player
+# - type: rewrite  #Flow right
+#   lhs: Wlr lr
+#   rhs: Wlr Wlr
+# - type: rewrite
+#   lhs: Wur lr
+#   rhs: Wur Wlr
+# - type: rewrite
+#   lhs: Wdr lr
+#   rhs: Wdr Wlr
+# - type: rewrite
+#   lhs: Wlr ur
+#   rhs: Wlr Wur
+# - type: rewrite
+#   lhs: Wdr ur
+#   rhs: Wdr Wur
+
+# - type: rewrite  #flow left
+#   lhs: lr Wlr
+#   rhs: Wlr Wlr
+# - type: rewrite
+#   lhs: ur Wul
+#   rhs: Wur Wul
+# - type: rewrite
+#   lhs: lr Wul
+#   rhs: Wlr Wul
+# - type: rewrite
+#   lhs: ul Wlr
+#   rhs: Wul Wlr
+
+#   - type: rewrite  #Flow down
+#   lhs:
+#     Wud
+#     ud
+#   rhs:
+#     Wud
+#     Wud
+# - type: rewrite
+#   lhs:
+#     Wul
+#     dl
+#   rhs:
+#     Wul
+#     Wdl
+# - type: rewrite
+#   lhs:
+#     Wur
+#     dr
+#   rhs:
+#     Wur
+#     Wdr
+# - type: rewrite
+#   lhs:
+#     Wud
+#     dl
+#   rhs:
+#     Wud
+#     Wdl
+# - type: rewrite
+#   lhs:
+#     Wud
+#     dr
+#   rhs:
+#     Wud
+#     Wdr
+
+
+# - type: rewrite #flow up
+#   lhs:
+#     ud
+#     Wud
+#   rhs:
+#     Wud
+#     Wud
+# - type: rewrite
+#   lhs:
+#     ul
+#     Wul
+#   rhs:
+#     Wul
+#     Wul
+# - type: rewrite
+#   lhs:
+#     dr
+#     Wur
+#   rhs:
+#     Wdr
+#     Wur
+# - type: rewrite
+#   lhs:
+#     dl
+#     Wul
+#   rhs:
+#     Wdl
+#     Wul
