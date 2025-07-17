@@ -1,9 +1,9 @@
-import argparse, json, os, random, sys, time
+import argparse, json
 import util
 
 
 
-def agent_game(filename):
+def agent_game(filename, enum):
     game = util.yaml2bt(filename, True, True)
 
     engine = util.new_engine(game, False)
@@ -27,8 +27,11 @@ def agent_game(filename):
         engine.setState(state)
         if engine.gameOver():
             if state.gameResult.result == 'win':
-                print(json.dumps({'result':True, 'board':dict(state.board)}))
-                return
+                if enum:
+                    pass
+                else:
+                    print(json.dumps({'result':True, 'board':dict(state.board)}), flush=True)
+                    return
             else:
                 continue
 
@@ -45,16 +48,20 @@ def agent_game(filename):
                 nextState = engine.getState()
                 nextStateStr = str(nextState)
                 if nextStateStr not in seen:
+                    if enum:
+                        print(json.dumps({'board':dict(nextState.board)}), flush=True)
                     queue.append(nextState)
                     seen[nextStateStr] = None
 
-    print(json.dumps({'result':False}))
+    if not enum:
+        print(json.dumps({'result':False}), flush=True)
 
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run agent on game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
+    parser.add_argument('--enum', action='store_true', help='Enumerate states rather than find winning state.')
     args = parser.parse_args()
 
-    agent_game(args.filename)
+    agent_game(args.filename, args.enum)
