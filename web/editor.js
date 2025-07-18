@@ -13,9 +13,10 @@ const EDT_TEXT_LINE = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
 const EDT_TEXT_RECT_END = 4;
 
-const EDT_PARSE_TEXT_INT = 0;
-const EDT_PARSE_TEXT_WORD = 1;
-const EDT_PARSE_TEXT_TEXT = 2;
+const EDT_PARSE_TEXT_INT    = 0;
+const EDT_PARSE_TEXT_FLOAT  = 1;
+const EDT_PARSE_TEXT_WORD   = 2;
+const EDT_PARSE_TEXT_TEXT   = 3;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
@@ -40,7 +41,11 @@ const EDT_NODE_PROTOTYPES = [
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'rewrite-all', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: 'append-rows', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: 'append-columns', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
     { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
+
+    { type: 'display-board', comment: '', nid: '', delay: 0.5 },
 
     { type: 'match', pattern: EDT_EMPTY_PATTERN },
 ];
@@ -79,7 +84,8 @@ const EDT_NODE_HELP = {
     'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
     'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
     'layer-template': { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
-    'display-board': { color: [0, 1, 0], help: 'Causes the board to be displayed. Always succeeds.' },
+
+    'display-board': { color: [1, 0, 1], help: 'Causes the board to be displayed. Always succeeds.' },
 
     'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
 
@@ -110,6 +116,7 @@ const EDT_NODE_PROP_NAMES = {
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
     layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
+    delay: { name: 'delay', help: 'Amount to delay.' },
     what: { name: 'what', help: 'Character to be swapped/replaced.' },
     with: { name: 'with', help: 'Other character to use.' },
     withs: { name: 'withs', help: 'Space-separated other characters to use.' },
@@ -596,6 +603,10 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('times')) {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['times'].name + ': ' + node.times });
+        }
+
+        if (node.hasOwnProperty('delay')) {
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['delay'].name + ': ' + node.delay });
         }
 
         if (node.hasOwnProperty('what')) {
@@ -1154,15 +1165,21 @@ class TRRBTEditor {
     parseTextProperty(id, how) {
         let value = document.getElementById(id).value;
         value = value.trim();
-        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
+        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_FLOAT || how === EDT_PARSE_TEXT_WORD) {
             if (value.match(/\s+/) !== null) {
                 return { ok: false, error: 'Cannot have spaces' };
             } else if (how === EDT_PARSE_TEXT_INT && value != '') {
                 const asInt = parseInt(value, 10);
-                if (isNaN(asInt) || asInt < 1 || asInt > 100) {
-                    return { ok: false, error: 'Must be an integer between 1 and 100' };
+                if (isNaN(asInt) || asInt <= 0 || asInt >= 100) {
+                    return { ok: false, error: 'Must be an integer greater than 0 and less than 100' };
                 }
                 return { ok: true, value: asInt };
+            } else if (how === EDT_PARSE_TEXT_FLOAT && value != '') {
+                const asFloat = parseFloat(value);
+                if (isNaN(asFloat) || asFloat <= 0 || asFloat >= 100) {
+                    return { ok: false, error: 'Must be a number greater than 0 and less than 100' };
+                }
+                return { ok: true, value: asFloat };
             }
         }
         return { ok: true, value: value };
@@ -1528,6 +1545,9 @@ class TRRBTEditor {
             if (node.hasOwnProperty('times')) {
                 this.appendTextProperty(list, 'prop_times', EDT_NODE_PROP_NAMES['times'].name, EDT_NODE_PROP_NAMES['times'].help, node.times);
             }
+            if (node.hasOwnProperty('delay')) {
+                this.appendTextProperty(list, 'prop_delay', EDT_NODE_PROP_NAMES['delay'].name, EDT_NODE_PROP_NAMES['delay'].help, node.delay);
+            }
             if (node.hasOwnProperty('what')) {
                 this.appendTextProperty(list, 'prop_what', EDT_NODE_PROP_NAMES['what'].name, EDT_NODE_PROP_NAMES['what'].help, node.what);
             }
@@ -1634,6 +1654,7 @@ class TRRBTEditor {
                 ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
                 ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                 ['withs', bind0(this, 'parseListProperty'), false],
