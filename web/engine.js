@@ -1,6 +1,7 @@
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
 const ENG_UNDO_NONE   = 'UNDO_NONE';
+const ENG_UNDO_PLAYER = 'UNDO_PLAYER';
 const ENG_UNDO_FULL   = 'UNDO_FULL';
 
 const ENG_UNDO_PLAYER_MAX = 100;
@@ -623,6 +624,12 @@ class TRRBTEngine {
             return;
         }
 
+        if (this.undoSetting === ENG_UNDO_PLAYER) {
+            if (this.state.choiceWait !== true) {
+                return;
+            }
+        }
+
         let state = deepcopyobj(this.state);
 
         if (this.undoStackFirst === null) {
@@ -980,13 +987,17 @@ class TRRBTWebEngine extends TRRBTEngine {
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
-	if (this.undoSetting === ENG_UNDO_NONE) {
-	} else {
-            appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
-            appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
-            appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
+        if (this.undoSetting === ENG_UNDO_NONE) {
+        } else {
+            if (this.undoSetting === ENG_UNDO_PLAYER || this.undoSetting === ENG_UNDO_FULL) {
+                appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
+            }
+            if (this.undoSetting === ENG_UNDO_FULL) {
+                appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
+                appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
+            }
             appendBr(ed);
-	}
+        }
 
         appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
         appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
