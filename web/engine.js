@@ -1288,41 +1288,48 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.gameResultFrames !== null && this.gameResultFrames > 0) {
             this.gameResultFrames -= 1;
             if (this.gameResultFrames === 0) {
-                //alert(this.gameResultText.innerHTML);
+                /*
+                  if (this.gameResultText !== null) {
+                  alert(this.gameResultText.innerHTML);
+                  }
+                */
                 this.gameResultFrames = null;
             }
             this.requestDraw();
         }
 
-        if (this.gameResultText.style.display === 'none') {
-            if (this.state.gameResult !== null) {
-                let gameOverText = null;
-                this.gameResultText.style.display = 'inline';
-                if (this.state.gameResult.result === 'win') {
-                    let player = this.state.gameResult.player;
-                    gameOverText = 'Game over, player ' + player + ' wins!';
-                } else if (this.state.gameResult.result === 'lose') {
-                    let player = this.state.gameResult.player;
-                    gameOverText = 'Game over, player ' + player + ' loses!';
-                } else if (this.state.gameResult.result === 'draw') {
-                    gameOverText = 'Game over, draw!';
-                } else if (this.state.gameResult.result === 'stalemate') {
-                    gameOverText = 'Game over, stalemate!';
-                } else if (this.state.gameResult.result === 'stepout') {
-                    gameOverText = 'Game over, too many steps before move!';
-                } else {
-                    gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
+        if (this.gameResultText !== null) {
+            if (this.gameResultText.style.display === 'none') {
+                if (this.state.gameResult !== null) {
+                    let gameOverText = null;
+                    this.gameResultText.style.display = 'inline';
+                    if (this.state.gameResult.result === 'win') {
+                        let player = this.state.gameResult.player;
+                        gameOverText = 'Game over, player ' + player + ' wins!';
+                    } else if (this.state.gameResult.result === 'lose') {
+                        let player = this.state.gameResult.player;
+                        gameOverText = 'Game over, player ' + player + ' loses!';
+                    } else if (this.state.gameResult.result === 'draw') {
+                        gameOverText = 'Game over, draw!';
+                    } else if (this.state.gameResult.result === 'stalemate') {
+                        gameOverText = 'Game over, stalemate!';
+                    } else if (this.state.gameResult.result === 'stepout') {
+                        gameOverText = 'Game over, too many steps before move!';
+                    } else {
+                        gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
+                    }
+                    this.gameResultText.innerHTML = gameOverText;
+                    this.gameResultFrames = 10;
+                    this.requestDraw();
                 }
-                this.gameResultText.innerHTML = gameOverText;
-                this.gameResultFrames = 10;
-                this.requestDraw();
-            }
-        } else {
-            if (this.state.gameResult === null) {
-                this.gameResultText.style.display = 'none';
-                this.gameResultText.innerHTML = '';
+            } else {
+                if (this.state.gameResult === null) {
+                    this.gameResultText.style.display = 'none';
+                    this.gameResultText.innerHTML = '';
+                }
             }
         }
+
         this.updateLayersDiv();
     }
 
@@ -1340,6 +1347,10 @@ class TRRBTWebEngine extends TRRBTEngine {
     }
 
     updateLayersDiv() {
+        if (this.layersDiv === null) {
+            return;
+        }
+
         this.layersDiv.innerHTML = '';
 
         if (this.state.board !== null) {
