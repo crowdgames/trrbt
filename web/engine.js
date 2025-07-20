@@ -1,5 +1,8 @@
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
+const ENG_UNDO_NONE   = 'UNDO_NONE';
+const ENG_UNDO_FULL   = 'UNDO_FULL';
+
 const ENG_UNDO_PLAYER_MAX = 100;
 const ENG_UNDO_RECENT_MAX = 100;
 
@@ -557,7 +560,7 @@ class TRRBTStepper {
 
 class TRRBTEngine {
 
-    constructor(game, undoEnabled) {
+    constructor(game, undoSetting) {
         this.game = game;
 
         this.nodeLookup = null;
@@ -565,7 +568,7 @@ class TRRBTEngine {
         this.state = null;
         this.stepper = null;
 
-        this.undoEnabled = undoEnabled;
+        this.undoSetting = undoSetting;
         this.undoStackFirst = null;
         this.undoStackMove = null;
         this.undoStackRecent = null;
@@ -584,7 +587,7 @@ class TRRBTEngine {
         this.state = new TRRBTState();
         this.stepper = new TRRBTStepper();
 
-        if (!this.undoEnabled) {
+        if (this.undoSetting === ENG_UNDO_NONE) {
             this.undoStackFirst = null;
             this.undoStackMove = null;
             this.undoStackRecent = null;
@@ -616,7 +619,7 @@ class TRRBTEngine {
     }
 
     undoPush() {
-        if (!this.undoEnabled) {
+        if (this.undoSetting === ENG_UNDO_NONE) {
             return;
         }
 
@@ -639,7 +642,7 @@ class TRRBTEngine {
     }
 
     undoPop() {
-        if (!this.undoEnabled) {
+        if (this.undoSetting === ENG_UNDO_NONE) {
             return;
         }
 
@@ -661,7 +664,7 @@ class TRRBTEngine {
     }
 
     undoEmpty() {
-        if (!this.undoEnabled) {
+        if (this.undoSetting === ENG_UNDO_NONE) {
             return true;
         } else {
             return (this.undoStackRecent.length + this.undoStackMove.length) === 0 && this.undoStackFirst === null;
@@ -720,8 +723,8 @@ class TRRBTEngine {
 
 class TRRBTWebEngine extends TRRBTEngine {
 
-    constructor(game, canvasname, divname) {
-        super(game, true);
+    constructor(game, undoSetting, canvasname, divname) {
+        super(game, undoSetting);
 
         this.canvasname = canvasname;
         this.divname = divname;
@@ -977,13 +980,16 @@ class TRRBTWebEngine extends TRRBTEngine {
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
 
-        appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
-        appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
-        appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
-        appendBr(ed);
+	if (this.undoSetting === ENG_UNDO_NONE) {
+	} else {
+            appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
+            appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
+            appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
+            appendBr(ed);
+	}
 
-        appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
         appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
+        appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
         appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
     }
