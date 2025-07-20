@@ -11,7 +11,7 @@
   <body>
     <script>
       var G_game = emptyGame();
-      var G_engine = new TRRBTWebEngine(G_game, 'enginecanvas', 'enginediv');
+      var G_engine = new TRRBTWebEngine(G_game, ENG_UNDO_FULL, 'enginecanvas', 'enginediv');
       function onSelectGame(gameSelected) {
           xformApplyIntoGame(G_game, gameSelected, SEL_getGameTree);
           G_engine.onLoad();

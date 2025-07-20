@@ -18,7 +18,7 @@
     var G_game_x = emptyGame();
     var G_editor_u = new TRRBTEditor(G_game_u, SEL_getGameTree, 'editorucanvas', 'editorudiv', beforeSave, afterSave, onTemplate, onDeleteGame);
     var G_editor_x = new TRRBTEditor(G_game_x, SEL_getGameTree, 'editorxcanvas', null);
-    var G_engine = new TRRBTWebEngine(G_game_x, 'enginecanvas', 'enginediv');
+    var G_engine = new TRRBTWebEngine(G_game_x, ENG_UNDO_FULL, 'enginecanvas', 'enginediv');
     var isTemplate = true;
     function onSelectGame(gameSelected, selectedTemplate) {
       if (G_editor_u.importGame(gameSelected)) {
