@@ -25,7 +25,7 @@ def run_game(filename, choice_order, random_players, clear_screen, board_init):
     if board_init is not None:
         game.tree = {'type':'order', 'children':[{'type':'set-board', 'pattern':board_init}, {'type':'display-board'}, game.tree]}
 
-    engine = util.new_engine(game, False)
+    engine = util.new_engine(game, 'UNDO_NONE')
 
     saved_state = None
 

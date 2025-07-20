@@ -6,7 +6,7 @@ import util
 def agent_game(filename, enum):
     game = util.yaml2bt(filename, True, True)
 
-    engine = util.new_engine(game, False)
+    engine = util.new_engine(game, 'UNDO_NONE')
 
     max_tile_width = util.node_max_tile_width(game.tree)
 
