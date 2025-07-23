@@ -5,22 +5,6 @@ tree:
   children:
   - type: set-board
     pattern: P _ _ _ D
-  - type: loop-until-all
-    children:
-    - type: player
-      pid: P
-      children:
-      - type: rewrite
-        lhs: P _
-        rhs: _ P
-      - type: rewrite
-        lhs: _ P
-        rhs: P _
-      - type: rewrite
-        lhs: P D
-        rhs: _ X
-    - type: win
-      pid: P
-      children:
-      - type: match
-        pattern: X
+  - type: x-file
+    file: right-gameloop
+    target: gameloop

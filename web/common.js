@@ -138,25 +138,27 @@ function appendList(parent) {
 
 
 
-function find_file_node_ids(file, node, resolve_file_to_game, file_to_nid_to_node) {
+function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_to_node) {
     if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-        if (!file_to_nid_to_node.has(file)) {
-            file_to_nid_to_node.set(file, new Map());
-        }
-        if (!file_to_nid_to_node.get(file).has(node.nid)) {
-            file_to_nid_to_node.get(file).set(node.nid, node);
+        if (!nid_to_node.has(node.nid)) {
+            nid_to_node.set(node.nid, node);
         }
     }
     if (node.hasOwnProperty('children')) {
         for (let child of node.children) {
-            find_file_node_ids(file, child, resolve_file_to_game, file_to_nid_to_node);
+            find_file_node_ids(file, child, resolve_file_to_game, file_to_tree, nid_to_node);
         }
     }
     if (node.hasOwnProperty('file') && node.hasOwnProperty('target')) {
-        if (resolve_file_to_game != null && !file_to_nid_to_node.has(node.file)) {
-            const game_tree = resolve_file_to_game(node.file)
-            if (game_tree) {
-                find_file_node_ids(node.file, game_tree, resolve_file_to_game, file_to_nid_to_node);
+        if (resolve_file_to_game != null) {
+            if (!file_to_tree.has(node.file)) {
+                const game_tree = resolve_file_to_game(node.file);
+                if (game_tree) {
+                    file_to_tree.set(node.file, game_tree);
+                    find_file_node_ids(node.file, game_tree, resolve_file_to_game, file_to_tree, nid_to_node);
+                } else {
+                    file_to_tree.set(node.file, null);
+                }
             }
         }
     }
@@ -486,7 +488,7 @@ function xform_rule_replace_only_fn(wht, wths) {
     return rule_replace_only;
 }
 
-function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix) {
+function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix) {
     let ret_nodes = [];
 
     node = shallowcopyobj(node);
@@ -494,25 +496,17 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
     const ntype = node.type;
 
     function get_link_or_file_nodes() {
-        let file = null;
-        if (node.hasOwnProperty('file')) {
-            file = node.file;
-        }
-
-        const nid_to_node = file_to_nid_to_node.get(file);
-        if (nid_to_node) {
-            if (node.hasOwnProperty('target')) {
-                const target = nid_to_node.get(node.target);
-                if (target) {
-                    const linked_id = JSON.stringify([file, node.target]);
-                    if (already_linked.indexOf(linked_id) >= 0) {
-                        // pass
-                        // TODO: ? add specialized node ?
-                    } else {
-                        const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node.dispid : undefined;
-                        const linked = xform_apply_to_node(deepcopyobj(target), xforms, file_to_nid_to_node, [linked_id].concat(already_linked), apply_xform, linked_dispid_suffix);
-                        return linked;
-                    }
+        if (node.hasOwnProperty('target')) {
+            const target = nid_to_node.get(node.target);
+            if (target) {
+                const linked_id = node.target;
+                if (already_linked.indexOf(linked_id) >= 0) {
+                    // pass
+                    // TODO: ? add specialized node ?
+                } else {
+                    const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node.dispid : undefined;
+                    const linked = xform_apply_to_node(deepcopyobj(target), xforms, file_to_tree, nid_to_node, [linked_id].concat(already_linked), apply_xform, linked_dispid_suffix);
+                    return linked;
                 }
             }
         }
@@ -532,7 +526,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
             if (ret_node.hasOwnProperty('children')) {
                 let new_children = []
                 for (const child of ret_node.children) {
-                    const child_xformed = xform_apply_to_node(child, xforms, file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
+                    const child_xformed = xform_apply_to_node(child, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                     new_children.push(...child_xformed);
                 }
                 ret_node.children = new_children;
@@ -579,7 +573,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
 
             for (const child of node.children) {
                 let dispid_suffix = 0;
-                const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
+                const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                 for (let child_xformed of children_xformed) {
                     if (dispid_use_or_prefix !== undefined) {
                         if (dispid_suffix > 0) {
@@ -606,7 +600,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                 if (ret_node.hasOwnProperty('children')) {
                     let new_children = []
                     for (const child of ret_node.children) {
-                        const child_xformed = xform_apply_to_node(child, xforms, file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
+                        const child_xformed = xform_apply_to_node(child, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                         new_children.push(...child_xformed);
                     }
                     ret_node.children = new_children;
@@ -621,11 +615,12 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
 }
 
 function xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispids) {
-    let file_to_nid_to_node = new Map();
+    let file_to_tree = new Map();
+    let nid_to_node = new Map();
 
-    find_file_node_ids(null, tree, resolve_file_to_game, file_to_nid_to_node);
+    find_file_node_ids(null, tree, resolve_file_to_game, file_to_tree, nid_to_node);
 
-    return xform_apply_to_node(tree, [xform_rule_identity], file_to_nid_to_node, [], apply_xform, use_dispids ? null : undefined)[0];
+    return xform_apply_to_node(tree, [xform_rule_identity], file_to_tree, nid_to_node, [], apply_xform, use_dispids ? null : undefined)[0];
 }
 
 
