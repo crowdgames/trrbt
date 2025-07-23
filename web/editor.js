@@ -142,7 +142,8 @@ class TRRBTEditor {
         this.undoStack = null;
         this.undoStackPos = null;
 
-        this.fileToNidToNode = null;
+        this.fileToTree = null;
+        this.nidToNode = null;
         this.dispidToNode = null;
 
         this.nodeDrawTexts = null;
@@ -296,7 +297,8 @@ class TRRBTEditor {
         this.undoStack = [];
         this.undoStackPos = -1;
 
-        this.fileToNidToNode = new Map();
+        this.fileToTree = new Map();
+        this.nidToNode = new Map();
         this.dispidToNode = new Map();
 
         this.nodeDrawTexts = new Map();
@@ -385,7 +387,7 @@ class TRRBTEditor {
             }
         }
 
-        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.fileToNidToNode, this.game.tree);
+        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.nidToNode, this.game.tree);
 
         this.nodeDrawLastTime = drawTime;
     }
@@ -431,11 +433,12 @@ class TRRBTEditor {
     }
 
     updateNodeIds() {
-        this.fileToNidToNode = new Map();
+        this.fileToTree = new Map();
+        this.nidToNode = new Map();
         this.dispidToNode = new Map();
         if (this.game.tree !== null) {
             this.updateDispids(this.game.tree);
-            find_file_node_ids(null, this.game.tree, this.file_to_game, this.fileToNidToNode);
+            find_file_node_ids(null, this.game.tree, this.file_to_game, this.fileToTree, this.nidToNode);
         }
     }
 
@@ -772,22 +775,14 @@ class TRRBTEditor {
             ctx.lineTo(x0 + 0.5 * dx, y0 + 0.5 * dy);
             ctx.stroke();
 
-            let file = null;
-            if (node.hasOwnProperty('file')) {
-                file = node.file;
-            }
-
             if (node.hasOwnProperty('target')) {
-                let target = null;
-                const nid_to_node = nodeIds.get(file);
-                if (nid_to_node) {
-                    target = nid_to_node.get(node.target);
-                }
+                const has_file = node.hasOwnProperty('file');
+                const target = nodeIds.get(node.target);
 
                 if (target) {
                     found_target = true;
 
-                    if (file === null && nodePositions.has(target.dispid)) {
+                    if (!has_file && nodePositions.has(target.dispid)) {
                         const tnrect = nodePositions.get(target.dispid);
                         const tnx = tnrect.x;
                         const tny = tnrect.y;
