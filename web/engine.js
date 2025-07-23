@@ -93,6 +93,7 @@ class TRRBTStepper {
             'draw': bind0(this, 'stepNodeDraw'),
             'match': bind0(this, 'stepNodeMatch'),
             'rewrite': bind0(this, 'stepNodeRewrite'),
+            'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
             'player': bind0(this, 'stepNodePlayer'),
         };
 
@@ -355,6 +356,21 @@ class TRRBTStepper {
         if (matches.length > 0) {
             let match = matches[Math.floor(Math.random() * matches.length)];
             this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        let matches = this.findLayerPattern(state, stateNode.lhs);
+        if (matches.length > 0) {
+            matches.sort((a, b) => 0.5 - Math.random());
+            for (let match of matches) {
+                if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
+                    this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+                }
+            }
             return true;
         } else {
             return false;
@@ -749,6 +765,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.gameResultText = null;
         this.gameResultFrames = null;
         this.breakResumeText = null;
+        this.layersDiv = null;
         this.engineDiv = null;
 
         this.padding = null;
@@ -770,6 +787,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
+        this.hiddenLayers = null;
 
         this.editor = null;
     }
@@ -807,6 +825,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
+        this.hiddenLayers = Object.create(null);
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
         this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
@@ -940,6 +959,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.editor !== null) {
             this.editor.updatePositionsAndDraw();
         }
+        this.updateLayersDiv();
     }
 
     updateEngineEditor() {
@@ -1011,6 +1031,10 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
         appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
+
+        this.layersDiv = document.createElement('div');
+        ed.appendChild(this.layersDiv);
+        this.updateLayersDiv()
     }
 
     resizeCanvas() {
@@ -1125,6 +1149,9 @@ class TRRBTWebEngine extends TRRBTEngine {
                     choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                     choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
+                        if (Object.hasOwn(this.hiddenLayers, layer)) {
+                            continue;
+                        }
                         if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
                             const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
                             if (tileOverwrite !== '.') {
@@ -1141,6 +1168,9 @@ class TRRBTWebEngine extends TRRBTEngine {
                     }
                 } else {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
+                        if (Object.hasOwn(this.hiddenLayers, layer)) {
+                            continue;
+                        }
                         tiles.push(pattern[rr][cc]);
                         overwrites.push(false);
                     }
@@ -1266,41 +1296,49 @@ class TRRBTWebEngine extends TRRBTEngine {
         if (this.gameResultFrames !== null && this.gameResultFrames > 0) {
             this.gameResultFrames -= 1;
             if (this.gameResultFrames === 0) {
-                //alert(this.gameResultText.innerHTML);
+                /*
+                  if (this.gameResultText !== null) {
+                  alert(this.gameResultText.innerHTML);
+                  }
+                */
                 this.gameResultFrames = null;
             }
             this.requestDraw();
         }
 
-        if (this.gameResultText.style.display === 'none') {
-            if (this.state.gameResult !== null) {
-                let gameOverText = null;
-                this.gameResultText.style.display = 'inline';
-                if (this.state.gameResult.result === 'win') {
-                    let player = this.state.gameResult.player;
-                    gameOverText = 'Game over, player ' + player + ' wins!';
-                } else if (this.state.gameResult.result === 'lose') {
-                    let player = this.state.gameResult.player;
-                    gameOverText = 'Game over, player ' + player + ' loses!';
-                } else if (this.state.gameResult.result === 'draw') {
-                    gameOverText = 'Game over, draw!';
-                } else if (this.state.gameResult.result === 'stalemate') {
-                    gameOverText = 'Game over, stalemate!';
-                } else if (this.state.gameResult.result === 'stepout') {
-                    gameOverText = 'Game over, too many steps before move!';
-                } else {
-                    gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
+        if (this.gameResultText !== null) {
+            if (this.gameResultText.style.display === 'none') {
+                if (this.state.gameResult !== null) {
+                    let gameOverText = null;
+                    this.gameResultText.style.display = 'inline';
+                    if (this.state.gameResult.result === 'win') {
+                        let player = this.state.gameResult.player;
+                        gameOverText = 'Game over, player ' + player + ' wins!';
+                    } else if (this.state.gameResult.result === 'lose') {
+                        let player = this.state.gameResult.player;
+                        gameOverText = 'Game over, player ' + player + ' loses!';
+                    } else if (this.state.gameResult.result === 'draw') {
+                        gameOverText = 'Game over, draw!';
+                    } else if (this.state.gameResult.result === 'stalemate') {
+                        gameOverText = 'Game over, stalemate!';
+                    } else if (this.state.gameResult.result === 'stepout') {
+                        gameOverText = 'Game over, too many steps before move!';
+                    } else {
+                        gameOverText = 'Game over, unknown result: ' + this.state.gameResult.result + '!';
+                    }
+                    this.gameResultText.innerHTML = gameOverText;
+                    this.gameResultFrames = 10;
+                    this.requestDraw();
                 }
-                this.gameResultText.innerHTML = gameOverText;
-                this.gameResultFrames = 10;
-                this.requestDraw();
-            }
-        } else {
-            if (this.state.gameResult === null) {
-                this.gameResultText.style.display = 'none';
-                this.gameResultText.innerHTML = '';
+            } else {
+                if (this.state.gameResult === null) {
+                    this.gameResultText.style.display = 'none';
+                    this.gameResultText.innerHTML = '';
+                }
             }
         }
+
+        this.updateLayersDiv();
     }
 
     updateStepManual(setting) {
@@ -1312,6 +1350,45 @@ class TRRBTWebEngine extends TRRBTEngine {
                 } else {
                     this.breakResumeText.style.display = 'none';
                 }
+            }
+        }
+    }
+
+    updateLayersDiv() {
+        if (this.layersDiv === null) {
+            return;
+        }
+
+        this.layersDiv.innerHTML = '';
+
+        if (this.state.board !== null) {
+            appendBr(this.layersDiv);
+            appendText(this.layersDiv, 'Layers', true, true);
+            appendBr(this.layersDiv);
+            for (let layer in this.state.board) {
+                const layerHidden = Object.hasOwn(this.hiddenLayers, layer);
+                const input = document.createElement('input');
+                input.id = 'layer_' + layer;
+                input.type = 'checkbox';
+                input.checked = !layerHidden;
+                input.onclick = () => {
+                    if (layerHidden) {
+                        delete this.hiddenLayers[layer];
+                    } else {
+                        this.hiddenLayers[layer] = true;
+                    }
+                    this.requestDraw();
+                };
+
+                const label = document.createElement('label');
+                label.innerHTML = layer;
+                label.htmlFor = 'layer_' + layer;;
+
+                const span = document.createElement('span');
+                span.appendChild(input);
+                span.appendChild(label);
+                appendBr(span);
+                this.layersDiv.appendChild(span);
             }
         }
     }
