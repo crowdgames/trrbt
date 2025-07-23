@@ -619,6 +619,14 @@ class TRRBTEngine {
         this.state = deepcopyobj(state);
     }
 
+    setBoard(board) {
+        this.state.board = deepcopyobj(board);
+
+        const [newRows, newCols] = this.stepper.layerPatternSize(this.state.board);
+        this.state.rows = newRows;
+        this.state.cols = newCols;
+    }
+
     undoPush() {
         if (this.undoSetting === ENG_UNDO_NONE) {
             return;

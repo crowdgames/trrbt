@@ -1,4 +1,4 @@
-import argparse, os, random, sys, time
+import argparse, json, os, random, sys, time
 import util
 
 
@@ -22,10 +22,10 @@ def delay(seconds):
 def run_game(filename, choice_order, random_players, clear_screen, board_init):
     game = util.yaml2bt(filename, True, True)
 
-    if board_init is not None:
-        game.tree = {'type':'order', 'children':[{'type':'set-board', 'pattern':board_init}, {'type':'display-board'}, game.tree]}
-
     engine = util.new_engine(game, 'UNDO_NONE')
+
+    if board_init is not None:
+        engine.setBoard(board_init)
 
     saved_state = None
 
@@ -161,6 +161,6 @@ if __name__ == '__main__':
     parser.add_argument('--board', type=str, help='Initial board configuration.')
     args = parser.parse_args()
 
-    board_init = None if args.board is None else {'main': util.string_to_pattern(args.board)}
+    board_init = None if args.board is None else json.loads(args.board)
 
     run_game(args.filename, args.choice_order, args.player_random, args.cls, board_init)

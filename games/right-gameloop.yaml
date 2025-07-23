@@ -1,0 +1,23 @@
+---
+name: right-gameloop
+tree:
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: player
+    pid: P
+    children:
+    - type: rewrite
+      lhs: P _
+      rhs: _ P
+    - type: rewrite
+      lhs: _ P
+      rhs: P _
+    - type: rewrite
+      lhs: P D
+      rhs: _ X
+  - type: win
+    pid: P
+    children:
+    - type: match
+      pattern: X

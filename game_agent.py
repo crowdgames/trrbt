@@ -3,10 +3,13 @@ import util
 
 
 
-def agent_game(filename, enum):
+def agent_game(filename, enum, board_init):
     game = util.yaml2bt(filename, True, True)
 
     engine = util.new_engine(game, 'UNDO_NONE')
+
+    if board_init is not None:
+        engine.setBoard(board_init)
 
     max_tile_width = util.node_max_tile_width(game.tree)
 
@@ -62,6 +65,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run agent on game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--enum', action='store_true', help='Enumerate states rather than find winning state.')
+    parser.add_argument('--board', type=str, help='Initial board configuration.')
     args = parser.parse_args()
 
-    agent_game(args.filename, args.enum)
+    board_init = None if args.board is None else json.loads(args.board)
+
+    agent_game(args.filename, args.enum, board_init)
