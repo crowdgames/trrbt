@@ -184,6 +184,24 @@ function graphemeLength(str) {
     return graphemes.length;
 }
 
+function graphemeTrunc(str, len) {
+    const graphemes = splitGraphemes(str);
+    if (graphemes.length <= len) {
+        return str;
+    } else {
+        let trunc = '';
+        let trunclen = 0;
+        for (const ch of graphemes) {
+            trunc += ch;
+            trunclen += 1;
+            if (trunclen + 3 >= len) {
+                break;
+            }
+        }
+        return trunc + '...';
+    }
+}
+
 function getTileSize(patterns) {
     let size = 1;
     for (const pattern of patterns) {
