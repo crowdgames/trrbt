@@ -1168,6 +1168,8 @@ class TRRBTEditor {
             this.resetXform();
             this.translateXform(this.canvas.width / 2 / PIXEL_RATIO - rect.x - 0.5 * rect.w, this.canvas.height / 2 / PIXEL_RATIO - rect.y - 0.5 * rect.h);
         }
+
+        this.updatePropertyEditor(node, false)
     }
 
     highlightProperty(id, isError) {
@@ -1511,22 +1513,31 @@ class TRRBTEditor {
                     navigateToNode(node);
                 }
             };
+
+            let choicesNid = []
+            for (const [key, node] of this.nidToNode) {
+                choicesNid.push([EDT_NODE_PROP_NAMES['nid'].name + ': ' + key, node.dispid]);
+            }
+            choicesNid.sort();
+
+            let choicesCmt = []
+            for (const [key, node] of this.commentToNode) {
+                choicesCmt.push([EDT_NODE_PROP_NAMES['comment'].name + ': ' + key, node.dispid]);
+            }
+            choicesCmt.sort();
+
+            let choices = [...choicesNid, ...choicesCmt];
             let option = document.createElement('option');
             option.innerHTML = '- Navigate -';
             option.value = null;
             select.add(option);
-            for (const [key, node] of this.nidToNode) {
+            for (const [text, dispid] of choices) {
                 let option = document.createElement('option');
-                option.innerHTML = EDT_NODE_PROP_NAMES['nid'].name + ': ' + graphemeTrunc(key, 30);
-                option.value = node.dispid;
+                option.innerHTML = graphemeTrunc(text, 40);
+                option.value = dispid;
                 select.add(option);
             }
-            for (const [key, node] of this.commentToNode) {
-                let option = document.createElement('option');
-                option.innerHTML = EDT_NODE_PROP_NAMES['comment'].name + ': ' + graphemeTrunc(key, 30);
-                option.value = node.dispid;
-                select.add(option);
-            }
+            appendBr(ed, true);
         }
 
         this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(node) } : null;
