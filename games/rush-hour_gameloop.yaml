@@ -1,0 +1,40 @@
+---
+name: rush hour
+tree:
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: player
+    pid: "1"
+    children:
+    - type: x-ident
+      nid: move
+      children:
+      - type: x-mirror
+        comment: red car moves side to side
+        children:
+        - type: rewrite
+          lhs: CR CR __
+          rhs: __ CR CR
+      - type: x-replace
+        comment: cars and trucks move
+        what: a
+        withs:
+        - 1
+        - 2
+        - 3
+        children:
+        - type: x-spin
+          children:
+          - type: rewrite
+            lhs: Ca Ca __
+            rhs: __ Ca Ca
+          - type: rewrite
+            lhs: Ta Ta Ta __
+            rhs: __ Ta Ta Ta
+  - type: win
+    comment: win if red car at exit
+    pid: "1"
+    children:
+    - type: match
+      pattern: CR CR OO

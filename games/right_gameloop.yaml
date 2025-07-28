@@ -1,5 +1,5 @@
 ---
-name: right-gameloop
+name: right_gameloop
 tree:
   type: loop-until-all
   nid: gameloop
