@@ -5,8 +5,8 @@ tree:
   type: order
   children:
   - type: set-board
-    pattern: X X _;
-             _ _ X;
+    pattern: O O _;
+             _ _ O;
              _ _ _;
   - type: x-file
     file: peg_solitaire-gameloop

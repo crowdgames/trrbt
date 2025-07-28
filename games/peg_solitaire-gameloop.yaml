@@ -11,11 +11,11 @@ tree:
     - type: x-spin
       children:
       - type: rewrite
-        lhs: X X _
-        rhs: _ _ X
+        lhs: O O _
+        rhs: _ _ O
   - type: win
     pid: "1"
     children:
     - type: match-times
       times: 1
-      pattern: X
+      pattern: O
