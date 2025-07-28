@@ -1,5 +1,5 @@
 ---
-name: peg_solitaire-gameloop
+name: peg solitaire-gameloop
 start:
 tree:
   type: loop-until-all

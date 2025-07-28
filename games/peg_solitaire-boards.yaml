@@ -1,5 +1,5 @@
 ---
-name: peg_solitaire-boards
+name: peg solitaire-boards
 start:
 tree:
   type: order
