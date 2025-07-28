@@ -23,6 +23,7 @@ class TRRBTState {
         this.callResult = null;
         this.gameResult = null;
         this.loopCheck = 0;
+	this.random = 0;
 
         this.board = null;
         this.rows = 0;
@@ -41,6 +42,19 @@ class TRRBTState {
     }
 
 };
+
+const _RND_A = 1103515245;
+const _RND_C = 12345;
+const _RND_M = 0x80000000;
+
+function stateRandom(state) {
+    state.random = (_RND_A * state.random + _RND_C) % _RND_M;
+    return state.random / _RND_M;
+}
+
+function stateSeed(state, seed) {
+    state.random = Math.floor(seed) % _RND_M;
+}
 
 
 
@@ -188,7 +202,7 @@ class TRRBTStepper {
             for (let ii = 0; ii < stateNode.children.length; ++ii) {
                 order.push(ii);
             }
-            order.sort((a, b) => 0.5 - Math.random());
+            order.sort((a, b) => 0.5 - stateRandom(state));
             this.localSet(stateFrame, 'order', order);
         }
 
@@ -363,7 +377,7 @@ class TRRBTStepper {
     stepNodeRewrite(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
-            let match = matches[Math.floor(Math.random() * matches.length)];
+            let match = matches[Math.floor(stateRandom(state) * matches.length)];
             this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
             return true;
         } else {
@@ -374,7 +388,7 @@ class TRRBTStepper {
     stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
-            matches.sort((a, b) => 0.5 - Math.random());
+            matches.sort((a, b) => 0.5 - stateRandom(state));
             for (let match of matches) {
                 if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
                     this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
@@ -624,6 +638,11 @@ class TRRBTEngine {
         }
     }
 
+    onRestart() {
+	this.onLoad();
+	this.setRandomSeed(Date.now());
+    }
+
     initializeNodeLookup(nodeLookup, node, id) {
         nodeLookup.idToNode.set(id[0], node);
         nodeLookup.nodeToId.set(node, id[0]);
@@ -642,6 +661,15 @@ class TRRBTEngine {
 
     setState(state) {
         this.state = deepcopyobj(state);
+    }
+
+    setRandomSeed(seed) {
+	stateSeed(this.state, seed);
+	if (seed != 0) {
+            for (let ii = 0; ii < 10; ii += 1) {
+		stateRandom(this.state);
+	    }
+	}
     }
 
     setBoard(board) {
@@ -987,7 +1015,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendText(ed, '(Hover for additional info)', false, false, true);
         appendBr(ed, true);
 
-        appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onRestart'));
         appendText(ed, ' ');
         this.gameResultText = document.createElement('span');
         this.gameResultText.style.color = '#4444cc';

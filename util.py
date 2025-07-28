@@ -2,6 +2,7 @@ import copy
 import io
 import json
 import os
+import random
 import sys
 import yaml
 
@@ -141,6 +142,23 @@ def new_engine(game, undoEnabled):
     require_js()
 
     return _js_common['new_engine'](game, undoEnabled)
+
+def setup_engine(game, undoEnabled, board_init, random_seed):
+    engine = new_engine(game, undoEnabled)
+
+    max_tile_width = node_max_tile_width(game.tree)
+
+    if board_init is not None:
+        engine.setBoard(board_init)
+
+    if random_seed is not None:
+        print('random seed:', random_seed)
+        engine.setRandomSeed(random_seed)
+        rng = random.Random(random_seed)
+    else:
+        rng = random.Random(0)
+
+    return engine, max_tile_width, rng
 
 
 
