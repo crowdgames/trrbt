@@ -602,7 +602,7 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
                     ret_nodes.push(child_xformed);
                 }
             }
-        } else if (['player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'rewrite-all', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'display-board', 'x-unroll-replace'].indexOf(ntype) >= 0) {
+        } else if (['player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'rewrite-all', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'match-times', 'display-board', 'x-unroll-replace'].indexOf(ntype) >= 0) {
             let xformed = [node];
             for (let xform of xforms) {
                 let new_xformed = [];

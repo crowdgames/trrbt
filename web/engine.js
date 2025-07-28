@@ -92,6 +92,7 @@ class TRRBTStepper {
             'lose': bind0(this, 'stepNodeLose'),
             'draw': bind0(this, 'stepNodeDraw'),
             'match': bind0(this, 'stepNodeMatch'),
+            'match-times': bind0(this, 'stepNodeMatchTimes'),
             'rewrite': bind0(this, 'stepNodeRewrite'),
             'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
             'player': bind0(this, 'stepNodePlayer'),
@@ -345,6 +346,14 @@ class TRRBTStepper {
 
     stepNodeMatch(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (this.findLayerPattern(state, stateNode.pattern).length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodeMatchTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        if (this.findLayerPattern(state, stateNode.pattern).length === stateNode.times) {
             return true;
         } else {
             return false;

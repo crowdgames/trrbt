@@ -40,6 +40,7 @@ ND_REWRITE         = 'rewrite'
 ND_SET_BOARD       = 'set-board'
 
 ND_MATCH           = 'match'
+ND_MATCH_TIMES     = 'match-times'
 
 ND_LAYER_TEMPLATE  = 'layer-template'
 ND_APPEND_ROWS     = 'append-rows'
@@ -233,7 +234,7 @@ def node_reshape_tiles(node):
         node[NKEY_LHS] = entry_to_layer_pattern(node[NKEY_LHS], node[NKEY_LAYER] if NKEY_LAYER in node else DEFAULT_LAYER)
         node[NKEY_RHS] = entry_to_layer_pattern(node[NKEY_RHS], node[NKEY_LAYER] if NKEY_LAYER in node else DEFAULT_LAYER)
 
-    if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
+    if node[NKEY_TYPE] in [ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
         node[NKEY_PATTERN] = entry_to_layer_pattern(node[NKEY_PATTERN], node[NKEY_LAYER] if NKEY_LAYER in node else DEFAULT_LAYER)
 
     if NKEY_CHILDREN in node.keys():
@@ -245,7 +246,7 @@ def node_check(node, files_resolved, xformed):
     ntype = node[NKEY_TYPE]
 
     if xformed:
-        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
             raise RuntimeError(f'node type {ntype} must not be in xformed tree')
 
     if ntype == ND_PLAYER:
@@ -263,7 +264,7 @@ def node_check(node, files_resolved, xformed):
         else:
             if NKEY_CHILDREN in node.keys():
                 raise RuntimeError(f'node type {ntype} must not have {NKEY_CHILDREN}')
-    elif ntype in [NDX_LINK, NDX_FILE, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+    elif ntype in [NDX_LINK, NDX_FILE, ND_REWRITE, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
         if NKEY_CHILDREN in node.keys():
             raise RuntimeError(f'node type {ntype} must not have {NKEY_CHILDREN}')
     else:
@@ -281,7 +282,7 @@ def node_max_tile_width(node):
         tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_LHS]))
         tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_RHS]))
 
-    if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
+    if node[NKEY_TYPE] in [ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
         tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_PATTERN]))
 
     if NKEY_CHILDREN in node.keys():
@@ -301,7 +302,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
     lt = 'e0'
     dk = 'd0'
 
-    if ntype in [ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+    if ntype in [ND_REWRITE, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
         nshape = 'box'
 
         nstyle += ',rounded'
@@ -309,11 +310,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
         nlabel += '<TABLE BORDER="0">'
         nlabel += '<TR><TD COLSPAN="3">'
         nlabel += ntype
+        if ntype in [ND_MATCH_TIMES]:
+            nlabel += ':' + str(intify(node[NKEY_TIMES]))
         nlabel += '</TD></TR>'
 
         if ntype in [ND_REWRITE, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS]:
             nfill = f'#{dk}{lt}{dk}'
-        elif ntype in [ND_MATCH]:
+        elif ntype in [ND_MATCH, ND_MATCH_TIMES]:
             nfill = f'#{dk}{lt}{lt}'
         elif ntype in [ND_DISPLAY_BOARD]:
             nfill = f'#{dk}{dk}{dk}'

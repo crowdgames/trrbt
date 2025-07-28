@@ -48,6 +48,7 @@ const EDT_NODE_PROTOTYPES = [
     { type: 'display-board', comment: '', nid: '', delay: 0.5 },
 
     { type: 'match', pattern: EDT_EMPTY_PATTERN },
+    { type: 'match-times', times: 1, pattern: EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
@@ -88,6 +89,7 @@ const EDT_NODE_HELP = {
     'display-board': { color: [1, 0, 1], help: 'Causes the board to be displayed. Always succeeds.' },
 
     'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
+    'match-times': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board the given number of times, otherwise fails.' },
 
     'x-ident': { color: [1, 1, 1], help: 'Do not apply any transform.' },
     'x-prune': { color: [1, 1, 1], help: 'Remove nodes.' },
@@ -989,7 +991,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['rewrite', 'rewrite-all', 'match', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
+        } else if (['rewrite', 'rewrite-all', 'match', 'match-times', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
             ctx.fill();
