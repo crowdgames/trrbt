@@ -1,5 +1,5 @@
 ---
-name: rush hour
+name: rush hour-gameloop
 tree:
   type: loop-until-all
   nid: gameloop

@@ -1,5 +1,5 @@
 ---
-name: rush hour
+name: rush hour-boards
 tree:
   type: order
   children:
@@ -24,5 +24,5 @@ tree:
                XX __ __ __ __ __ __ XX;
                XX XX XX XX XX XX XX XX;
   - type: x-file
-    file: rush-hour_gameloop
+    file: rush_hour-gameloop
     target: gameloop

@@ -1,10 +1,10 @@
 ---
-name: right
+name: right-boards
 tree:
   type: order
   children:
   - type: set-board
     pattern: P _ _ _ D
   - type: x-file
-    file: right_gameloop
+    file: right-gameloop
     target: gameloop

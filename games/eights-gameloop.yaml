@@ -1,5 +1,5 @@
 ---
-name: eights_gameloop
+name: eights-gameloop
 start:
 tree:
   type: loop-until-all

@@ -58,5 +58,5 @@ tree:
     - type: match
       pattern: CR CR __ __ __ __ OO
   - type: x-file
-    file: rush-hour_gameloop
+    file: rush_hour-gameloop
     target: gameloop
