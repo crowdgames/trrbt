@@ -92,6 +92,7 @@ class TRRBTStepper {
             'lose': bind0(this, 'stepNodeLose'),
             'draw': bind0(this, 'stepNodeDraw'),
             'match': bind0(this, 'stepNodeMatch'),
+            'match-times': bind0(this, 'stepNodeMatchTimes'),
             'rewrite': bind0(this, 'stepNodeRewrite'),
             'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
             'player': bind0(this, 'stepNodePlayer'),
@@ -345,6 +346,14 @@ class TRRBTStepper {
 
     stepNodeMatch(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (this.findLayerPattern(state, stateNode.pattern).length > 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    stepNodeMatchTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        if (this.findLayerPattern(state, stateNode.pattern).length === stateNode.times) {
             return true;
         } else {
             return false;
@@ -787,7 +796,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
-        this.hiddenLayers = null;
+        this.hideLayers = null;
+        this.showTileLayers = null;
 
         this.editor = null;
     }
@@ -825,7 +835,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
-        this.hiddenLayers = Object.create(null);
+        this.hideLayers = Object.create(null);
+        this.showTileLayers = Object.create(null);
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
         this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
@@ -1021,14 +1032,14 @@ class TRRBTWebEngine extends TRRBTEngine {
                 appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
             }
             if (this.undoSetting === ENG_UNDO_FULL) {
-                appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
+                appendButton(ed, 'engine-undo-move', 'Undo Action', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
                 appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
             }
             appendBr(ed);
         }
 
         appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
-        appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
+        appendButton(ed, 'engine-next-move', 'Next Action', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
         appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
 
@@ -1061,6 +1072,19 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.drawRequested = true;
             window.requestAnimationFrame(bind0(this, 'onDraw'));
         }
+    }
+
+    drawTile(layer, tile) {
+        if (tile === '.') {
+            return false;
+        }
+        if (Object.hasOwn(this.hideLayers, layer)) {
+            return false;
+        }
+        if (tile.length > 0 && tile[0] === '_' && !Object.hasOwn(this.showTileLayers, layer)) {
+            return false;
+        }
+        return true;
     }
 
     onDraw() {
@@ -1149,30 +1173,27 @@ class TRRBTWebEngine extends TRRBTEngine {
                     choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                     choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
-                        if (Object.hasOwn(this.hiddenLayers, layer)) {
-                            continue;
-                        }
+                        let tileOverwrite = null;
                         if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
-                            const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
-                            if (tileOverwrite !== '.') {
-                                tiles.push(tileOverwrite);
-                                overwrites.push(true);
-                            } else {
-                                tiles.push(pattern[rr][cc]);
-                                overwrites.push(false);
+                            const tileChoice = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                            if (tileChoice !== '.') {
+                                tileOverwrite = tileChoice;
                             }
-                        } else {
-                            tiles.push(pattern[rr][cc]);
-                            overwrites.push(false);
+                        }
+                        const tile = (tileOverwrite !== null) ? tileOverwrite : pattern[rr][cc];
+                        const overwrite = (tileOverwrite !== null);
+                        if (this.drawTile(layer, tile)) {
+                            tiles.push(tile);
+                            overwrites.push(overwrite);
                         }
                     }
                 } else {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
-                        if (Object.hasOwn(this.hiddenLayers, layer)) {
-                            continue;
+                        const tile = pattern[rr][cc];
+                        if (this.drawTile(layer, tile)) {
+                            tiles.push(tile);
+                            overwrites.push(false);
                         }
-                        tiles.push(pattern[rr][cc]);
-                        overwrites.push(false);
                     }
                 }
                 tiles = tiles.reverse();
@@ -1193,14 +1214,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
-                            if (tile.length > 0 && tile[0] === '_') {
-                                // pass
-                            } else {
-                                function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
-                                const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
-                                this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
-                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
-                            }
+                            function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
+                            const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
+                            this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
+                            this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
                         }
                     }
                 }
@@ -1366,27 +1383,47 @@ class TRRBTWebEngine extends TRRBTEngine {
             appendText(this.layersDiv, 'Layers', true, true);
             appendBr(this.layersDiv);
             for (let layer in this.state.board) {
-                const layerHidden = Object.hasOwn(this.hiddenLayers, layer);
-                const input = document.createElement('input');
-                input.id = 'layer_' + layer;
-                input.type = 'checkbox';
-                input.checked = !layerHidden;
-                input.onclick = () => {
-                    if (layerHidden) {
-                        delete this.hiddenLayers[layer];
+                const hideLayer = Object.hasOwn(this.hideLayers, layer);
+                const hideLayerInput = document.createElement('input');
+                hideLayerInput.id = 'hideLayer_' + layer;
+                hideLayerInput.type = 'checkbox';
+                hideLayerInput.checked = !hideLayer;
+                hideLayerInput.onclick = () => {
+                    if (hideLayer) {
+                        delete this.hideLayers[layer];
                     } else {
-                        this.hiddenLayers[layer] = true;
+                        this.hideLayers[layer] = true;
                     }
                     this.requestDraw();
                 };
 
-                const label = document.createElement('label');
-                label.innerHTML = layer;
-                label.htmlFor = 'layer_' + layer;;
+                const hideLayerLabel = document.createElement('label');
+                hideLayerLabel.innerHTML = layer;
+                hideLayerLabel.htmlFor = 'hideLayer_' + layer
+
+                const showTileLayer = Object.hasOwn(this.showTileLayers, layer);
+                const showTileLayerInput = document.createElement('input');
+                showTileLayerInput.id = 'showTileLayer_' + layer;
+                showTileLayerInput.type = 'checkbox';
+                showTileLayerInput.checked = showTileLayer;
+                showTileLayerInput.onclick = () => {
+                    if (showTileLayer) {
+                        delete this.showTileLayers[layer];
+                    } else {
+                        this.showTileLayers[layer] = true;
+                    }
+                    this.requestDraw();
+                };
+
+                const showTileLayerLabel = document.createElement('label');
+                showTileLayerLabel.innerHTML = '_';
+                showTileLayerLabel.htmlFor = 'showTileLayer_' + layer
 
                 const span = document.createElement('span');
-                span.appendChild(input);
-                span.appendChild(label);
+                span.appendChild(hideLayerInput);
+                span.appendChild(hideLayerLabel);
+                span.appendChild(showTileLayerInput);
+                span.appendChild(showTileLayerLabel);
                 appendBr(span);
                 this.layersDiv.appendChild(span);
             }

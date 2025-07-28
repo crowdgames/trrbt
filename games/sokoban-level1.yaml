@@ -1,5 +1,5 @@
 ---
-name: soko
+name: sokoban-level1
 tree:
   type: order
   children:
@@ -27,28 +27,6 @@ tree:
             _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ O O _;
             . . . . _ _ _ _ _ _ _ _ _ _ _ _ _ _ _;
             . . . . _ _ _ _ _ _ _ . . . . . . . .;
-  - type: loop-until-all
-    nid: gameloop
-    children:
-    - type: player
-      pid: "1"
-      children:
-      - type: x-spin
-        children:
-        - type: rewrite
-          button: right
-          lhs: P _
-          rhs: _ P
-        - type: rewrite
-          button: right
-          lhs: P @ _
-          rhs: _ P @
-    - type: win
-      pid: "1"
-      children:
-      - type: none
-        children:
-        - type: match
-          pattern:
-            main: '@'
-            trgt: _
+  - type: x-file
+    file: sokoban-gameloop
+    target: gameloop

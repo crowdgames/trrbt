@@ -19,7 +19,8 @@ python copy_game.py games/games.js games_web trogue.json
 python make_game.py games/games.js ../games ttt.yaml
 python make_game.py games/games.js ../games connect4.yaml
 python make_game.py games/games.js ../games checkers.yaml --sprites sprites/checkers/checkers.yaml
-python make_game.py games/games.js ../games soko.yaml --sprites sprites/soko/soko.yaml
+python make_game.py games/games.js ../games sokoban-gameloop.yaml
+python make_game.py games/games.js ../games sokoban-level1.yaml --sprites sprites/soko/soko.yaml
 python make_game.py games/games.js ../games choice.yaml
 python make_game.py games/games.js ../games lost_and_found.yaml
 python make_game.py games/games.js ../games rust.yaml --sprites sprites/dungeon/rust.yaml
@@ -29,7 +30,8 @@ python make_game.py games/games.js ../games dungeon.yaml
 python make_game.py games/games.js ../games dungeon_patrol.yaml
 python make_game.py games/games.js ../games dungeon_chase.yaml
 python make_game.py games/games.js ../games ca.yaml
-python make_game.py games/games.js ../games right.yaml
+python make_game.py games/games.js ../games right-gameloop.yaml
+python make_game.py games/games.js ../games right-boards.yaml
 
 python make_game.py games/games.js ../games blockdude.yaml --sprites sprites/blockdude/blockdude.yaml
 python make_game.py games/games.js ../games blockdude_mechanics.yaml

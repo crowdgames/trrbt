@@ -1,5 +1,5 @@
 ---
-name: eights-basic
+name: eights-boards
 start:
 tree:
   type: order

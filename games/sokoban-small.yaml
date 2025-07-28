@@ -1,0 +1,20 @@
+---
+name: sokoban-small
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern:
+      main: X X X X X;
+            X _ _ _ X;
+            X _ @ P X;
+            X _ _ _ X;
+            X X X X X;
+      trgt: . . . . .;
+            . O _ _ .;
+            . _ _ _ .;
+            . _ _ _ .;
+            . . . . .;
+  - type: x-file
+    file: sokoban-gameloop
+    target: gameloop
