@@ -46,7 +46,7 @@ def game_agent(filename, enum, board_init, random_seed):
                 nextStateStr = str(nextState)
                 if nextStateStr not in seen:
                     if enum:
-                        print(json.dumps({'board':dict(nextState.board)}), flush=True)
+                        print(json.dumps(dict(nextState.board)), flush=True)
                     queue.append(nextState)
                     seen[nextStateStr] = None
 
