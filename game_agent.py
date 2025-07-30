@@ -14,11 +14,11 @@ def game_agent(filename, enum, board_init, random_seed):
     state = engine.getState()
     stateStr = str(state)
 
-    queue.append(state)
+    queue.append((state, 0))
     seen[stateStr] = None
 
     while len(queue) > 0:
-        state = queue[0]
+        state, steps = queue[0]
         queue = queue[1:]
 
         engine.setState(state)
@@ -27,7 +27,7 @@ def game_agent(filename, enum, board_init, random_seed):
                 if enum:
                     pass
                 else:
-                    print(json.dumps({'result':True, 'board':dict(state.board)}), flush=True)
+                    print(json.dumps({'result':True, 'steps':steps, 'board':dict(state.board)}), flush=True)
                     return
             else:
                 continue
@@ -47,7 +47,7 @@ def game_agent(filename, enum, board_init, random_seed):
                 if nextStateStr not in seen:
                     if enum:
                         print(json.dumps(dict(nextState.board)), flush=True)
-                    queue.append(nextState)
+                    queue.append((nextState, steps + 1))
                     seen[nextStateStr] = None
 
     if not enum:
