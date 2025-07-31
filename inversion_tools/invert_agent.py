@@ -34,13 +34,11 @@ if __name__ == '__main__':
         failed = False
         
         for board in enum_boards:
-            board_dict = (json.loads(board)).get("board")
-            board_str = format_win_board(board_dict)
-            forward_run = subprocess.run(["python", "game_agent.py", args.filename, "--board", board_str], stdout=subprocess.PIPE, text=True)
+            forward_run = subprocess.run(["python", "game_agent.py", args.filename, "--board", board], stdout=subprocess.PIPE, text=True)
             forward_result = json.loads(forward_run.stdout)
             
             if (not(forward_result.get("result"))): 
-                print(f"failed forward run for board\n", board_str)
+                print(f"failed forward run for board\n", board)
                 failed = True
                 
         if not failed:
