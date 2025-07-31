@@ -3,15 +3,9 @@ import util
 
 
 
-def agent_game(filename, enum, board_init):
+def game_agent(filename, enum, board_init, random_seed):
     game = util.yaml2bt(filename, True, True)
-
-    engine = util.new_engine(game, 'UNDO_NONE')
-
-    if board_init is not None:
-        engine.setBoard(board_init)
-
-    max_tile_width = util.node_max_tile_width(game.tree)
+    engine, max_tile_width, rng = util.setup_engine(game, 'UNDO_NONE', board_init, random_seed)
 
     queue = []
     seen = {}
@@ -20,11 +14,11 @@ def agent_game(filename, enum, board_init):
     state = engine.getState()
     stateStr = str(state)
 
-    queue.append(state)
+    queue.append((state, 0))
     seen[stateStr] = None
 
     while len(queue) > 0:
-        state = queue[0]
+        state, steps = queue[0]
         queue = queue[1:]
 
         engine.setState(state)
@@ -33,7 +27,7 @@ def agent_game(filename, enum, board_init):
                 if enum:
                     pass
                 else:
-                    print(json.dumps({'result':True, 'board':dict(state.board)}), flush=True)
+                    print(json.dumps({'result':True, 'steps':steps, 'board':dict(state.board)}), flush=True)
                     return
             else:
                 continue
@@ -52,8 +46,8 @@ def agent_game(filename, enum, board_init):
                 nextStateStr = str(nextState)
                 if nextStateStr not in seen:
                     if enum:
-                        print(json.dumps({'board':dict(nextState.board)}), flush=True)
-                    queue.append(nextState)
+                        print(json.dumps(dict(nextState.board)), flush=True)
+                    queue.append((nextState, steps + 1))
                     seen[nextStateStr] = None
 
     if not enum:
@@ -66,8 +60,9 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--enum', action='store_true', help='Enumerate states rather than find winning state.')
     parser.add_argument('--board', type=str, help='Initial board configuration.')
+    parser.add_argument('--seed', type=int, help='Random seed.')
     args = parser.parse_args()
 
     board_init = None if args.board is None else json.loads(args.board)
 
-    agent_game(args.filename, args.enum, board_init)
+    game_agent(args.filename, args.enum, board_init, args.seed)

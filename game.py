@@ -1,4 +1,4 @@
-import argparse, json, os, random, sys, time
+import argparse, json, os, sys, time
 import util
 
 
@@ -19,13 +19,9 @@ def delay(seconds):
 
 
 
-def run_game(filename, choice_order, random_players, clear_screen, board_init):
+def run_game(filename, choice_order, random_players, clear_screen, board_init, random_seed):
     game = util.yaml2bt(filename, True, True)
-
-    engine = util.new_engine(game, 'UNDO_NONE')
-
-    if board_init is not None:
-        engine.setBoard(board_init)
+    engine, max_tile_width, rng = util.setup_engine(game, 'UNDO_NONE', board_init, random_seed)
 
     saved_state = None
 
@@ -70,7 +66,7 @@ def run_game(filename, choice_order, random_players, clear_screen, board_init):
             player_id = util.intify(engine.state.choicePlayer)
 
             if player_id in random_players:
-                choiceIndex = random.randint(0, len(engine.state.choices) - 1)
+                choiceIndex = rng.randint(0, len(engine.state.choices) - 1)
                 choice = engine.state.choices[choiceIndex]
 
                 lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
@@ -159,8 +155,9 @@ if __name__ == '__main__':
     parser.add_argument('--choice-order', action='store_true', help='Keep move choices in order.')
     parser.add_argument('--cls', type=float, nargs='?', const=DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
     parser.add_argument('--board', type=str, help='Initial board configuration.')
+    parser.add_argument('--seed', type=int, help='Random seed.')
     args = parser.parse_args()
 
     board_init = None if args.board is None else json.loads(args.board)
 
-    run_game(args.filename, args.choice_order, args.player_random, args.cls, board_init)
+    run_game(args.filename, args.choice_order, args.player_random, args.cls, board_init, args.seed)

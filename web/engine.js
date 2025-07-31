@@ -23,6 +23,7 @@ class TRRBTState {
         this.callResult = null;
         this.gameResult = null;
         this.loopCheck = 0;
+	this.random = 0;
 
         this.board = null;
         this.rows = 0;
@@ -41,6 +42,19 @@ class TRRBTState {
     }
 
 };
+
+const _RND_A = 1103515245;
+const _RND_C = 12345;
+const _RND_M = 0x80000000;
+
+function stateRandom(state) {
+    state.random = (_RND_A * state.random + _RND_C) % _RND_M;
+    return state.random / _RND_M;
+}
+
+function stateSeed(state, seed) {
+    state.random = Math.floor(seed) % _RND_M;
+}
 
 
 
@@ -92,6 +106,7 @@ class TRRBTStepper {
             'lose': bind0(this, 'stepNodeLose'),
             'draw': bind0(this, 'stepNodeDraw'),
             'match': bind0(this, 'stepNodeMatch'),
+            'match-times': bind0(this, 'stepNodeMatchTimes'),
             'rewrite': bind0(this, 'stepNodeRewrite'),
             'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
             'player': bind0(this, 'stepNodePlayer'),
@@ -187,7 +202,7 @@ class TRRBTStepper {
             for (let ii = 0; ii < stateNode.children.length; ++ii) {
                 order.push(ii);
             }
-            order.sort((a, b) => 0.5 - Math.random());
+            order.sort((a, b) => 0.5 - stateRandom(state));
             this.localSet(stateFrame, 'order', order);
         }
 
@@ -351,10 +366,18 @@ class TRRBTStepper {
         }
     }
 
+    stepNodeMatchTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
+        if (this.findLayerPattern(state, stateNode.pattern).length === stateNode.times) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     stepNodeRewrite(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
-            let match = matches[Math.floor(Math.random() * matches.length)];
+            let match = matches[Math.floor(stateRandom(state) * matches.length)];
             this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
             return true;
         } else {
@@ -365,7 +388,7 @@ class TRRBTStepper {
     stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
-            matches.sort((a, b) => 0.5 - Math.random());
+            matches.sort((a, b) => 0.5 - stateRandom(state));
             for (let match of matches) {
                 if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
                     this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
@@ -615,6 +638,11 @@ class TRRBTEngine {
         }
     }
 
+    onRestart() {
+	this.onLoad();
+	this.setRandomSeed(Date.now());
+    }
+
     initializeNodeLookup(nodeLookup, node, id) {
         nodeLookup.idToNode.set(id[0], node);
         nodeLookup.nodeToId.set(node, id[0]);
@@ -633,6 +661,15 @@ class TRRBTEngine {
 
     setState(state) {
         this.state = deepcopyobj(state);
+    }
+
+    setRandomSeed(seed) {
+	stateSeed(this.state, seed);
+	if (seed != 0) {
+            for (let ii = 0; ii < 10; ii += 1) {
+		stateRandom(this.state);
+	    }
+	}
     }
 
     setBoard(board) {
@@ -787,7 +824,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
-        this.hiddenLayers = null;
+        this.hideLayers = null;
+        this.showTileLayers = null;
 
         this.editor = null;
     }
@@ -825,7 +863,8 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.stepManual = false;
 
         this.drawRequested = false;
-        this.hiddenLayers = Object.create(null);
+        this.hideLayers = Object.create(null);
+        this.showTileLayers = Object.create(null);
 
         this.canvas.addEventListener('mousedown', bind0(this, 'onMouseDown'));
         this.canvas.addEventListener('mousemove', bind0(this, 'onMouseMove'));
@@ -976,7 +1015,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         appendText(ed, '(Hover for additional info)', false, false, true);
         appendBr(ed, true);
 
-        appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onLoad'));
+        appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onRestart'));
         appendText(ed, ' ');
         this.gameResultText = document.createElement('span');
         this.gameResultText.style.color = '#4444cc';
@@ -1021,14 +1060,14 @@ class TRRBTWebEngine extends TRRBTEngine {
                 appendButton(ed, 'engine-undo-choice', 'Undo Choice', 'Undo to last player choice.', null, bind1(this, 'onUndo', 'choice'));
             }
             if (this.undoSetting === ENG_UNDO_FULL) {
-                appendButton(ed, 'engine-undo-move', 'Undo Move', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
+                appendButton(ed, 'engine-undo-move', 'Undo Action', 'Undo to last choice or display.', null, bind1(this, 'onUndo', 'move'));
                 appendButton(ed, 'engine-undo-step', 'Undo Step', 'Undo a single step.', null, bind1(this, 'onUndo', 'step'));
             }
             appendBr(ed);
         }
 
         appendButton(ed, 'engine-next-choice', 'Next Choice', 'Run to next player choice.', null, bind1(this, 'onNext', 'choice'));
-        appendButton(ed, 'engine-next-move', 'Next Move', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
+        appendButton(ed, 'engine-next-move', 'Next Action', 'Run to next choice or display.', null, bind1(this, 'onNext', 'move'));
         appendButton(ed, 'engine-next-step', 'Next Step', 'Run a single step.', null, bind1(this, 'onNext', 'step'));
         appendBr(ed);
 
@@ -1061,6 +1100,19 @@ class TRRBTWebEngine extends TRRBTEngine {
             this.drawRequested = true;
             window.requestAnimationFrame(bind0(this, 'onDraw'));
         }
+    }
+
+    drawTile(layer, tile) {
+        if (tile === '.') {
+            return false;
+        }
+        if (Object.hasOwn(this.hideLayers, layer)) {
+            return false;
+        }
+        if (tile.length > 0 && tile[0] === '_' && !Object.hasOwn(this.showTileLayers, layer)) {
+            return false;
+        }
+        return true;
     }
 
     onDraw() {
@@ -1149,30 +1201,27 @@ class TRRBTWebEngine extends TRRBTEngine {
                     choiceOverwrite.rct.row <= rr && rr < choiceOverwrite.rct.row + choiceOverwrite.rct.rows &&
                     choiceOverwrite.rct.col <= cc && cc < choiceOverwrite.rct.col + choiceOverwrite.rct.cols) {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
-                        if (Object.hasOwn(this.hiddenLayers, layer)) {
-                            continue;
-                        }
+                        let tileOverwrite = null;
                         if (choiceOverwrite.rhs.hasOwnProperty(layer)) {
-                            const tileOverwrite = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
-                            if (tileOverwrite !== '.') {
-                                tiles.push(tileOverwrite);
-                                overwrites.push(true);
-                            } else {
-                                tiles.push(pattern[rr][cc]);
-                                overwrites.push(false);
+                            const tileChoice = choiceOverwrite.rhs[layer][rr - choiceOverwrite.rct.row][cc - choiceOverwrite.rct.col];
+                            if (tileChoice !== '.') {
+                                tileOverwrite = tileChoice;
                             }
-                        } else {
-                            tiles.push(pattern[rr][cc]);
-                            overwrites.push(false);
+                        }
+                        const tile = (tileOverwrite !== null) ? tileOverwrite : pattern[rr][cc];
+                        const overwrite = (tileOverwrite !== null);
+                        if (this.drawTile(layer, tile)) {
+                            tiles.push(tile);
+                            overwrites.push(overwrite);
                         }
                     }
                 } else {
                     for (const [layer, pattern] of Object.entries(this.state.board)) {
-                        if (Object.hasOwn(this.hiddenLayers, layer)) {
-                            continue;
+                        const tile = pattern[rr][cc];
+                        if (this.drawTile(layer, tile)) {
+                            tiles.push(tile);
+                            overwrites.push(false);
                         }
-                        tiles.push(pattern[rr][cc]);
-                        overwrites.push(false);
                     }
                 }
                 tiles = tiles.reverse();
@@ -1193,14 +1242,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
-                            if (tile.length > 0 && tile[0] === '_') {
-                                // pass
-                            } else {
-                                function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
-                                const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
-                                this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
-                                this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
-                            }
+                            function isASCII(str) { return /^[\x00-\x7F]*$/.test(str); }
+                            const offset = isASCII(tile) ? TEXT_YOFFSET : EMOJI_YOFFSET;
+                            this.ctx.font = (this.cell_size / graphemeLength(tile)) + ENG_FONTNAME;
+                            this.ctx.fillText(tile, this.tocvsx(cc + 0.5), this.tocvsy(rr + 0.5 + offset));
                         }
                     }
                 }
@@ -1366,27 +1411,47 @@ class TRRBTWebEngine extends TRRBTEngine {
             appendText(this.layersDiv, 'Layers', true, true);
             appendBr(this.layersDiv);
             for (let layer in this.state.board) {
-                const layerHidden = Object.hasOwn(this.hiddenLayers, layer);
-                const input = document.createElement('input');
-                input.id = 'layer_' + layer;
-                input.type = 'checkbox';
-                input.checked = !layerHidden;
-                input.onclick = () => {
-                    if (layerHidden) {
-                        delete this.hiddenLayers[layer];
+                const hideLayer = Object.hasOwn(this.hideLayers, layer);
+                const hideLayerInput = document.createElement('input');
+                hideLayerInput.id = 'hideLayer_' + layer;
+                hideLayerInput.type = 'checkbox';
+                hideLayerInput.checked = !hideLayer;
+                hideLayerInput.onclick = () => {
+                    if (hideLayer) {
+                        delete this.hideLayers[layer];
                     } else {
-                        this.hiddenLayers[layer] = true;
+                        this.hideLayers[layer] = true;
                     }
                     this.requestDraw();
                 };
 
-                const label = document.createElement('label');
-                label.innerHTML = layer;
-                label.htmlFor = 'layer_' + layer;;
+                const hideLayerLabel = document.createElement('label');
+                hideLayerLabel.innerHTML = layer;
+                hideLayerLabel.htmlFor = 'hideLayer_' + layer
+
+                const showTileLayer = Object.hasOwn(this.showTileLayers, layer);
+                const showTileLayerInput = document.createElement('input');
+                showTileLayerInput.id = 'showTileLayer_' + layer;
+                showTileLayerInput.type = 'checkbox';
+                showTileLayerInput.checked = showTileLayer;
+                showTileLayerInput.onclick = () => {
+                    if (showTileLayer) {
+                        delete this.showTileLayers[layer];
+                    } else {
+                        this.showTileLayers[layer] = true;
+                    }
+                    this.requestDraw();
+                };
+
+                const showTileLayerLabel = document.createElement('label');
+                showTileLayerLabel.innerHTML = '_';
+                showTileLayerLabel.htmlFor = 'showTileLayer_' + layer
 
                 const span = document.createElement('span');
-                span.appendChild(input);
-                span.appendChild(label);
+                span.appendChild(hideLayerInput);
+                span.appendChild(hideLayerLabel);
+                span.appendChild(showTileLayerInput);
+                span.appendChild(showTileLayerLabel);
                 appendBr(span);
                 this.layersDiv.appendChild(span);
             }
