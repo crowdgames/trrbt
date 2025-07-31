@@ -1,31 +1,31 @@
 ---
 name: silver-dollar
 tree:
-  type: order
+  # type: order
+  # children:
+  # - type: set-board
+  #   pattern: _ _ C _ _ C _ C    
+  type: loop-until-all
+  nid: gameloop
   children:
-  - type: set-board
-    pattern: _ _ C _ _ C _ C    
-  - type: loop-until-all
-    nid: gameloop
+  - type: player
+    pid: "1"
     children:
-    - type: player
-      pid: "1"
-      children:
-      - type: rewrite
-        lhs: _ C
-        rhs: C _
-      - type: rewrite
-        lhs: _ _ C
-        rhs: C _ _
-      - type: rewrite
-        lhs: _ _ _ C
-        rhs: C _ _ _
-      - type: rewrite
-        lhs: _ _ _ _ C
-        rhs: C _ _ _ _
+    - type: rewrite
+      lhs: _ C
+      rhs: C _
+    - type: rewrite
+      lhs: _ _ C
+      rhs: C _ _
+    - type: rewrite
+      lhs: _ _ _ C
+      rhs: C _ _ _
+    - type: rewrite
+      lhs: _ _ _ _ C
+      rhs: C _ _ _ _
 
-    - type: win
-      pid: 1
-      children:
-        - type: match
-          pattern: C C C _ _ _ _ _
+  - type: win
+    pid: 1
+    children:
+      - type: match
+        pattern: C C C _ _ _ _ _
