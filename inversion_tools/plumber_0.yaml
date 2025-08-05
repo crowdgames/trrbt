@@ -10,38 +10,38 @@ tree:
   #             __ __ __ ud ; 
   #             __ __ __ ud ; 
   #             __ __ __ ur ;    
-  - type: loop-until-all
-    nid: gameloop
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: player
+    pid: "1"
     children:
-    - type: player
-      pid: "1"
-      children:
-      - type: rewrite 
-        lhs: ud 
-        rhs: lr
-      - type: rewrite
-        lhs: lr
-        rhs: ud
-      - type: rewrite
-        lhs: dr 
-        rhs: dl
-      - type: rewrite
-        lhs: dl
-        rhs: ul
-      - type: rewrite
-        lhs: ul
-        rhs: ur
-      - type: rewrite
-        lhs: ur
-        rhs: dr
+    - type: rewrite 
+      lhs: ud 
+      rhs: lr
+    - type: rewrite
+      lhs: lr
+      rhs: ud
+    - type: rewrite
+      lhs: dr 
+      rhs: dl
+    - type: rewrite
+      lhs: dl
+      rhs: ul
+    - type: rewrite
+      lhs: ul
+      rhs: ur
+    - type: rewrite
+      lhs: ur
+      rhs: dr
 
-    - type: win
-      pid: 1
-      children:
-        - type: match
-          pattern:  lr dl __ __ ; 
-                    __ ur dl __ ; 
-                    __ __ ur dl ; 
-                    __ __ __ ud ; 
-                    __ __ __ ud ; 
-                    __ __ __ ur ;
+  - type: win
+    pid: 1
+    children:
+      - type: match
+        pattern:  lr dl __ __ ; 
+                  __ ur dl __ ; 
+                  __ __ ur dl ; 
+                  __ __ __ ud ; 
+                  __ __ __ ud ; 
+                  __ __ __ ur ;

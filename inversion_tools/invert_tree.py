@@ -34,7 +34,7 @@ def check_tree(data):
         
     for node in l_u_a_childs[0]['children']: #list of the children of the player node 
         if node['type'] != 'rewrite':
-            print("Invalid game because not all children of player node are rewrites")
+            print("Insvalid game because not all children of player node are rewrites")
             return False, {}, []
         else:
             rewrite = {'type': 'rewrite', 'rhs': node['lhs'] , 'lhs': node['rhs']}
