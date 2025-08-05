@@ -12,49 +12,49 @@ tree:
       rhs: _ P
     - type: rewrite 
       button: left 
-      lhs: _ P 
+      lhs: _ P
       rhs: P _
     - type: rewrite
       button: down
-      lhs: P
-           _
-      rhs: _
-           P
+      lhs: P; 
+           _; 
+      rhs: _;
+           P;
     - type: rewrite
       button: up
-      lhs: _
-           P
-      rhs: P
-           _
+      lhs: _; 
+           P; 
+      rhs: P;
+           _;
     - type: rewrite
       button: right
-      lhs: P '@' _
-      rhs: _ P '@'
+      lhs: P O _
+      rhs: _ P O
     - type: rewrite
       button: left
-      lhs: _ '@' P
-      rhs: '@' P _
+      lhs: _ O P
+      rhs: O P _
     - type: rewrite
       button: up
-      lhs: _ 
-          '@' 
-           P
-      rhs: '@' 
-           P
-           _
+      lhs: _;
+           O;
+           P; 
+      rhs: O; 
+           P; 
+           _; 
     - type: rewrite
       button: down
-      lhs: P
-          '@' 
-           _
-      rhs: _
-           P
-          '@'
+      lhs: P; 
+           O; 
+           _; 
+      rhs: _;
+           P;
+           O;
   - type: win
     pid: "1"
     children:
     - type: match-times
       times: 0
       pattern:
-        main: '@'
+        main: O
         trgt: _
