@@ -1,0 +1,14 @@
+---
+name: twodoor-board
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern:
+      main: X  X  X  X  X  X  X  X  X  X;
+            X  P_ _  A  _  b  X  _  O  X;
+            X  _  a  X  _  _  B  _  _  X;
+            X  X  X  X  X  X  X  X  X  X;
+  - type: x-file
+    file: twodoor-gameloop
+    target: gameloop

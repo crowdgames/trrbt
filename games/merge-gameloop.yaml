@@ -1,0 +1,28 @@
+---
+name: merge-gameloop
+tree:
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: player
+    pid: "1"
+    children:
+    - type: x-spin
+      children:
+      - type: rewrite
+        lhs: "1 1"
+        rhs: "_ 2"
+      - type: rewrite
+        lhs: "2 2"
+        rhs: "_ 3"
+      - type: rewrite
+        lhs: "3 3"
+        rhs: "_ 4"
+      - type: rewrite
+        lhs: "4 4"
+        rhs: "_ 5"
+  - type: win
+    pid: "1"
+    children:
+    - type: match
+      pattern: "5"
