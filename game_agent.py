@@ -27,7 +27,7 @@ def game_agent(filename, enum, board_init, random_seed):
                 if enum:
                     pass
                 else:
-                    print(json.dumps({'result':True, 'steps':steps, 'board':dict(state.board)}), flush=True)
+                    print(json.dumps({'board':dict(state.board), 'steps':steps, 'game_result':dict(state.gameResult), 'success':True}), flush=True)
                     return
             else:
                 continue
@@ -44,14 +44,16 @@ def game_agent(filename, enum, board_init, random_seed):
                 engine.stepToWaitChoiceOrResult()
                 nextState = engine.getState()
                 nextStateStr = str(nextState)
+                nextStateResult = dict(nextState.gameResult) if engine.gameOver() else None
+                nextSteps = steps + 1
                 if nextStateStr not in seen:
                     if enum:
-                        print(json.dumps(dict(nextState.board)), flush=True)
-                    queue.append((nextState, steps + 1))
+                        print(json.dumps({'board':dict(nextState.board), 'steps':nextSteps, 'game_result':nextStateResult}), flush=True)
+                    queue.append((nextState, nextSteps))
                     seen[nextStateStr] = None
 
     if not enum:
-        print(json.dumps({'result':False}), flush=True)
+        print(json.dumps({'success':False}), flush=True)
 
 
 
