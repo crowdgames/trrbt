@@ -56,7 +56,7 @@ def check_tree(data):
 
 
 # def invert(inverted_filename, n, starting_board, winning_board, rewrites): 
-def invert(inverted_filename, n, win_children, rewrites): 
+def invert(inverted_filename, win_children, rewrites): 
     data = {
         'name': inverted_filename,
         'tree': {
@@ -64,8 +64,8 @@ def invert(inverted_filename, n, win_children, rewrites):
             # 'children': [
             #     {'type': 'set-board', 
             #     'pattern': winning_board},
-                'type': 'loop-times',
-                'times': n,
+                'type': 'loop-until-all',
+                # 'times': n,
                 'children': [
                         {
                             'type': 'player', 
@@ -117,19 +117,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('inverted_filename', type=str, help='New file to write to inverted tree')
-    parser.add_argument('n', type=str, help='number of random executions of reverse rewrites')
+    # parser.add_argument('n', type=str, help='number of random executions of reverse rewrites')
     args = parser.parse_args()
 
     data = load_yaml(args.filename)
     print(data)
 
-    n = int(args.n)
+    # n = int(args.n)
     # valid, starting_board, rewrites = check_tree(data)
     valid, win_children, rewrites = check_tree(data)
    
     if valid:
         #when we run game_agent.py we should check that result is true and then only take the board input
-        invert(args.inverted_filename, n, win_children, rewrites)
+        invert(args.inverted_filename, win_children, rewrites)
         print("tree inverted and written to " + args.inverted_filename)
         
         # forward_run = subprocess.run(

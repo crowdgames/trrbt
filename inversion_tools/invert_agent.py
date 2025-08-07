@@ -8,7 +8,7 @@ if __name__ == '__main__':
     parser.add_argument('filename', type=str, help='Game filename to process.')
     parser.add_argument('game_name', type=str, help='name of the game')
     parser.add_argument('starting_board', type=str, help='starting board')
-    parser.add_argument('n', type=str, help='number of random executions of reverse rewrites')
+    # parser.add_argument('n', type=str, help='number of random executions of reverse rewrites')
     args = parser.parse_args()
     
     inverted_filename = f"inversion_tools/inverted_trees/{args.game_name}_inverted.yaml"
@@ -21,7 +21,7 @@ if __name__ == '__main__':
         print(winning_board + f"\n winning board for {args.filename} above\n") 
 
         #run invert_tree 
-        subprocess.run(["python", "inversion_tools/invert_tree.py", args.filename, inverted_filename, args.n], stdout=subprocess.PIPE, text=True)
+        subprocess.run(["python", "inversion_tools/invert_tree.py", args.filename, inverted_filename], stdout=subprocess.PIPE, text=True)
         print(f"tree inverted and written to {inverted_filename}")
 
         #run game agent on inverted tree to enumerate all boards reachable in n moves from solved board
@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
         failed = False
         
-        f = open(f"inversion_tools/outputs/{args.game_name}_{args.n}moves.txt", "a")
+        f = open(f"inversion_tools/outputs/{args.game_name}_enum_boards.txt", "a")
         for board in enum_boards:
             forward_run = subprocess.run(["python", "game_agent.py", args.filename, "--board", board], stdout=subprocess.PIPE, text=True)
             forward_result = json.loads(forward_run.stdout)
