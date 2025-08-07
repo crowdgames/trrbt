@@ -1,65 +1,42 @@
-import subprocess
-import json
 import argparse
-from invert_tree import format_win_board
+import json
+import invert_util
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('filename', type=str, help='Game filename to process.')
     parser.add_argument('game_name', type=str, help='name of the game')
     parser.add_argument('starting_board', type=str, help='starting board')
-    # parser.add_argument('n', type=str, help='number of random executions of reverse rewrites')
     args = parser.parse_args()
-    
-    inverted_filename = f"inversion_tools/inverted_trees/{args.game_name}_inverted.yaml"
-    
-    #run normal game to get winning board
-    solve_for_board = subprocess.run(["python", "game_agent.py", args.filename, "--board", args.starting_board], stdout=subprocess.PIPE, text=True)
-    board_result = json.loads(solve_for_board.stdout)
-    if (board_result.get("result")):
-        winning_board= format_win_board(board_result.get("board"))
-        print(winning_board + f"\n winning board for {args.filename} above\n") 
 
-        #run invert_tree 
-        subprocess.run(["python", "inversion_tools/invert_tree.py", args.filename, inverted_filename], stdout=subprocess.PIPE, text=True)
-        print(f"tree inverted and written to {inverted_filename}")
+    inverted_filename = f'inversion_tools/inverted_trees/{args.game_name}_inverted.yaml'
 
-        #run game agent on inverted tree to enumerate all boards reachable in n moves from solved board
-        
-        enum = subprocess.run(["python", "game_agent.py", inverted_filename, "--board", str(winning_board), "--enum"], stdout=subprocess.PIPE, text=True)
-        enum_str = enum.stdout
-        enum_boards = enum_str.split("\n")
-        enum_boards.pop()
+    # run forard game to get winning board
+    board_result = invert_util.script_output_json('game_agent.py', args.filename, '--board', args.starting_board)
+    if not board_result['success']:
+        raise RuntimeError('given game failed forward run')
 
-        print(f"possible starting boards for {args.filename} enumerated\n")
+    winning_board_str = json.dumps(board_result['board'])
+    print(f'winning board for {args.filename}:\n{winning_board_str}\n')
 
-        failed = False
-        
-        f = open(f"inversion_tools/outputs/{args.game_name}_enum_boards.txt", "a")
-        for board in enum_boards:
-            forward_run = subprocess.run(["python", "game_agent.py", args.filename, "--board", board], stdout=subprocess.PIPE, text=True)
-            forward_result = json.loads(forward_run.stdout)
-            
-            if (not(forward_result.get("result"))): 
-                print(f"failed forward run for board\n", board)
-                failed = True
-            else: 
-                f.write(board)
-                f.write("\n")
-                f.write(str(forward_result))
-                f.write("\n")
-                f.write("\n")
+    # run invert_tree
+    invert_util.script_output('inversion_tools/invert_tree.py', args.filename, inverted_filename)
+    print(f'tree inverted and written to {inverted_filename}\n')
 
-        
-        if not failed:
-            print("all enumerated boards passed game_agent.py forward solver")
-        
-        else:
-            print("failed forward run for at least one board") 
-            f = open("filename", "w")
-            f.write("failed!") 
-        
+    # run game agent on inverted tree to enumerate all boards reachable from solved board
+    enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', winning_board_str, '--enum')
+    enum_boards = [result['board'] for result in enum_results if not (result['game_result'] != None and result['game_result']['result'] == 'lose')]
+    print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {args.filename}\n')
 
-    else:
-        print("given game failed forward run")
-    
+    # check enumerated boards
+    with open(f'inversion_tools/outputs/{args.game_name}_enum_boards.txt', 'wt') as f:
+        for enum_board in enum_boards:
+            enum_board_str = json.dumps(enum_board)
+            forward_result = invert_util.script_output_json('game_agent.py', args.filename, '--board', enum_board_str)
+
+            if not forward_result['success']:
+                raise RuntimeError(f'failed forward run for board:\n{enum_board_str}')
+
+            f.write(f'{enum_board_str}\n')
+
+    print('all enumerated boards passed game_agent.py forward solver')
