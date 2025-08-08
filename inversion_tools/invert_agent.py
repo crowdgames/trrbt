@@ -17,11 +17,11 @@ if __name__ == '__main__':
     shutil.rmtree(f'{out_folder}')
     os.makedirs(f'{out_folder}', exist_ok=True)
 
-    forward_filename = f'{out_folder}/tree_forward.json'
-    inverted_filename = f'{out_folder}/tree_inverted.json'
+    forward_filename = f'{out_folder}/game_forward.json'
+    inverted_filename = f'{out_folder}/game_inverted.json'
 
     # transform to forward game
-    invert_util.script_output('yaml2bt.py', gameloop_filename, '--out', forward_filename, '--resolve', '--xform', '--fmt', 'json')
+    invert_util.script_output('yaml2bt.py', gameloop_filename, '--out', forward_filename, '--resolve', '--xform', '--fmt', 'json', '--name', args.game_name + '-forward')
     print(f'transformed forward game to {forward_filename}\n')
 
     # run forward game to get winning board
@@ -37,7 +37,7 @@ if __name__ == '__main__':
     print(f'winning board for {forward_filename}:\n{winning_board_str}\n')
 
     # run invert_tree
-    invert_util.script_output('inversion_tools/invert_tree.py', forward_filename, inverted_filename)
+    invert_util.script_output('inversion_tools/invert_tree.py', args.game_name + '-inverted', forward_filename, inverted_filename)
     print(f'tree inverted and written to {inverted_filename}\n')
 
     # run game agent on inverted tree to enumerate all boards reachable from solved board
@@ -46,8 +46,9 @@ if __name__ == '__main__':
     print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {forward_filename}\n')
 
     # check enumerated boards
-    with open(f'{out_folder}/enum_boards.jsons', 'wt') as f:
-        print('checking enumerated boards')
+    enum_boards_filename = f'{out_folder}/enum_boards.jsons'
+    with open(enum_boards_filename, 'wt') as f:
+        print(f'checking enumerated boards and writing to {enum_boards_filename}')
         for enum_board in enum_boards:
             enum_board_str = json.dumps(enum_board)
             forward_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', enum_board_str)
