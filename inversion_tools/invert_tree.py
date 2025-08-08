@@ -21,6 +21,10 @@ def check_tree(tree):
             return False
 
     rewrites = []
+    if len(l_u_a_childs[1]['children']) == 0:
+        print ('Invalid game because player does not have children')
+        return False
+
     for node in l_u_a_childs[0]['children']: #list of the children of the player node
         if node['type'] != 'rewrite':
             print('Invalid game because not all children of player node are rewrites')
@@ -30,7 +34,7 @@ def check_tree(tree):
             rewrites.append(rewrite)
 
     if len(l_u_a_childs[1]['children']) != 1 or (l_u_a_childs[1]['children'][0]['type'] != 'match' and l_u_a_childs[1]['children'][0]['type'] != 'match-times'): #l_u_a[1] is win node
-        print ('Invalid game because win condition isn\'t a single match or match-times')
+        print ('Invalid game because win condition is not a single match or match-times')
         return False
     else:
         win_children = l_u_a_childs[1]['children']

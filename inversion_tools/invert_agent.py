@@ -52,7 +52,7 @@ if __name__ == '__main__':
     enum_boards_filename = f'{out_folder}/enum_boards.jsons'
     with open(enum_boards_filename, 'wt') as f:
         print(f'checking enumerated boards and writing to {enum_boards_filename}')
-        for enum_board in enum_boards:
+        for ii, enum_board in enumerate(enum_boards):
             enum_board_str = json.dumps(enum_board)
             forward_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', enum_board_str)
 
@@ -62,6 +62,8 @@ if __name__ == '__main__':
             json.dump({'board':enum_board, 'result':forward_result}, f)
             f.write(f'\n')
             print('.', end='', flush=True)
+            if (ii + 1) % 50 == 0:
+                print(f'{ii + 1}/{len(enum_boards)}', flush=True)
 
     print()
     print('all enumerated boards passed game_agent.py forward solver')
