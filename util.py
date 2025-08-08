@@ -218,6 +218,8 @@ def layer_pattern_to_string(lpatt, filt, lpre, lpost, lsep, ppre, ppost, colsep,
         ret += ppost
     return ret
 
+
+
 def listify(patt):
     return list([list(row) for row in patt])
 
@@ -229,6 +231,21 @@ def intify(s):
         return int(s)
     else:
         return s
+
+def objify(obj):
+    if type(obj).__name__ == 'dict':
+        new_obj = {}
+        for key, val in obj.items():
+            new_obj[key] = objify(val)
+        return new_obj
+    elif type(obj).__name__ == 'list':
+        return [objify(elem) for elem in obj]
+    elif type(obj).__name__ == 'tuple':
+        return tuple([objify(elem) for elem in obj])
+    else:
+        return obj
+
+
 
 def pad_pattern(patt):
     max_row_len = max([len(row) for row in patt])
@@ -595,6 +612,10 @@ def game_print_gv(game):
 def game_print_json(game):
     print(json.dumps({'name':game.name, 'tree':game.tree}))
 
+def jsonload(filename):
+    with open(filename, 'rt') as f:
+        return json.load(f)
+
 def yamlload(filename):
     with open(filename, 'rt') as f:
         return yaml.safe_load(f)
@@ -623,7 +644,12 @@ def file_to_game_in_folder(folder):
     return file_to_game
 
 def yaml2bt(filename, resolve, xform):
-    data = processyamlgame(yamlload(filename))
+    if filename.endswith('.yaml'):
+        data = processyamlgame(yamlload(filename))
+    elif filename.endswith('.json'):
+        data = jsonload(filename)
+    else:
+        raise RuntimeError(f'unrecognized game file extension')
 
     name = data[FKEY_NAME]
     root = data[FKEY_TREE]
