@@ -1,0 +1,2 @@
+python inversion_tools/invert_agent.py sokoban
+python inversion_tools/invert_agent.py peg_solitaire

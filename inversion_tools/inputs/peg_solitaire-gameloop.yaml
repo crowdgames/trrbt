@@ -1,0 +1,21 @@
+---
+name: peg solitaire-gameloop
+start:
+tree:
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: player
+    pid: "1"
+    children:
+    - type: x-spin
+      children:
+      - type: rewrite
+        lhs: O O _
+        rhs: _ _ O
+  - type: win
+    pid: "1"
+    children:
+    - type: match-times
+      times: 1
+      pattern: O
