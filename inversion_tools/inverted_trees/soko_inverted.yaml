@@ -1,0 +1,39 @@
+name: inversion_tools/inverted_trees/soko_inverted.yaml
+tree:
+  type: loop-until-all
+  children:
+  - type: player
+    pid: '1'
+    children:
+    - type: rewrite
+      rhs: P _
+      lhs: _ P
+    - type: rewrite
+      rhs: _ P
+      lhs: P _
+    - type: rewrite
+      rhs: P; _;
+      lhs: _; P;
+    - type: rewrite
+      rhs: _; P;
+      lhs: P; _;
+    - type: rewrite
+      rhs: P O _
+      lhs: _ P O
+    - type: rewrite
+      rhs: _ O P;
+      lhs: O P _;
+    - type: rewrite
+      rhs: _; O; P;
+      lhs: O; P; _;
+    - type: rewrite
+      rhs: P; O; _;
+      lhs: _; P; O;
+  - type: lose
+    pid: '1'
+    children:
+    - type: match-times
+      times: 0
+      pattern:
+        main: O
+        trgt: _

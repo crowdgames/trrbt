@@ -1,0 +1,25 @@
+name: inversion_tools/inverted_trees/peg_inverted.yaml
+tree:
+  type: loop-until-all
+  children:
+  - type: player
+    pid: '1'
+    children:
+    - type: rewrite
+      rhs: O O _
+      lhs: _ _ O
+    - type: rewrite
+      rhs: _ O O
+      lhs: O _ _
+    - type: rewrite
+      rhs: O; O; _;
+      lhs: _; _; O;
+    - type: rewrite
+      rhs: _; O; O;
+      lhs: O; _; _;
+  - type: lose
+    pid: '1'
+    children:
+    - type: match-times
+      times: 1
+      pattern: O

@@ -38,5 +38,6 @@ if __name__ == '__main__':
                 raise RuntimeError(f'failed forward run for board:\n{enum_board_str}')
 
             f.write(f'{enum_board_str}\n')
+            f.write(f'{forward_result}\n\n')
 
     print('all enumerated boards passed game_agent.py forward solver')

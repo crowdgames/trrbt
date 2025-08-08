@@ -32,8 +32,8 @@ tree:
       rhs: _ P O
     - type: rewrite
       button: left
-      lhs: _ O P
-      rhs: O P _
+      lhs: _ O P;
+      rhs: O P _;
     - type: rewrite
       button: up
       lhs: _;

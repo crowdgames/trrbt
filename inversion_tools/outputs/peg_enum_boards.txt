@@ -1,0 +1,45 @@
+{"main": [["_", "_", "_"], ["_", "_", "_"], ["O", "O", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 1, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "_", "O"], ["_", "_", "O"], ["_", "_", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 1, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["O", "_", "_"], ["O", "_", "_"], ["_", "O", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 2, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "O", "_"], ["_", "O", "_"], ["O", "_", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 2, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["O", "O", "_"], ["_", "_", "O"], ["_", "_", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 2, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "_", "O"], ["O", "O", "_"], ["_", "_", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 2, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "O", "O"], ["O", "_", "_"], ["_", "O", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 3, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["O", "_", "_"], ["_", "O", "O"], ["_", "O", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 3, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["O", "O", "_"], ["O", "O", "_"], ["_", "_", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 3, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "O", "_"], ["_", "O", "_"], ["_", "O", "O"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 3, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "O", "_"], ["O", "_", "O"], ["O", "_", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 3, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "_", "_"], ["O", "O", "O"], ["_", "_", "O"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 3, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "O", "O"], ["_", "O", "O"], ["_", "O", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 4, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "O", "_"], ["O", "_", "O"], ["_", "O", "O"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 4, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
+{"main": [["_", "_", "_"], ["O", "O", "O"], ["O", "O", "_"]]}
+{'board': {'main': [['_', '_', '_'], ['_', '_', '_'], ['_', '_', 'O']]}, 'steps': 4, 'game_result': {'result': 'win', 'player': '1'}, 'success': True}
+
