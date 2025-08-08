@@ -1,0 +1,48 @@
+---
+name: twodoor-gameloop
+tree:
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: player
+    pid: "1"
+    children:
+    - type: x-spin
+      children:
+      - type: rewrite
+        lhs: P_ _
+        rhs: _  P_
+      - type: rewrite
+        lhs: P_ a
+        rhs: _  Pa
+      - type: rewrite
+        lhs: P_ b
+        rhs: _  Pb
+      - type: rewrite
+        lhs: P_ O
+        rhs: _  W
+      - type: rewrite
+        lhs: Pa _
+        rhs: _  Pa
+      - type: rewrite
+        lhs: .  X;
+             Pa A;
+             .  X;
+        rhs: .  X;
+             _  P_;
+             .  X;
+      - type: rewrite
+        lhs: Pb _
+        rhs: _  Pb
+      - type: rewrite
+        lhs: .  X;
+             Pb B;
+             .  X;
+        rhs: .  X;
+             _  P_;
+             .  X;
+  - type: win
+    pid: "1"
+    children:
+    - type: match
+      pattern: W

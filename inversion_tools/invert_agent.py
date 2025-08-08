@@ -14,8 +14,9 @@ if __name__ == '__main__':
 
     out_folder = f'out_inversion/{args.game_name}'
     print(f'setting up folder {out_folder}\n')
-    shutil.rmtree(f'{out_folder}')
-    os.makedirs(f'{out_folder}', exist_ok=True)
+    if os.path.exists(out_folder):
+        shutil.rmtree(out_folder)
+    os.makedirs(out_folder, exist_ok=True)
 
     forward_filename = f'{out_folder}/game_forward.json'
     inverted_filename = f'{out_folder}/game_inverted.json'
@@ -29,18 +30,20 @@ if __name__ == '__main__':
         starting_board_str = json.dumps(json.load(f))
     print(f'starting board for {forward_filename}:\n{starting_board_str}\n')
 
+    print(f'finding winning board')
     board_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', starting_board_str)
     if not board_result['success']:
         raise RuntimeError('given game failed forward run')
-
     winning_board_str = json.dumps(board_result['board'])
     print(f'winning board for {forward_filename}:\n{winning_board_str}\n')
 
     # run invert_tree
+    print(f'inverting tree')
     invert_util.script_output('inversion_tools/invert_tree.py', args.game_name + '-inverted', forward_filename, inverted_filename)
     print(f'tree inverted and written to {inverted_filename}\n')
 
     # run game agent on inverted tree to enumerate all boards reachable from solved board
+    print(f'enumerating boards')
     enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', winning_board_str, '--enum')
     enum_boards = [result['board'] for result in enum_results if not (result['game_result'] != None and result['game_result']['result'] == 'lose')]
     print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {forward_filename}\n')
