@@ -44,5 +44,6 @@ tree:
   - type: win
     pid: "1"
     children:
-    - type: match
+    - type: match-times
+      times: 1
       pattern: W

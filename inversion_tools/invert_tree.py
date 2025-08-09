@@ -33,8 +33,8 @@ def check_tree(tree):
             rewrite = {'type': 'rewrite', 'rhs': node['lhs'] , 'lhs': node['rhs']}
             rewrites.append(rewrite)
 
-    if len(l_u_a_childs[1]['children']) != 1 or (l_u_a_childs[1]['children'][0]['type'] != 'match' and l_u_a_childs[1]['children'][0]['type'] != 'match-times'): #l_u_a[1] is win node
-        print ('Invalid game because win condition is not a single match or match-times')
+    if len(l_u_a_childs[1]['children']) != 1 or l_u_a_childs[1]['children'][0]['type'] != 'match-times': #l_u_a[1] is win node
+        print ('Invalid game because win condition is not a single match-times')
         return False
     else:
         win_children = l_u_a_childs[1]['children']
