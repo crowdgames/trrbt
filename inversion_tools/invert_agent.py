@@ -2,15 +2,24 @@ import argparse
 import json
 import os
 import shutil
+import threading
+import time
+import queue
+
 import invert_util
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('game_name', type=str, help='Name of the game.')
+    parser.add_argument('--parallel', type=int, help='Number of enumerated boards to check in parallel.')
     args = parser.parse_args()
 
     gameloop_filename = f'inversion_tools/inputs/{args.game_name}-gameloop.yaml'
     board_filename = f'inversion_tools/inputs/{args.game_name}-board.json'
+
+    start_time = time.time()
+
+    summary = {}
 
     out_folder = f'out_inversion/{args.game_name}'
     print(f'setting up folder {out_folder}\n')
@@ -27,14 +36,18 @@ if __name__ == '__main__':
 
     # run forward game to get winning board
     with open(board_filename) as f:
-        starting_board_str = json.dumps(json.load(f))
+        starting_board = json.load(f)
+    starting_board_str = json.dumps(starting_board)
+    summary['starting_board'] = starting_board
     print(f'starting board for {forward_filename}:\n{starting_board_str}\n')
 
     print(f'finding winning board')
     board_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', starting_board_str)
     if not board_result['success']:
         raise RuntimeError('given game failed forward run')
-    winning_board_str = json.dumps(board_result['board'])
+    winning_board = board_result['board']
+    winning_board_str = json.dumps(winning_board)
+    summary['winning_board'] = winning_board
     print(f'winning board for {forward_filename}:\n{winning_board_str}\n')
 
     # run invert_tree
@@ -46,24 +59,74 @@ if __name__ == '__main__':
     print(f'enumerating boards')
     enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', winning_board_str, '--enum')
     enum_boards = [result['board'] for result in enum_results if not (result['game_result'] != None and result['game_result']['result'] == 'lose')]
+    summary['num_enum_boards'] = len(enum_boards)
+    summary['num_result_boards'] = len(enum_results)
     print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {forward_filename}\n')
 
     # check enumerated boards
-    enum_boards_filename = f'{out_folder}/enum_boards.jsons'
-    with open(enum_boards_filename, 'wt') as f:
-        print(f'checking enumerated boards and writing to {enum_boards_filename}')
-        for ii, enum_board in enumerate(enum_boards):
+    q_in = queue.Queue()
+    q_out = queue.Queue()
+    complete = 0
+    print_lock = threading.Lock()
+
+    def process_enum():
+        global complete
+
+        any_error = False
+        while not q_in.empty() and not any_error:
+            enum_ii, enum_board = q_in.get()
             enum_board_str = json.dumps(enum_board)
             forward_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', enum_board_str)
 
-            if not forward_result['success']:
-                raise RuntimeError(f'failed forward run for board:\n{enum_board_str}')
+            if forward_result['success']:
+                q_out.put((True, enum_ii, {'board':enum_board, 'result':forward_result}))
+            else:
+                q_out.put((False, enum_ii, enum_board))
+                any_error = True
 
-            json.dump({'board':enum_board, 'result':forward_result}, f)
-            f.write(f'\n')
-            print('.', end='', flush=True)
-            if (ii + 1) % 50 == 0:
-                print(f'{ii + 1}/{len(enum_boards)}', flush=True)
+            with print_lock:
+                print('.' if not any_error else '!', end='', flush=True)
+                complete += 1
+                if complete % 50 == 0:
+                    print(f'{complete}/{len(enum_boards)}', flush=True)
+
+            q_in.task_done()
+
+    print(f'checking enumerated boards')
+    for enum_ii, enum_board in enumerate(enum_boards):
+        q_in.put((enum_ii, enum_board))
+
+    nthreads = args.parallel if args.parallel is not None else 1
+    for ii in range(nthreads):
+        threading.Thread(target=process_enum, daemon=True).start()
+    q_in.join()
+
+    enum_results = []
+    while not q_out.empty():
+        okay, enum_ii, enum_result = q_out.get()
+        if not okay:
+            raise RuntimeError(f'failed forward run for board:\n{json.dumps(enum_result)}')
+        enum_results.append((enum_ii, enum_result))
+        q_out.task_done()
+    enum_results = sorted(enum_results)
 
     print()
     print('all enumerated boards passed game_agent.py forward solver')
+
+    enum_boards_filename = f'{out_folder}/enum_boards.jsons'
+    print()
+    print(f'writing enumerated boards to {enum_boards_filename}')
+    with open(enum_boards_filename, 'wt') as f:
+        for enum_ii, enum_result in enum_results:
+            json.dump(enum_result, f)
+            f.write(f'\n')
+
+    total_time = time.time() - start_time
+    summary['total_time'] = total_time
+
+    summary_filename = f'{out_folder}/summary.json'
+    print()
+    print(f'writing summary to {summary_filename}')
+    with open(summary_filename, 'wt') as f:
+        json.dump(summary, f)
+        f.write(f'\n')
