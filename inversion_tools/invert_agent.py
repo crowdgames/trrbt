@@ -72,20 +72,16 @@ if __name__ == '__main__':
     def process_enum():
         global complete
 
-        any_error = False
-        while not q_in.empty() and not any_error:
+        while not q_in.empty():
             enum_ii, enum_board = q_in.get()
             enum_board_str = json.dumps(enum_board)
             forward_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', enum_board_str)
 
-            if forward_result['success']:
-                q_out.put((True, enum_ii, {'board':enum_board, 'result':forward_result}))
-            else:
-                q_out.put((False, enum_ii, enum_board))
-                any_error = True
+            success = forward_result['success']
+            q_out.put((success, enum_ii, {'board':enum_board, 'result':forward_result}))
 
             with print_lock:
-                print('.' if not any_error else '!', end='', flush=True)
+                print('.' if success else '!', end='', flush=True)
                 complete += 1
                 if complete % 50 == 0:
                     print(f'{complete}/{len(enum_boards)}', flush=True)
