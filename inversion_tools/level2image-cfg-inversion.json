@@ -1,0 +1,24 @@
+{
+    "tile": {
+        "P": "blue",
+        "P_": "blue",
+        "Pa": "blue",
+        "Pb": "blue",
+
+        "O": "saddlebrown",
+
+	"a": "orange",
+        "b": "orange",
+	"A": "orangered",
+        "B": "orangered",
+        "@": "green",
+        "W": "green",
+
+        "_": "grey",
+        ".": "lightgrey",
+        "X": "black",
+        "*": "green"
+    },
+    "draw": {
+    }
+}
