@@ -25,7 +25,7 @@ tree:
         lhs: P_ b
         rhs: _  Pb
       - type: rewrite
-        lhs: P_ O
+        lhs: P_ @
         rhs: _  W
       - type: rewrite
         lhs: Pa _
