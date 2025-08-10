@@ -9,6 +9,7 @@ def game_agent(filename, enum, board_init, random_seed):
 
     queue = []
     seen = {}
+    enum_seen = {}
 
     engine.stepToWaitChoiceOrResult()
     state = engine.getState()
@@ -22,12 +23,19 @@ def game_agent(filename, enum, board_init, random_seed):
         queue = queue[1:]
 
         engine.setState(state)
-        if engine.gameOver():
-            if state.gameResult.result == 'win':
-                if enum:
-                    pass
-                else:
-                    print(json.dumps({'board':dict(state.board), 'steps':steps, 'game_result':dict(state.gameResult), 'success':True}), flush=True)
+        stateBoard = dict(state.board)
+        stateResult = dict(state.gameResult) if engine.gameOver() else None
+
+        if enum:
+            enum_key = str((stateBoard, stateResult))
+            if enum_key not in enum_seen:
+                enum_seen[enum_key] = None
+                print(json.dumps({'board':stateBoard, 'steps':steps, 'game_result':stateResult}), flush=True)
+
+        if stateResult is not None:
+            if stateResult['result'] == 'win':
+                if not enum:
+                    print(json.dumps({'board':stateBoard, 'steps':steps, 'game_result':stateResult, 'success':True}), flush=True)
                     return
             else:
                 continue
@@ -44,12 +52,8 @@ def game_agent(filename, enum, board_init, random_seed):
                 engine.stepToWaitChoiceOrResult()
                 nextState = engine.getState()
                 nextStateStr = str(nextState)
-                nextStateResult = dict(nextState.gameResult) if engine.gameOver() else None
-                nextSteps = steps + 1
                 if nextStateStr not in seen:
-                    if enum:
-                        print(json.dumps({'board':dict(nextState.board), 'steps':nextSteps, 'game_result':nextStateResult}), flush=True)
-                    queue.append((nextState, nextSteps))
+                    queue.append((nextState, steps + 1))
                     seen[nextStateStr] = None
 
     if not enum:
@@ -60,7 +64,7 @@ def game_agent(filename, enum, board_init, random_seed):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run agent on game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
-    parser.add_argument('--enum', action='store_true', help='Enumerate states rather than find winning state.')
+    parser.add_argument('--enum', action='store_true', help='Enumerate boards rather than find winning board.')
     parser.add_argument('--board', type=str, help='Initial board configuration.')
     parser.add_argument('--seed', type=int, help='Random seed.')
     args = parser.parse_args()
