@@ -11,6 +11,7 @@ import invert_util
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('game_name', type=str, help='Name of the game.')
+    parser.add_argument('--forward', action='store_true', help='Enumerate forward rather than inverted.')
     parser.add_argument('--parallel', type=int, help='Number of enumerated boards to check in parallel.')
     args = parser.parse_args()
 
@@ -22,7 +23,13 @@ if __name__ == '__main__':
     summary = {}
 
     out_folder = f'out_inversion/{args.game_name}'
-    print(f'setting up folder {out_folder}\n')
+    if args.forward:
+        out_folder += '/forward'
+    else:
+        out_folder += '/inverted'
+
+    print(f'setting up folder {out_folder}')
+    print()
     if os.path.exists(out_folder):
         shutil.rmtree(out_folder)
     os.makedirs(out_folder, exist_ok=True)
@@ -32,36 +39,51 @@ if __name__ == '__main__':
 
     # transform to forward game
     invert_util.script_output('yaml2bt.py', gameloop_filename, '--out', forward_filename, '--resolve', '--xform', '--fmt', 'json', '--name', args.game_name + '-forward')
-    print(f'transformed forward game to {forward_filename}\n')
+    print(f'transformed forward game to {forward_filename}')
+    print()
 
-    # run forward game to get winning board
     with open(board_filename) as f:
         starting_board = json.load(f)
     starting_board_str = json.dumps(starting_board)
     summary['starting_board'] = starting_board
-    print(f'starting board for {forward_filename}:\n{starting_board_str}\n')
+    print(f'starting board for {forward_filename}:\n{starting_board_str}')
+    print()
 
-    print(f'finding winning board')
-    board_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', starting_board_str)
-    if not board_result['success']:
-        raise RuntimeError('given game failed forward run')
-    winning_board = board_result['board']
-    winning_board_str = json.dumps(winning_board)
-    summary['winning_board'] = winning_board
-    print(f'winning board for {forward_filename}:\n{winning_board_str}\n')
+    if args.forward:
+        # run game agent on inverted tree to enumerate all boards reachable from solved board
+        print(f'enumerating boards')
+        enum_results = invert_util.script_output_jsons('game_agent.py', forward_filename, '--board', starting_board_str, '--enum')
+        enum_boards = [result['board'] for result in enum_results]
+        summary['num_enum_boards'] = len(enum_boards)
+        print(f'enumerated {len(enum_boards)} possible starting boards for {forward_filename}')
+        print()
 
-    # run invert_tree
-    print(f'inverting tree')
-    invert_util.script_output('inversion_tools/invert_tree.py', args.game_name + '-inverted', forward_filename, inverted_filename)
-    print(f'tree inverted and written to {inverted_filename}\n')
+    else:
+        # run forward game to get winning board
+        print(f'finding winning board')
+        board_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', starting_board_str)
+        if not board_result['success']:
+            raise RuntimeError('given game failed forward run')
+        winning_board = board_result['board']
+        winning_board_str = json.dumps(winning_board)
+        summary['winning_board'] = winning_board
+        print(f'winning board for {forward_filename}:\n{winning_board_str}')
+        print()
 
-    # run game agent on inverted tree to enumerate all boards reachable from solved board
-    print(f'enumerating boards')
-    enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', winning_board_str, '--enum')
-    enum_boards = [result['board'] for result in enum_results if not (result['game_result'] != None and result['game_result']['result'] == 'lose')]
-    summary['num_enum_boards'] = len(enum_boards)
-    summary['num_result_boards'] = len(enum_results)
-    print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {forward_filename}\n')
+        # run invert_tree
+        print(f'inverting tree')
+        invert_util.script_output('inversion_tools/invert_tree.py', args.game_name + '-inverted', forward_filename, inverted_filename)
+        print(f'tree inverted and written to {inverted_filename}')
+        print()
+
+        # run game agent on inverted tree to enumerate all boards reachable from solved board
+        print(f'enumerating boards')
+        enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', winning_board_str, '--enum')
+        enum_boards = [result['board'] for result in enum_results if not (result['game_result'] != None and result['game_result']['result'] == 'lose')]
+        summary['num_enum_boards'] = len(enum_boards)
+        summary['num_result_boards'] = len(enum_results)
+        print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {inverted_filename}')
+        print()
 
     # check enumerated boards
     q_in = queue.Queue()
@@ -100,18 +122,18 @@ if __name__ == '__main__':
     enum_results = []
     while not q_out.empty():
         okay, enum_ii, enum_result = q_out.get()
-        if not okay:
+        if okay:
+            enum_results.append((enum_ii, enum_result))
+        elif not args.forward:
             raise RuntimeError(f'failed forward run for board:\n{json.dumps(enum_result)}')
-        enum_results.append((enum_ii, enum_result))
         q_out.task_done()
     enum_results = sorted(enum_results)
-
     print()
-    print('all enumerated boards passed game_agent.py forward solver')
+    print()
 
     enum_boards_filename = f'{out_folder}/enum_boards.jsons'
-    print()
     print(f'writing enumerated boards to {enum_boards_filename}')
+    print()
     with open(enum_boards_filename, 'wt') as f:
         for enum_ii, enum_result in enum_results:
             json.dump(enum_result, f)
@@ -121,7 +143,6 @@ if __name__ == '__main__':
     summary['total_time'] = total_time
 
     summary_filename = f'{out_folder}/summary.json'
-    print()
     print(f'writing summary to {summary_filename}')
     with open(summary_filename, 'wt') as f:
         json.dump(summary, f)
