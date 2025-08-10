@@ -11,7 +11,7 @@ def check_tree(tree):
         return False
 
     l_u_a_childs = tree['children'] #children of order node, delete this if we go back to system using start board
-    allowed_types_l_u_a = ['player', 'win']
+    allowed_types_l_u_a = ['win', 'player']
     for i in range(len(allowed_types_l_u_a)):
         if l_u_a_childs[i]['type'] != allowed_types_l_u_a[i]:
             print('Invalid game based on children of l-u-a node')
@@ -20,24 +20,28 @@ def check_tree(tree):
             print('Invalid game based on player id')
             return False
 
+    child_win = l_u_a_childs[0]
+
+    if len(child_win['children']) != 1 or child_win['children'][0]['type'] != 'match-times': #l_u_a[1] is win node
+        print ('Invalid game because win condition is not a single match-times')
+        return False
+    else:
+        win_children = child_win['children']
+
+    child_player = l_u_a_childs[1]
+
     rewrites = []
-    if len(l_u_a_childs[1]['children']) == 0:
+    if len(child_player['children']) == 0:
         print ('Invalid game because player does not have children')
         return False
 
-    for node in l_u_a_childs[0]['children']: #list of the children of the player node
+    for node in child_player['children']: #list of the children of the player node
         if node['type'] != 'rewrite':
             print('Invalid game because not all children of player node are rewrites')
             return False
         else:
             rewrite = {'type': 'rewrite', 'rhs': node['lhs'] , 'lhs': node['rhs']}
             rewrites.append(rewrite)
-
-    if len(l_u_a_childs[1]['children']) != 1 or l_u_a_childs[1]['children'][0]['type'] != 'match-times': #l_u_a[1] is win node
-        print ('Invalid game because win condition is not a single match-times')
-        return False
-    else:
-        win_children = l_u_a_childs[1]['children']
 
     # return starting_board, rewrites
     return win_children, rewrites  # returning tuple of boolean (does check pass), and list of dictionaries (rewrites)

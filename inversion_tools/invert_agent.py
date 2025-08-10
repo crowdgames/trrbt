@@ -46,28 +46,30 @@ if __name__ == '__main__':
         starting_board = json.load(f)
     starting_board_str = json.dumps(starting_board)
     summary['starting_board'] = starting_board
-    print(f'starting board for {forward_filename}:\n{starting_board_str}')
-    print()
 
     if args.forward:
-        # run game agent on inverted tree to enumerate all boards reachable from solved board
         print(f'enumerating boards')
         enum_results = invert_util.script_output_jsons('game_agent.py', forward_filename, '--board', starting_board_str, '--enum')
-        enum_boards = [result['board'] for result in enum_results]
-        summary['num_enum_boards'] = len(enum_boards)
+        enum_boards = [result['board'] for result in enum_results if result['game_result'] == None]
         print(f'enumerated {len(enum_boards)} possible starting boards for {forward_filename}')
         print()
+        summary['num_result_boards'] = len(enum_results)
+        summary['num_enum_boards'] = len(enum_boards)
 
     else:
-        # run forward game to get winning board
-        print(f'finding winning board')
+        print(f'starting board for {forward_filename}:\n{starting_board_str}')
+        print()
+
+        # run forward game to get solved board
+        print(f'finding solved board')
         board_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', starting_board_str)
         if not board_result['success']:
             raise RuntimeError('given game failed forward run')
-        winning_board = board_result['board']
-        winning_board_str = json.dumps(winning_board)
-        summary['winning_board'] = winning_board
-        print(f'winning board for {forward_filename}:\n{winning_board_str}')
+        solved_board = board_result['board']
+
+        summary['solved_board'] = solved_board
+        solved_board_str = json.dumps(solved_board)
+        print(f'solved board for {forward_filename}:\n{solved_board_str}')
         print()
 
         # run invert_tree
@@ -78,8 +80,8 @@ if __name__ == '__main__':
 
         # run game agent on inverted tree to enumerate all boards reachable from solved board
         print(f'enumerating boards')
-        enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', winning_board_str, '--enum')
-        enum_boards = [result['board'] for result in enum_results if not (result['game_result'] != None and result['game_result']['result'] == 'lose')]
+        enum_results = invert_util.script_output_jsons('game_agent.py', inverted_filename, '--board', solved_board_str, '--enum')
+        enum_boards = [result['board'] for result in enum_results if result['steps'] > 0 and not (result['game_result'] != None and result['game_result']['result'] != 'stalemate')]
         summary['num_enum_boards'] = len(enum_boards)
         summary['num_result_boards'] = len(enum_results)
         print(f'enumerated {len(enum_boards)} possible starting boards of {len(enum_results)} results for {inverted_filename}')
@@ -100,7 +102,7 @@ if __name__ == '__main__':
             forward_result = invert_util.script_output_json('game_agent.py', forward_filename, '--board', enum_board_str)
 
             success = forward_result['success']
-            q_out.put((success, enum_ii, {'board':enum_board, 'result':forward_result}))
+            q_out.put((success, enum_ii, {'board':enum_board, 'forward_result':forward_result}))
 
             with print_lock:
                 print('.' if success else '!', end='', flush=True)
@@ -128,6 +130,7 @@ if __name__ == '__main__':
             raise RuntimeError(f'failed forward run for board:\n{json.dumps(enum_result)}')
         q_out.task_done()
     enum_results = sorted(enum_results)
+    summary['num_okay_boards'] = len(enum_results)
     print()
     print()
 

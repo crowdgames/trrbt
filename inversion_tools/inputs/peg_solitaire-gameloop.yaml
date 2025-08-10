@@ -5,6 +5,12 @@ tree:
   type: loop-until-all
   nid: gameloop
   children:
+  - type: win
+    pid: "1"
+    children:
+    - type: match-times
+      times: 1
+      pattern: O
   - type: player
     pid: "1"
     children:
@@ -13,9 +19,3 @@ tree:
       - type: rewrite
         lhs: O O _
         rhs: _ _ O
-  - type: win
-    pid: "1"
-    children:
-    - type: match-times
-      times: 1
-      pattern: O

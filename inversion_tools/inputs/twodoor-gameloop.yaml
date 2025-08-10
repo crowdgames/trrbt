@@ -4,6 +4,12 @@ tree:
   type: loop-until-all
   nid: gameloop
   children:
+  - type: win
+    pid: "1"
+    children:
+    - type: match-times
+      times: 1
+      pattern: W
   - type: player
     pid: "1"
     children:
@@ -41,9 +47,3 @@ tree:
         rhs: .  X;
              _  P_;
              .  X;
-  - type: win
-    pid: "1"
-    children:
-    - type: match-times
-      times: 1
-      pattern: W

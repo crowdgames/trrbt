@@ -4,6 +4,12 @@ tree:
   type: loop-until-all
   nid: gameloop
   children:
+  - type: win
+    pid: "1"
+    children:
+    - type: match-times
+      times: 0
+      pattern: O
   - type: player
     pid: "1"
     children:
@@ -21,9 +27,3 @@ tree:
         button: right
         lhs: P O *
         rhs: _ P @
-  - type: win
-    pid: "1"
-    children:
-    - type: match-times
-      times: 0
-      pattern: O
