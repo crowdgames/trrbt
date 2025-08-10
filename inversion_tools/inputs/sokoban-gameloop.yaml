@@ -9,21 +9,17 @@ tree:
     children:
     - type: match-times
       times: 0
-      pattern: O
+      pattern:
+        main: 'O'
+        trgt: _
   - type: player
     pid: "1"
     children:
     - type: x-spin
       children:
       - type: rewrite
-        button: right
         lhs: P _
         rhs: _ P
       - type: rewrite
-        button: right
         lhs: P O _
         rhs: _ P O
-      - type: rewrite
-        button: right
-        lhs: P O *
-        rhs: _ P @
