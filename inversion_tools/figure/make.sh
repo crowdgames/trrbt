@@ -5,16 +5,38 @@ fi
 
 set -ex
 
-PIPENV_PIPFILE="$1/Pipfile" pipenv run python "$1/level2image.py" --cfg level2image-cfg.json --tile-norect --suffix "" gen/*.json
-PIPENV_PIPFILE="$1/Pipfile" pipenv run python "$1/level2image.py" --cfg level2image-cfg.json --tile-norect --suffix "" ../inputs/*.json
-mv ../inputs/*.pdf inputs/
+mkdir -p out/board
+mkdir -p out/tree
 
-python ../../yaml2bt.py ../inputs/peg_solitaire-gameloop.yaml --out program/peg_solitaire-forward.json --resolve --xform --fmt json --name "Peg Solitaire:forward"
-python ../../yaml2bt.py program/peg_solitaire-forward.json --out program/peg_solitaire-forward.gv --fmt gv
+cp gen/*.json out/board/
+cp ../inputs/*.json out/board/
 
-python ../invert_tree.py "Peg Solitaire:inverted" program/peg_solitaire-forward.json program/peg_solitaire-inverted.json
-python ../../yaml2bt.py program/peg_solitaire-inverted.json --out program/peg_solitaire-inverted.gv --fmt gv
+PIPENV_PIPFILE="$1/Pipfile" pipenv run python "$1/level2image.py" --cfg level2image-cfg.json --tile-norect --suffix "" out/board/*.json
 
-for gv in `ls program/*.gv`; do
+rm -f out/board/*.json
+
+files=(peg_solitaire merge sokoban twodoor)
+names=("Peg Solitaire" "Merge" "Sokoban" "TwoDoor")
+
+for ii in "${!files[@]}"; do
+    file="${files[ii]}"
+    name="${names[ii]}"
+    python "../../yaml2bt.py" "../inputs/${file}-gameloop.yaml" --out "out/tree/${file}-forward.json" --resolve --xform --fmt json --name "${name}:forward"
+    cat "../inputs/${file}-gameloop.yaml" | sed '/x-spin/,+1 d' > out/tree/${file}-gameloop-trim.yaml
+    python "../../yaml2bt.py" "out/tree/${file}-gameloop-trim.yaml" --out "out/tree/${file}-forward-trim.json" --resolve --xform --fmt json --name "${name}:forward"
+done
+
+python ../invert_tree.py "Peg Solitaire:inverted" out/tree/peg_solitaire-forward.json out/tree/peg_solitaire-inverted.json
+
+cp program/*.gv out/tree/
+
+for json in `ls out/tree/*.json`; do
+    python ../../yaml2bt.py "${json}" --out "${json%.*}.gv" --fmt gv
+done
+
+for gv in `ls out/tree/*.gv`; do
     dot -Tpdf "${gv}" -o "${gv%.*}.pdf"
 done
+
+rm -f out/tree/*.json
+rm -f out/tree/*.gv

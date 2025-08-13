@@ -1,0 +1,23 @@
+---
+name: sokoban-gameloop
+tree:
+  type: loop-until-all
+  nid: gameloop
+  children:
+  - type: win
+    pid: "1"
+    children:
+    - type: match-times
+      times: 0
+      pattern:
+        main: 'O'
+        trgt: _
+  - type: player
+    pid: "1"
+    children:
+      - type: rewrite
+        lhs: P _
+        rhs: _ P
+      - type: rewrite
+        lhs: P O _
+        rhs: _ P O
