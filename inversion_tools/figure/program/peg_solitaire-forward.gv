@@ -1,0 +1,19 @@
+digraph G {
+  graph [ordering="out", margin="0"];
+  _NAME [shape="component", label=<Peg Solitaire:forward>, style="filled", fillcolor="#cccccc"];
+  1000000 [shape="oval", fillcolor="#e0e0e0", style="filled", label=<loop-until-all>];
+  1000001 [shape="octagon", fillcolor="#e0d0d0", style="filled", label=<win:1>];
+  1000002 [shape="box", fillcolor="#d0e0e0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">match-times:1</TD></TR><TR><TD></TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">O</FONT></TD><TD></TD></TR></TABLE>>];
+  1000003 [shape="diamond", fillcolor="#d0d0e0", style="filled", label=<player:1>];
+  1000004 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">O O _</FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">_ _ O</FONT></TD></TR></TABLE>>];
+  1000005 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">O<BR/>O<BR/>_</FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">_<BR/>_<BR/>O</FONT></TD></TR></TABLE>>];
+  1000006 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">_ O O</FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">O _ _</FONT></TD></TR></TABLE>>];
+  1000007 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">_<BR/>O<BR/>O</FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New">O<BR/>_<BR/>_</FONT></TD></TR></TABLE>>];
+  1000001 -> 1000002;
+  1000000 -> 1000001;
+  1000003 -> 1000004;
+  1000003 -> 1000005;
+  1000003 -> 1000006;
+  1000003 -> 1000007;
+  1000000 -> 1000003;
+}

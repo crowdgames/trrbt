@@ -2,7 +2,7 @@ import argparse
 import json
 import subprocess
 import sys
-sys.path += ['.', '..']
+sys.path += ['.', '..', '../..']
 import util
 
 def check_tree(tree):
