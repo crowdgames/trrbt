@@ -44,7 +44,7 @@ def check_tree(tree):
             rewrites.append(rewrite)
 
     # return starting_board, rewrites
-    return win_children, rewrites  # returning tuple of boolean (does check pass), and list of dictionaries (rewrites)
+    return win_children, rewrites # returning tuple of boolean (does check pass), and list of dictionaries (rewrites)
 
 
 # def invert(inverted_filename, n, starting_board, winning_board, rewrites):

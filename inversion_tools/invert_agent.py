@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     summary = {}
 
-    out_folder = f'out_inversion/{args.game_name}'
+    out_folder = f'inversion_tools/out/{args.game_name}'
     if args.forward:
         out_folder += '/forward'
     else:
