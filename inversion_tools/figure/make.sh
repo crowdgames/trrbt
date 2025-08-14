@@ -5,6 +5,7 @@ fi
 
 set -ex
 
+rm -rf out
 mkdir -p out/board
 mkdir -p out/tree
 
