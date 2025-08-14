@@ -32,6 +32,10 @@ cp program/*.gv out/tree/
 
 for json in `ls out/tree/*.json`; do
     python ../../yaml2bt.py "${json}" --out "${json%.*}.gv" --fmt gv
+    if [[ $json == *-trim.json ]]; then
+	cat  "${json%.*}.gv" | sed 's/}/  2000000 [shape="box", label=<. . .>, fontsize="30pt", shape=plaintext]; 1000003 -> 2000000 [style="invis"];\n}/g' >  "${json%.*}.gv.tmp"
+	mv  "${json%.*}.gv.tmp" "${json%.*}.gv"
+    fi
 done
 
 for gv in `ls out/tree/*.gv`; do
