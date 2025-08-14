@@ -4,10 +4,10 @@ digraph G {
   1000000 [shape="oval", fillcolor="#e0e0e0", style="filled", label=<loop-until-all>];
 
   1000001 [shape="diamond", fillcolor="#d0d0e0", style="filled", label=<player:1>];
-  1000002 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>RIGHT<SUB>1</SUB></B></FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>LEFT<SUB>1</SUB></B></FONT></TD></TR></TABLE>>];
-  1000003 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>RIGHT<SUB>2</SUB></B></FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>LEFT<SUB>2</SUB></B></FONT></TD></TR></TABLE>>];
+  1000002 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>RIGHT<SUB>N</SUB></B></FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>LEFT<SUB>N</SUB></B></FONT></TD></TR></TABLE>>];
+  1000003 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>RIGHT<SUB>N-1</SUB></B></FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>LEFT<SUB>N-1</SUB></B></FONT></TD></TR></TABLE>>];
   1000004 [shape="box", label=<. . .>, fontsize="30pt", shape=plaintext];
-  1000005 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>RIGHT<SUB>N</SUB></B></FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>LEFT<SUB>N</SUB></B></FONT></TD></TR></TABLE>>];
+  1000005 [shape="box", fillcolor="#d0e0d0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">rewrite</TD></TR><TR><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>RIGHT<SUB>1</SUB></B></FONT></TD><TD>→</TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>LEFT<SUB>1</SUB></B></FONT></TD></TR></TABLE>>];
 
   1000018 [shape="octagon", fillcolor="#e0d0d0", style="filled", label=<lose:1>];
   1000019 [shape="box", fillcolor="#d0e0e0", style="filled,rounded", label=<<TABLE BORDER="0"><TR><TD COLSPAN="3">match-times:<B>T</B></TD></TR><TR><TD></TD><TD BORDER="1" COLOR="#888888"><FONT FACE="Courier New"><B>END</B></FONT></TD><TD></TD></TR></TABLE>>];
