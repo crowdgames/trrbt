@@ -14,7 +14,7 @@ if __name__ == '__main__':
             print(f' {style}:')
             num_boards = 0
             steps_list = []
-            with open(f'out_inversion/{game}/{style}/enum_boards.jsons', 'rt') as curr_file:
+            with open(f'inversion_tools/out/{game}/{style}/enum_boards.jsons', 'rt') as curr_file:
                 for line in curr_file:
                     line_dict = json.loads(line)
                     steps_list.append(line_dict['forward_result']['steps'])

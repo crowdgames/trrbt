@@ -57,7 +57,7 @@ def invert(inverted_filename, game_name, win_children, rewrites):
                 {
                     'type': 'player',
                     'pid': '1',
-                    'children': rewrites
+                    'children': (rewrites[::-1])
                 },
                 {
                     'type': 'lose',
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         raise RuntimeError('tree not valid')
 
     win_children, rewrites = result
-
+    
     # when we run game_agent.py we should check that result is true and then only take the board input
     invert(args.inverted_filename, args.game_name, win_children, rewrites)
     print('tree inverted and written to ' + args.inverted_filename)

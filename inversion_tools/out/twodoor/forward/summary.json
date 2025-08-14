@@ -1,0 +1,1 @@
+{"starting_board": {"main": [["X", "X", "X", "X", "X", "X", "X", "X", "X", "X"], ["X", "P_", "_", "A", "_", "b", "X", "_", "@", "X"], ["X", "_", "a", "X", "_", "_", "B", "_", "_", "X"], ["X", "X", "X", "X", "X", "X", "X", "X", "X", "X"]]}, "num_result_boards": 38, "num_enum_boards": 37, "num_okay_boards": 37, "total_time": 10.682833909988403}
