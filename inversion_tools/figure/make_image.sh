@@ -1,12 +1,14 @@
 if [ -z "$1" ]; then
-    echo "usage: make.sh [path/to/level2image]"
+    echo "usage: make_image.sh [path/to/level2image]"
     exit
 fi
 
 set -ex
 
-rm -rf out
+rm -rf out/board
 mkdir -p out/board
+
+rm -rf out/tree
 mkdir -p out/tree
 
 cp gen/*.json out/board/
