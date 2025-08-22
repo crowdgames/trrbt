@@ -1,0 +1,28 @@
+---
+name: rush hour-boards
+tree:
+  type: order
+  children:
+  - type: random-try
+    children:
+    - type: set-board
+      pattern: XX XX XX XX XX XX XX XX;
+               XX __ __ __ __ T1 __ XX;
+               XX __ __ __ __ T1 __ XX;
+               XX CR CR __ __ T1 __ OO;
+               XX __ __ __ __ __ __ XX;
+               XX __ __ __ __ __ __ XX;
+               XX __ __ __ __ __ __ XX;
+               XX XX XX XX XX XX XX XX;
+    - type: set-board
+      pattern: XX XX XX XX XX XX XX XX;
+               XX __ __ __ __ T1 __ XX;
+               XX __ __ __ __ T1 __ XX;
+               XX CR CR __ __ T1 __ OO;
+               XX __ __ __ __ C1 C1 XX;
+               XX __ __ __ T2 T2 T2 XX;
+               XX __ __ __ __ __ __ XX;
+               XX XX XX XX XX XX XX XX;
+  - type: x-file
+    file: rush_hour-gameloop
+    target: gameloop

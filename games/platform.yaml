@@ -22,7 +22,7 @@ tree:
       nid: gameloop
       children:
       - type: player
-        pid: 1
+        pid: "1"
         children:
         - type: rewrite
           comment: player stays still
@@ -109,13 +109,13 @@ tree:
           rhs: Pa
       - type: win
         comment: player wins if reached goal
-        pid: 1
+        pid: "1"
         children:
         - type: match
           pattern: W
       - type: lose
         comment: player loses if captured
-        pid: 1
+        pid: "1"
         children:
         - type: none
           children:

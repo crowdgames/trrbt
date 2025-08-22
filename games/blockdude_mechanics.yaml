@@ -75,7 +75,7 @@ tree:
                 - Bf
                 children:
                 - type: player
-                  pid: 1
+                  pid: "1"
                   children:
                   - type: x-mirror
                     comment: regardless of block

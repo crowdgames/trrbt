@@ -1,4 +1,4 @@
-import argparse, os, random, sys, time
+import argparse, json, os, sys, time
 import util
 
 
@@ -19,13 +19,11 @@ def delay(seconds):
 
 
 
-def run_game(filename, choice_order, random_players, clear_screen, board_init):
+def run_game(filename, choice_order, random_players, clear_screen, board_init, random_seed):
     game = util.yaml2bt(filename, True, True)
+    engine, max_tile_width, rng = util.setup_engine(game, 'UNDO_NONE', board_init, random_seed)
 
-    if board_init is not None:
-        game.tree = {'type':'order', 'children':[{'type':'set-board', 'pattern':board_init}, {'type':'display-board'}, game.tree]}
-
-    engine = util.new_engine(game)
+    saved_state = None
 
     previous_moves = {}
     max_tile_width = util.node_max_tile_width(game.tree)
@@ -68,7 +66,7 @@ def run_game(filename, choice_order, random_players, clear_screen, board_init):
             player_id = util.intify(engine.state.choicePlayer)
 
             if player_id in random_players:
-                choiceIndex = random.randint(0, len(engine.state.choices) - 1)
+                choiceIndex = rng.randint(0, len(engine.state.choices) - 1)
                 choice = engine.state.choices[choiceIndex]
 
                 lhs = util.layer_pattern_to_string(choice.lhs, None, '-', '-:', '&', '', '', ' ', '; ')
@@ -124,17 +122,28 @@ def run_game(filename, choice_order, random_players, clear_screen, board_init):
 
                     print(f'{desc}{inputIndex}: {lhs} → {rhs} at {row},{col}')
 
-                choiceIndex = None
-                while choiceIndex is None:
+                print(f's: save state')
+                if saved_state is not None:
+                    print(f'r: restore state')
+
+                while True:
                     try:
-                        user_input = int(input(f'Please enter the number of your choice: '))
-                        if user_input not in inputToChoiceIndex:
-                            print('Your number is out of range!')
+                        user_input = input(f'Please enter your choice: ')
+                        if user_input == 's':
+                            saved_state = engine.getState()
+                        elif user_input == 'r' and saved_state is not None:
+                            engine.setState(saved_state)
                         else:
-                            choiceIndex = inputToChoiceIndex[user_input]
+                            user_input = int(user_input)
+                            if user_input not in inputToChoiceIndex:
+                                raise ValueError('Number out of range.')
+                            else:
+                                choiceIndex = inputToChoiceIndex[user_input]
+                                engine.clearChoiceWait(True, choiceIndex)
+                        break
                     except ValueError:
-                        print('Error: Please enter a valid number.')
-                engine.clearChoiceWait(True, choiceIndex)
+                        print('Error: Please enter a valid choice.')
+
                 print()
 
 
@@ -143,16 +152,12 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Play game YAML.')
     parser.add_argument('filename', type=str, help='Filename to process.')
     parser.add_argument('--player-random', type=str, nargs='+', help='Player IDs to play randomly.', default=[])
-    parser.add_argument('--random', type=int, help='Random seed.')
     parser.add_argument('--choice-order', action='store_true', help='Keep move choices in order.')
     parser.add_argument('--cls', type=float, nargs='?', const=DEFAULT_DISPLAY_DELAY, default=None, help='Clear screen before moves, optionally providing move delay.')
     parser.add_argument('--board', type=str, help='Initial board configuration.')
+    parser.add_argument('--seed', type=int, help='Random seed.')
     args = parser.parse_args()
 
-    random_seed = args.random if args.random is not None else int(time.time()) % 10000
-    print(f'Using random seed {random_seed}')
-    random.seed(random_seed)
+    board_init = None if args.board is None else json.loads(args.board)
 
-    board_init = None if args.board is None else {'main': util.string_to_pattern(args.board)}
-
-    run_game(args.filename, args.choice_order, args.player_random, args.cls, board_init)
+    run_game(args.filename, args.choice_order, args.player_random, args.cls, board_init, args.seed)

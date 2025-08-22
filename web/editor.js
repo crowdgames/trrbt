@@ -13,9 +13,10 @@ const EDT_TEXT_LINE = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
 const EDT_TEXT_RECT_END = 4;
 
-const EDT_PARSE_TEXT_INT = 0;
-const EDT_PARSE_TEXT_WORD = 1;
-const EDT_PARSE_TEXT_TEXT = 2;
+const EDT_PARSE_TEXT_INT    = 0;
+const EDT_PARSE_TEXT_FLOAT  = 1;
+const EDT_PARSE_TEXT_WORD   = 2;
+const EDT_PARSE_TEXT_TEXT   = 3;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
@@ -38,10 +39,16 @@ const EDT_NODE_PROTOTYPES = [
     { type: 'loop-times', comment: '', nid: '', children: [], times: 1 },
 
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
+    { type: 'rewrite-all', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: 'append-rows', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: 'append-columns', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
     { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
 
+    { type: 'display-board', comment: '', nid: '', delay: 0.5 },
+
     { type: 'match', pattern: EDT_EMPTY_PATTERN },
+    { type: 'match-times', times: 1, pattern: EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
@@ -73,13 +80,16 @@ const EDT_NODE_HELP = {
     'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.' },
 
     'rewrite': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'rewrite-all': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, rewrites as many as possible in random order with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
     'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
     'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
     'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
     'layer-template': { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
-    'display-board': { color: [0, 1, 0], help: 'Causes the board to be displayed. Always succeeds.' },
+
+    'display-board': { color: [1, 0, 1], help: 'Causes the board to be displayed. Always succeeds.' },
 
     'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
+    'match-times': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board the given number of times, otherwise fails.' },
 
     'x-ident': { color: [1, 1, 1], help: 'Do not apply any transform.' },
     'x-prune': { color: [1, 1, 1], help: 'Remove nodes.' },
@@ -108,6 +118,7 @@ const EDT_NODE_PROP_NAMES = {
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
     layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
+    delay: { name: 'delay', help: 'Amount to delay.' },
     what: { name: 'what', help: 'Character to be swapped/replaced.' },
     with: { name: 'with', help: 'Other character to use.' },
     withs: { name: 'withs', help: 'Space-separated other characters to use.' },
@@ -142,8 +153,11 @@ class TRRBTEditor {
         this.undoStack = null;
         this.undoStackPos = null;
 
-        this.fileToNidToNode = null;
+        this.fileToTree = null;
+        this.nidToNode = null;
+        this.commentToNode = null;
         this.dispidToNode = null;
+        this.parentNodes = null;
 
         this.nodeDrawTexts = null;
         this.nodeDrawPositions = null;
@@ -296,8 +310,11 @@ class TRRBTEditor {
         this.undoStack = [];
         this.undoStackPos = -1;
 
-        this.fileToNidToNode = new Map();
+        this.fileToTree = new Map();
+        this.nidToNode = new Map();
+        this.commentToNode = new Map();
         this.dispidToNode = new Map();
+        this.parentNodes = new Map();
 
         this.nodeDrawTexts = new Map();
         this.nodeDrawPositions = new Map();
@@ -365,6 +382,12 @@ class TRRBTEditor {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
+        this.doNodeDrawPositionUpdate();
+
+        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.nidToNode, this.game.tree);
+    }
+
+    doNodeDrawPositionUpdate() {
         const drawTime = Date.now();
 
         if (this.nodeDrawPositionsWantUpdate) {
@@ -384,8 +407,6 @@ class TRRBTEditor {
                 this.nodeDrawPositionsWantUpdate = false;
             }
         }
-
-        this.drawTree(this.ctx, this.nodeDrawPositions, this.nodeDrawTexts, this.fileToNidToNode, this.game.tree);
 
         this.nodeDrawLastTime = drawTime;
     }
@@ -430,12 +451,37 @@ class TRRBTEditor {
         }
     }
 
+    updateCommentToNode(node) {
+        if (node.hasOwnProperty('comment') && node.comment != null && node.comment != '') {
+            this.commentToNode.set(node.comment, node);
+        }
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                this.updateCommentToNode(child);
+            }
+        }
+    }
+
+    updateParentNodes(node, parent) {
+        this.parentNodes.set(node, parent);
+        if (node.hasOwnProperty('children')) {
+            for (let child of node.children) {
+                this.updateParentNodes(child, node);
+            }
+        }
+    }
+
     updateNodeIds() {
-        this.fileToNidToNode = new Map();
+        this.fileToTree = new Map();
+        this.nidToNode = new Map();
+        this.commentToNode = new Map();
         this.dispidToNode = new Map();
+        this.parentNodes = new Map();
         if (this.game.tree !== null) {
             this.updateDispids(this.game.tree);
-            find_file_node_ids(null, this.game.tree, this.file_to_game, this.fileToNidToNode);
+            this.updateCommentToNode(this.game.tree);
+            this.updateParentNodes(this.game.tree, null);
+            find_file_node_ids(null, this.game.tree, this.file_to_game, this.fileToTree, this.nidToNode);
         }
     }
 
@@ -493,7 +539,7 @@ class TRRBTEditor {
         let stackNodes = new Set();
         if (this.hasEngine() && this.engine.state.callStack !== null) {
             for (let frame of this.engine.state.callStack) {
-                stackNodes.add(frame.node.dispid);
+                stackNodes.add(this.engine.nodeLookup.idToNode.get(frame.nodeId).dispid);
             }
         }
         return stackNodes;
@@ -560,11 +606,7 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('comment') && node.comment != '') {
             texts.push({ type: EDT_TEXT_FONT, data: 'italic 10px sans-serif' });
-            if (node.comment.length > 30) {
-                texts.push({ type: EDT_TEXT_LINE, data: node.comment.substring(0, 27) + '...' });
-            } else {
-                texts.push({ type: EDT_TEXT_LINE, data: node.comment });
-            }
+            texts.push({ type: EDT_TEXT_LINE, data: graphemeTrunc(node.comment, 30) });
             texts.push({ type: EDT_TEXT_FONT, data: 'bold 10px sans-serif' });
         }
 
@@ -594,6 +636,10 @@ class TRRBTEditor {
 
         if (node.hasOwnProperty('times')) {
             texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['times'].name + ': ' + node.times });
+        }
+
+        if (node.hasOwnProperty('delay')) {
+            texts.push({ type: EDT_TEXT_LINE, data: EDT_NODE_PROP_NAMES['delay'].name + ': ' + node.delay });
         }
 
         if (node.hasOwnProperty('what')) {
@@ -772,22 +818,14 @@ class TRRBTEditor {
             ctx.lineTo(x0 + 0.5 * dx, y0 + 0.5 * dy);
             ctx.stroke();
 
-            let file = null;
-            if (node.hasOwnProperty('file')) {
-                file = node.file;
-            }
-
             if (node.hasOwnProperty('target')) {
-                let target = null;
-                const nid_to_node = nodeIds.get(file);
-                if (nid_to_node) {
-                    target = nid_to_node.get(node.target);
-                }
+                const has_file = node.hasOwnProperty('file');
+                const target = nodeIds.get(node.target);
 
                 if (target) {
                     found_target = true;
 
-                    if (file === null && nodePositions.has(target.dispid)) {
+                    if (!has_file && nodePositions.has(target.dispid)) {
                         const tnrect = nodePositions.get(target.dispid);
                         const tnx = tnrect.x;
                         const tny = tnrect.y;
@@ -885,14 +923,14 @@ class TRRBTEditor {
                     const midy = 0.5 * (ny + nh + cny);
 
                     const edge = this.layout_horizontal ?
-                        [nx + nw / 2, ny + nh,
-                        nx + nw / 2, midy,
-                        cnx + cnw / 2, midy,
-                        cnx + cnw / 2, cny] :
-                        [nx + nw, ny + nh / 2,
-                            midx, ny + nh / 2,
-                            midx, cny + cnh / 2,
-                            cnx, cny + cnh / 2];
+                          [nx + nw / 2, ny + nh,
+                           nx + nw / 2, midy,
+                           cnx + cnw / 2, midy,
+                           cnx + cnw / 2, cny] :
+                          [nx + nw, ny + nh / 2,
+                           midx, ny + nh / 2,
+                           midx, cny + cnh / 2,
+                           cnx, cny + cnh / 2];
 
                     if (stackNodes.has(child.dispid)) {
                         stackEdges.push(edge);
@@ -953,7 +991,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['rewrite', 'match', 'set-board', 'layer-template', 'append-rows', 'append-cols', 'display-board'].indexOf(node.type) >= 0) {
+        } else if (['rewrite', 'rewrite-all', 'match', 'match-times', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
             ctx.fill();
@@ -1035,9 +1073,9 @@ class TRRBTEditor {
                     const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
                     const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
                     ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
-                        ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
-                        width,
-                        texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
+                                   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+                                   width,
+                                   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
         }
@@ -1115,6 +1153,27 @@ class TRRBTEditor {
         }
     }
 
+    navigateToNode(node) {
+        this.collapseNodes(this.game.tree, true, true);
+        this.collapseNodes(node, true, false);
+        let uncollapse = node;
+        while (uncollapse !== null) {
+            this.collapseNodes(uncollapse, false, false);
+            uncollapse = this.findNodeParent(uncollapse);
+        }
+
+        this.updatePositionsAndDraw(true);
+        this.doNodeDrawPositionUpdate();
+
+        const rect = this.nodeDrawPositions.get(node.dispid);
+        if (rect) {
+            this.resetXform();
+            this.translateXform(this.canvas.width / 2 / PIXEL_RATIO - rect.x - 0.5 * rect.w, this.canvas.height / 2 / PIXEL_RATIO - rect.y - 0.5 * rect.h);
+        }
+
+        this.updatePropertyEditor(node, false)
+    }
+
     highlightProperty(id, isError) {
         let elem = document.getElementById(id);
         elem.style.backgroundColor = (isError ? EDT_COLOR_ERROR : EDT_COLOR_CHANGE);
@@ -1152,15 +1211,21 @@ class TRRBTEditor {
     parseTextProperty(id, how) {
         let value = document.getElementById(id).value;
         value = value.trim();
-        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_WORD) {
+        if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_FLOAT || how === EDT_PARSE_TEXT_WORD) {
             if (value.match(/\s+/) !== null) {
                 return { ok: false, error: 'Cannot have spaces' };
             } else if (how === EDT_PARSE_TEXT_INT && value != '') {
                 const asInt = parseInt(value, 10);
-                if (isNaN(asInt) || asInt < 1 || asInt > 100) {
-                    return { ok: false, error: 'Must be an integer between 1 and 100' };
+                if (isNaN(asInt) || asInt <= 0 || asInt >= 100) {
+                    return { ok: false, error: 'Must be an integer greater than 0 and less than 100' };
                 }
                 return { ok: true, value: asInt };
+            } else if (how === EDT_PARSE_TEXT_FLOAT && value != '') {
+                const asFloat = parseFloat(value);
+                if (isNaN(asFloat) || asFloat <= 0 || asFloat >= 100) {
+                    return { ok: false, error: 'Must be a number greater than 0 and less than 100' };
+                }
+                return { ok: true, value: asFloat };
             }
         }
         return { ok: true, value: value };
@@ -1384,9 +1449,9 @@ class TRRBTEditor {
         }
 
         const changed =
-            force ||
-            (this.propertyNodes === null && node !== null) ||
-            (this.propertyNodes !== null && node !== this.propertyNodes.node);
+              force ||
+              (this.propertyNodes === null && node !== null) ||
+              (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
         if (!changed) {
             return;
@@ -1436,7 +1501,48 @@ class TRRBTEditor {
 
         this.appendThisEmojiPicker(ed);
 
-        this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(this.game.tree, node) } : null;
+        if (true) {
+            const findDispidNode = bind0(this, 'findDispidNode')
+            const navigateToNode = bind0(this, 'navigateToNode')
+            let select = document.createElement('select');
+            ed.appendChild(select);
+            select.id = 'navigate';
+            select.onchange = function () {
+                const dispid = Number(select.options[select.selectedIndex].value);
+                select.selectedIndex = 0;
+                const node = findDispidNode(dispid);
+                if (node !== null) {
+                    navigateToNode(node);
+                }
+            };
+
+            let choicesNid = []
+            for (const [key, node] of this.nidToNode) {
+                choicesNid.push([EDT_NODE_PROP_NAMES['nid'].name + ': ' + key, node.dispid]);
+            }
+            choicesNid.sort();
+
+            let choicesCmt = []
+            for (const [key, node] of this.commentToNode) {
+                choicesCmt.push([EDT_NODE_PROP_NAMES['comment'].name + ': ' + key, node.dispid]);
+            }
+            choicesCmt.sort();
+
+            let choices = [...choicesNid, ...choicesCmt];
+            let option = document.createElement('option');
+            option.innerHTML = '- Navigate -';
+            option.value = null;
+            select.add(option);
+            for (const [text, dispid] of choices) {
+                let option = document.createElement('option');
+                option.innerHTML = graphemeTrunc(text, 40);
+                option.value = dispid;
+                select.add(option);
+            }
+            appendBr(ed, true);
+        }
+
+        this.propertyNodes = (node !== null) ? { node: node, parent: this.findNodeParent(node) } : null;
         if (this.propertyNodes) {
             const parent = this.propertyNodes.parent;
 
@@ -1525,6 +1631,9 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('times')) {
                 this.appendTextProperty(list, 'prop_times', EDT_NODE_PROP_NAMES['times'].name, EDT_NODE_PROP_NAMES['times'].help, node.times);
+            }
+            if (node.hasOwnProperty('delay')) {
+                this.appendTextProperty(list, 'prop_delay', EDT_NODE_PROP_NAMES['delay'].name, EDT_NODE_PROP_NAMES['delay'].help, node.delay);
             }
             if (node.hasOwnProperty('what')) {
                 this.appendTextProperty(list, 'prop_what', EDT_NODE_PROP_NAMES['what'].name, EDT_NODE_PROP_NAMES['what'].help, node.what);
@@ -1622,24 +1731,25 @@ class TRRBTEditor {
 
     validateProperties() {
         const SAVE_PROPS =
-            [
-                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-                ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['withs', bind0(this, 'parseListProperty'), false],
-                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-                ['rhs', bind0(this, 'parsePatternProperty'), undefined]
-            ];
+              [
+                  ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                  ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                  ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+                  ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                  ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
+                  ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['withs', bind0(this, 'parseListProperty'), false],
+                  ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                  ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                  ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                  ['rhs', bind0(this, 'parsePatternProperty'), undefined]
+              ];
 
         let node = this.propertyNodes?.node;
 
@@ -1650,9 +1760,9 @@ class TRRBTEditor {
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             let full_id = 'prop_' + propid
             if ((EDT_GAME_PROP_NAMES[propid]
-                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
+                 || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
                 && document.getElementById(full_id)
-            ) {
+               ) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     this.highlightProperty('prop_' + propid, true);
@@ -1755,17 +1865,16 @@ class TRRBTEditor {
         }
     }
 
-    findNodeParent(from, node) {
-        if (from.hasOwnProperty('children')) {
-            for (let child of from.children) {
-                if (child === node) {
-                    return from;
-                }
-                const found = this.findNodeParent(child, node);
-                if (found !== null) {
-                    return found;
-                }
-            }
+    findNodeParent(node) {
+        if (this.parentNodes.has(node)) {
+            return this.parentNodes.get(node);
+        }
+        return null;
+    }
+
+    findDispidNode(dispid) {
+        if (this.dispidToNode.has(dispid)) {
+            return this.dispidToNode.get(dispid);
         }
         return null;
     }
@@ -1824,6 +1933,9 @@ class TRRBTEditor {
                 this.updatePropertyEditor(null);
             }
         }
+
+        this.collapseNodes(node, false, reparentChildren);
+        this.updateTreeStructureAndDraw(false, false);
     }
 
     onNodeDeleteChildren() {
@@ -1836,7 +1948,7 @@ class TRRBTEditor {
 
         node.children = [];
 
-        this.collapseNodes(node, false);
+        this.collapseNodes(node, false, true);
         this.updateTreeStructureAndDraw(false, false);
     }
 

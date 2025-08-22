@@ -1,5 +1,5 @@
 ---
-name: eights-randomize
+name: eights-shuffle
 tree:
   type: order
   children:
@@ -23,5 +23,5 @@ tree:
                4 5 6;
                7 8 _;
   - type: x-file
-    file: eights
+    file: eights-gameloop
     target: gameloop

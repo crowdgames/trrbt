@@ -22,7 +22,7 @@ tree:
       - K
       children:
       - type: player
-        pid: 1
+        pid: "1"
         children:
         - type: rewrite
           comment: player stays still
@@ -49,12 +49,12 @@ tree:
       - type: x-link
         target: plugin
       - type: win
-        pid: 1
+        pid: "1"
         children:
         - type: match
           pattern: W
       - type: lose
-        pid: 1
+        pid: "1"
         children:
         - type: none
           children:

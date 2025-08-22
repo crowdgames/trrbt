@@ -138,25 +138,27 @@ function appendList(parent) {
 
 
 
-function find_file_node_ids(file, node, resolve_file_to_game, file_to_nid_to_node) {
+function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_to_node) {
     if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-        if (!file_to_nid_to_node.has(file)) {
-            file_to_nid_to_node.set(file, new Map());
-        }
-        if (!file_to_nid_to_node.get(file).has(node.nid)) {
-            file_to_nid_to_node.get(file).set(node.nid, node);
+        if (!nid_to_node.has(node.nid)) {
+            nid_to_node.set(node.nid, node);
         }
     }
     if (node.hasOwnProperty('children')) {
         for (let child of node.children) {
-            find_file_node_ids(file, child, resolve_file_to_game, file_to_nid_to_node);
+            find_file_node_ids(file, child, resolve_file_to_game, file_to_tree, nid_to_node);
         }
     }
     if (node.hasOwnProperty('file') && node.hasOwnProperty('target')) {
-        if (resolve_file_to_game != null && !file_to_nid_to_node.has(node.file)) {
-            const game_tree = resolve_file_to_game(node.file)
-            if (game_tree) {
-                find_file_node_ids(node.file, game_tree, resolve_file_to_game, file_to_nid_to_node);
+        if (resolve_file_to_game != null) {
+            if (!file_to_tree.has(node.file)) {
+                const game_tree = resolve_file_to_game(node.file);
+                if (game_tree) {
+                    file_to_tree.set(node.file, game_tree);
+                    find_file_node_ids(node.file, game_tree, resolve_file_to_game, file_to_tree, nid_to_node);
+                } else {
+                    file_to_tree.set(node.file, null);
+                }
             }
         }
     }
@@ -180,6 +182,24 @@ function splitGraphemes(str) {
 function graphemeLength(str) {
     const graphemes = splitGraphemes(str);
     return graphemes.length;
+}
+
+function graphemeTrunc(str, len) {
+    const graphemes = splitGraphemes(str);
+    if (graphemes.length <= len) {
+        return str;
+    } else {
+        let trunc = '';
+        let trunclen = 0;
+        for (const ch of graphemes) {
+            trunc += ch;
+            trunclen += 1;
+            if (trunclen + 3 >= len) {
+                break;
+            }
+        }
+        return trunc + '...';
+    }
 }
 
 function getTileSize(patterns) {
@@ -218,6 +238,39 @@ function joinRow(row, tileSize, alwaysPad) {
     }
 
     return rowStr;
+}
+
+function patternReplace(patt, regex, func) {
+    let ret = [];
+    for (let row of patt) {
+        let ret_row = [];
+        for (let tile of row) {
+            ret_row.push(tile.replace(regex, func));
+        }
+        ret.push(ret_row);
+    }
+    return ret;
+}
+
+function patternReplaceRotate(patt) {
+    const regex = new RegExp('(\u2190|\u2191|\u2192|\u2193)', 'g');
+    const func = function (mm) { if (mm == '\u2190') return '\u2191'; else if (mm == '\u2191') return '\u2192'; else if (mm == '\u2192') return '\u2193'; else return '\u2190'};
+
+    return patternReplace(patt, regex, func);
+}
+
+function patternReplaceMirror(patt) {
+    const regex = new RegExp('(\u2190|\u2192)', 'g');
+    const func = function (mm) { if (mm == '\u2190') return '\u2192'; else return '\u2190'};
+
+    return patternReplace(patt, regex, func);
+}
+
+function patternReplaceFlip(patt) {
+    const regex = new RegExp('(\u2191|\u2193)', 'g');
+    const func = function (mm) { if (mm == '\u2191') return '\u2193'; else return '\u2191'};
+
+    return patternReplace(patt, regex, func);
 }
 
 
@@ -315,7 +368,7 @@ function xform_rule_prune(node) {
 function xform_rule_mirror_fn(remorig) {
     function xform_rule_mirror(node) {
         function pattern_func(patt) {
-            return patt.slice(0).map(row => row.slice(0).reverse());
+            return patternReplaceMirror(patt.slice(0).map(row => row.slice(0).reverse()));
         }
         let button_obj = { 'left': 'right', 'right': 'left' };
 
@@ -327,7 +380,7 @@ function xform_rule_mirror_fn(remorig) {
 function xform_rule_rotate_fn(remorig) {
     function xform_rule_rotate(node) {
         function pattern_func(patt) {
-            return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
+            return patternReplaceRotate(patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse()));
         }
         let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
 
@@ -339,7 +392,7 @@ function xform_rule_rotate_fn(remorig) {
 function xform_rule_spin_fn(remorig) {
     function xform_rule_spin(node) {
         function pattern_func(patt) {
-            return patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse());
+            return patternReplaceRotate(patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse()));
         }
         let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
 
@@ -384,7 +437,7 @@ function xform_rule_skew_fn(remorig) {
 function xform_rule_flip_fn(remorig) {
     function xform_rule_flip(node) {
         function pattern_func(patt) {
-            return patt.slice(0).reverse();
+            return patternReplaceFlip(patt.slice(0).reverse());
         }
         let button_obj = { 'up': 'down', 'down': 'up' };
 
@@ -395,22 +448,14 @@ function xform_rule_flip_fn(remorig) {
 
 function xform_rule_swap_only_fn(wht, wth) {
     const swap_regex = new RegExp('(' + wht + '|' + wth + ')', 'g');
-    const swap_fn = function (mm) { return mm === wht ? wth : wht; };
+    const swap_func = function (mm) { return mm === wht ? wth : wht; };
 
     function pattern_func(patt) {
-        let ret = [];
-        for (let row of patt) {
-            let ret_row = [];
-            for (let tile of row) {
-                ret_row.push(tile.replace(swap_regex, swap_fn));
-            }
-            ret.push(ret_row);
-        }
-        return ret;
+        return patternReplace(patt, swap_regex, swap_func);
     }
 
     function pid_func(pid) {
-        return pid.replace(swap_regex, swap_fn);
+        return pid.replace(swap_regex, swap_func);
     }
 
     function rule_swap_only(node) {
@@ -421,24 +466,19 @@ function xform_rule_swap_only_fn(wht, wth) {
 }
 
 function xform_rule_replace_only_fn(wht, wths) {
-    function pattern_func_fn(which) {
+    function pattern_func_fn(wth) {
         function pattern_func(patt) {
-            let ret = [];
-            for (let row of patt) {
-                let ret_row = [];
-                for (let tile of row) {
-                    ret_row.push(tile.replaceAll(wht, which));
-                }
-                ret.push(ret_row);
-            }
-            return ret;
+            const repl_regex = new RegExp(wht, 'g');
+            const repl_func = function (mm) { return wth; };
+
+            return patternReplace(patt, repl_regex, repl_func);
         }
         return pattern_func;
     }
 
-    function pid_func_fn(which) {
+    function pid_func_fn(wth) {
         function pid_func(pid) {
-            return pid.replaceAll(wht, which);
+            return pid.replaceAll(wht, wth);
         }
         return pid_func;
     }
@@ -448,16 +488,16 @@ function xform_rule_replace_only_fn(wht, wths) {
         if (node.type === 'x-unroll-replace') {
             if (node.what === wht) {
                 let new_node = { type: 'order', children: [] };
-                for (const which of wths) {
-                    new_node.children.push({ type: 'x-replace', what: node.what, withs: [which], children: deepcopyobj(node.children) });
+                for (const wth of wths) {
+                    new_node.children.push({ type: 'x-replace', what: node.what, withs: [wth], children: deepcopyobj(node.children) });
                 }
                 ret.push(new_node);
             } else {
                 ret.push(node);
             }
         } else {
-            for (const which of wths) {
-                ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(which), pid_func_fn(which), null));
+            for (const wth of wths) {
+                ret.push(xform_rule_apply(shallowcopyobj(node), pattern_func_fn(wth), pid_func_fn(wth), null));
             }
         }
         return xform_unique(ret);
@@ -466,7 +506,7 @@ function xform_rule_replace_only_fn(wht, wths) {
     return rule_replace_only;
 }
 
-function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix) {
+function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix) {
     let ret_nodes = [];
 
     node = shallowcopyobj(node);
@@ -474,25 +514,17 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
     const ntype = node.type;
 
     function get_link_or_file_nodes() {
-        let file = null;
-        if (node.hasOwnProperty('file')) {
-            file = node.file;
-        }
-
-        const nid_to_node = file_to_nid_to_node.get(file);
-        if (nid_to_node) {
-            if (node.hasOwnProperty('target')) {
-                const target = nid_to_node.get(node.target);
-                if (target) {
-                    const linked_id = JSON.stringify([file, node.target]);
-                    if (already_linked.indexOf(linked_id) >= 0) {
-                        // pass
-                        // TODO: ? add specialized node ?
-                    } else {
-                        const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node.dispid : undefined;
-                        const linked = xform_apply_to_node(deepcopyobj(target), xforms, file_to_nid_to_node, [linked_id].concat(already_linked), apply_xform, linked_dispid_suffix);
-                        return linked;
-                    }
+        if (node.hasOwnProperty('target')) {
+            const target = nid_to_node.get(node.target);
+            if (target) {
+                const linked_id = node.target;
+                if (already_linked.indexOf(linked_id) >= 0) {
+                    // pass
+                    // TODO: ? add specialized node ?
+                } else {
+                    const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node.dispid : undefined;
+                    const linked = xform_apply_to_node(deepcopyobj(target), xforms, file_to_tree, nid_to_node, [linked_id].concat(already_linked), apply_xform, linked_dispid_suffix);
+                    return linked;
                 }
             }
         }
@@ -512,7 +544,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
             if (ret_node.hasOwnProperty('children')) {
                 let new_children = []
                 for (const child of ret_node.children) {
-                    const child_xformed = xform_apply_to_node(child, xforms, file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
+                    const child_xformed = xform_apply_to_node(child, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                     new_children.push(...child_xformed);
                 }
                 ret_node.children = new_children;
@@ -559,7 +591,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
 
             for (const child of node.children) {
                 let dispid_suffix = 0;
-                const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
+                const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                 for (let child_xformed of children_xformed) {
                     if (dispid_use_or_prefix !== undefined) {
                         if (dispid_suffix > 0) {
@@ -570,7 +602,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                     ret_nodes.push(child_xformed);
                 }
             }
-        } else if (['player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'display-board', 'x-unroll-replace'].indexOf(ntype) >= 0) {
+        } else if (['player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'rewrite-all', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'match-times', 'display-board', 'x-unroll-replace'].indexOf(ntype) >= 0) {
             let xformed = [node];
             for (let xform of xforms) {
                 let new_xformed = [];
@@ -586,7 +618,7 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
                 if (ret_node.hasOwnProperty('children')) {
                     let new_children = []
                     for (const child of ret_node.children) {
-                        const child_xformed = xform_apply_to_node(child, xforms, file_to_nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
+                        const child_xformed = xform_apply_to_node(child, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                         new_children.push(...child_xformed);
                     }
                     ret_node.children = new_children;
@@ -601,11 +633,12 @@ function xform_apply_to_node(node, xforms, file_to_nid_to_node, already_linked, 
 }
 
 function xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispids) {
-    let file_to_nid_to_node = new Map();
+    let file_to_tree = new Map();
+    let nid_to_node = new Map();
 
-    find_file_node_ids(null, tree, resolve_file_to_game, file_to_nid_to_node);
+    find_file_node_ids(null, tree, resolve_file_to_game, file_to_tree, nid_to_node);
 
-    return xform_apply_to_node(tree, [xform_rule_identity], file_to_nid_to_node, [], apply_xform, use_dispids ? null : undefined)[0];
+    return xform_apply_to_node(tree, [xform_rule_identity], file_to_tree, nid_to_node, [], apply_xform, use_dispids ? null : undefined)[0];
 }
 
 

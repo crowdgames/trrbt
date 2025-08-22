@@ -2,6 +2,7 @@ import copy
 import io
 import json
 import os
+import random
 import sys
 import yaml
 
@@ -40,6 +41,7 @@ ND_REWRITE         = 'rewrite'
 ND_SET_BOARD       = 'set-board'
 
 ND_MATCH           = 'match'
+ND_MATCH_TIMES     = 'match-times'
 
 ND_LAYER_TEMPLATE  = 'layer-template'
 ND_APPEND_ROWS     = 'append-rows'
@@ -124,7 +126,7 @@ def require_js():
 
         js += '() => { return {\n'
         js += '  xform_apply_to_tree:xform_apply_to_tree,\n'
-        js += '  new_engine:(game)=>{ let engine = new TRRBTEngine(game); engine.onLoad(); return engine; }\n'
+        js += '  new_engine:(game, undoEnabled)=>{ let engine = new TRRBTEngine(game, undoEnabled); engine.onLoad(); return engine; }\n'
         js += '} };\n'
 
         _js_common = pythonmonkey.eval(js)()
@@ -135,11 +137,28 @@ def xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispids):
 
     return _js_common['xform_apply_to_tree'](tree, resolve_file_to_game, apply_xform, use_dispids)
 
-def new_engine(game):
+def new_engine(game, undoEnabled):
     global _js_common
     require_js()
 
-    return _js_common['new_engine'](game)
+    return _js_common['new_engine'](game, undoEnabled)
+
+def setup_engine(game, undoEnabled, board_init, random_seed):
+    engine = new_engine(game, undoEnabled)
+
+    max_tile_width = node_max_tile_width(game.tree)
+
+    if board_init is not None:
+        engine.setBoard(board_init)
+
+    if random_seed is not None:
+        print('random seed:', random_seed)
+        engine.setRandomSeed(random_seed)
+        rng = random.Random(random_seed)
+    else:
+        rng = random.Random(0)
+
+    return engine, max_tile_width, rng
 
 
 
@@ -199,6 +218,8 @@ def layer_pattern_to_string(lpatt, filt, lpre, lpost, lsep, ppre, ppost, colsep,
         ret += ppost
     return ret
 
+
+
 def listify(patt):
     return list([list(row) for row in patt])
 
@@ -210,6 +231,21 @@ def intify(s):
         return int(s)
     else:
         return s
+
+def objify(obj):
+    if type(obj).__name__ == 'dict':
+        new_obj = {}
+        for key, val in obj.items():
+            new_obj[key] = objify(val)
+        return new_obj
+    elif type(obj).__name__ == 'list':
+        return [objify(elem) for elem in obj]
+    elif type(obj).__name__ == 'tuple':
+        return tuple([objify(elem) for elem in obj])
+    else:
+        return obj
+
+
 
 def pad_pattern(patt):
     max_row_len = max([len(row) for row in patt])
@@ -233,7 +269,7 @@ def node_reshape_tiles(node):
         node[NKEY_LHS] = entry_to_layer_pattern(node[NKEY_LHS], node[NKEY_LAYER] if NKEY_LAYER in node else DEFAULT_LAYER)
         node[NKEY_RHS] = entry_to_layer_pattern(node[NKEY_RHS], node[NKEY_LAYER] if NKEY_LAYER in node else DEFAULT_LAYER)
 
-    if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
+    if node[NKEY_TYPE] in [ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
         node[NKEY_PATTERN] = entry_to_layer_pattern(node[NKEY_PATTERN], node[NKEY_LAYER] if NKEY_LAYER in node else DEFAULT_LAYER)
 
     if NKEY_CHILDREN in node.keys():
@@ -245,7 +281,7 @@ def node_check(node, files_resolved, xformed):
     ntype = node[NKEY_TYPE]
 
     if xformed:
-        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+        if ntype not in [ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
             raise RuntimeError(f'node type {ntype} must not be in xformed tree')
 
     if ntype == ND_PLAYER:
@@ -263,7 +299,7 @@ def node_check(node, files_resolved, xformed):
         else:
             if NKEY_CHILDREN in node.keys():
                 raise RuntimeError(f'node type {ntype} must not have {NKEY_CHILDREN}')
-    elif ntype in [NDX_LINK, NDX_FILE, ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+    elif ntype in [NDX_LINK, NDX_FILE, ND_REWRITE, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
         if NKEY_CHILDREN in node.keys():
             raise RuntimeError(f'node type {ntype} must not have {NKEY_CHILDREN}')
     else:
@@ -281,7 +317,7 @@ def node_max_tile_width(node):
         tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_LHS]))
         tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_RHS]))
 
-    if node[NKEY_TYPE] in [ND_MATCH, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
+    if node[NKEY_TYPE] in [ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS]:
         tile_len = max(tile_len, layer_pattern_max_tile_width(node[NKEY_PATTERN]))
 
     if NKEY_CHILDREN in node.keys():
@@ -301,7 +337,7 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
     lt = 'e0'
     dk = 'd0'
 
-    if ntype in [ND_REWRITE, ND_MATCH, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
+    if ntype in [ND_REWRITE, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD]:
         nshape = 'box'
 
         nstyle += ',rounded'
@@ -309,11 +345,13 @@ def node_print_gv(node_lines, edge_lines, node, depth, nid_to_node):
         nlabel += '<TABLE BORDER="0">'
         nlabel += '<TR><TD COLSPAN="3">'
         nlabel += ntype
+        if ntype in [ND_MATCH_TIMES]:
+            nlabel += ':' + str(intify(node[NKEY_TIMES]))
         nlabel += '</TD></TR>'
 
         if ntype in [ND_REWRITE, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS]:
             nfill = f'#{dk}{lt}{dk}'
-        elif ntype in [ND_MATCH]:
+        elif ntype in [ND_MATCH, ND_MATCH_TIMES]:
             nfill = f'#{dk}{lt}{lt}'
         elif ntype in [ND_DISPLAY_BOARD]:
             nfill = f'#{dk}{dk}{dk}'
@@ -574,6 +612,10 @@ def game_print_gv(game):
 def game_print_json(game):
     print(json.dumps({'name':game.name, 'tree':game.tree}))
 
+def jsonload(filename):
+    with open(filename, 'rt') as f:
+        return json.load(f)
+
 def yamlload(filename):
     with open(filename, 'rt') as f:
         return yaml.safe_load(f)
@@ -602,7 +644,12 @@ def file_to_game_in_folder(folder):
     return file_to_game
 
 def yaml2bt(filename, resolve, xform):
-    data = processyamlgame(yamlload(filename))
+    if filename.endswith('.yaml'):
+        data = processyamlgame(yamlload(filename))
+    elif filename.endswith('.json'):
+        data = jsonload(filename)
+    else:
+        raise RuntimeError(f'unrecognized game file extension')
 
     name = data[FKEY_NAME]
     root = data[FKEY_TREE]

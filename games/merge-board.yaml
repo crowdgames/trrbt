@@ -1,0 +1,13 @@
+---
+name: merge-board
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern: "1 1 _ _;
+              2 1 _ _;
+              2 1 1 1;
+              2 2 1 1;"
+  - type: x-file
+    file: merge-gameloop
+    target: gameloop
