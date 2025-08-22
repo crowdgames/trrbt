@@ -1,6 +1,21 @@
-# trrbt
+# Game Behaviour Trees Using Tile Rewrite Rules
 
-## General Setup
+## Web Interface
+
+To start the web interface, run the following:
+```
+bash web/make_games.sh
+open web/public/index.html
+```
+
+Click the Download Introductory Materials button for a brief tutorial video and editor guide.
+
+By default, only games included in the study are in the dropdown. 
+
+Additional game files are in games and web/games_web.
+You can add more games by adding the game name to the TEMPLATES list in web/public/selector.js. Games from games_web can also be imported from JSON.
+
+## CLI
 
 To setup, you will need pipenv:
 
@@ -15,13 +30,13 @@ pipenv shell
 ```
 
 
-## Game Description Visualization
+### Game Description Visualization
 
 To visualize game descriptions you will also need [GraphViz](https://graphviz.org/) installed.
 Then run `make` to create visualizations in the `out` folder.
 
 
-## Playing Games
+### Playing Games
 
 To play a game, run `python game.py games/NAME.yaml`.
 
