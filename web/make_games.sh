@@ -1,7 +1,7 @@
 set -ex
 
-rm -rf games
-mkdir -p games
+rm games/games.js
+rm public/games/games.js
 
 python copy_game.py games/games.js games_web new_game.json
 python copy_game.py games/games.js games_web connect4-emoji.json
@@ -15,6 +15,13 @@ python copy_game.py games/games.js games_web lights_out.json
 python copy_game.py games/games.js games_web conway.json
 python copy_game.py games/games.js games_web soko-demo.json
 python copy_game.py games/games.js games_web soko_enemy-incomplete.json
+python copy_game.py games/games.js games_web blocksworld.json
+python copy_game.py games/games.js games_web doors.json
+python copy_game.py games/games.js games_web pong.json
+python copy_game.py games/games.js games_web stephens_sausage_roll.json
+python copy_game.py games/games.js games_web tm-parens.json
+python copy_game.py games/games.js games_web trogue.json
+python copy_game.py games/games.js games_web x_unroll_replace.json
 
 python make_game.py games/games.js ../games ttt.yaml
 python make_game.py games/games.js ../games connect4.yaml
@@ -78,3 +85,5 @@ python make_game.py games/games.js ../games limerick_levels/limerick_28.yaml
 python make_game.py games/games.js ../games limerick_levels/limerick_29.yaml
 python make_game.py games/games.js ../games limerick_levels/limerick_30.yaml
 python make_game.py games/games.js ../games limerick_levels/limerick_31.yaml
+
+cp games/games.js public/games/games.js

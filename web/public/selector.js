@@ -48,9 +48,14 @@ function setOptions(select) {
     for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS).sort()) {
         SEL_addOption(game + " (local)", game, ['local']);
     }
+    console.log(Object.getOwnPropertyNames(GAME_SETUPS))
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
         if (TEMPLATES.includes(game)) {
-            SEL_addOption(game, game);
+            SEL_addOption("(study) " + game, game);
+        }
+        else {
+            if (game != "NEW")
+                SEL_addOption(game, game);
         }
     }
 }
