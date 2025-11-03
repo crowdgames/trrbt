@@ -1,0 +1,13 @@
+---
+name: eights-boards
+start:
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern: 1 2 3;
+             4 _ 6;
+             7 5 8;
+  - type: x-file
+    file: eights-gameloop
+    target: gameloop

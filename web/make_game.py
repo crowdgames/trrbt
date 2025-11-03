@@ -1,48 +1,10 @@
 import argparse
-import base64
 import json
 import os
-import PIL.Image
-import struct
 import sys
-import zlib
 sys.path.append('..')
 import util
-
-def get_sprite_data(sprites):
-    sprite_data = {}
-
-    sprite_info = util.yamlload(sprites)
-
-    sprite_map = {}
-    sprite_cache = {}
-    for tile, filename in sprite_info['sprites'].items():
-        if filename == '.':
-            sprite_map[tile] = None
-        else:
-            if filename not in sprite_cache:
-                img = PIL.Image.open(os.path.join(os.path.dirname(sprites), filename + '.png')).convert('RGBA')
-                img_data = sum(img.getdata(), ())
-                img_data = struct.pack('%dB' % len(img_data), *img_data)
-                img_data = zlib.compress(img_data)
-                img_data = base64.b64encode(img_data)
-                img_data = img_data.decode('ascii')
-                sprite_cache[filename] = { 'size':img.size, 'data': img_data }
-            sprite_map[tile] = filename
-
-    sprite_data['images'] = sprite_cache
-    sprite_data['tiles'] = sprite_map
-
-    if 'back' in sprite_info:
-        sprite_data['back'] = util.string_to_pattern(sprite_info['back'])
-
-    if 'players' in sprite_info:
-        sprite_data['players'] = {}
-        for pid, colors in sprite_info['players'].items():
-            color = colors.split(';')[0]
-            sprite_data['players'][pid] = [int(color[ii:ii+2], 16) for ii in (0, 2, 4)]
-
-    return sprite_data
+import webutil
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Convert game YAML to JSON.')
@@ -56,7 +18,7 @@ if __name__ == '__main__':
 
     game = util.yaml2bt(os.path.join(args.gamefolder, args.filename), args.resolve, args.xform)
 
-    sprite_data = get_sprite_data(os.path.join(args.gamefolder, args.sprites)) if args.sprites else None
+    sprite_data = webutil.get_sprite_data(os.path.join(args.gamefolder, args.sprites)) if args.sprites else None
 
     game_file = os.path.splitext(args.filename)[0]
     game_json = json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data})

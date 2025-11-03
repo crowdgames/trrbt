@@ -44,7 +44,7 @@ tree:
         - type: x-spin
           children:
           - type: player
-            pid: 1
+            pid: "1"
             children:
             - type: rewrite
               lhs: P
@@ -302,7 +302,7 @@ tree:
                 lhs: a16
                 rhs: a
           - type: lose
-            pid: 1
+            pid: "1"
             children:
             - type: none
               children:

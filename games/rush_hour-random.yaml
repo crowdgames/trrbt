@@ -1,5 +1,5 @@
 ---
-name: rush hour-randomize
+name: rush hour-random
 tree:
   type: order
   children:
@@ -58,5 +58,5 @@ tree:
     - type: match
       pattern: CR CR __ __ __ __ OO
   - type: x-file
-    file: rushhour
+    file: rush_hour-gameloop
     target: gameloop

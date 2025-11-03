@@ -232,7 +232,7 @@ tree:
             file: limerick_levels/limerick_31
             target: board_31
         - type: win
-          pid: 1
+          pid: "1"
           children:
           - type: none
             children:

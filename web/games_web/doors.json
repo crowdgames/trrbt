@@ -1,0 +1,137 @@
+{
+    "name": "Doors",
+    "sprites": null,
+    "tree": {
+        "type": "order",
+        "comment": "",
+        "nid": "",
+        "children": [
+            {
+                "type": "x-replace",
+                "comment": "key shared behaviour",
+                "friendly": "replace-chars",
+                "nid": "",
+                "children": [
+                    {
+                        "type": "all",
+                        "friendly": "order-until-fail",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "match",
+                                "friendly": "find-pattern",
+                                "pattern": {
+                                    "main": [
+                                        [
+                                            "Ki"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "player",
+                                "friendly": "player-choice",
+                                "comment": "",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "rewrite",
+                                        "comment": "",
+                                        "nid": "",
+                                        "button": "",
+                                        "lhs": {
+                                            "main": [
+                                                [
+                                                    "P",
+                                                    "DK"
+                                                ]
+                                            ]
+                                        },
+                                        "rhs": {
+                                            "main": [
+                                                [
+                                                    "_",
+                                                    "P"
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "pid": ""
+                            }
+                        ]
+                    }
+                ],
+                "what": "K",
+                "withs": [
+                    "A",
+                    "B"
+                ]
+            },
+            {
+                "type": "x-unroll-replace",
+                "comment": "key shared behaviour",
+                "friendly": "replace-chars",
+                "nid": "",
+                "children": [
+                    {
+                        "type": "all",
+                        "friendly": "order-until-fail",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "match",
+                                "friendly": "find-pattern",
+                                "pattern": {
+                                    "main": [
+                                        [
+                                            "Ki"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "player",
+                                "friendly": "player-choice",
+                                "comment": "",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "rewrite",
+                                        "comment": "",
+                                        "nid": "",
+                                        "button": "",
+                                        "lhs": {
+                                            "main": [
+                                                [
+                                                    "P",
+                                                    "DK"
+                                                ]
+                                            ]
+                                        },
+                                        "rhs": {
+                                            "main": [
+                                                [
+                                                    "_",
+                                                    "P"
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "pid": ""
+                            }
+                        ]
+                    }
+                ],
+                "what": "K",
+                "withs": [
+                    "A",
+                    "B"
+                ]
+            }
+        ]
+    }
+}

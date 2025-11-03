@@ -1,0 +1,15 @@
+---
+name: move-right
+tree:
+  type: order
+  children:
+  - type: loop-until-all
+    children:
+    - type: rewrite
+      lhs: X _
+      rhs: _ v
+  - type: loop-until-all
+    children:
+    - type: rewrite
+      lhs: v
+      rhs: X

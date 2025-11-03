@@ -1,0 +1,13 @@
+---
+name: peg solitaire-boards
+start:
+tree:
+  type: order
+  children:
+  - type: set-board
+    pattern: O O _;
+             _ _ O;
+             _ _ _;
+  - type: x-file
+    file: peg_solitaire-gameloop
+    target: gameloop
