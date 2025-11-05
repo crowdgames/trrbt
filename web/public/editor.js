@@ -2418,7 +2418,6 @@ class TRRBTEditor {
                   ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                   ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
                   ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
-                  ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_DEC],
                 ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                   ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                   ['withs', bind0(this, 'parseListProperty'), false],

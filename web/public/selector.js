@@ -49,9 +49,9 @@ function setOptions(select) {
         SEL_addOption(game + " (local)", game, ['local']);
     }
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
-        if (TEMPLATES.includes(game)) {
-            SEL_addOption(game, game);
-        }
+        // if (TEMPLATES.includes(game)) {
+        SEL_addOption(game, game);
+        // }
     }
 }
 

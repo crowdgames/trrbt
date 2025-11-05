@@ -107,6 +107,24 @@
         btn.innerHTML = "-";
       }
     }
+    function exportJson() {
+      data = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS"));
+      stringData = JSON.stringify(data);
+      b64Data = btoa(unescape(encodeURIComponent(stringData)));
+      console.log('game json: ' + b64Data);
+      msg = "Game JSON can also be found in the JavaScript console logs (Chrome: View > Developer > JavaScript Console; Firefox: Tools > Browser Tools > Web Developer Tools > Console)";
+      failmsg = "Unable to copy JSON to clipboard. " + msg;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(b64Data).then(function () {
+          alert('Game JSON copied to clipboard. ' + msg);
+        }, function (err) {
+          alert(failmsg);
+        });
+      } else {
+        alert(failmsg);
+      }
+    }
     function exportStudyData() {
       telemetryData = JSON.parse(localStorage.getItem("TELEMETRY_DATA"));
       gameData = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS"));
@@ -157,8 +175,9 @@
     <div id="toolbar">
       <div id="selectordiv"></div>
       <div>
-        <button onclick="exportStudyData()">Export Study Data</button>
-        <button onclick="downloadIntroMaterials()">Download Introductory Materials</button>
+        <button onclick="exportJson()">Export Local JSON</button>
+        <!-- <button onclick="exportStudyData()">Export Study Data</button> -->
+        <!-- <button onclick="downloadIntroMaterials()">Download Introductory Materials</button> -->
       </div>
     </div>
     <div id="editwindow">
@@ -211,15 +230,17 @@
           </div>
         </div>
         <div class="card-column" id="editorcolumn">
-          <div class="card-bar">
-            <span class="card-title">Editor</span>
-            <div class="card-button-group">
-              <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
-              <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
-              <!-- <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button> -->
+          <div id="editorcard" class="card" style="width: 400px">
+            <div class="card-bar">
+              <span class="card-title">Editor</span>
+              <div class="card-button-group">
+                <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
+                <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
+                <!-- <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button> -->
+              </div>
             </div>
+            <div id="editorudiv"></div>
           </div>
-          <div id="editorudiv"></div>
         </div>
         <div class="card-column" id="enginecolumn">
           <div class="card-bar">
