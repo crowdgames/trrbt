@@ -1,4 +1,5 @@
 ```
 bash make_games.sh
-open index.html
+open public/index.html
+firebase deploy
 ```

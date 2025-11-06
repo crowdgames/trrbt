@@ -1,0 +1,465 @@
+{
+    "name": "soko_enemy-incomplete",
+    "sprites": null,
+    "tree": {
+        "type": "order",
+        "comment": "",
+        "nid": "",
+        "children": [
+            {
+                "type": "set-board",
+                "comment": "initial board",
+                "nid": "",
+                "pattern": {
+                    "main": [
+                        [
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "\ud83e\uddb8",
+                            "_",
+                            "_",
+                            "\ud83d\udd77\ufe0fv",
+                            "_",
+                            "_",
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "_",
+                            "_",
+                            "\ud83d\udce6\ufe0f",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X",
+                            "_",
+                            "_",
+                            "X",
+                            "X",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "_",
+                            "X",
+                            "\ud83d\udd77\ufe0f^",
+                            "_",
+                            "_",
+                            "\u26f3\ufe0f",
+                            "X"
+                        ],
+                        [
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X",
+                            "X"
+                        ]
+                    ]
+                }
+            },
+            {
+                "type": "loop-until-all",
+                "friendly": "loop-until-all-fail",
+                "comment": "",
+                "nid": "",
+                "children": [
+                    {
+                        "type": "player",
+                        "comment": "",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "x-mirror",
+                                "friendly": "row-mirror",
+                                "comment": "",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "rewrite",
+                                        "comment": "walk",
+                                        "nid": "",
+                                        "button": "right",
+                                        "lhs": {
+                                            "main": [
+                                                [
+                                                    "\ud83e\uddb8",
+                                                    "_"
+                                                ]
+                                            ]
+                                        },
+                                        "rhs": {
+                                            "main": [
+                                                [
+                                                    "_",
+                                                    "\ud83e\uddb8"
+                                                ]
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "rewrite",
+                                        "comment": "push box",
+                                        "nid": "",
+                                        "button": "right",
+                                        "lhs": {
+                                            "main": [
+                                                [
+                                                    "\ud83e\uddb8",
+                                                    "\ud83d\udce6\ufe0f",
+                                                    "_"
+                                                ]
+                                            ]
+                                        },
+                                        "rhs": {
+                                            "main": [
+                                                [
+                                                    "_",
+                                                    "\ud83e\uddb8",
+                                                    "\ud83d\udce6\ufe0f"
+                                                ]
+                                            ]
+                                        }
+                                    },
+                                    {
+                                        "type": "rewrite",
+                                        "comment": "push box onto target",
+                                        "nid": "",
+                                        "button": "right",
+                                        "lhs": {
+                                            "main": [
+                                                [
+                                                    "\ud83e\uddb8",
+                                                    "\ud83d\udce6\ufe0f",
+                                                    "\u26f3\ufe0f"
+                                                ]
+                                            ]
+                                        },
+                                        "rhs": {
+                                            "main": [
+                                                [
+                                                    "_",
+                                                    "\ud83e\uddb8",
+                                                    "\ud83c\udf81"
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "remorig": false
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "wait",
+                                "nid": "",
+                                "button": "action1",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83e\uddb8"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83e\uddb8"
+                                        ]
+                                    ]
+                                }
+                            }
+                        ],
+                        "pid": "\ud83e\uddb8"
+                    },
+                    {
+                        "type": "loop-until-all",
+                        "friendly": "loop-until-all-fail",
+                        "comment": "move spiders, adding movement mark ' to prevent moving all the way at once!",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0fv"
+                                        ],
+                                        [
+                                            "_"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "_"
+                                        ],
+                                        [
+                                            "\ud83d\udd77\ufe0fv'"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0fv"
+                                        ],
+                                        [
+                                            "\ud83e\uddb8"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "_"
+                                        ],
+                                        [
+                                            "\ud83d\udd77\ufe0fv'"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "_"
+                                        ],
+                                        [
+                                            "\ud83d\udd77\ufe0f^"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0f^'"
+                                        ],
+                                        [
+                                            "_"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83e\uddb8"
+                                        ],
+                                        [
+                                            "\ud83d\udd77\ufe0f^"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0f^'"
+                                        ],
+                                        [
+                                            "_"
+                                        ]
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "loop-until-all",
+                        "friendly": "loop-until-all-fail",
+                        "comment": "unset movement marks",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0f^'"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0f^"
+                                        ]
+                                    ]
+                                }
+                            },
+                            {
+                                "type": "rewrite",
+                                "comment": "",
+                                "nid": "",
+                                "button": "",
+                                "lhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0fv'"
+                                        ]
+                                    ]
+                                },
+                                "rhs": {
+                                    "main": [
+                                        [
+                                            "\ud83d\udd77\ufe0fv"
+                                        ]
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "type": "win",
+                        "comment": "win if there are no more targets",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "none",
+                                "comment": "",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "match",
+                                        "pattern": {
+                                            "main": [
+                                                [
+                                                    "\u26f3\ufe0f"
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        "pid": "\ud83e\uddb8"
+                    },
+                    {
+                        "type": "lose",
+                        "comment": "lose if the player is killed (there is no more player)",
+                        "nid": "",
+                        "children": [
+                            {
+                                "type": "none",
+                                "comment": "",
+                                "nid": "",
+                                "children": [
+                                    {
+                                        "type": "match",
+                                        "pattern": {
+                                            "main": [
+                                                [
+                                                    "\ud83e\uddb8"
+                                                ]
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        ],
+                        "pid": ""
+                    }
+                ]
+            }
+        ]
+    }
+}

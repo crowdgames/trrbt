@@ -26,37 +26,41 @@
       }
     }
     function beforeSave(newName) {
-      if (LOCAL_GAME_SETUPS[newName]
-        || isTemplate && newName == "" && LOCAL_GAME_SETUPS[G_editor_u.game['name']]) {
-        if (newName == "") {
-          newName = G_editor_u.game['name'];
-        }
+      if (newName != "" && LOCAL_GAME_SETUPS[newName]) {
+        newName = G_editor_u.game['name'];
         return { ok: false, error: "A local game already exists with name \"" + newName + "\"" }
       }
       return { ok: true }
     }
     function afterSave(oldProps = new Map()) {
-      var game = emptyGame();
-      copyIntoGame(game, G_editor_u.game);
-      if (!isTemplate && oldProps.has('name')) {
-        if (LOCAL_GAME_SETUPS[oldProps.get('name')]) {
-          delete LOCAL_GAME_SETUPS[oldProps.get('name')];
-          SEL_removeLocal(oldProps.get('name'));
+      if (isTemplate) {
+        onTemplate();
+      }
+      else {
+        var game = emptyGame();
+        copyIntoGame(game, G_editor_u.game);
+        if (!isTemplate && oldProps.has('name')) {
+          if (LOCAL_GAME_SETUPS[oldProps.get('name')]) {
+            delete LOCAL_GAME_SETUPS[oldProps.get('name')];
+            SEL_removeLocal(oldProps.get('name'));
+          }
         }
+        SEL_upsert(game);
       }
 
-      SEL_upsert(game);
       isTemplate = false;
     }
     function onTemplate() {
       var game = emptyGame();
       copyIntoGame(game, G_editor_u.game);
       let numCopies = 1;
-      name = game['name'];
+      name = game['name'] + " (from template)";
+      game['name'] = name;
       while (LOCAL_GAME_SETUPS[game['name']]) {
         game['name'] = name + " (" + numCopies++ + ")";
       }
 
+      alert("Creating local game from template");
       SEL_upsert(game);
       G_editor_u.importGame(game);
       isTemplate = false;
@@ -70,8 +74,6 @@
       G_editor_u.importGame(emptyGame())
     }
     function onLoad() {
-      copyIntoGame(G_game_u, SEL_startingGame());
-
       G_editor_u.xform_editor = G_editor_x;
 
       G_editor_x.engine = G_engine;
@@ -81,6 +83,7 @@
       G_engine.stepManual = true;
       G_editor_x.onLoad();
       G_editor_u.onLoad();
+      SEL_selectStartingGame();
     }
     function moveCard(id, dir) {
       telemetry("button-" + id + "-" + dir);
@@ -92,17 +95,78 @@
       }
     }
     function hideshow(id) {
-      btn = document.getElementById("hide-" + id);
+      let btn = document.getElementById("hide-" + id);
+      let el = document.getElementById(id);
+      let card = el.closest(".card");
+
       if (btn.innerHTML == "-") {
+        card.style.height = (card.clientHeight - el.clientHeight) + "px";
         btn.innerHTML = "+";
       } else {
+        card.style.height = (card.clientHeight + el.clientHeight) + "px";
         btn.innerHTML = "-";
       }
-      el = document.getElementById(id);
-      if (el.style.display == "none") {
-        el.style.display = "table-cell";
+    }
+    function exportJson() {
+      data = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS"));
+      stringData = JSON.stringify(data);
+      b64Data = btoa(unescape(encodeURIComponent(stringData)));
+      console.log('game json: ' + b64Data);
+      msg = "Game JSON can also be found in the JavaScript console logs (Chrome: View > Developer > JavaScript Console; Firefox: Tools > Browser Tools > Web Developer Tools > Console)";
+      failmsg = "Unable to copy JSON to clipboard. " + msg;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(b64Data).then(function () {
+          alert('Game JSON copied to clipboard. ' + msg);
+        }, function (err) {
+          alert(failmsg);
+        });
       } else {
-        el.style.display = "none";
+        alert(failmsg);
+      }
+    }
+    function exportStudyData() {
+      telemetryData = JSON.parse(localStorage.getItem("TELEMETRY_DATA"));
+      gameData = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS"));
+      data = {
+        "telemetryData": telemetryData,
+        "gameData": gameData,
+      };
+      stringData = JSON.stringify(data);
+      b64Data = btoa(unescape(encodeURIComponent(stringData)));
+      console.log('study data: ' + b64Data);
+      msg = "Data can also be found in the JavaScript console logs (Chrome: View > Developer > JavaScript Console; Firefox: Tools > Browser Tools > Web Developer Tools > Console)";
+      failmsg = "Unable to copy data to clipboard. " + msg;
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(b64Data).then(function () {
+          alert('Study data copied to clipboard. ' + msg);
+        }, function (err) {
+          alert(failmsg);
+        });
+      } else {
+        alert(failmsg);
+      }
+    }
+    function downloadIntroMaterials() {
+
+      // Create a link and set the URL using `createObjectURL`
+      const link = document.createElement('a');
+      link.style.display = 'none';
+      link.href = 'Introductory Materials.zip';
+      link.download = 'Introductory Materials.zip';
+
+      if (confirm("Download Introductory Materials.zip? This may occur in the background and could take up to a minute.")) {
+        // It needs to be added to the DOM so it can be clicked
+        document.body.appendChild(link);
+        link.click();
+
+        // To make this work on Firefox we need to wait
+        // a little while before removing it.
+        setTimeout(() => {
+          URL.revokeObjectURL(link.href);
+          link.parentNode.removeChild(link);
+        }, 0);
       }
     }
     window.addEventListener('load', onLoad, false);
@@ -110,46 +174,55 @@
   <center>
     <div id="toolbar">
       <div id="selectordiv"></div>
+      <div>
+        <button onclick="exportJson()">Export Local JSON</button>
+        <!-- <button onclick="exportStudyData()">Export Study Data</button> -->
+        <!-- <button onclick="downloadIntroMaterials()">Download Introductory Materials</button> -->
+      </div>
     </div>
     <div id="editwindow">
       <div class="card-group">
-        <div class="card-column" id="treecolumn">
+        <div class="card-column" id="treecolumn" style="width: 500px">
           <div class="card-bar">
             <span class="card-title">Tree Views</span>
+            <br />
+            <i>Left click and drag or use arrow keys to pan, or right click once to pan without dragging.</i>
             <div class="card-button-group" id="treecolumnbuttons">
               <button class="card-button" onclick="moveCard('treecolumn', 'left')">⬅️</button>
               <button class="card-button" onclick="moveCard('treecolumn', 'right')">➡️</button>
             </div>
           </div>
           <div id="tree-card-group" class="card-group">
-            <div class="card" id="ucanvascard">
+            <div class="card" id="ucanvascard" style="height: 500px; width: 500px">
               <div class="card-bar">
                 <span class="card-title">Untransformed Tree</span>
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('ucanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('ucanvascard', 'down')">⬇️</button>
-                  <button id="hide-div-editorucanvas" class="card-button"
-                    onclick="hideshow('div-editorucanvas')">-</button>
+                  <!-- <button id="hide-div-editorucanvas" class="card-button"
+                    onclick="hideshow('div-editorucanvas')">-</button> -->
                 </div>
+                <div><span><i>Click on a node to make changes.</i></span></div>
               </div>
-              <div id="div-editorucanvas">
-                <canvas id="editorucanvas" width="800px" height="350px">
+              <div id="div-editorucanvas" class="canvasdiv">
+                <canvas id="editorucanvas" width="800px" height="350px" tabindex="1">
                   Browser does not support canvas.
                 </canvas>
               </div>
             </div>
-            <div id="xcanvascard" class="card">
+            <div id="xcanvascard" class="card" style="height: 500px; width: 500px">
               <div class="card-bar">
                 <span class="card-title">Transformed Tree</span>
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('xcanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('xcanvascard', 'down')">⬇️</button>
-                  <button id="hide-div-editorxcanvas" class="card-button"
-                    onclick="hideshow('div-editorxcanvas')">-</button>
+                  <!-- <button id="hide-div-editorxcanvas" class="card-button"
+                    onclick="hideshow('div-editorxcanvas')">-</button> -->
                 </div>
+                <div><span><i>During gameplay, the current node is outlined in pink.</i></span></div>
               </div>
-              <div id="div-editorxcanvas">
-                <canvas id="editorxcanvas" width="800px" height="350px">
+              <div id="div-editorxcanvas" class="canvasdiv">
+                <canvas id="editorxcanvas" width="800px" height="350px" tabindex="1">
                   Browser does not support canvas.
                 </canvas>
               </div>
@@ -163,7 +236,7 @@
               <div class="card-button-group">
                 <button class="card-button" onclick="moveCard('editorcolumn', 'left')">⬅️</button>
                 <button class="card-button" onclick="moveCard('editorcolumn', 'right')">➡️</button>
-                <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button>
+                <!-- <button id="hide-editorudiv" class="card-button" onclick="hideshow('editorudiv')">-</button> -->
               </div>
             </div>
             <div id="editorudiv"></div>
@@ -181,11 +254,13 @@
             <div id="enginecanvascard" class="card">
               <div class="card-bar">
                 <span class="card-title">Game</span>
+                <br />
+                <i>Click board or use rewrite node action buttons to play.</i>
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('enginecanvascard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('enginecanvascard', 'down')">⬇️</button>
-                  <button id="hide-div-enginecanvas" class="card-button"
-                    onclick="hideshow('div-enginecanvas')">-</button>
+                  <!-- <button id="hide-div-enginecanvas" class="card-button"
+                    onclick="hideshow('div-enginecanvas')">-</button> -->
                 </div>
               </div>
               <div id="div-enginecanvas">
@@ -200,7 +275,7 @@
                 <div class="card-button-group">
                   <button class="card-button" onclick="moveCard('enginecontrolscard', 'up')">⬆️</button>
                   <button class="card-button" onclick="moveCard('enginecontrolscard', 'down')">⬇️</button>
-                  <button id="hide-enginediv" class="card-button" onclick="hideshow('enginediv')">-</button>
+                  <!-- <button id="hide-enginediv" class="card-button" onclick="hideshow('enginediv')">-</button> -->
                 </div>
               </div>
               <div id="enginediv"></div>

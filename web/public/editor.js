@@ -7,16 +7,21 @@ const EDT_FONT_SIZE = 10;
 const EDT_FONT_CHAR_SIZE = 7;
 const EDT_FONT_LINE_SIZE = 12;
 
+const EDT_KEY_PAN_DELAY = 10;
+const EDT_KEY_PAN_AMOUNT_MIN = 1;
+const EDT_KEY_PAN_AMOUNT_MAX = 10;
+const EDT_KEY_PAN_AMOUNT_SCL = 1.05;
+
 const EDT_TEXT_FONT = 0;
 const EDT_TEXT_COLOR = 1;
 const EDT_TEXT_LINE = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
 const EDT_TEXT_RECT_END = 4;
 
-const EDT_PARSE_TEXT_INT    = 0;
-const EDT_PARSE_TEXT_FLOAT  = 1;
-const EDT_PARSE_TEXT_WORD   = 2;
-const EDT_PARSE_TEXT_TEXT   = 3;
+const EDT_PARSE_TEXT_INT = 0;
+const EDT_PARSE_TEXT_FLOAT = 1;
+const EDT_PARSE_TEXT_WORD = 2;
+const EDT_PARSE_TEXT_TEXT = 3;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
@@ -25,18 +30,18 @@ const EDT_BUTTONS = { '': '\u2205', 'up': '\u2191', 'down': '\u2193', 'left': '\
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type: 'player', comment: '', nid: '', children: [], pid: '' },
+    { type: 'player', friendly: 'player-choice', comment: '', nid: '', children: [], pid: '' },
 
     { type: 'win', comment: '', nid: '', children: [], pid: '' },
     { type: 'lose', comment: '', nid: '', children: [], pid: '' },
-    { type: 'draw', comment: '', nid: '', children: [] },
+    { type: 'draw', friendly: 'tie', comment: '', nid: '', children: [] },
 
-    { type: 'order', comment: '', nid: '', children: [] },
-    { type: 'all', comment: '', nid: '', children: [] },
-    { type: 'none', comment: '', nid: '', children: [] },
-    { type: 'random-try', comment: '', nid: '', children: [] },
-    { type: 'loop-until-all', comment: '', nid: '', children: [] },
-    { type: 'loop-times', comment: '', nid: '', children: [], times: 1 },
+    { type: 'order', friendly: 'order', comment: '', nid: '', children: [] },
+    { type: 'all', friendly: 'all', comment: '', nid: '', children: [] },
+    { type: 'none', friendly: 'none', comment: '', nid: '', children: [] },
+    { type: 'random-try', friendly: 'random-until-pass', comment: '', nid: '', children: [] },
+    { type: 'loop-until-all', friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
+    { type: 'loop-times', friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
 
     { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: 'rewrite-all', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
@@ -52,80 +57,80 @@ const EDT_NODE_PROTOTYPES = [
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type: 'x-ident', comment: '', nid: '', children: [] },
-    { type: 'x-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-skew', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-rotate', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-spin', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-flip', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-swap', comment: '', nid: '', children: [], what: '', with: '' },
-    { type: 'x-replace', comment: '', nid: '', children: [], what: '', withs: [] },
-    { type: 'x-unroll-replace', comment: '', nid: '', children: [], what: '', withs: [] },
-    { type: 'x-prune', comment: '', nid: '', children: [] },
-    { type: 'x-link', comment: '', nid: '', target: '' },
+    { type: 'x-ident', friendly: 'group', comment: '', nid: '', children: [] },
+    { type: 'x-mirror', friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-skew', friendly: 'slant', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-rotate', comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
+    { type: 'x-spin', comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
+    { type: 'x-flip', friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: 'x-swap', comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
+    { type: 'x-replace', comment: '', friendly: 'replace-text-leaves', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-unroll-replace', comment: '', friendly: 'replace-text-subtree', nid: '', children: [], what: '', withs: [] },
+    { type: 'x-prune', comment: '', friendly: 'delete', nid: '', children: [] },
+    { type: 'x-link', comment: '', friendly: 'copy-subtree', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
-    'player': { color: [0, 0, 1], help: 'If any LHS of any child matches, given player can choose which RHS rewrite to apply. Succeeds if there were any matches, otherwise, fails.' },
+    'player': { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise.' },
 
     'win': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
-    'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
-    'draw': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
+    'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player losing; otherwise fails.' },
+    'draw': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with a draw; otherwise fails.' },
 
     'order': { color: [1, 1, 0], help: 'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.' },
-    'all': { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Fails if any child fails, otherwise succeeds.' },
-    'none': { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Fails if any child succeeds, otherwise succeeds.' },
+    'all': { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Succeeds if all children are successful, otherwise fails.' },
+    'none': { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Succeeds if all children fail, otherwise fails.' },
     'random-try': { color: [1, 1, 0], help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
-    'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds, otherwise fails.' },
-    'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds, otherwise fails.' },
+    'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds at least once, otherwise fails.' },
+    'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds at least once, otherwise fails.' },
 
-    'rewrite': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, randomly rewrites one of these matches with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
-    'rewrite-all': { color: [0, 1, 0], help: 'If there are any LHS pattern matches, rewrites as many as possible in random order with the RHS pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'rewrite': { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
+    'rewrite-all': { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, rewrite as many as possible in random order with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
     'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
     'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
     'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
     'layer-template': { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
 
-    'display-board': { color: [1, 0, 1], help: 'Causes the board to be displayed. Always succeeds.' },
+    'display-board': { color: [1, 0, 1], help: 'Causes the board display to update. Always succeeds.' },
 
-    'match': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board, otherwise fails.' },
-    'match-times': { color: [0, 1, 1], help: 'Succeeds if pattern matches current board the given number of times, otherwise fails.' },
+    'match': { color: [0, 1, 1], help: 'Succeeds if the pattern is found anywhere on the board, otherwise fails.' },
+    'match-times': { color: [0, 1, 1], help: 'Succeeds if the pattern is foundn on the current board the given number of times, otherwise fails.' },
 
-    'x-ident': { color: [1, 1, 1], help: 'Do not apply any transform.' },
-    'x-prune': { color: [1, 1, 1], help: 'Remove nodes.' },
+    'x-ident': { color: [1, 1, 1], help: 'No effect. Nodes are visually grouped only.' },
+    'x-prune': { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
 
-    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right.' },
-    'x-skew': { color: [1, 1, 1], help: 'Skew patterns along columns.' },
-    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees.' },
-    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns 90, 180, and 270 degrees.' },
-    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom.' },
+    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right, e.g x y => x y, y x' },
+    'x-skew': { color: [1, 1, 1], help: 'Slant patterns down, e.g x y z => x y z, x . ./. y ./. . z' },
+    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
+    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
+    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
 
-    'x-swap': { color: [1, 1, 1], help: 'Swap characters in patterns and player IDs (removing original).' },
-    'x-replace': { color: [1, 1, 1], help: 'Replace characters in patterns and player IDs (removing original).' },
+    'x-swap': { color: [1, 1, 1], help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
+    'x-replace': { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
 
     'x-unroll-replace': { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
 
-    'x-link': { color: [1, 1, 1], help: 'Link to another node by node ID.' },
+    'x-link': { color: [1, 1, 1], help: 'Create a copy of another node accessed by node ID.' },
     'x-file': { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
 }
 
 const EDT_NODE_PROP_NAMES = {
     comment: { name: 'comment', help: 'A comment about the node.' },
-    nid: { name: 'node ID', help: 'ID of node that other nodes can use to refer to it.' },
-    remorig: { name: 'remove original', help: 'Remove original pattern after transform applied.' },
+    nid: { name: 'node ID', help: 'Unique ID for the node, optional unless other nodes need to refer to it.' },
+    remorig: { name: 'remove original', help: 'Remove the original pattern after transform is applied.' },
     file: { name: 'file name', help: 'Name of file to link to.' },
-    target: { name: 'target ID', help: 'Target node ID to link to.' },
+    target: { name: 'target ID', help: 'Node ID of the node to copy.' },
     pid: { name: 'player ID', help: 'ID of player to make choice.' },
     layer: { name: 'layer', help: 'Name of layer to use.' },
     times: { name: 'times', help: 'How many times.' },
-    delay: { name: 'delay', help: 'Amount to delay.' },
-    what: { name: 'what', help: 'Character to be swapped/replaced.' },
-    with: { name: 'with', help: 'Other character to use.' },
-    withs: { name: 'withs', help: 'Space-separated other characters to use.' },
-    button: { name: 'button', help: 'Button to press to apply rewrite.' },
+    delay: { name: 'delay (seconds)', help: 'Delay (in seconds) before continuing.' },
+    what: { name: 'what', help: 'Text to be swapped/replaced.' },
+    with: { name: 'with', help: 'Text to swap for the what text.' },
+    withs: { name: 'with (space separated list)', help: 'Text(s) to replace the what with (separated by spaces).' },
+    button: { name: 'action button', help: 'Button to press to apply rewrite on player choice. Transforms will be applied; e.g., on row-mirror, left becomes right.' },
     pattern: { name: 'pattern', help: 'A tile pattern.' },
-    lhs: { name: 'LHS', help: 'Left hand side tile pattern of a rewrite rule.' },
-    rhs: { name: 'RHS', help: 'Right hand side tile pattern of a rewrite rule.' }
+    lhs: { name: 'LEFT', help: 'Left hand side tile pattern of a rewrite rule.' },
+    rhs: { name: 'RIGHT', help: 'Right hand side tile pattern of a rewrite rule.' }
 };
 
 const EDT_GAME_PROP_NAMES = {
@@ -149,6 +154,7 @@ class TRRBTEditor {
         this.ctx = null;
         this.propertyEditor = null;
         this.keysDown = new Set();
+        this.keysPanning = false;
 
         this.undoStack = null;
         this.undoStackPos = null;
@@ -190,6 +196,9 @@ class TRRBTEditor {
         this.drawRequested = false;
 
         this.xform_editor = null;
+
+        this.confirmedAlerts = "";
+        this.preventInput = false;
     }
 
     undoPush() {
@@ -272,6 +281,7 @@ class TRRBTEditor {
         this.ctx = this.canvas.getContext('2d');
         this.propertyEditor = this.divname ? document.getElementById(this.divname) : null;
         this.keysDown = new Set();
+        this.keysPanning = false;
 
         this.tooltip = document.getElementById('tooltip');
         if (this.tooltip === null) {
@@ -346,8 +356,6 @@ class TRRBTEditor {
         this.canvas.addEventListener('keydown', bind0(this, 'onKeyDown'));
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
 
-        this.canvas.parentElement.style.width = this.canvas.width + "px";
-        this.canvas.parentElement.style.height = this.canvas.height + "px";
         this.updateCanvasSize(this.canvas.width, this.canvas.height);
 
         this.updateTreeStructure(false);
@@ -597,9 +605,11 @@ class TRRBTEditor {
 
     updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
         let texts = [];
+        const proto = this.getNodePrototype(node.type);
+        const node_friendly_name = proto?.friendly || node.type;
         texts.push({ type: EDT_TEXT_FONT, data: 'bold 10px sans-serif' });
         texts.push({ type: EDT_TEXT_COLOR, data: '#222222' });
-        texts.push({ type: EDT_TEXT_LINE, data: node.type });
+        texts.push({ type: EDT_TEXT_LINE, data: node_friendly_name });
         texts.push({ type: EDT_TEXT_FONT, data: '10px sans-serif' });
 
         //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
@@ -923,14 +933,14 @@ class TRRBTEditor {
                     const midy = 0.5 * (ny + nh + cny);
 
                     const edge = this.layout_horizontal ?
-                          [nx + nw / 2, ny + nh,
-                           nx + nw / 2, midy,
-                           cnx + cnw / 2, midy,
-                           cnx + cnw / 2, cny] :
-                          [nx + nw, ny + nh / 2,
-                           midx, ny + nh / 2,
-                           midx, cny + cnh / 2,
-                           cnx, cny + cnh / 2];
+                        [nx + nw / 2, ny + nh,
+                        nx + nw / 2, midy,
+                        cnx + cnw / 2, midy,
+                        cnx + cnw / 2, cny] :
+                        [nx + nw, ny + nh / 2,
+                            midx, ny + nh / 2,
+                            midx, cny + cnh / 2,
+                            cnx, cny + cnh / 2];
 
                     if (stackNodes.has(child.dispid)) {
                         stackEdges.push(edge);
@@ -951,7 +961,7 @@ class TRRBTEditor {
 
                 for (let edge of stackEdges) {
                     ctx.lineWidth = 4;
-                    ctx.strokeStyle = '#222222';
+                    ctx.strokeStyle = '#FF13F0';
 
                     ctx.beginPath();
                     ctx.moveTo(edge[0], edge[1]);
@@ -1073,9 +1083,9 @@ class TRRBTEditor {
                     const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
                     const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
                     ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
-                                   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
-                                   width,
-                                   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
+                        ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+                        width,
+                        texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
         }
@@ -1087,8 +1097,9 @@ class TRRBTEditor {
         }
 
         if (stackNodes.has(node.dispid)) {
+            // Highlight current node.
             ctx.lineWidth = 4;
-            ctx.strokeStyle = '#222222';
+            ctx.strokeStyle = '#FF13F0';
             ctx.stroke();
         }
 
@@ -1174,9 +1185,39 @@ class TRRBTEditor {
         this.updatePropertyEditor(node, false)
     }
 
-    highlightProperty(id, isError) {
+    highlightProperty(id, isError, errText = '') {
         let elem = document.getElementById(id);
         elem.style.backgroundColor = (isError ? EDT_COLOR_ERROR : EDT_COLOR_CHANGE);
+
+        this.setErrText(elem, errText);
+    }
+
+    unhighlightProperty(id) {
+        console.log('unhighlight')
+        let elem = document.getElementById(id);
+        elem.style.backgroundColor = 'transparent';
+    }
+
+    setErrText(elem, errText) {
+        parent = elem.parentNode;
+
+        let errNode = null;
+        for (var i = 0; i < parent.children.length; i++) {
+            if (parent.children[i].classList.contains('errtext')) {
+                errNode = parent.children[i];
+            }
+        }
+        if (errNode === null && errText != '') {
+            let textNode = document.createTextNode(errText);
+            const iNode = document.createElement('i');
+            iNode.appendChild(textNode);
+            textNode = iNode;
+            textNode.style = "color: red";
+            textNode.classList.add("errtext");
+            parent.appendChild(textNode);
+        } else if (errNode != null && errText == '') {
+            errNode.remove();
+        }
     }
 
     appendTextProperty(parent, id, name, help, value) {
@@ -1200,6 +1241,9 @@ class TRRBTEditor {
             telemetry("text-" + name + "-set-" + input.value);
             this.nodeSaveProperties();
         }
+        input.onblur = () => {
+            this.unhighlightProperty(id);
+        }
 
         item.appendChild(label);
         if (inList) { appendBr(item) } else { appendText(item, ' '); }
@@ -1213,7 +1257,7 @@ class TRRBTEditor {
         value = value.trim();
         if (how === EDT_PARSE_TEXT_INT || how === EDT_PARSE_TEXT_FLOAT || how === EDT_PARSE_TEXT_WORD) {
             if (value.match(/\s+/) !== null) {
-                return { ok: false, error: 'Cannot have spaces' };
+                return { ok: false, error: 'Cannot have spaces', value: value };
             } else if (how === EDT_PARSE_TEXT_INT && value != '') {
                 const asInt = parseInt(value, 10);
                 if (isNaN(asInt) || asInt <= 0 || asInt >= 100) {
@@ -1320,7 +1364,7 @@ class TRRBTEditor {
 
     appendThisEmojiPicker(parent) {
         if (this.emojiPicker) {
-            appendButton(parent, 'emoji-picker', 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHidEmojiPicker'));
+            appendButton(parent, 'emoji-picker', 'Show/Hide Emoji Picker', 'Emoji picker can be used to copy emoji to clipboard.', null, bind0(this, 'onShowHideEmojiPicker'));
             appendText(parent, ' ');
             parent.appendChild(this.emojiMessage);
             appendBr(parent);
@@ -1339,101 +1383,723 @@ class TRRBTEditor {
         return { ok: true, value: value.split(/\s+/) };
     }
 
-    appendPatternProperty(parent, id, name, help, value, tileSize) {
-        let rows = 0;
-        let cols = 0;
-        let text = '';
+    equalizeCells() {
+        const tables = document.getElementsByClassName('pattern-table');
+        for (const table of tables) {
+            const cells = table.querySelectorAll('.pattern-table-cell');
+            let maxWidth = 0;
+            let maxHeight = 0;
+            for (const cell of cells) {
+                if (cell.offsetWidth > maxWidth) {
+                    maxWidth = cell.offsetWidth;
+                }
+                if (cell.offsetHeight > maxHeight) {
+                    maxHeight = cell.offsetHeight;
+                }
+            }
 
-        const layers = Object.getOwnPropertyNames(value);
+            for (const cell of cells) {
+                cell.style.width = maxWidth + "px";
+                cell.style.height = maxHeight + "px";
+            }
+        }
+    }
+
+    renderTableInputs(id, pattern, flayer = "", fr = 0, fc = 0, fis = 0, fie = 0) {
+        let tableInput = document.getElementById(id + "_tableview");
+        tableInput.innerHTML = "";
+        console.log("pattern og")
+        console.log(pattern)
+        if (pattern == undefined || pattern.length == 0) {
+            pattern = {
+                'main': [
+                    [""]
+                ]
+            }
+        }
+        console.log(pattern['main'])
+        let layers = Object.getOwnPropertyNames(pattern);
+        let focusInput = null;
+        let textPattern = this.textFromPattern(pattern).patternText;
+        pattern = this.patternFromString(textPattern);
         for (const layer of layers) {
+            if (pattern[layer].length == 0) {
+                pattern[layer].push([" "]);
+            }
+            const inputTable = document.createElement('table');
+            inputTable.classList.add('pattern-table');
             if (layers.length === 1 && layers[0] === 'main') {
                 // pass
             } else {
-                text += ' ' + layer + '\n';
-                rows += 1;
-                cols = Math.max(cols, graphemeLength(layer) + 1);
+                const row = document.createElement('tr');
+                const cell = document.createElement('td');
+                const input = document.createElement('input');
+                input.type = "text";
+                input.value = layer;
+                input.onblur = () => this.layerTextOnBlur(id, input, pattern, layer);
+                input.onfocus = () => {
+                    input.setSelectionRange(0, input.value.length);
+                }
+                cell.appendChild(input);
+                appendButton(cell, 'remove-pattern-layer-' + id + layer, 'Delete Layer', 'Delete this layer.', 'red;white', bind4(this, 'onRemovePatternLayer', id, pattern, layer));
+                row.appendChild(cell);
+                inputTable.appendChild(row);
             }
+            if (pattern[layer].length == 0) {
+                pattern[layer] = [[""]]
+            }
+            if (pattern[layer][0].length > 1) {
+                let row = document.createElement('tr');
+                const blankCell = document.createElement('td');
+                blankCell.classList.add('pattern-table-cell');
+                row.appendChild(blankCell);
+                for (let c = 0; c < pattern[layer][0].length; c++) {
+                    const removeColTd = document.createElement('td');
+                    removeColTd.classList.add('pattern-table-cell');
+                    appendButton(removeColTd, 'remove-pattern-col-' + id + c, '-', 'Remove column', 'red;white', bind4(this, 'onRemovePatternCol', id, pattern, layer, c));
+                    row.appendChild(removeColTd);
+                }
+                inputTable.appendChild(row);
+            }
+            let row = document.createElement('tr');
+            for (let c = -1; c < pattern[layer][0].length; c++) {
+                const addColTd = document.createElement('td');
+                addColTd.classList.add('pattern-table-cell');
+                let desc = 'Add column to right';
+                if (c == -1) {
+                    desc = "Add column left"
+                }
+                appendButton(addColTd, 'add-pattern-col-' + id + c, '+', desc, 'green;white', bind4(this, 'onAddPatternCol', id, pattern, layer, c));
+                row.appendChild(addColTd);
+            }
+            const blankCell = document.createElement('td');
+            blankCell.classList.add('pattern-table-cell');
+            row.appendChild(blankCell);
+            const addRowTd = document.createElement('td');
+            addRowTd.classList.add('pattern-table-cell');
+            appendButton(addRowTd, 'add-pattern-row-' + id + -1, '+', 'Add row top', 'green;white', bind4(this, 'onAddPatternRow', id, pattern, layer, -1));
+            row.appendChild(addRowTd);
+            inputTable.appendChild(row);
+            for (let r = 0; r < pattern[layer].length; r++) {
+                row = document.createElement('tr');
 
-            for (const row of value[layer]) {
-                const row_text = joinRow(row, tileSize, false);
-                text += row_text + '\n';
-                rows += 1;
-                cols = Math.max(cols, graphemeLength(row_text));
+                // blank cell makes room for remove column.
+                const blankCell = document.createElement('td');
+                blankCell.classList.add('pattern-table-cell');
+                row.appendChild(blankCell);
+                for (let c = 0; c < pattern[layer][r].length; c++) {
+                    const cell = document.createElement('td');
+                    cell.classList.add('pattern-table-cell')
+                    cell.classList.add('input-sizer');
+                    const input = document.createElement('input');
+                    if (layer == flayer && r == fr && c == fc) {
+                        focusInput = input;
+                    }
+                    input.type = 'text';
+                    input.oninput = (e) => this.patternCellOnInput(id, inputTable, input, pattern, layer, r, c, e);
+                    input.onkeydown = (e) => this.patternCellOnKeyDown(id, inputTable, input, pattern, layer, r, c, e);
+                    input.onfocus = () => {
+                        input.setSelectionRange(0, input.value.length);
+                    }
+                    input.size = 1;
+                    input.value = pattern[layer][r][c] == "_" ? " " : pattern[layer][r][c];
+                    cell.dataset.value = input.value;
+                    cell.appendChild(input)
+                    row.appendChild(cell);
+                }
+
+                if (pattern[layer].length > 1) {
+                    const removeTd = document.createElement('td');
+                    removeTd.classList.add("pattern-table-cell");
+                    appendText(removeTd, " ");
+                    appendButton(removeTd, 'remove-pattern-row-' + id + r, '-', 'Remove row', 'red;white', bind4(this, 'onRemovePatternRow', id, pattern, layer, r));
+                    row.appendChild(removeTd);
+                }
+
+                const addTd = document.createElement('td');
+                addTd.classList.add("pattern-table-cell");
+                appendText(addTd, " ");
+                appendButton(addTd, 'add-pattern-row-' + id + r, '+', 'Add row below', 'green;white', bind4(this, 'onAddPatternRow', id, pattern, layer, r));
+                row.appendChild(addTd);
+
+                inputTable.appendChild(row);
+            }
+            tableInput.appendChild(inputTable);
+        }
+        appendButton(tableInput, 'add-pattern-layer-' + id, 'Add Layer', 'Add a new layer.', 'green;white', bind4(this, 'onAddPatternLayer', id, pattern));
+
+        this.equalizeCells();
+
+        if (focusInput != null) {
+            setTimeout(() => {
+                focusInput.focus();
+                if (fis >= 0) {
+                    if (fie < 0) {
+                        fie = fis;
+                    }
+                    focusInput.setSelectionRange(fis, fie);
+                }
+                if (focusInput.value.trim() == "?" || focusInput.value.trim() == "." || focusInput.value == " ") {
+                    focusInput.setSelectionRange(0, 1);
+                }
+            }, 10)
+        }
+        if (textPattern !== this.textFromPattern(pattern).patternText) {
+            this.updatePatternText(id, pattern, flayer, fr, fc, fis, fie);
+        }
+    }
+
+    onAddPatternLayer(id, pattern) {
+        let layer = "NEW"
+        let uniqueName = layer
+        let i = 1
+        while (uniqueName in pattern) {
+            uniqueName = `${layer}${i}`
+            i++
+        }
+        pattern[uniqueName] = [[]]
+        this.updatePatternText(id, pattern, uniqueName);
+    }
+    onAddPatternCol(id, pattern, layer, c) {
+        for (let r = 0; r < pattern[layer].length; r++) {
+            pattern[layer][r].splice(c + 1, 0, " ");
+        }
+        this.updatePatternText(id, pattern, layer, 0, c + 1);
+    }
+    onAddPatternRow(id, pattern, layer, r) {
+        let newRow = [];
+        for (let c = 0; c < pattern[layer][0].length; c++) {
+            newRow.push(" ")
+        }
+        pattern[layer].splice(r + 1, 0, newRow);
+        this.updatePatternText(id, pattern, layer, r + 1, 0);
+    }
+    onRemovePatternLayer(id, pattern, layer) {
+        delete pattern[layer]
+        this.updatePatternText(id, pattern);
+    }
+    onRemovePatternCol(id, pattern, layer, c) {
+        for (let r = 0; r < pattern[layer].length; r++) {
+            pattern[layer][r].splice(c, 1);
+        }
+        this.updatePatternText(id, pattern, layer, 0, Math.max(c - 1, 0));
+    }
+    onRemovePatternRow(id, pattern, layer, r) {
+        pattern[layer].splice(r, 1);
+        this.updatePatternText(id, pattern, layer, Math.max(r - 1, 0), 0);
+    }
+
+    layerTextOnBlur(id, input, pattern, layer) {
+        if (this.preventInput) {
+            e.preventDefault();
+            this.preventInput = false;
+            return;
+        }
+        let newLayerName = input.value.trim();
+        console.log(newLayerName)
+        if (newLayerName == "") {
+            this.displayAlert(["Layer name cannot be blank."])
+            return
+        }
+        if (newLayerName != layer && newLayerName in pattern) {
+            this.displayAlert([`Layer ${newLayerName} already exists in the pattern.`], true)
+            return
+        }
+
+        pattern[newLayerName] = pattern[layer]
+        delete pattern[layer]
+        this.updatePatternText(id, pattern, newLayerName, 0, 0, input.selectionStart, input.selectionStart);
+    }
+
+    patternCellOnKeyDown(id, inputTable, input, pattern, layer, r, c, e) {
+        switch (e.key) {
+            // case " ":
+            //     if (input.selectionEnd == pattern[layer][r][c].length) {
+            //         c += 1;
+            //         if (c < pattern[layer][r].length) {
+            //             pattern[layer][r].splice(c, 0, " ");
+            //         }
+            //         else {
+            //             pattern[layer][r].push(" ");
+            //         }
+            //         this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+            //     } else if (input.selectionStart == 0) {
+            //         pattern[layer][r].splice(c, 0, " ");
+            //         c += 1;
+            //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+            //     } else {
+            //         let before = pattern[layer][r][c].slice(0, input.selectionStart);
+            //         let after = pattern[layer][r][c].slice(input.selectionStart)
+            //         pattern[layer][r].splice(c, 0, before);
+            //         c += 1;
+            //         pattern[layer][r][c] = after;
+            //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+            //     }
+
+            //     return false;
+            case "Backspace":
+                if (input.selectionEnd == 0 && [...(pattern[layer][r][c].trim())].length > 0) {
+                    // Move to previous cell.
+                    c -= 1;
+                    if (c < 0) {
+                        if (r > 0) {
+                            r -= 1;
+                            c = pattern[layer][r].length - 1;
+                        }
+                        else {
+                            c = 0;
+                        }
+                    }
+                    this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    return false;
+                    // c -= 1;
+                    // if (c < 0) {
+                    //     if (r > 0) {
+                    //         c = pattern[layer][r].length;
+                    //         pattern[layer][r - 1].push(...pattern[layer][r]);
+                    //         pattern[layer].splice(r, 1);
+                    //         r -= 1;
+                    //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                    //         return false;
+                    //     }
+                    //     break;
+                    // }
+                }
+                else if ([...(pattern[layer][r][c].trim())].length <= 1) {
+                    // if (pattern[layer][r][c].trim() == "." || pattern[layer][r][c].trim() == "?" || pattern[layer][r][c] == " ") {
+                    //     // if cell is empty, delete and move to the cell to the left.
+                    //     pattern[layer][r].splice(c, 1);
+                    //     c -= 1;
+                    //     if (c < 0) {
+                    //         if (r > 0) {
+                    //             // move up one row, deleting this row if it is empty.
+                    //             let delRow = true;
+                    //             for (let c = 0; c < pattern[layer][r].length; c++) {
+                    //                 if (pattern[layer][r][c] != "?") {
+                    //                     delRow = false;
+                    //                 }
+                    //             }
+                    //             if (delRow) {
+                    //                 pattern[layer].splice(r, 1);
+                    //                 r -= 1;
+                    //                 c = pattern[layer][r].length - 1;
+                    //             }
+                    //             else {
+                    //                 c = 0;
+                    //                 this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                    //                 break;
+                    //             }
+                    //         }
+                    //         else {
+                    //             console.log("update for c = 0; r = 0")
+                    //             c = 0;
+                    //             this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                    //             break;
+                    //         }
+                    //     }
+                    // } else {
+                    //     // Remove contents and allow putting something else in.
+                    //     pattern[layer][r][c] = " ";
+                    //     this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+                    //     return false;
+                    // }
+
+                    if (pattern[layer][r][c] == "_") {
+                        // Move to previous cell.
+                        c -= 1;
+                        if (c < 0) {
+                            if (r > 0) {
+                                r -= 1;
+                                c = pattern[layer][r].length - 1;
+                            }
+                            else {
+                                c = 0;
+                            }
+                        }
+                    } else {
+                        // Remove contents and allow putting something else in.
+                        pattern[layer][r][c] = "_";
+                        this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+                        return false;
+                    }
+                    this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    return false;
+                }
+                break;
+            case "Enter":
+                c = 0;
+            case "ArrowDown":
+                // go to the next cell down (or otherwise the next layer) if one exists
+                if (pattern[layer][r + 1]) {
+                    r += 1;
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                } else {
+                    const layers = Object.getOwnPropertyNames(pattern);
+                    let found = false;
+                    for (const layerName of layers) {
+                        if (found) {
+                            layer = layerName;
+                            r = 0;
+                            this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                            break;
+                        }
+                        if (layerName == layer) {
+                            found = true;
+                        }
+                    }
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    break;
+                }
+                break;
+            case "ArrowUp":
+                // go to the next cell/layer up, if one exists
+                if (pattern[layer][r - 1]) {
+                    r -= 1;
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                } else {
+                    const layers = Object.getOwnPropertyNames(pattern);
+                    let newLayer = layer;
+                    for (const layerName of layers) {
+                        if (layerName == layer) {
+                            break;
+                        }
+                        newLayer = layerName;
+                    }
+                    layer = newLayer;
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                }
+                break;
+            case "ArrowLeft":
+                if (input.selectionStart == 0) {
+                    // go to the next cell to the left, if one exists
+                    if (pattern[layer][r][c - 1]) {
+                        c -= 1;
+                        this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                    }
+                }
+                break;
+            case " ":
+                pattern[layer][r][c] = pattern[layer][r][c].trim();
+                c += 1;
+                if (c >= pattern[layer][r].length) {
+                    c = 0;
+                    r += 1;
+                    if (r >= pattern[layer].length) {
+                        r -= 1;
+                        c = pattern[layer][r].length - 1;
+                    }
+                }
+                this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                break;
+            case "ArrowRight":
+                // go to the next cell to the right, if one exists
+                if (input.selectionEnd == pattern[layer][r][c].length) {
+                    c = Math.min(c + 1, pattern[layer][r].length - 1);
+                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                }
+                break;
+            // case "Enter":
+            //     // new line (split in middle)
+            //     if (input.selectionStart == pattern[layer][r][c].length) {
+            //         c += 1;
+            //     } else if (input.selectionStart !== 0) {
+            //         let before = pattern[layer][r][c].slice(0, input.selectionStart);
+            //         let after = pattern[layer][r][c].slice(input.selectionStart)
+            //         pattern[layer][r].splice(c, 0, before);
+            //         c += 1;
+            //         pattern[layer][r][c] = after;
+            //     }
+
+            //     if (c < pattern[layer][r].length - 1) {
+            //         let oldRow = pattern[layer][r].slice(0, c);
+            //         let newRow = pattern[layer][r].slice(c);
+            //         pattern[layer][r] = oldRow;
+            //         pattern[layer].splice(r + 1, 0, newRow);
+            //     } else {
+            //         pattern[layer].splice(r + 1, 0, [" "]);
+            //     }
+
+            //     c = 0;
+            //     r += 1;
+            //     this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+            //     break;
+            default:
+                break;
+        }
+    }
+
+    patternCellOnInput(id, inputTable, input, pattern, layer, r, c, e) {
+        if (this.preventInput) {
+            e.preventDefault();
+            this.preventInput = false;
+            return;
+        }
+        pattern[layer][r][c] = input.value.trim() == "" ? "_" : input.value.trim();
+        // if ([...pattern[layer][r][c].trim()].length == 0) {
+        //     // if cell is empty, delete and move to the cell to the left.
+        //     pattern[layer][r].splice(c, 1);
+        //     c -= 1;
+        //     this.updatePatternText(id, pattern, layer, r, c);
+        // } else {
+        //     this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+        // }
+        this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
+    }
+
+    updatePatternText(id, pattern, layer = "", r = 0, c = 0, fis = -1, fie = -1) {
+        let patternText = this.textFromPattern(pattern).patternText
+        let textInput = document.getElementById(id);
+        if (textInput != null) {
+            let scrollToX = window.scrollX;
+            let scrollToY = window.scrollY;
+            if (this.patternTextInput !== null && this.patternTextInput.style.display !== 'none') {
+                this.patternTextVisible = true;
+            }
+            textInput.value = patternText;
+            telemetry("pattern-" + id + "-set-" + textInput.value);
+            this.validateProperties();
+            this.nodeSaveProperties();
+            this.renderTableInputs(id, pattern, layer, r, c, fis, fie);
+            setTimeout(() => { window.scrollTo(scrollToX, scrollToY) }, 0);
+        }
+    }
+
+    patternTextOnInput(id) {
+        let textInput = document.getElementById(id);
+        let pos = textInput.selectionStart;
+        this.highlightProperty(id, false);
+        this.validateProperties();
+        this.renderTableInputs(id, this.patternFromString(textInput.value));
+        textInput.setSelectionRange(pos, pos);
+    }
+
+    onShowHidePatternText(id, show = null) {
+        let textInput = document.getElementById(id);
+        if (textInput !== null) {
+            if (textInput.style.display === 'none' || show) {
+                console.log('show')
+                textInput.style.display = 'block';
+            } else {
+                console.log('hide')
+                textInput.style.display = 'none';
             }
         }
+    }
+
+    appendPatternProperty(parent, id, name, help, pattern, tileSize, minRows = 0, minCols = 0, sublabel = "") {
+        let textPattern = this.textFromPattern(pattern).patternText;
+        pattern = this.patternFromString(textPattern);
+        let layers = Object.getOwnPropertyNames(pattern);
+        for (const layer of layers) {
+            if (pattern[layer].length == 0) {
+                pattern[layer].push([" "]);
+            }
+        }
+        let patternTextInfo = this.textFromPattern(pattern, tileSize, minRows, minCols);
+        let patternText = patternTextInfo.patternText;
+        let rows = patternTextInfo.rows;
+        let cols = patternTextInfo.cols;
 
         const item = document.createElement('li');
         const label = document.createElement('label');
         label.innerHTML = name;
         label.htmlFor = id;
         label.title = help;
-        const input = document.createElement('textarea');
-        input.id = id;
-        input.name = id;
-        input.innerHTML = text;
-        input.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
-
-        input.oninput = () => {
-            this.highlightProperty(id, false);
-            this.validateProperties();
-        }
-        input.onchange = () => {
-            this.nodeSaveProperties();
-            telemetry("pattern-" + name + "-set-" + input.value);
-        }
 
         item.appendChild(label)
         appendBr(item)
-        item.appendChild(input)
+        if (sublabel != "") {
+            appendText(item, sublabel, false, false, true)
+            appendBr(item)
+        }
+
+        const tableInput = document.createElement('div');
+        tableInput.id = id + "_tableview";
+        item.appendChild(tableInput);
         appendBr(item)
         parent.appendChild(item);
+        this.renderTableInputs(id, pattern);
+
+        const patternTextInputDiv = document.createElement('div');
+        appendButton(patternTextInputDiv, 'showHidePatternText', 'Show/Hide Text Editor', 'Show/Hide Text-based Pattern Editor', null, bind1(this, 'onShowHidePatternText', id + 'showhide'));
+        const patternTextInputHideable = document.createElement('div');
+        patternTextInputHideable.id = id + 'showhide';
+        patternTextInputHideable.style = 'display: none';
+        const patternTextInputDesc = document.createElement('div');
+        patternTextInputDesc.innerHTML = "<i>Separate cells with spaces. Special characters: use '_' for an empty cell, '.' is a wildcard (matches everything in rewrites), and '?' is padding.</i>";
+        patternTextInputHideable.appendChild(patternTextInputDesc);
+
+        const patternTextInput = document.createElement('textarea');
+        patternTextInput.id = id;
+        patternTextInput.name = id;
+        patternTextInput.innerHTML = patternText;
+        patternTextInput.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
+        patternTextInput.oninput = () => {
+            this.patternTextOnInput(id);
+        }
+        patternTextInput.onchange = () => {
+            let pattern = this.patternFromString(patternTextInput.value)
+            this.renderTableInputs(id, pattern);
+            this.updatePatternText(id, pattern);
+            this.nodeSaveProperties();
+            telemetry("pattern-" + name + "-set-" + patternTextInput.value);
+        }
+        patternTextInput.onblur = () => {
+            this.unhighlightProperty(id);
+        }
+        this.patternTextInput = patternTextInput;
+        patternTextInputHideable.appendChild(patternTextInput);
+        patternTextInputDiv.appendChild(patternTextInputHideable)
+
+        item.appendChild(patternTextInputDiv);
+        if (this.patternTextVisible) {
+            this.onShowHidePatternText(id);
+            setTimeout(() => this.patternTextVisible = false, 10);
+        }
     }
 
-    parsePatternProperty(id) {
+    textFromPattern(pattern, tileSize, minRows, minCols) {
+        let cols = 0;
+        let rows = 0;
+        cols = Math.max(minCols, cols);
+        rows = Math.max(minRows, rows);
+        let patternText = "";
+        const layers = Object.getOwnPropertyNames(pattern);
+        for (const layer of layers) {
+            if (layers.length === 1 && layers[0] === 'main') {
+                // pass
+            } else {
+                patternText += ' ' + layer + '\n';
+                rows += 1;
+            }
+            cols = Math.max(cols, graphemeLength(layer) + 1);
+
+            for (const row of pattern[layer]) {
+                let rowCopy = row.map(tile => tile.trim() == "" ? "_" : tile);
+                const row_text = joinRow(rowCopy, tileSize, false);
+                patternText += row_text + '\n';
+                rows += 1;
+                cols = Math.max(cols, graphemeLength(row_text));
+            }
+        }
+        return {
+            "patternText": patternText,
+            "rows": rows,
+            "cols": cols,
+        };
+    }
+
+    patternFromString(patternStr) {
         let pattern = deepcopyobj(EDT_EMPTY_PATTERN);
         let layer = 'main';
-        const text = document.getElementById(id).value;
+        if (!pattern.hasOwnProperty(layer) && patternStr[0] != ' ') {
+            pattern[layer] = [];
+        }
 
-        for (const line of text.split('\n')) {
+        for (const line of patternStr.split('\n')) {
             const tline = line.trimEnd();
             if (tline.length === 0) {
                 continue;
             }
             if (tline[0] === ' ') {
                 layer = tline.trim();
+                pattern[layer] = [];
             } else {
-                let row = tline.split(/\s+/);
-                if (!pattern.hasOwnProperty(layer)) {
-                    pattern[layer] = [];
-                }
+                let row = tline.trim().split(/\s+/);
                 pattern[layer].push(row);
             }
         }
+        let maxCols = 0;
+        if (pattern[layer] != undefined) {
+            for (let r = 0; r < pattern[layer].length; r++) {
+                while (pattern[layer][r][pattern[layer][r].length - 1] != undefined
+                    && (pattern[layer][r][pattern[layer][r].length - 1] == "?")) {
+                    pattern[layer][r].splice(pattern[layer][r].length - 1, 1);
+                }
+                if (pattern[layer][r].length > maxCols) {
+                    maxCols = pattern[layer][r].length;
+                }
+            }
+            for (let r = 0; r < pattern[layer].length; r++) {
+                for (let c = 0; c < maxCols; c++) {
+                    if (!pattern[layer][r][c] || pattern[layer][r][c] == "") {
+                        pattern[layer][r][c] = "?";
+                    }
+                }
+            }
+        }
+        return pattern;
+    }
+
+    parsePatternProperty(id) {
+        const text = document.getElementById(id).value;
+        let pattern = this.patternFromString(text);
 
         return this.checkPatterns([pattern]);
     }
 
     checkPatterns(patterns) {
-        let rows = null;
-        let cols = null;
+        let overallErrMsg = "Patterns must be the same size.";
+        let patternErrMsg = "Layers must be the same size.";
+        let layerErrMsg = "Rows must be the same length."
 
+        let overallErr = false;
+        let patternErr = false;
+        let layerErr = false;
+
+        let overallRows = null;
+        let overallCols = null;
         for (const pattern of patterns) {
+            let patternRows = null;
+            let patternCols = null;
             for (const layer of Object.getOwnPropertyNames(pattern)) {
-                if (rows === null) {
-                    rows = pattern[layer].length;
+                if (overallRows === null) {
+                    overallRows = pattern[layer].length;
                 }
-                if (rows !== pattern[layer].length) {
-                    return { ok: false, error: 'Layer row count mismatch.' };
+                if (patternRows === null) {
+                    patternRows = pattern[layer].length;
                 }
+                if (pattern[layer].length != overallRows) {
+                    overallErr = true;
+                }
+                if (pattern[layer].length != patternRows) {
+                    patternErr = true;
+                }
+                let layerCols = null;
                 for (const row of pattern[layer]) {
-                    if (cols === null) {
-                        cols = row.length;
+                    if (overallCols === null) {
+                        overallCols = row.length;
                     }
-                    if (cols !== row.length) {
-                        return { ok: false, error: 'Layer column count mismatch.' };
+                    if (patternCols === null) {
+                        patternCols = row.length;
+                    }
+                    if (layerCols === null) {
+                        layerCols = row.length;
+                    }
+                    if (row.length != overallCols) {
+                        overallErr = true;
+                    }
+                    if (row.length != patternCols) {
+                        patternErr = true;
+                    }
+                    if (row.length != layerCols) {
+                        layerErr = true;
                     }
                 }
             }
+        }
+
+        let errMsg = "";
+        if (layerErr) {
+            errMsg = layerErrMsg;
+        } else if (patternErr) {
+            errMsg = patternErrMsg;
+        } else if (overallErr) {
+            errMsg = overallErrMsg;
+        }
+
+        if (layerErr || patternErr || overallErr) {
+            return { ok: false, error: errMsg, value: patterns };
         }
 
         if (patterns.length === 1) {
@@ -1449,9 +2115,9 @@ class TRRBTEditor {
         }
 
         const changed =
-              force ||
-              (this.propertyNodes === null && node !== null) ||
-              (this.propertyNodes !== null && node !== this.propertyNodes.node);
+            force ||
+            (this.propertyNodes === null && node !== null) ||
+            (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
         if (!changed) {
             return;
@@ -1460,7 +2126,6 @@ class TRRBTEditor {
         if (!force) {
             let alert_strs = this.nodeSaveProperties(false);
             if (alert_strs.length > 0) {
-                console.log("update property editor error...")
                 if (!this.displayAlert(alert_strs, true)) {
                     return;
                 }
@@ -1473,21 +2138,21 @@ class TRRBTEditor {
 
         appendText(ed, 'Editor', true, true);
         appendText(ed, ' ');
-        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendText(ed, '(Hover over buttons or labels for helptext.)', false, false, true);
         appendBr(ed, true);
 
-        appendButton(ed, 'undo-edit', 'Undo', 'Undo an edit.', null, bind0(this, 'onUndo'));
-        appendButton(ed, 'redo-edit', 'Redo', 'Redo an edit.', null, bind0(this, 'onRedo'));
+        appendButton(ed, 'undo-edit', 'Undo', 'Undo the last edit.', null, bind0(this, 'onUndo'));
+        appendButton(ed, 'redo-edit', 'Redo', 'Redo the last undo.', null, bind0(this, 'onRedo'));
         appendText(ed, ' ');
         let treecolumnbuttons = document.getElementById("treecolumnbuttons");
         let hasHrz = false;
         for (var i = 0; i < treecolumnbuttons.children.length; i++) {
-            if (treecolumnbuttons.children[i].innerHTML == "Switch Layout") {
+            if (treecolumnbuttons.children[i].innerHTML == "Switch Layout Hrz/Vrt") {
                 hasHrz = true;
             }
         }
         if (!hasHrz) {
-            appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout", 'Toggle between horizontal and vertical layout.', null, bind0(this, 'onHrzVrt'));
+            appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout Hrz/Vrt", 'Toggle between horizontal and vertical layout for the trees.', null, bind0(this, 'onHrzVrt'));
         }
         appendButton(ed, 'import', 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
         appendButton(ed, 'export', 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
@@ -1495,7 +2160,7 @@ class TRRBTEditor {
 
         this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES['name'].name, + EDT_GAME_PROP_NAMES['name'].help, this.game.name)
         appendBr(ed, true);
-        appendButton(ed, 'template', 'Use as Template', 'Create a copy of the game to edit.', null, bind0(this, 'onTemplate'));
+        appendButton(ed, 'template', 'Use as Template', 'Create a local copy of the game to edit.', null, bind0(this, 'onTemplate'));
         appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
         appendBr(ed, true);
 
@@ -1556,39 +2221,50 @@ class TRRBTEditor {
             }
 
             const tooltip_help = 'Get more information about this node type.';
-            const tooltip_add_front = 'Add new node at front of children.';
-            const tooltip_add_back = 'Add new node at back of children.';
-            const tooltip_add_below = 'Add new child node, and move current children to new node.';
-            const tooltip_add_above = 'Add node as new parent to current node.';
+            const tooltip_add_front = 'Add new node to beginning of children.';
+            const tooltip_add_back = 'Add new node to end of children.';
+            const tooltip_add_below = 'Add node as a child, and move current children below it.';
+            const tooltip_add_above = 'Add node as the parent, below the current parent.';
 
             const node_clr = this.nodeColor(node.type, false);
             const node_help_str = EDT_NODE_HELP[node.type].help;
+            const node_friendly = proto.friendly || node.type;
 
-            appendButton(ed, 'help-' + node.type, '?', tooltip_help, node_clr, () => { alert(node.type + ': ' + node_help_str); });
-            appendText(ed, ' ' + node.type, true);
+            appendText(ed, node_friendly, true);
+            appendBr(ed);
+            appendText(ed, node_help_str, false, false, true);
             appendBr(ed, true);
 
             if (parent !== null) {
-                appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node earlier in parent.', null, bind1(this, 'onNodeShift', true));
-                appendButton(ed, 'node-shift-right', 'Move Later', 'Move node later in parent.', null, bind1(this, 'onNodeShift', false));
+                appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node one child earlier under parent.', null, bind1(this, 'onNodeShift', true));
+                appendButton(ed, 'node-shift-right', 'Move Later', 'Move node one child later under parent.', null, bind1(this, 'onNodeShift', false));
                 if (node.type === 'player') {
                     // pass
                 } else if (node.hasOwnProperty('children')) {
-                    appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent.', null, bind0(this, 'onNodeSwapUp'));
+                    appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent, such that its children become the children of the parent.', null, bind0(this, 'onNodeSwapUp'));
                 }
             }
             appendBr(ed, true);
 
-            appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Remember this subtree to paste later.', null, bind1(this, 'onNodeCopy', false));
-            if (node !== this.game.tree) {
-                appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Remember this subtree to paste later, and delete it.', null, bind1(this, 'onNodeCopy', true));
+            if (node.hasOwnProperty('children') && node.children.length > 0) {
+                appendButton(ed, 'node-copy-subtree', 'Copy Subtree', 'Copy this subtree. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', false));
+                if (node !== this.game.tree) {
+                    appendButton(ed, 'node-cut-subtree', 'Cut Subtree', 'Copy this subtree and delete the original. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', true));
+                }
+            } else {
+                appendButton(ed, 'node-copy-subtree', 'Copy Node', 'Copy this node. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', false));
+
+                if (node !== this.game.tree) {
+                    appendButton(ed, 'node-cut-subtree', 'Cut Node', 'Copy this node and delete the original. Click on the new parent to paste.', null, bind1(this, 'onNodeCopy', true));
+                }
             }
+
             if (this.clipboard !== null) {
                 if (node.hasOwnProperty('children')) {
                     if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
                         // pass
                     } else {
-                        appendButton(ed, 'node-paste-subtree', 'Paste Subtree', 'Paste the remembered subtree.', null, bind1(this, 'onNodePaste', true));
+                        appendButton(ed, 'node-paste-subtree', 'Paste Node/Subtree', 'Paste the remembered node/subtree to the end of the children.', null, bind1(this, 'onNodePaste', true));
                     }
                 }
             }
@@ -1596,13 +2272,13 @@ class TRRBTEditor {
 
             if (node.hasOwnProperty('children') && node.children.length > 0) {
                 if (node !== this.game.tree) {
-                    appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent.', null, bind1(this, 'onNodeDelete', true));
-                    appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and the whole subtree.', null, bind1(this, 'onNodeDelete', false));
+                    appendButton(ed, 'node-del-reparent', 'Delete and Reparent', 'Delete this node and move its children to the parent node.', null, bind1(this, 'onNodeDelete', true));
+                    appendButton(ed, 'node-del-subtree', 'Delete Subtree', 'Delete this node and all its children.', null, bind1(this, 'onNodeDelete', false));
                 }
                 appendButton(ed, 'node-del-children', 'Delete Children', 'Delete all children of this node.', null, bind1(this, 'onNodeDeleteChildren', false));
                 appendBr(ed, true);
             } else if (node !== this.game.tree) {
-                appendButton(ed, 'node-delete', 'Delete', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
+                appendButton(ed, 'node-delete', 'Delete Node', 'Delete this node.', null, bind1(this, 'onNodeDelete', false));
                 appendBr(ed, true);
             }
 
@@ -1649,17 +2325,17 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty('pattern')) {
                 const tileSize = getTileSize([node.pattern]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize);
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES['pattern'].name, EDT_NODE_PROP_NAMES['pattern'].help, node.pattern, tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
             }
             if (node.hasOwnProperty('lhs') || node.hasOwnProperty('rhs')) {
                 const hasLHS = node.hasOwnProperty('lhs');
                 const hasRHS = node.hasOwnProperty('rhs');
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node.lhs, node.rhs]) : (hasLHS ? getTileSize([node.lhs]) : getTileSize([node.rhs]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize);
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES['lhs'].name, EDT_NODE_PROP_NAMES['lhs'].help, node.lhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize);
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES['rhs'].name, EDT_NODE_PROP_NAMES['rhs'].help, node.rhs, tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
                 }
             }
 
@@ -1718,8 +2394,9 @@ class TRRBTEditor {
                         }
                     }
 
-                    appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(proto.type + ': ' + help_str); });
-                    appendText(elem, ' ' + proto.type);
+                    let friendlyName = (proto.friendly || proto.type);
+                    appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(friendlyName + ': ' + help_str); });
+                    appendText(elem, ' ' + friendlyName);
                     appendBr(elem);
                 }
             }
@@ -1731,25 +2408,25 @@ class TRRBTEditor {
 
     validateProperties() {
         const SAVE_PROPS =
-              [
-                  ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                  ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                  ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-                  ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-                  ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
-                  ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['withs', bind0(this, 'parseListProperty'), false],
-                  ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-                  ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-                  ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-                  ['rhs', bind0(this, 'parsePatternProperty'), undefined]
-              ];
+            [
+                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
+                ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['withs', bind0(this, 'parseListProperty'), false],
+                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                ['rhs', bind0(this, 'parsePatternProperty'), undefined]
+            ];
 
         let node = this.propertyNodes?.node;
 
@@ -1760,19 +2437,19 @@ class TRRBTEditor {
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             let full_id = 'prop_' + propid
             if ((EDT_GAME_PROP_NAMES[propid]
-                 || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
+                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
                 && document.getElementById(full_id)
-               ) {
+            ) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
-                    this.highlightProperty('prop_' + propid, true);
+                    this.highlightProperty('prop_' + propid, true, result.error);
                     let propname = ""
                     if (EDT_NODE_PROP_NAMES[propid]) {
                         propname = EDT_NODE_PROP_NAMES[propid].name
                     } else {
                         propname = EDT_GAME_PROP_NAMES[propid].name
                     }
-                    alert_strs.push('Error saving ' + propname + '.\n' + result.error);
+                    alert_strs.push('Error saving ' + propname + ' as ' + JSON.stringify(result.value) + '.\n' + result.error);
                 } else {
                     let new_value = result.value;
                     let old_value = EDT_NODE_PROP_NAMES[propid] ? node[propid] : this.game[propid]
@@ -1785,19 +2462,30 @@ class TRRBTEditor {
             }
         }
 
-        if (new_props.has('lhs') && new_props.has('rhs')) {
-            let result = this.checkPatterns([new_props.get('lhs'), new_props.get('rhs')]);
+        if (new_props.has('lhs') || new_props.has('rhs')) {
+            let lhs_val = node['lhs'];
+            let rhs_val = node['rhs'];
+            if (new_props.has('lhs')) {
+                lhs_val = new_props.get('lhs');
+            }
+            if (new_props.has('rhs')) {
+                rhs_val = new_props.get('rhs');
+            }
+            let result = this.checkPatterns([lhs_val, rhs_val]);
             if (!result.ok) {
-                this.highlightProperty('prop_lhs', true);
-                this.highlightProperty('prop_rhs', true);
-                let on_pattern_input = () => {
-                    this.highlightProperty('prop_lhs', false);
-                    this.highlightProperty('prop_rhs', false);
+                this.highlightProperty('prop_lhs', true, result.error);
+                this.highlightProperty('prop_rhs', true, result.error);
+                let on_pattern_input = (id) => {
+                    this.patternTextOnInput(id);
+                    this.highlightProperty('prop_lhs', false, result.error);
+                    this.highlightProperty('prop_rhs', false, result.error);
                     this.validateProperties();
                 }
-                document.getElementById('prop_lhs').oninput = on_pattern_input;
-                document.getElementById('prop_rhs').oninput = on_pattern_input;
-                alert_strs.push('Error saving ' + EDT_NODE_PROP_NAMES['lhs'].name + ' and ' + EDT_NODE_PROP_NAMES['rhs'].name + '.\n' + result.error);
+                document.getElementById('prop_lhs').oninput = () => on_pattern_input('prop_lhs');
+                document.getElementById('prop_rhs').oninput = () => on_pattern_input('prop_rhs');
+                alert_strs.push('Error saving ' + EDT_NODE_PROP_NAMES['lhs'].name + ' as ' + JSON.stringify(lhs_val) + ' and ' + EDT_NODE_PROP_NAMES['rhs'].name + ' as ' + JSON.stringify(rhs_val) + '.\n' + result.error);
+                new_props.delete('lhs');
+                new_props.delete('rhs');
             }
         }
 
@@ -1824,7 +2512,7 @@ class TRRBTEditor {
         let result = this.beforeSave(new_name);
         if (!result.ok) {
             if (document.getElementById('prop_name')) {
-                this.highlightProperty('prop_name', true);
+                this.highlightProperty('prop_name', true, result.error);
             }
             alert_strs.push('Error saving local game.\n' + result.error)
         }
@@ -1835,11 +2523,7 @@ class TRRBTEditor {
         let [old_props, new_props, alert_strs] = this.validateProperties();
         let node = this.propertyNodes?.node;
 
-        if (do_alert && alert_strs.length > 0) {
-            this.displayAlert(alert_strs);
-        }
-
-        if (new_props.size == 0) {
+        if (alert_strs.length > 0) {
             return alert_strs;
         }
         for (let [propid, value] of new_props.entries()) {
@@ -1849,18 +2533,26 @@ class TRRBTEditor {
                 this.game[propid] = value;
             }
         }
-        this.afterSave(old_props);
+        if (new_props.size > 0) {
+            this.afterSave(old_props);
+        }
         this.updateTreeStructureAndDraw(false, false);
-        return alert_strs
+        return alert_strs;
     }
 
     displayAlert(alert_strs, doConfirm) {
         if (alert_strs.length > 0) {
             let joined_alerts = alert_strs.join('\n\n');
+            telemetry("alert-" + joined_alerts);
             if (doConfirm) {
-                return confirm("The following errors were found when attempting to save: " + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
+                this.confirmedAlerts = joined_alerts;
+                return confirm("The following errors were found when attempting to save: \n" + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
             } else {
-                alert("The following errors were found when attempting to save: " + joined_alerts);
+                if (this.confirmedAlerts != joined_alerts) {
+                    alert("The following errors were found when attempting to save: " + joined_alerts);
+                }
+                this.confirmedAlerts = "";
+                return false;
             }
         }
     }
@@ -1910,6 +2602,7 @@ class TRRBTEditor {
             node.children.push(deepcopyobj(this.clipboard));
             this.updateTreeStructureAndDraw(false, false);
         }
+        this.afterSave();
     }
 
     onNodeDelete(reparentChildren) {
@@ -1950,6 +2643,7 @@ class TRRBTEditor {
 
         this.collapseNodes(node, false, true);
         this.updateTreeStructureAndDraw(false, false);
+        this.afterSave();
     }
 
     getNodePrototype(type) {
@@ -1984,6 +2678,7 @@ class TRRBTEditor {
             node.children.unshift(new_node);
         }
         this.updateTreeStructureAndDraw(false, false);
+        this.afterSave();
     }
 
     onNodeAddParent(type) {
@@ -2006,6 +2701,7 @@ class TRRBTEditor {
 
             this.updateTreeStructureAndDraw(false, false);
         }
+        this.afterSave();
     }
 
     onNodeShift(earlier) {
@@ -2031,6 +2727,7 @@ class TRRBTEditor {
                 }
             }
         }
+        this.afterSave();
     }
 
     onNodeSwapUp() {
@@ -2061,6 +2758,7 @@ class TRRBTEditor {
             reassignnode(node, tmp);
             this.updateTreeStructureAndDraw(false, false);
         }
+        this.afterSave();
     }
 
     onUndo() {
@@ -2071,7 +2769,7 @@ class TRRBTEditor {
         this.undoRedo();
     }
 
-    onShowHidEmojiPicker() {
+    onShowHideEmojiPicker() {
         if (this.emojiPicker !== null) {
             if (this.emojiPicker.style.display === 'none') {
                 this.emojiPicker.style.display = 'block';
@@ -2124,21 +2822,18 @@ class TRRBTEditor {
                 return;
             }
         }
-        if (!navigator.clipboard) {
-            alert('ERROR: Cannot find clipboard.');
-        } else {
-            let this_editor = this;
-            navigator.clipboard.readText().then(function (text) {
-                let gameImport = JSON.parse(text);
-                this_editor.clearNodeDispid(gameImport.tree);
 
-                this_editor.importGame(gameImport);
+        let this_editor = this;
+        readClipboard().then(function (text) {
+            let gameImport = JSON.parse(text);
+            this_editor.clearNodeDispid(gameImport.tree);
 
-                alert('Game imported from clipboard.');
-            }, function (err) {
-                alert('ERROR: Could not import game from clipboard.');
-            });
-        }
+            this_editor.importGame(gameImport);
+
+            alert('Game imported from clipboard.');
+        }, function (err) {
+            alert('ERROR: Could not import game from clipboard: ' + err);
+        });
     }
 
     onExport() {
@@ -2191,7 +2886,7 @@ class TRRBTEditor {
                 if (mouseButton === BUTTON_LEFT) {
                     this.mousePan = true;
                 } else if (mouseButton === BUTTON_RIGHT) {
-                    this.mouseZoom = this.mousePos;
+                    // this.mouseZoom = this.mousePos;
                 }
             }
         }
@@ -2207,8 +2902,15 @@ class TRRBTEditor {
             this.updatePropertyEditor(null, false);
         }
 
-        this.mousePan = null;
-        this.mouseZoom = null;
+        if (mouseButton === BUTTON_LEFT) {
+            this.mousePan = null;
+        } else if (mouseButton === BUTTON_RIGHT) {
+            if (this.mousePan !== null) {
+                this.mousePan = null;
+            } else {
+                this.mousePan = true;
+            }
+        }
 
         evt.preventDefault();
         this.requestDraw();
@@ -2286,6 +2988,46 @@ class TRRBTEditor {
         this.requestDraw();
     }
 
+    keyPan(evt) {
+        const left = this.keysDown.has('ArrowLeft');
+        const right = this.keysDown.has('ArrowRight');
+        const up = this.keysDown.has('ArrowUp');
+        const down = this.keysDown.has('ArrowDown');
+
+        let xpan = 0.0;
+        let ypan = 0.0;
+
+        if (left) {
+            if (!right) {
+                xpan = 1.0;
+            }
+        } else if (right) {
+            xpan = -1.0;
+        }
+
+        if (up) {
+            if (!down) {
+                ypan = 1.0;
+            }
+        } else if (down) {
+            ypan = -1.0;
+        }
+
+        const len = Math.sqrt(xpan * xpan + ypan * ypan);
+        if (len > 0.0001) {
+            this.translateXform(this.xformInv.a * this.keysPanning * xpan / len, this.xformInv.d * this.keysPanning * ypan / len);
+        }
+
+        if (left || right || up || down) {
+            this.keysPanning = Math.min(EDT_KEY_PAN_AMOUNT_MAX, this.keysPanning * EDT_KEY_PAN_AMOUNT_SCL);
+            setTimeout(bind0(this, 'keyPan'), EDT_KEY_PAN_DELAY);
+        } else {
+            this.keysPanning = false;
+        }
+
+        this.requestDraw();
+    }
+
     onKeyDown(evt) {
         let key = evt.key;
 
@@ -2298,9 +3040,15 @@ class TRRBTEditor {
                     this.updatePositionsAndDraw(false);
                 }
             }
-            if (key === 'v' || key === 'V') {
+            if (key === 'v' || key === 'V' || key === 'h' || key === 'H') {
                 this.layout_horizontal = !this.layout_horizontal;
                 this.updatePositionsAndDraw(false);
+            }
+            if (key === 'ArrowLeft' || key === 'ArrowUp' || key === 'ArrowRight' || key === 'ArrowDown') {
+                if (this.keysPanning === false) {
+                    this.keysPanning = EDT_KEY_PAN_AMOUNT_MIN;
+                    setTimeout(bind0(this, 'keyPan'), EDT_KEY_PAN_DELAY);
+                }
             }
         }
 
@@ -2327,14 +3075,19 @@ class TRRBTEditor {
                 pebbleHeight += pebble.offsetHeight;
             }
         }
-        parent.style.outline = "1px solid blue"
 
-        let targetHeight = grandparent.clientHeight - pebbleHeight;
+        parent.style.height = grandparent.offsetHeight - pebbleHeight + "px";
+        parent.style.width = grandparent.offsetWidth + "px";
 
-        let targetWidth = grandparent.clientWidth;
-        parent.style.height = targetHeight + "px";
-        parent.style.width = targetWidth + "px";
-        this.updateCanvasSize(targetWidth - 4, targetHeight - 4);
-        this.requestDraw();
+        if (!this.resizing) {
+            this.resizing = true;
+            let targetHeight = Math.min(parent.clientHeight, 1500);
+            console.log("target Height: " + targetHeight)
+
+            let targetWidth = Math.min(parent.clientWidth, 1500);
+            this.updateCanvasSize(targetWidth, targetHeight);
+            this.requestDraw();
+            this.resizing = false;
+        }
     }
 };

@@ -8,6 +8,10 @@ const TAU = 2 * Math.PI;
 const SEGMENTER = new Intl.Segmenter();
 
 var TELEMETRY_DATA = JSON.parse(localStorage.getItem("TELEMETRY_DATA")) || [];
+const TELEMETRY_SESSION = TELEMETRY_DATA.length
+TELEMETRY_DATA.push([]);
+const START_TIME = Date.now();
+telemetry("newSession");
 
 let G_nextId = 0;
 
@@ -77,6 +81,14 @@ function bind2(obj, fn, arg1, arg2) {
     return obj[fn].bind(obj, arg1, arg2);
 }
 
+function bind3(obj, fn, arg1, arg2, arg3) {
+    return obj[fn].bind(obj, arg1, arg2, arg3);
+}
+
+function bind4(obj, fn, arg1, arg2, arg3, arg4) {
+    return obj[fn].bind(obj, arg1, arg2, arg3, arg4);
+}
+
 
 
 function appendText(parent, text, bold = false, underline = false, italic = false) {
@@ -101,10 +113,15 @@ function appendText(parent, text, bold = false, underline = false, italic = fals
 
 function appendButton(parent, id, text, tooltip, color, callback) {
     const button = document.createElement('button');
+    button.id = "button-" + id;
     button.innerHTML = text;
     button.title = tooltip;
     if (color !== null) {
-        button.style.backgroundColor = color
+        let colors = color.split(";");
+        button.style.backgroundColor = colors[0];
+        if (colors.length > 1) {
+            button.style.color = colors[1];
+        }
     } else {
         button.style.backgroundColor = '#dddddd';
     }
@@ -116,8 +133,9 @@ function appendButton(parent, id, text, tooltip, color, callback) {
 }
 
 function telemetry(action) {
-    // console.log(action);
-    // TELEMETRY_DATA.push({"action": action, "time": Date()});
+    // let elapsed = Date.now() - START_TIME;
+    // console.log(action + " at " + elapsed);
+    // TELEMETRY_DATA[TELEMETRY_SESSION].push({"action": action, "time": elapsed});
     // localStorage.setItem("TELEMETRY_DATA", JSON.stringify(TELEMETRY_DATA));
 }
 
@@ -164,9 +182,10 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_
     }
 }
 
+const ALLOWED_PLAYER_CHILDREN = ['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap', 'x-replace', 'rewrite']
 function can_be_player_children(nodes) {
     for (const node of nodes) {
-        if (node.type !== 'rewrite') {
+        if (!ALLOWED_PLAYER_CHILDREN.includes(node.type)) {
             return false;
         }
     }
@@ -392,6 +411,9 @@ function xform_rule_rotate_fn(remorig) {
 function xform_rule_spin_fn(remorig) {
     function xform_rule_spin(node) {
         function pattern_func(patt) {
+            if (patt.length == 0) {
+                return [];
+            }
             return patternReplaceRotate(patt[0].slice(0).map((val, index) => patt.slice(0).map(row => row.slice(0)[index]).reverse()));
         }
         let button_obj = { 'left': 'up', 'up': 'right', 'right': 'down', 'down': 'left' };
@@ -662,4 +684,17 @@ function copyIntoGame(game, fromGame) {
 
 function emptyGame() {
     return { name: 'empty', sprites: null, tree: null };
+}
+
+async function readClipboard() {
+    if (!navigator.clipboard) {
+        throw 'Cannot find clipboard.';
+    }
+
+    const permissionStatus = await navigator.permissions.query({ name: 'clipboard-read' });
+    if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
+      return await navigator.clipboard.readText();
+    } else {
+      throw 'Clipboard permission denied.';
+    }
 }

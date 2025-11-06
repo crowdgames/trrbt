@@ -1,1 +1,215 @@
-{"name":"connect four","sprites":null,"tree":{"type":"order","children":[{"type":"set-board","pattern":{"main":[["\u2193","\u2193","\u2193","\u2193","\u2193","\u2193","\u2193"],["\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1"],["\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1"],["\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1"],["\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1"],["\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1"],["\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1","\u25a1"]]},"nid":""},{"type":"loop-until-all","nid":"gameloop","children":[{"type":"x-ident","nid":"ply","children":[{"type":"player","pid":"\ud83d\udd34","children":[{"type":"rewrite","lhs":{"main":[["\u2193"],["\u25a1"]]},"rhs":{"main":[["\u2193"],["\ud83d\udd34"]]},"nid":"","button":""}],"nid":""},{"type":"loop-until-all","children":[{"type":"all","comment":"","nid":"","children":[{"type":"rewrite","lhs":{"main":[["\ud83d\udd34"],["\u25a1"]]},"rhs":{"main":[["\u25a1"],["\ud83d\udd34"]]},"nid":"","button":""},{"type":"display-board","delay":0.01}]}],"comment":"","nid":""},{"type":"win","pid":"\ud83d\udd34","children":[{"type":"x-rotate","children":[{"type":"x-skew","children":[{"type":"match","pattern":{"main":[["\ud83d\udd34","\ud83d\udd34","\ud83d\udd34","\ud83d\udd34"]]}}]}]}],"nid":""}]},{"type":"x-swap","what":"\ud83d\udd34","with":"\ud83d\udfe1","children":[{"type":"x-link","target":"ply"}],"nid":""}]}]}}
+{
+    "name": "connect four",
+    "sprites": null,
+    "tree": {
+        "type": "order",
+        "children": [
+            {
+                "type": "set-board",
+                "pattern": {
+                    "main": [
+                        [
+                            "\u2193",
+                            "\u2193",
+                            "\u2193",
+                            "\u2193",
+                            "\u2193",
+                            "\u2193",
+                            "\u2193"
+                        ],
+                        [
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1"
+                        ],
+                        [
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1"
+                        ],
+                        [
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1"
+                        ],
+                        [
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1"
+                        ],
+                        [
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1"
+                        ],
+                        [
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1",
+                            "\u25a1"
+                        ]
+                    ]
+                },
+                "nid": ""
+            },
+            {
+                "type": "loop-until-all",
+                "nid": "gameloop",
+                "children": [
+                    {
+                        "type": "x-ident",
+                        "nid": "ply",
+                        "children": [
+                            {
+                                "type": "player",
+                                "pid": "\ud83d\udd34",
+                                "children": [
+                                    {
+                                        "type": "rewrite",
+                                        "lhs": {
+                                            "main": [
+                                                [
+                                                    "\u2193"
+                                                ],
+                                                [
+                                                    "\u25a1"
+                                                ]
+                                            ]
+                                        },
+                                        "rhs": {
+                                            "main": [
+                                                [
+                                                    "\u2193"
+                                                ],
+                                                [
+                                                    "\ud83d\udd34"
+                                                ]
+                                            ]
+                                        },
+                                        "nid": "",
+                                        "button": ""
+                                    }
+                                ],
+                                "nid": ""
+                            },
+                            {
+                                "type": "loop-until-all",
+                                "children": [
+                                    {
+                                        "type": "all",
+                                        "comment": "",
+                                        "nid": "",
+                                        "children": [
+                                            {
+                                                "type": "rewrite",
+                                                "lhs": {
+                                                    "main": [
+                                                        [
+                                                            "\ud83d\udd34"
+                                                        ],
+                                                        [
+                                                            "\u25a1"
+                                                        ]
+                                                    ]
+                                                },
+                                                "rhs": {
+                                                    "main": [
+                                                        [
+                                                            "\u25a1"
+                                                        ],
+                                                        [
+                                                            "\ud83d\udd34"
+                                                        ]
+                                                    ]
+                                                },
+                                                "nid": "",
+                                                "button": ""
+                                            },
+                                            {
+                                                "type": "display-board",
+                                                "delay": 0.01,
+                                                "comment": "show the chip falling"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "comment": "",
+                                "nid": ""
+                            },
+                            {
+                                "type": "win",
+                                "pid": "\ud83d\udd34",
+                                "children": [
+                                    {
+                                        "type": "x-rotate",
+                                        "children": [
+                                            {
+                                                "type": "x-skew",
+                                                "children": [
+                                                    {
+                                                        "type": "match",
+                                                        "pattern": {
+                                                            "main": [
+                                                                [
+                                                                    "\ud83d\udd34",
+                                                                    "\ud83d\udd34",
+                                                                    "\ud83d\udd34",
+                                                                    "\ud83d\udd34"
+                                                                ]
+                                                            ]
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "nid": ""
+                            }
+                        ]
+                    },
+                    {
+                        "type": "x-swap",
+                        "what": "\ud83d\udd34",
+                        "with": "\ud83d\udfe1",
+                        "children": [
+                            {
+                                "type": "x-link",
+                                "target": "ply",
+                                "comment": "Use the red player node as a template for the yellow player node",
+                                "friendly": "copy-subtree",
+                                "nid": ""
+                            }
+                        ],
+                        "nid": "",
+                        "comment": "create the yellow player by copying the red player and replacing red with yellow",
+                        "friendly": "swap-chars"
+                    }
+                ]
+            }
+        ]
+    }
+}

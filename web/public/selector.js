@@ -3,6 +3,12 @@ window.addEventListener('load', SEL_onLoad, false);
 var GAME_SETUPS = {}
 var LOCAL_GAME_SETUPS = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS")) || {};
 
+const TEMPLATES = [
+    'connect four',
+    'soko-demo',
+    'soko_enemy-incomplete',
+]
+
 function SEL_onLoad() {
     let div = document.getElementById('selectordiv');
 
@@ -43,9 +49,9 @@ function setOptions(select) {
         SEL_addOption(game + " (local)", game, ['local']);
     }
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
-        if (game != "NEW") {
-            SEL_addOption(game, game);
-        }
+        // if (TEMPLATES.includes(game)) {
+        SEL_addOption(game, game);
+        // }
     }
 }
 
@@ -77,12 +83,16 @@ function SEL_removeLocal(game) {
     SEL_update();
 }
 
-function SEL_startingGame() {
+function SEL_selectStartingGame() {
     const game = decodeURIComponent(window.location.hash.substring(1));
+
     if (game !== '' && GAME_SETUPS.hasOwnProperty(game)) {
-        return GAME_SETUPS[game];
+        onSelectGame(GAME_SETUPS[game], true);
+    } else if (game !== '' && LOCAL_GAME_SETUPS.hasOwnProperty(game)) {
+        onSelectGame(LOCAL_GAME_SETUPS[game], false);
+    } else {
+        onSelectGame(GAME_SETUPS['NEW'] || emptyGame(), true)
     }
-    return GAME_SETUPS['NEW'] || emptyGame();
 }
 
 function SEL_getGameTree(game) {

@@ -1,0 +1,101 @@
+.card {
+  resize: both;
+  overflow: hidden;
+  outline: 1px solid;
+}
+
+.canvasdiv {
+  height: 100%;
+  width: 100%;
+}
+
+.card-bar {
+  outline: 1px solid;
+  overflow: hidden;
+}
+
+.card-group>* {
+  margin: 5px;
+}
+
+.card-button-group {
+  float: right;
+}
+
+.card-column {
+  display: table-cell;
+  outline: 1px solid;
+}
+
+#editwindow {
+  display: table-row;
+}
+
+#toolbar {
+  text-align: center;
+}
+
+#toolbar>* {
+  display: inline-block;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.pattern-table-cell {
+  display: inline-grid;
+  vertical-align: top;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+
+.input-sizer {
+  border: solid 1px;
+
+  &::after,
+  input,
+  textarea {
+    width: auto;
+    min-width: 1em;
+    grid-area: 1 / 2;
+    font: inherit;
+    margin: 0;
+    resize: none;
+    background: none;
+    appearance: none;
+    border: none;
+  }
+
+  &::after {
+    content: attr(data-value) ' ';
+    visibility: hidden;
+    white-space: pre-wrap;
+  }
+
+  &:focus-within {
+    outline: solid 1px;
+
+    textarea:focus,
+    input:focus {
+      outline: none;
+    }
+  }
+}
+
+.pattern-table {
+  outline: solid 1px;
+  resize: both;
+  overflow: hidden;
+}
+
+.pattern-table-cell > button {
+  font-weight: bold;
+  font-size: large;
+  height: 25px;
+  width: 25px;
+  margin: auto;
+}

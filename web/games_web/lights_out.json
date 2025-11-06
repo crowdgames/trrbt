@@ -8,7 +8,7 @@
         "children": [
             {
                 "type": "set-board",
-                "comment": "",
+                "comment": "main is the state of the lightbulbs; active tracks which lightbulbs should be flipped.",
                 "nid": "",
                 "pattern": {
                     "main": [
@@ -72,7 +72,7 @@
                 "children": [
                     {
                         "type": "player",
-                        "comment": "",
+                        "comment": "flip a bulb and set it to active",
                         "nid": "",
                         "children": [
                             {
@@ -136,7 +136,7 @@
                                 }
                             }
                         ],
-                        "pid": "_1"
+                        "pid": "1"
                     },
                     {
                         "type": "x-spin",
@@ -145,7 +145,7 @@
                         "children": [
                             {
                                 "type": "rewrite",
-                                "comment": "",
+                                "comment": "set all adjacent bulbs to active",
                                 "nid": "",
                                 "button": "",
                                 "lhs": {
@@ -170,7 +170,7 @@
                     },
                     {
                         "type": "rewrite",
-                        "comment": "",
+                        "comment": "unset original bulbs, which were flipped already by the player rewrite",
                         "nid": "",
                         "button": "",
                         "lhs": {
@@ -190,7 +190,7 @@
                     },
                     {
                         "type": "loop-until-all",
-                        "comment": "",
+                        "comment": "flip the adjacent bulbs that have been marked active, and unset the active layer",
                         "nid": "",
                         "children": [
                             {
@@ -253,11 +253,12 @@
                                     ]
                                 }
                             }
-                        ]
+                        ],
+                        "friendly": "loop-until-all-fail"
                     },
                     {
                         "type": "win",
-                        "comment": "",
+                        "comment": "win when all lights are on.",
                         "nid": "",
                         "children": [
                             {
@@ -278,7 +279,7 @@
                                 ]
                             }
                         ],
-                        "pid": ""
+                        "pid": "1"
                     }
                 ]
             }

@@ -9,10 +9,10 @@ const ENG_UNDO_RECENT_MAX = 100;
 
 const ENG_LOOP_CHECK_MAX = 100000;
 
-const ENG_CELL_SIZE_MIN     =  15;
-const ENG_CELL_SIZE_MAX     =  60;
-const ENG_CELL_SIZE_DEFAULT =  50;
-const ENG_CELL_SIZE_STEP    =   5;
+const ENG_CELL_SIZE_MIN = 15;
+const ENG_CELL_SIZE_MAX = 60;
+const ENG_CELL_SIZE_DEFAULT = 50;
+const ENG_CELL_SIZE_STEP = 5;
 
 
 
@@ -767,7 +767,7 @@ class TRRBTEngine {
 
         while (this.stepReady()) {
             this.step();
-            ++ stepped;
+            ++stepped;
         }
 
         return stepped;
@@ -949,7 +949,7 @@ class TRRBTWebEngine extends TRRBTEngine {
                 }
                 return image_reader.read().then(process);
             } else {
-                this_engine.spriteArrays[image_name] = { array:image_read_array, size:image_info.size };
+                this_engine.spriteArrays[image_name] = { array: image_read_array, size: image_info.size };
                 this_engine.resizeSpriteImage(image_name);
             }
         });
@@ -1012,7 +1012,7 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         appendText(ed, 'Engine', true, true);
         appendText(ed, ' ');
-        appendText(ed, '(Hover for additional info)', false, false, true);
+        appendText(ed, '(Hover over buttons for helptext.)', false, false, true);
         appendBr(ed, true);
 
         appendButton(ed, 'restart-engine', 'Restart', 'Restart game.', null, bind0(this, 'onRestart'));
@@ -1020,7 +1020,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.gameResultText = document.createElement('span');
         this.gameResultText.style.color = '#4444cc';
         this.gameResultText.innerHTML = '';
-        this.gameResultText.title = 'Game is over.  Restart to play again.';
+        this.gameResultText.title = 'Game is over. Reset to play again.';
         this.gameResultText.style.display = 'none';
         ed.appendChild(this.gameResultText);
         appendBr(ed);
@@ -1044,12 +1044,12 @@ class TRRBTWebEngine extends TRRBTEngine {
 
         appendBr(ed, true);
 
-        appendButton(ed, 'engine-breakresume', 'Break/Resume', 'Toggle between break/running mode.', null, bind0(this, 'onBreakResume'));
+        appendButton(ed, 'engine-breakresume', 'Step Through Tree', 'Use step mode to see the runtime progress through the transformed tree.', null, bind0(this, 'onBreakResume'));
         appendText(ed, ' ');
         this.breakResumeText = document.createElement('span');
         this.breakResumeText.style.color = '#fc5d5d';
-        this.breakResumeText.innerHTML = 'In break mode (resume or restart).';
-        this.breakResumeText.title = 'Game is currently in break mode, where you must manually step. Resume or restart to play as normal.';
+        this.breakResumeText.innerHTML = 'Click Start/Continue to play without stopping.';
+        this.breakResumeText.title = 'Click Next Tree Node / Undo Tree Node to follow the transformed tree through gameplay. Start/Continue to play as normal.';
         this.breakResumeText.style.display = 'none';
         ed.appendChild(this.breakResumeText);
         appendBr(ed);
@@ -1157,7 +1157,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
 
-        const TEXT_YOFFSET  = 0.05;
+        const TEXT_YOFFSET = 0.05;
         const EMOJI_YOFFSET = 0.17;
 
         for (let rr = 0; rr < this.state.rows; rr += 1) {
@@ -1386,14 +1386,23 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.updateLayersDiv();
     }
 
-    updateStepManual(setting) {
-        if (setting != this.stepManual) {
+    updateStepManual(setting, force = false) {
+        let breakBtn = document.getElementById("button-engine-breakresume");
+        let undoStepBtn = document.getElementById("button-engine-undo-step");
+        let nextStepBtn = document.getElementById("button-engine-next-step");
+        if (force || setting != this.stepManual) {
             this.stepManual = setting;
             if (this.breakResumeText !== null) {
                 if (this.stepManual) {
                     this.breakResumeText.style.display = 'inline';
+                    breakBtn.innerHTML = "Start/Continue";
+                    undoStepBtn.style.display = 'inline';
+                    nextStepBtn.style.display = 'inline';
                 } else {
                     this.breakResumeText.style.display = 'none';
+                    breakBtn.innerHTML = "Step Through Tree";
+                    undoStepBtn.style.display = 'none';
+                    nextStepBtn.style.display = 'none';
                 }
             }
         }
