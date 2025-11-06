@@ -1,6 +1,9 @@
 # trrbt
 
-## General Setup
+## Web Setup
+open web/public/index.html
+
+## Python Setup (OLD)
 
 To setup, you will need pipenv:
 

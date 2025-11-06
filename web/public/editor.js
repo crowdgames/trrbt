@@ -18,10 +18,10 @@ const EDT_TEXT_LINE = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
 const EDT_TEXT_RECT_END = 4;
 
-const EDT_PARSE_TEXT_INT    = 0;
-const EDT_PARSE_TEXT_FLOAT  = 1;
-const EDT_PARSE_TEXT_WORD   = 2;
-const EDT_PARSE_TEXT_TEXT   = 3;
+const EDT_PARSE_TEXT_INT = 0;
+const EDT_PARSE_TEXT_FLOAT = 1;
+const EDT_PARSE_TEXT_WORD = 2;
+const EDT_PARSE_TEXT_TEXT = 3;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
 const EDT_COLOR_ERROR = '#ffdddd';
@@ -71,7 +71,7 @@ const EDT_XNODE_PROTOTYPES = [
 ];
 
 const EDT_NODE_HELP = {
-    'player': { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise..' },
+    'player': { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise.' },
 
     'win': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
     'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player losing; otherwise fails.' },
@@ -933,14 +933,14 @@ class TRRBTEditor {
                     const midy = 0.5 * (ny + nh + cny);
 
                     const edge = this.layout_horizontal ?
-                          [nx + nw / 2, ny + nh,
-                           nx + nw / 2, midy,
-                           cnx + cnw / 2, midy,
-                           cnx + cnw / 2, cny] :
-                          [nx + nw, ny + nh / 2,
-                           midx, ny + nh / 2,
-                           midx, cny + cnh / 2,
-                           cnx, cny + cnh / 2];
+                        [nx + nw / 2, ny + nh,
+                        nx + nw / 2, midy,
+                        cnx + cnw / 2, midy,
+                        cnx + cnw / 2, cny] :
+                        [nx + nw, ny + nh / 2,
+                            midx, ny + nh / 2,
+                            midx, cny + cnh / 2,
+                            cnx, cny + cnh / 2];
 
                     if (stackNodes.has(child.dispid)) {
                         stackEdges.push(edge);
@@ -1083,9 +1083,9 @@ class TRRBTEditor {
                     const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
                     const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
                     ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
-                                   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
-                                   width,
-                                   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
+                        ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+                        width,
+                        texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
         }
@@ -1162,48 +1162,6 @@ class TRRBTEditor {
                 }
             }
         }
-    }
-
-    navigateToNode(node) {
-        this.collapseNodes(this.game.tree, true, true);
-        this.collapseNodes(node, true, false);
-        let uncollapse = node;
-        while (uncollapse !== null) {
-            this.collapseNodes(uncollapse, false, false);
-            uncollapse = this.findNodeParent(uncollapse);
-        }
-
-        this.updatePositionsAndDraw(true);
-        this.doNodeDrawPositionUpdate();
-
-        const rect = this.nodeDrawPositions.get(node.dispid);
-        if (rect) {
-            this.resetXform();
-            this.translateXform(this.canvas.width / 2 / PIXEL_RATIO - rect.x - 0.5 * rect.w, this.canvas.height / 2 / PIXEL_RATIO - rect.y - 0.5 * rect.h);
-        }
-
-        this.updatePropertyEditor(node, false)
-    }
-
-    navigateToNode(node) {
-        this.collapseNodes(this.game.tree, true, true);
-        this.collapseNodes(node, true, false);
-        let uncollapse = node;
-        while (uncollapse !== null) {
-            this.collapseNodes(uncollapse, false, false);
-            uncollapse = this.findNodeParent(uncollapse);
-        }
-
-        this.updatePositionsAndDraw(true);
-        this.doNodeDrawPositionUpdate();
-
-        const rect = this.nodeDrawPositions.get(node.dispid);
-        if (rect) {
-            this.resetXform();
-            this.translateXform(this.canvas.width / 2 / PIXEL_RATIO - rect.x - 0.5 * rect.w, this.canvas.height / 2 / PIXEL_RATIO - rect.y - 0.5 * rect.h);
-        }
-
-        this.updatePropertyEditor(node, false)
     }
 
     navigateToNode(node) {
@@ -1478,7 +1436,12 @@ class TRRBTEditor {
                 const input = document.createElement('input');
                 input.type = "text";
                 input.value = layer;
+                input.onblur = () => this.layerTextOnBlur(id, input, pattern, layer);
+                input.onfocus = () => {
+                    input.setSelectionRange(0, input.value.length);
+                }
                 cell.appendChild(input);
+                appendButton(cell, 'remove-pattern-layer-' + id + layer, 'Delete Layer', 'Delete this layer.', 'red;white', bind4(this, 'onRemovePatternLayer', id, pattern, layer));
                 row.appendChild(cell);
                 inputTable.appendChild(row);
             }
@@ -1563,6 +1526,7 @@ class TRRBTEditor {
             }
             tableInput.appendChild(inputTable);
         }
+        appendButton(tableInput, 'add-pattern-layer-' + id, 'Add Layer', 'Add a new layer.', 'green;white', bind4(this, 'onAddPatternLayer', id, pattern));
 
         this.equalizeCells();
 
@@ -1585,6 +1549,17 @@ class TRRBTEditor {
         }
     }
 
+    onAddPatternLayer(id, pattern) {
+        let layer = "NEW"
+        let uniqueName = layer
+        let i = 1
+        while (uniqueName in pattern) {
+            uniqueName = `${layer}${i}`
+            i++
+        }
+        pattern[uniqueName] = [[]]
+        this.updatePatternText(id, pattern, uniqueName);
+    }
     onAddPatternCol(id, pattern, layer, c) {
         for (let r = 0; r < pattern[layer].length; r++) {
             pattern[layer][r].splice(c + 1, 0, " ");
@@ -1599,6 +1574,10 @@ class TRRBTEditor {
         pattern[layer].splice(r + 1, 0, newRow);
         this.updatePatternText(id, pattern, layer, r + 1, 0);
     }
+    onRemovePatternLayer(id, pattern, layer) {
+        delete pattern[layer]
+        this.updatePatternText(id, pattern);
+    }
     onRemovePatternCol(id, pattern, layer, c) {
         for (let r = 0; r < pattern[layer].length; r++) {
             pattern[layer][r].splice(c, 1);
@@ -1608,6 +1587,28 @@ class TRRBTEditor {
     onRemovePatternRow(id, pattern, layer, r) {
         pattern[layer].splice(r, 1);
         this.updatePatternText(id, pattern, layer, Math.max(r - 1, 0), 0);
+    }
+
+    layerTextOnBlur(id, input, pattern, layer) {
+        if (this.preventInput) {
+            e.preventDefault();
+            this.preventInput = false;
+            return;
+        }
+        let newLayerName = input.value.trim();
+        console.log(newLayerName)
+        if (newLayerName == "") {
+            this.displayAlert(["Layer name cannot be blank."])
+            return
+        }
+        if (newLayerName != layer && newLayerName in pattern) {
+            this.displayAlert([`Layer ${newLayerName} already exists in the pattern.`], true)
+            return
+        }
+
+        pattern[newLayerName] = pattern[layer]
+        delete pattern[layer]
+        this.updatePatternText(id, pattern, newLayerName, 0, 0, input.selectionStart, input.selectionStart);
     }
 
     patternCellOnKeyDown(id, inputTable, input, pattern, layer, r, c, e) {
@@ -1845,7 +1846,7 @@ class TRRBTEditor {
         this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
     }
 
-    updatePatternText(id, pattern, layer, r = 0, c = 0, fis = -1, fie = -1) {
+    updatePatternText(id, pattern, layer = "", r = 0, c = 0, fis = -1, fie = -1) {
         let patternText = this.textFromPattern(pattern).patternText
         let textInput = document.getElementById(id);
         if (textInput != null) {
@@ -2114,9 +2115,9 @@ class TRRBTEditor {
         }
 
         const changed =
-              force ||
-              (this.propertyNodes === null && node !== null) ||
-              (this.propertyNodes !== null && node !== this.propertyNodes.node);
+            force ||
+            (this.propertyNodes === null && node !== null) ||
+            (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
         if (!changed) {
             return;
@@ -2407,25 +2408,25 @@ class TRRBTEditor {
 
     validateProperties() {
         const SAVE_PROPS =
-              [
-                  ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                  ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                  ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-                  ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-                  ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
+            [
+                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
                 ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                  ['withs', bind0(this, 'parseListProperty'), false],
-                  ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-                  ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-                  ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-                  ['rhs', bind0(this, 'parsePatternProperty'), undefined]
-              ];
+                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                ['withs', bind0(this, 'parseListProperty'), false],
+                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                ['rhs', bind0(this, 'parsePatternProperty'), undefined]
+            ];
 
         let node = this.propertyNodes?.node;
 
@@ -2436,9 +2437,9 @@ class TRRBTEditor {
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             let full_id = 'prop_' + propid
             if ((EDT_GAME_PROP_NAMES[propid]
-                 || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
+                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
                 && document.getElementById(full_id)
-               ) {
+            ) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     this.highlightProperty('prop_' + propid, true, result.error);
