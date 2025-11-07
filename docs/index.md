@@ -1,26 +1,7 @@
 # Game Behaviour Trees Using Tile Rewrite Rules
 
 ## Abstract
-Game creation tools that minimize required resources and
-knowledge to use them have transformed the practice of learn-
-ing and prototyping game design, especially in hobbyist and
-indie development contexts. However, little is known about
-how the different programming models found underlying these
-tools affect their expressiveness and usability. A recently pro-
-posed programming model allows creators to author the logic
-of the entire game using a single “game behaviour tree” with
-tile-grid rewrite rules at the leaves. We contribute to this body
-of knowledge by studying this recently proposed programming
-model. We have used it to make clones of popular games as
-case studies, from which we extracted a number of design pat-
-terns. To gain formative information about usability, we also
-conducted a small user study with people who have varying
-levels of experience authoring games with other tools. We find
-game behaviour trees capable of expressing a wide variety of
-2D turn-based games. Study participants are quick to grasp
-the underlying concepts, but further research is needed to un-
-derstand discrepancies with user intuitions that may arise from
-their familiarity with different programming models.
+Game creation tools that minimize required resources and knowledge to use them have transformed the practice of learning and prototyping game design, especially in hobbyist and indie development contexts. However, little is known about how the different programming models found underlying these tools affect their expressiveness and usability. A recently proposed programming model allows creators to author the logic of the entire game using a single “game behaviour tree” with tile-grid rewrite rules at the leaves. We contribute to this body of knowledge by studying this recently proposed programming model. We have used it to make clones of popular games as case studies, from which we extracted a number of design patterns. To gain formative information about usability, we also conducted a small user study with people who have varying levels of experience authoring games with other tools. We find game behaviour trees capable of expressing a wide variety of 2D turn-based games. Study participants are quick to grasp the underlying concepts, but further research is needed to understand discrepancies with user intuitions that may arise from their familiarity with different programming models.
 
 ## Live Editor
 [Explore the live editor!](/edengine.html)
