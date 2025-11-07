@@ -94,7 +94,7 @@ const EDT_NODE_HELP = {
     'display-board': { color: [1, 0, 1], help: 'Causes the board display to update. Always succeeds.' },
 
     'match': { color: [0, 1, 1], help: 'Succeeds if the pattern is found anywhere on the board, otherwise fails.' },
-    'match-times': { color: [0, 1, 1], help: 'Succeeds if the pattern is foundn on the current board the given number of times, otherwise fails.' },
+    'match-times': { color: [0, 1, 1], help: 'Succeeds if the pattern is found on the current board the given number of times, otherwise fails.' },
 
     'x-ident': { color: [1, 1, 1], help: 'No effect. Nodes are visually grouped only.' },
     'x-prune': { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
