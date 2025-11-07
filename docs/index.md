@@ -25,6 +25,9 @@ their familiarity with different programming models.
 ## Live Editor
 [Explore the live editor!](/edengine.html)
 
+## Code
+Explore the code on [GitHub](https://github.com/crowdgames/trrbt).
+
 ## Study Data
 The study materials and full text of the paper are on [OSF](https://osf.io/btqcj/).
 
