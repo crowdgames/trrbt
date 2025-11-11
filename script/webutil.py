@@ -4,7 +4,6 @@ import PIL.Image
 import struct
 import sys
 import zlib
-sys.path += ['.', '..']
 import util
 
 def get_sprite_data(spritefile):

@@ -3,7 +3,6 @@ import base64
 import json
 import os
 import sys
-sys.path.append('..')
 import util
 
 def get_sprite_data(sprites):
@@ -43,12 +42,12 @@ if __name__ == '__main__':
     parser.add_argument('--sprites', type=str, help='Sprite file.')
     args = parser.parse_args()
 
-    game = util.yaml2bt(args.filename, True)
+    game = util.yaml2bt(args.filename, True, True)
 
     sprite_data = get_sprite_data(args.sprites) if args.sprites else None
 
     with open(args.outname + '.js', 'wt') as f:
-        f.write('const GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data}) + ';\n')
+        f.write('const GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':util.objify(game.tree), 'sprites':sprite_data}) + ';\n')
 
     with open(args.outname + '.html', 'wt') as f:
         f.write('<!DOCTYPE html>\n')
