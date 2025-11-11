@@ -43,7 +43,6 @@ function setOptions(select) {
     select.options.length = 0;
 
     SEL_addOption('--', '');
-    SEL_addOption('NEW', 'NEW');
 
     for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS).sort()) {
         SEL_addOption(game + " (local)", game, ['local']);
