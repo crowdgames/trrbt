@@ -121,8 +121,8 @@ def require_js():
         js += 'localStorage.getItem = (key) => { var ret = localStorage.get(key); return (ret === undefined) ? null : ret; };\n'
         js += 'localStorage.setItem = localStorage.set;\n'
 
-        js += open(os.path.join(dirname, 'web/common.js')).read() + '\n'
-        js += open(os.path.join(dirname, 'web/engine.js')).read() + '\n'
+        js += open(os.path.join(dirname, '..', 'docs', 'common.js')).read() + '\n'
+        js += open(os.path.join(dirname, '..', 'docs', 'engine.js')).read() + '\n'
 
         js += '() => { return {\n'
         js += '  xform_apply_to_tree:xform_apply_to_tree,\n'

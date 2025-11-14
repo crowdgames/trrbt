@@ -1,3 +1,70 @@
+const DEFAULT_LAYER      = 'main';
+
+const NDX_IDENT          = 'x-ident';
+const NDX_PRUNE          = 'x-prune';
+const NDX_MIRROR         = 'x-mirror';
+const NDX_SKEW           = 'x-skew';
+const NDX_ROTATE         = 'x-rotate';
+const NDX_SPIN           = 'x-spin';
+const NDX_FLIP           = 'x-flip';
+const NDX_SWAP_ONLY      = 'x-swap';
+const NDX_REPLACE_ONLY   = 'x-replace';
+
+const NDX_UNROLL_REPLACE = 'x-unroll-replace';
+const NDX_LINK           = 'x-link';
+const NDX_FILE           = 'x-file';
+
+const ND_PLAYER          = 'player';
+
+const ND_WIN             = 'win';
+const ND_LOSE            = 'lose';
+const ND_DRAW            = 'draw';
+
+const ND_ORDER           = 'order';
+const ND_ALL             = 'all';
+const ND_NONE            = 'none';
+const ND_RND_TRY         = 'random-try';
+const ND_LOOP_UNTIL_ALL  = 'loop-until-all';
+const ND_LOOP_TIMES      = 'loop-times';
+
+const ND_REWRITE         = 'rewrite';
+const ND_SET_BOARD       = 'set-board';
+
+const ND_MATCH           = 'match';
+const ND_MATCH_TIMES     = 'match-times';
+
+const ND_LAYER_TEMPLATE  = 'layer-template';
+const ND_APPEND_ROWS     = 'append-rows';
+const ND_APPEND_COLS     = 'append-columns';
+const ND_DISPLAY_BOARD   = 'display-board';
+
+const NKEY_TYPE          = 'type';
+const NKEY_CHILDREN      = 'children';
+const NKEY_NID           = 'nid';
+const NKEY_COMMENT       = 'comment';
+
+const NKEY_PATTERN       = 'pattern';
+const NKEY_LHS           = 'lhs';
+const NKEY_RHS           = 'rhs';
+const NKEY_LAYER         = 'layer';
+
+const NKEY_PID           = 'pid';
+const NKEY_REMORIG       = 'remorig';
+const NKEY_TIMES         = 'times';
+const NKEY_WHAT          = 'what';
+const NKEY_WITH          = 'with';
+const NKEY_WITHS         = 'withs';
+const NKEY_FILE          = 'file';
+const NKEY_TARGET        = 'target';
+const NKEY_DESC          = 'desc';
+const NKEY_DELAY         = 'delay';
+const NKEY_BUTTON        = 'button';
+
+const FKEY_NAME          = 'name';
+const FKEY_TREE          = 'tree';
+
+
+
 const BUTTON_LEFT = 0;
 const BUTTON_RIGHT = 2;
 const PIXEL_RATIO = (typeof (window) === 'undefined') ? 1 : window.devicePixelRatio;
@@ -7,17 +74,22 @@ const TAU = 2 * Math.PI;
 
 const SEGMENTER = new Intl.Segmenter();
 
-var TELEMETRY_DATA = JSON.parse(localStorage.getItem("TELEMETRY_DATA")) || [];
-const TELEMETRY_SESSION = TELEMETRY_DATA.length
-TELEMETRY_DATA.push([]);
-const START_TIME = Date.now();
-telemetry("newSession");
-
 let G_nextId = 0;
 
 function getNextId() {
     ++G_nextId;
     return G_nextId;
+}
+
+if (typeof alert === 'undefined') {
+    function alert(message) {
+        console.log(message);
+    }
+}
+
+if (typeof telemetry === 'undefined') {
+    function telemetry(action) {
+    }
 }
 
 function copymap(map) {
@@ -130,13 +202,6 @@ function appendButton(parent, id, text, tooltip, color, callback) {
         callback();
     };
     parent.appendChild(button)
-}
-
-function telemetry(action) {
-    // let elapsed = Date.now() - START_TIME;
-    // console.log(action + " at " + elapsed);
-    // TELEMETRY_DATA[TELEMETRY_SESSION].push({"action": action, "time": elapsed});
-    // localStorage.setItem("TELEMETRY_DATA", JSON.stringify(TELEMETRY_DATA));
 }
 
 function appendBr(parent, extraSpace=false) {
