@@ -756,10 +756,16 @@ async function readClipboard() {
         throw 'Cannot find clipboard.';
     }
 
-    const permissionStatus = await navigator.permissions.query({ name: 'clipboard-read' });
-    if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
-      return await navigator.clipboard.readText();
+    let permissionDenied = false;
+    try {
+        const permissionStatus = await navigator.permissions.query({ name: 'clipboard-read' });
+        permissionDenied = !(permissionStatus.state === 'granted' || permissionStatus.state === 'prompt');
+    } catch (error) {
+    }
+
+    if (permissionDenied) {
+        throw 'Clipboard permission denied.';
     } else {
-      throw 'Clipboard permission denied.';
+        return await navigator.clipboard.readText();
     }
 }
