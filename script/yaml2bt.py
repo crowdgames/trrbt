@@ -1,4 +1,4 @@
-import argparse, json, sys
+import argparse, sys
 import util
 
 if __name__ == '__main__':
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     if args.fmt == 'gv':
         out_str = util.game_print_gv(game)
     elif args.fmt == 'json':
-        out_str = json.dumps({'name':game.name, 'tree':util.objify(game.tree)})
+        out_str = util.str_json({'name':game.name, 'tree':util.objify(game.tree)})
     else:
         raise RuntimeError(f'unrecognized format {args.fmt}')
 

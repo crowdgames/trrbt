@@ -1,6 +1,5 @@
-import argparse, json, sys
+import argparse, sys
 import util
-
 
 
 def game_agent(filename, enum, board_init, random_seed):
@@ -30,12 +29,12 @@ def game_agent(filename, enum, board_init, random_seed):
             enum_key = str((stateBoard, stateResult))
             if enum_key not in enum_seen:
                 enum_seen[enum_key] = None
-                print(json.dumps({'board':stateBoard, 'steps':steps, 'game_result':stateResult}), flush=True)
+                util.print_json({'board':stateBoard, 'steps':steps, 'game_result':stateResult})
 
         if stateResult is not None:
             if stateResult['result'] == 'win':
                 if not enum:
-                    print(json.dumps({'board':stateBoard, 'steps':steps, 'game_result':stateResult, 'success':True}), flush=True)
+                    util.print_json({'board':stateBoard, 'steps':steps, 'game_result':stateResult, 'success':True})
                     return
             else:
                 continue
@@ -57,7 +56,7 @@ def game_agent(filename, enum, board_init, random_seed):
                     seen[nextStateStr] = None
 
     if not enum:
-        print(json.dumps({'success':False}), flush=True)
+        util.print_json({'success':False})
 
 
 
@@ -69,6 +68,6 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, help='Random seed.')
     args = parser.parse_args()
 
-    board_init = None if args.board is None else json.loads(args.board)
+    board_init = None if args.board is None else util.jsonloadstr(args.board)
 
     game_agent(args.filename, args.enum, board_init, args.seed)

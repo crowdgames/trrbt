@@ -1,6 +1,5 @@
 import argparse
 import base64
-import json
 import os
 import sys
 import util
@@ -47,7 +46,7 @@ if __name__ == '__main__':
     sprite_data = get_sprite_data(args.sprites) if args.sprites else None
 
     with open(args.outname + '.js', 'wt') as f:
-        f.write('const GAME_SETUP = ' + json.dumps({'name':game.name, 'tree':util.objify(game.tree), 'sprites':sprite_data}) + ';\n')
+        f.write('const GAME_SETUP = ' + util.str_json({'name':game.name, 'tree':util.objify(game.tree), 'sprites':sprite_data}) + ';\n')
 
     with open(args.outname + '.html', 'wt') as f:
         f.write('<!DOCTYPE html>\n')

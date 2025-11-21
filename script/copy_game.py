@@ -1,7 +1,7 @@
 import argparse
 import base64
-import json
 import os
+import util
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Copy JSON game to JSON.')
@@ -11,10 +11,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     game_file = os.path.splitext(args.filename)[0]
-    with open(os.path.join(args.gamefolder, args.filename), 'rt') as f:
-        game_json = json.load(f)
-
-    game_entry = 'GAME_SETUPS[\'' + game_json['name'] + '\'] = ' + json.dumps(game_json) + ';\n'
+    game_json = util.jsonload(os.path.join(args.gamefolder, args.filename))
+    game_entry = 'GAME_SETUPS[\'' + game_json['name'] + '\'] = ' + util.str_json(game_json) + ';\n'
 
     with open(args.appendfile, 'at') as f:
         f.write(game_entry);

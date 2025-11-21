@@ -609,8 +609,17 @@ def game_print_gv(game):
 
     return '\n'.join(lines) + '\n'
 
+def str_json(obj):
+    return json.dumps(obj,separators=(',', ':'))
+
+def print_json(obj):
+    print(str_json(obj), flush=True)
+
 def game_print_json(game):
-    print(json.dumps({'name':game.name, 'tree':game.tree}))
+    print_json({'name':game.name, 'tree':game.tree})
+
+def jsonloadstr(st):
+    return json.loads(st)
 
 def jsonload(filename):
     with open(filename, 'rt') as f:

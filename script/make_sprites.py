@@ -1,7 +1,7 @@
 import argparse
-import json
 import os
 import sys
+import util
 import webutil
 
 if __name__ == '__main__':
@@ -11,4 +11,4 @@ if __name__ == '__main__':
 
     sprite_data = webutil.get_sprite_data(args.sprites)
 
-    sys.stdout.write(json.dumps(sprite_data) + '\n')
+    util.print_json(sprite_data)

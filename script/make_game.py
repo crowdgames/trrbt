@@ -20,7 +20,7 @@ if __name__ == '__main__':
     sprite_data = webutil.get_sprite_data(os.path.join(args.gamefolder, args.sprites)) if args.sprites else None
 
     game_file = os.path.splitext(args.filename)[0]
-    game_json = json.dumps({'name':game.name, 'tree':game.tree, 'sprites':sprite_data})
+    game_json = util.str_json({'name':game.name, 'tree':game.tree, 'sprites':sprite_data})
     game_entry = 'GAME_SETUPS[\'' + game_file + '\'] = ' + game_json + ';\n'
 
     with open(args.appendfile, 'at') as f:

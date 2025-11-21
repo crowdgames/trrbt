@@ -1,4 +1,4 @@
-import argparse, json, os, sys, time
+import argparse, os, sys, time
 import util
 
 
@@ -158,6 +158,6 @@ if __name__ == '__main__':
     parser.add_argument('--seed', type=int, help='Random seed.')
     args = parser.parse_args()
 
-    board_init = None if args.board is None else json.loads(args.board)
+    board_init = None if args.board is None else util.jsonloadstr(args.board)
 
     run_game(args.filename, args.choice_order, args.player_random, args.cls, board_init, args.seed)

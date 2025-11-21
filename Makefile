@@ -10,7 +10,7 @@ else
     RMRF=rm -rf
 endif
 
-GAMES=$(basename $(notdir $(wildcard games/*.yaml)))
+GAMES=$(basename $(notdir $(wildcard games_yaml/*.yaml)))
 OUTFILES=$(addprefix out/, $(addsuffix -unxform, $(GAMES))) \
          $(addprefix out/, $(addsuffix -xform, $(GAMES)))
 
@@ -29,11 +29,11 @@ out/%.pdf: out/%.gv | out
 out/%.png: out/%.gv | out
 	dot $< -o $@ -Gbgcolor=transparent -Gdpi=300 -Tpng
 
-out/%-unxform.gv: games/%.yaml yaml2bt.py util.py | out
-	python yaml2bt.py $< --out $@ --fmt gv --resolve
+out/%-unxform.gv: games_yaml/%.yaml script/yaml2bt.py script/util.py | out
+	python script/yaml2bt.py $< --out $@ --fmt gv --resolve
 
-out/%-xform.gv: games/%.yaml yaml2bt.py util.py | out
-	python yaml2bt.py $< --out $@ --fmt gv --resolve --xform
+out/%-xform.gv: games_yaml/%.yaml script/yaml2bt.py script/util.py | out
+	python script/yaml2bt.py $< --out $@ --fmt gv --resolve --xform
 
 clean:
 	$(RMRF) out
