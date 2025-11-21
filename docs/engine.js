@@ -23,7 +23,7 @@ class TRRBTState {
         this.callResult = null;
         this.gameResult = null;
         this.loopCheck = 0;
-	this.random = 0;
+        this.random = 0;
 
         this.board = null;
         this.rows = 0;
@@ -54,6 +54,13 @@ function stateRandom(state) {
 
 function stateSeed(state, seed) {
     state.random = Math.floor(seed) % _RND_M;
+}
+
+function shuffleArray(arr, state) {
+    for (let ii = arr.length - 1; ii > 0; -- ii) {
+        const jj = Math.floor(stateRandom(state) * (ii + 1));
+        [arr[ii], arr[jj]] = [arr[jj], arr[ii]];
+    }
 }
 
 
@@ -202,7 +209,7 @@ class TRRBTStepper {
             for (let ii = 0; ii < stateNode.children.length; ++ii) {
                 order.push(ii);
             }
-            order.sort((a, b) => 0.5 - stateRandom(state));
+            shuffleArray(order, state);
             this.localSet(stateFrame, 'order', order);
         }
 
@@ -388,7 +395,7 @@ class TRRBTStepper {
     stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let matches = this.findLayerPattern(state, stateNode.lhs);
         if (matches.length > 0) {
-            matches.sort((a, b) => 0.5 - stateRandom(state));
+            shuffleArray(matches, state);
             for (let match of matches) {
                 if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
                     this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
@@ -639,8 +646,8 @@ class TRRBTEngine {
     }
 
     onRestart() {
-	this.onLoad();
-	this.setRandomSeed(Date.now());
+        this.onLoad();
+        this.setRandomSeed(Date.now());
     }
 
     initializeNodeLookup(nodeLookup, node, id) {
@@ -664,12 +671,12 @@ class TRRBTEngine {
     }
 
     setRandomSeed(seed) {
-	stateSeed(this.state, seed);
-	if (seed != 0) {
+        stateSeed(this.state, seed);
+        if (seed != 0) {
             for (let ii = 0; ii < 10; ii += 1) {
-		stateRandom(this.state);
-	    }
-	}
+                stateRandom(this.state);
+            }
+        }
     }
 
     setBoard(board) {
