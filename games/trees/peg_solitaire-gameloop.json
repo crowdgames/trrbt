@@ -1,1 +1,0 @@
-{"name":"peg solitaire-gameloop","tree":{"type":"loop-until-all","nid":"gameloop","children":[{"type":"player","pid":"1","children":[{"type":"x-spin","children":[{"type":"rewrite","lhs":{"main":[["O","O","_"]]},"rhs":{"main":[["_","_","O"]]}}]}]},{"type":"win","pid":"1","children":[{"type":"match-times","times":1,"pattern":{"main":[["O"]]}}]}]}}

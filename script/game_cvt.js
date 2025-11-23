@@ -1,16 +1,24 @@
 const args = parse_args({
     game: { type: 'string', required: true },
     fmt: { type: 'string', required: true },
-    gamefolder: { type: 'string' },
+    folder: { type: 'string' },
     sprites: { type: 'string' },
     out: { type: 'string' },
+    rename: { type: 'boolean', default: false },
     resolve: { type: 'boolean', default: false },
     xform: { type: 'boolean', default: false },
 });
 
-const gamefilename = args.gamefolder ? path.join(args.gamefolder, args.game) : args.game;
+const gamefilename = args.folder ? path.join(args.folder, args.game) : args.game;
 
 const game = load_game(gamefilename, args.resolve, args.xform);
+
+const parse = path.parse(args.game);
+const game_name = path.join(parse.dir, parse.name);
+
+if (args.rename) {
+    game.name = game_name;
+}
 
 if (args.sprites) {
     game.sprites = load_sprites(args.sprites);
@@ -22,8 +30,6 @@ if (args.fmt === 'gv') {
 } else if (args.fmt === 'json') {
     out_str = JSON.stringify(game) + '\n';
 } else if (args.fmt === 'js-entry') {
-    const parse = path.parse(args.game);
-    const game_name = path.join(parse.dir, parse.name);
     out_str = 'GAME_SETUPS[\'' + game_name + '\'] = ' + JSON.stringify(game) + '\n';
 }
 

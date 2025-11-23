@@ -1,1 +1,1 @@
-{"name":"move-right","tree":{"type":"order","children":[{"type":"loop-until-all","children":[{"type":"rewrite","lhs":{"main":[["X","_"]]},"rhs":{"main":[["_","v"]]}}]},{"type":"loop-until-all","children":[{"type":"rewrite","lhs":{"main":[["v"]]},"rhs":{"main":[["X"]]}}]}]}}
+{"name":"board-move-right","tree":{"type":"order","children":[{"type":"loop-until-all","children":[{"type":"rewrite","lhs":{"main":[["X","_"]]},"rhs":{"main":[["_","v"]]}}]},{"type":"loop-until-all","children":[{"type":"rewrite","lhs":{"main":[["v"]]},"rhs":{"main":[["X"]]}}]}]}}
