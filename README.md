@@ -21,7 +21,7 @@ To run the utility scripts, you will need [Node.js](https://nodejs.org/) install
 ### Game Description Visualization
 
 To visualize game descriptions you will also need [GraphViz](https://graphviz.org/) installed.
-Then run `bash make_viz.sh` to create visualizations in the `viz` folder.
+Then run `bash make/viz.sh` to create visualizations in the `viz` folder.
 
 ### Playing Games
 
