@@ -25,31 +25,31 @@ while (queue.length > 0) {
     const [state, steps] = queue.shift();
 
     if (args.enumerate) {
-	const enum_key = JSON.stringify([state.board, state.gameResult]);
+        const enum_key = JSON.stringify([state.board, state.gameResult]);
         if (!(enum_key in enum_seen)) {
             enum_seen[enum_key] = null;
-	    process.stdout.write(JSON.stringify({'board':state.board, 'steps':steps, 'game_result':state.gameResult}) + '\n')
-	}
+            process.stdout.write(JSON.stringify({'board':state.board, 'steps':steps, 'game_result':state.gameResult}) + '\n')
+        }
     }
 
     if (state.gameResult !== null) {
         if (state.gameResult.result === 'win') {
-	    if (!args.enumerate) {
+            if (!args.enumerate) {
                 process.stdout.write(JSON.stringify({'board':state.board, 'steps':steps, 'game_result':state.gameResult, 'success':true}) + '\n');
-		process.exit();
-	    } else {
+                process.exit();
+            } else {
                 continue;
-	    }
-	}
+            }
+        }
     } else {
         if (state.displayWait) {
             throw new Error('At display wait.');
-	}
+        }
         if (!state.choiceWait) {
             throw new Error('Not at choice wait.');
-	}
+        }
 
-	for (const choiceIndex in state.choices) {
+        for (const choiceIndex in state.choices) {
             engine.setState(state);
             engine.clearChoiceWait(true, choiceIndex);
             engine.stepToWaitChoiceOrResult();
@@ -58,8 +58,8 @@ while (queue.length > 0) {
             if (!(nextStateStr in seen)) {
                 queue.push([nextState, steps + 1]);
                 seen[nextStateStr] = null;
-	    }
-	}
+            }
+        }
     }
 }
 

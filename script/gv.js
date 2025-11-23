@@ -23,7 +23,7 @@ function pattern_max_tile_width(patt) {
     for (const row of patt) {
         for (const tile of row) {
             tile_len = Math.max(tile_len, graphemeLength(tile));
-	}
+        }
     }
     return tile_len;
 }
@@ -46,11 +46,11 @@ function pad_tiles_single(patt, tile_len=null) {
 function layer_pattern_max_tile_width(lpatt) {
     let tile_len = 0;
     for (const [layer, patt] of Object.entries(lpatt)) {
-	for (const row of patt) {
+        for (const row of patt) {
             for (const tile of row) {
-		tile_len = Math.max(tile_len, graphemeLength(tile));
-	    }
-	}
+                tile_len = Math.max(tile_len, graphemeLength(tile));
+            }
+        }
     }
     return tile_len;
 }
@@ -60,16 +60,16 @@ function layer_pad_tiles_multiple(lpatts, tile_len=null) {
         tile_len = 0
         for (const lpatt of lpatts) {
             tile_len = Math.max(tile_len, layer_pattern_max_tile_width(lpatt));
-	}
+        }
     }
 
     let ret = [];
     for (const lpatt of lpatts) {
-	let ret_lpatt = {};
-	for (const [layer, patt] of Object.entries(lpatt)) {
-	    ret_lpatt[layer] = pad_tiles_single(patt, tile_len);
-	}
-	ret.push(ret_lpatt);
+        let ret_lpatt = {};
+        for (const [layer, patt] of Object.entries(lpatt)) {
+            ret_lpatt[layer] = pad_tiles_single(patt, tile_len);
+        }
+        ret.push(ret_lpatt);
     }
     return ret;
 }
@@ -88,14 +88,14 @@ function layer_pattern_to_string(lpatt, filt, lpre, lpost, lsep, ppre, ppost, co
     for (const [layer, patt] of Object.entries(lpatt)) {
         if (li > 0) {
             ret += lsep;
-	}
+        }
         if (Object.entries(lpatt).length > 1 || layer !== DEFAULT_LAYER) {
             ret += (lpre + layer + lpost);
-	}
+        }
         ret += ppre;
         ret += pattern_to_string(patt, filt, colsep, rowsep, tile_len);
         ret += ppost;
-	++ li;
+        ++ li;
     }
     return ret;
 }
@@ -124,7 +124,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
         nlabel += ntype;
         if ([ND_MATCH_TIMES].includes(ntype)) {
             nlabel += ':' + node[NKEY_TIMES]; // todo intify
-	}
+        }
         nlabel += '</TD></TR>';
 
         if ([ND_REWRITE, ND_REWRITE_ALL, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS].includes(ntype)) {
@@ -133,7 +133,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nfill = `#${dk}${lt}${lt}`;
         } else if ([ND_DISPLAY_BOARD].includes(ntype)) {
             nfill = `#${dk}${dk}${dk}`;
-	}
+        }
 
         if ([ND_DISPLAY_BOARD].includes(ntype)) {
             // pass
@@ -146,7 +146,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                 nlabel += node[NKEY_DESC]
                 nlabel += GVDESCEND
                 nlabel += '</TD></TR>'
-	    }
+            }
 
             if (NKEY_BUTTON in node && node[NKEY_BUTTON] !== "") {
                 nlabel += '<TR><TD COLSPAN="3">'
@@ -154,20 +154,20 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                 nlabel += node[NKEY_BUTTON]
                 nlabel += GVBUTTONEND
                 nlabel += '</TD></TR>'
-	    }
+            }
 
             let layer_to_sides = {};
 
             for (const [layer, patt] of Object.entries(lhs)) {
                 layer_to_sides[layer] = [patt, null];
-	    }
+            }
             for (const [layer, patt] of Object.entries(rhs)) {
                 if (layer in layer_to_sides) {
                     layer_to_sides[layer][1] = patt;
                 } else {
                     layer_to_sides[layer] = [null, patt];
-		}
-	    }
+                }
+            }
 
             for (const [layer, [llhs, lrhs]] of Object.entries(layer_to_sides)) {
                 if (layer === DEFAULT_LAYER && Object.entries(layer_to_sides).length === 1) {
@@ -176,7 +176,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                     nlabel += '<TR>';
                     nlabel += '<TD COLSPAN="3">' + GVLAYERBGN + layer + GVLAYEREND + '</TD>';
                     nlabel += '</TR>';
-		}
+                }
 
                 nlabel += '<TR>';
                 if (llhs !== null) {
@@ -187,7 +187,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                     nlabel += '</TD>';
                 } else {
                     nlabel += '<TD></TD>';
-		}
+                }
                 nlabel += '<TD>→</TD>';
                 if (lrhs !== null) {
                     nlabel += '<TD BORDER="1" COLOR="#888888">';
@@ -197,10 +197,10 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                     nlabel += '</TD>';
                 } else {
                     nlabel += '<TD></TD>';
-		}
+                }
                 nlabel += '</TR>';
-	    }
-	} else if ([ND_LAYER_TEMPLATE].includes(ntype)) {
+            }
+        } else if ([ND_LAYER_TEMPLATE].includes(ntype)) {
             nlabel += '<TR><TD COLSPAN="3">';
             nlabel += GVLAYERBGN;
             nlabel += gv_filter_string(node[NKEY_LAYER]);
@@ -210,7 +210,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nlabel += gv_filter_string(node[NKEY_WITH]);
             nlabel += GVTILEEND;
             nlabel += '</TD></TR>';
-	} else {
+        } else {
             nlabel += layer_pattern_to_string(node[NKEY_PATTERN], gv_filter_string,
                                               '<TR><TD COLSPAN="3">' + GVLAYERBGN,
                                               GVLAYEREND + '</TD></TR>',
@@ -218,7 +218,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                                               '<TR><TD></TD><TD BORDER="1" COLOR="#888888">' + GVTILEBGN,
                                               GVTILEEND + '</TD><TD></TD></TR>',
                                               ' ', GVNEWLINE); // todo
-	}
+        }
 
         if (NKEY_NID in node && node[NKEY_NID] !== "") {
             nlabel += '<TR><TD COLSPAN="3">';
@@ -227,7 +227,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nlabel += node[NKEY_NID];
             nlabel += GVNIDEND;
             nlabel += '</TD></TR>';
-	}
+        }
 
         if (NKEY_COMMENT in node && node[NKEY_COMMENT] !== "") {
             nlabel += '<TR><TD COLSPAN="3">';
@@ -235,7 +235,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nlabel += node[NKEY_COMMENT];
             nlabel += GVCOMMEND;
             nlabel += '</TD></TR>';
-	}
+        }
 
         nlabel += '</TABLE>';
 
@@ -243,7 +243,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
         if ([NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY].includes(ntype)) {
             nshape = 'hexagon';
             nfill = `#${lt}${dk}${lt}`
-	} else if ([NDX_UNROLL_REPLACE].includes(ntype)) {
+        } else if ([NDX_UNROLL_REPLACE].includes(ntype)) {
             nshape = 'egg';
             nfill = `#${lt}${lt}${dk}`
         } else if ([NDX_LINK].includes(ntype)) {
@@ -263,7 +263,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nfill = `#${lt}${lt}${lt}`
         } else {
             throw new Error(`unrecognized node type ${ntype}`);
-	}
+        }
 
         nlabel += ntype
 
@@ -273,7 +273,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
                 nlabel += GVBOOLBGN;
                 nlabel += 'remove original';
                 nlabel += GVBOOLEND;
-	    }
+            }
         } else if ([ND_PLAYER, ND_WIN, ND_LOSE].includes(ntype)) {
             nlabel += ':' + node[NKEY_PID]; // todo intify
         } else if ([ND_LOOP_TIMES].includes(ntype)) {
@@ -301,9 +301,9 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nlabel += GVTILEEND;
             nlabel += ' with ';
             nlabel += GVTILEBGN;
-	    nlabel += node[NKEY_WITHS].map(ee => gv_filter_string(ee)).join(GVTILEEND + ', ' + GVTILEBGN);
+            nlabel += node[NKEY_WITHS].map(ee => gv_filter_string(ee)).join(GVTILEEND + ', ' + GVTILEBGN);
             nlabel += GVTILEEND;
-	}
+        }
 
         if (NKEY_NID in node && node[NKEY_NID] !== "") {
             nlabel += GVNEWLINE;
@@ -311,14 +311,14 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             nlabel += '@';
             nlabel += node[NKEY_NID];
             nlabel += GVNIDEND;
-	}
+        }
 
         if (NKEY_COMMENT in node && node[NKEY_COMMENT] !== "") {
             nlabel += GVNEWLINE;
             nlabel += GVCOMMBGN;
             nlabel += gv_filter_string(node[NKEY_COMMENT]);
             nlabel += GVCOMMEND;
-	}
+        }
     }
 
     function indent(_depth) {
@@ -343,17 +343,17 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             gv_print_node(node_lines, edge_lines, child, depth, nid_to_node);
             const child_nid_gv = child[NKEY_GVID];
             edge_lines.push(`  ${nid_gv} -> ${child_nid_gv};`);
-	}
+        }
     }
 
     if (ntype === NDX_FILE) {
-	depth -= 1;
-	ind = indent(depth);
+        depth -= 1;
+        ind = indent(depth);
         node_lines.push(`${ind}}`);
     }
 
     if (ntype === NDX_LINK) {
-	const nid_target = node[NKEY_TARGET];
+        const nid_target = node[NKEY_TARGET];
         if (nid_target in nid_to_node) {
             const target_id = nid_to_node[nid_target][NKEY_GVID];
             edge_lines.push(`  ${nid_gv} -> ${target_id} [style="dotted", constraint="false"];`);
@@ -361,7 +361,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             const target_id = `_TARGET_MISSING_${nid_gv}`;
             node_lines.push(`${ind}"${target_id}" [shape="house", label=<<i>MISSING</i>>, style="filled", fillcolor="#aaaaaa"];`);
             edge_lines.push(`  ${nid_gv} -> ${target_id} [style="dotted"];`);
-	}
+        }
     }
 }
 
@@ -375,17 +375,17 @@ export function gv_print_game(game) {
 
         if (NKEY_NID in node && node[NKEY_NID] !== "") {
             const nid = node[NKEY_NID];
-	    if (nid in nid_to_node) {
+            if (nid in nid_to_node) {
                 throw new Error(`duplicate node id ${nid}`);
-	    }
-	    nid_to_node[nid] = node;
-	}
+            }
+            nid_to_node[nid] = node;
+        }
 
         if (NKEY_CHILDREN in node) {
             for (let child of node[NKEY_CHILDREN]) {
                 node_find_ids(child);
-	    }
-	}
+            }
+        }
     }
 
     function node_clear_ids(node) {
@@ -394,8 +394,8 @@ export function gv_print_game(game) {
         if (NKEY_CHILDREN in node) {
             for (let child of node[NKEY_CHILDREN]) {
                 node_clear_ids(child);
-	    }
-	}
+            }
+        }
     }
 
     node_find_ids(game.tree)

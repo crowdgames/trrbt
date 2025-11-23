@@ -50,11 +50,11 @@ function parse_args(options) {
 function file_to_game_in_folder(folder) {
     function file_to_game(filename) {
         filename = path.join(folder, filename + '.json');
-	if (!fs.existsSync(filename)) {
-	    return null;
-	} else {
+        if (!fs.existsSync(filename)) {
+            return null;
+        } else {
             return JSON.parse(fs.readFileSync(filename, 'utf8')).tree;
-	}
+        }
     }
     return file_to_game;
 }
@@ -78,30 +78,30 @@ function image_pam_data(pamfile) {
 
     let fileBuffer = fs.readFileSync(pamfile);
     while (true) {
-	const newline = fileBuffer.indexOf('\n');
-	if (newline < 0) {
-	    break;
-	}
-	const line = fileBuffer.subarray(0, newline).toString('ascii');
-	fileBuffer = fileBuffer.subarray(newline + 1);
-	if (magic === null) {
-	    magic = line;
-	} else if (line.startsWith('WIDTH ')) {
-	    width = parseInt(line.substring(6));
-	} else if (line.startsWith('HEIGHT ')) {
-	    height = parseInt(line.substring(7));
-	} else if (line.startsWith('MAXVAL ')) {
-	    maxval = parseInt(line.substring(7));
-	} else if (line.startsWith('TUPLTYPE ')) {
-	    tupltype = line.substring(9);
-	} else if (line === 'ENDHDR') {
-	    data = zlib.deflateSync(fileBuffer).toString('base64');
-	    break;
-	}
+        const newline = fileBuffer.indexOf('\n');
+        if (newline < 0) {
+            break;
+        }
+        const line = fileBuffer.subarray(0, newline).toString('ascii');
+        fileBuffer = fileBuffer.subarray(newline + 1);
+        if (magic === null) {
+            magic = line;
+        } else if (line.startsWith('WIDTH ')) {
+            width = parseInt(line.substring(6));
+        } else if (line.startsWith('HEIGHT ')) {
+            height = parseInt(line.substring(7));
+        } else if (line.startsWith('MAXVAL ')) {
+            maxval = parseInt(line.substring(7));
+        } else if (line.startsWith('TUPLTYPE ')) {
+            tupltype = line.substring(9);
+        } else if (line === 'ENDHDR') {
+            data = zlib.deflateSync(fileBuffer).toString('base64');
+            break;
+        }
     }
 
     if (magic !== 'P7' || width === null || height === null || maxval !== 255 || tupltype !== 'RGB_ALPHA' || data === null) {
-	throw new Error('Bad PAM image format: ' + pamfile);
+        throw new Error('Bad PAM image format: ' + pamfile);
     }
 
     return {size:[width,height], data:data};
@@ -117,12 +117,12 @@ function load_sprites(spritefilename) {
     for (const [tile, imagefilename] of Object.entries(sprite_info.sprites)) {
         if (imagefilename === '.') {
             sprite_tiles[tile] = null;
-	} else {
+        } else {
             if (!(imagefilename in sprite_images)) {
                 sprite_images[imagefilename] = image_pam_data(path.join(path.dirname(spritefilename), imagefilename + '.pam'));
-	    }
+            }
             sprite_tiles[tile] = imagefilename;
-	}
+        }
     }
 
     sprite_data['images'] = sprite_images

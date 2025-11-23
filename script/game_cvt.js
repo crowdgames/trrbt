@@ -36,9 +36,9 @@ if (args.fmt === 'gv') {
 
 if (args.out) {
     if (args.append) {
-	fs.appendFileSync(args.out, out_str);
+        fs.appendFileSync(args.out, out_str);
     } else {
-	fs.writeFileSync(args.out, out_str);
+        fs.writeFileSync(args.out, out_str);
     }
 } else {
     process.stdout.write(out_str);
