@@ -4,6 +4,7 @@ const args = parse_args({
     folder: { type: 'string' },
     sprites: { type: 'string' },
     out: { type: 'string' },
+    append: { type: 'boolean', default: false },
     rename: { type: 'boolean', default: false },
     resolve: { type: 'boolean', default: false },
     xform: { type: 'boolean', default: false },
@@ -34,7 +35,11 @@ if (args.fmt === 'gv') {
 }
 
 if (args.out) {
-    fs.writeFileSync(args.out, out_str);
+    if (args.append) {
+	fs.appendFileSync(args.out, out_str);
+    } else {
+	fs.writeFileSync(args.out, out_str);
+    }
 } else {
     process.stdout.write(out_str);
 }
