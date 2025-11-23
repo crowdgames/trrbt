@@ -304,13 +304,13 @@ function getTileSize(patterns) {
 function getMaxTileSize(node) {
     let patterns = [];
     if (NKEY_LHS in node) {
-	patterns.push(node[NKEY_LHS]);
+        patterns.push(node[NKEY_LHS]);
     }
     if (NKEY_RHS in node) {
-	patterns.push(node[NKEY_RHS]);
+        patterns.push(node[NKEY_RHS]);
     }
     if (NKEY_PATTERN in node) {
-	patterns.push(node[NKEY_PATTERN]);
+        patterns.push(node[NKEY_PATTERN]);
     }
 
     let max_tile_size = getTileSize(patterns);
@@ -318,7 +318,7 @@ function getMaxTileSize(node) {
     if (NKEY_CHILDREN in node) {
         for (let child of node[NKEY_CHILDREN]) {
             max_tile_size = Math.max(max_tile_size, getMaxTileSize(child));
-	}
+        }
     }
 
     return max_tile_size;
