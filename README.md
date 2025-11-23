@@ -1,46 +1,31 @@
 # Game Behaviour Trees Using Tile Rewrite Rules
 
+
 ## Web Interface
 
-To start the web interface, run the following:
-```
-cd web
-bash make_games.sh
-open public/index.html
-```
+To start the web interface, open `docs/edengine.html` in a browser.
 
 The introductory materials provided to the users are available on [OSF](https://osf.io/btqcj/).
 
 Games included in the user study are in the dropdown with the prefix "(study)". The other games are example games that were not provided in the user study.
 
-Note that advanced nodes and layers have limited view/editing support in the interface, though games using them should have accurate transformed trees and run correctly. 
+Note that advanced nodes and layers have limited view/editing support in the interface, though games using them should have accurate transformed trees and run correctly.
 
-Editing a game in the dropdown creates a local copy. You can also create an editable copy of any game using the "Use as Template" button. 
+Editing a game in the dropdown creates a local copy. You can also create an editable copy of any game using the "Use as Template" button.
+
 
 ## CLI
 
-To setup, you will need pipenv:
-
-```
-pip3 install pipenv
-```
-
-Then set up the environment for this project by running:
-```
-pipenv install
-pipenv shell
-```
-
+To run the utility scripts, you will need [Node.js](https://nodejs.org/) installed.
 
 ### Game Description Visualization
 
 To visualize game descriptions you will also need [GraphViz](https://graphviz.org/) installed.
-Then run `make` to create visualizations in the `out` folder.
-
+Then run `bash make_viz.sh` to create visualizations in the `viz` folder.
 
 ### Playing Games
 
-To play a game in the terminal, run `python game.py games/NAME.yaml`.
+To play a game in the terminal, run `bash script/game_play.sh games/NAME.json`.
 
 
 ## Node Behaviors
@@ -81,7 +66,7 @@ To play a game in the terminal, run `python game.py games/NAME.yaml`.
 
 **x-rotate**: Children are rotated 90 degrees clockwise (option to keep or remove the original).
 
-**x-spin**: Children are rotated 90, 180, and 270 degrees (option to keep or remove the original). 
+**x-spin**: Children are rotated 90, 180, and 270 degrees (option to keep or remove the original).
 
 **x-swap**: Swap "what" with "with" in all childrens' patterns and player IDs, removing the original.
 

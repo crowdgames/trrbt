@@ -28,6 +28,7 @@ const ND_LOOP_UNTIL_ALL  = 'loop-until-all';
 const ND_LOOP_TIMES      = 'loop-times';
 
 const ND_REWRITE         = 'rewrite';
+const ND_REWRITE_ALL     = 'rewrite-all';
 const ND_SET_BOARD       = 'set-board';
 
 const ND_MATCH           = 'match';
@@ -298,6 +299,29 @@ function getTileSize(patterns) {
         }
     }
     return size;
+}
+
+function getMaxTileSize(node) {
+    let patterns = [];
+    if (NKEY_LHS in node) {
+	patterns.push(node[NKEY_LHS]);
+    }
+    if (NKEY_RHS in node) {
+	patterns.push(node[NKEY_RHS]);
+    }
+    if (NKEY_PATTERN in node) {
+	patterns.push(node[NKEY_PATTERN]);
+    }
+
+    let max_tile_size = getTileSize(patterns);
+
+    if (NKEY_CHILDREN in node) {
+        for (let child of node[NKEY_CHILDREN]) {
+            max_tile_size = Math.max(max_tile_size, getMaxTileSize(child));
+	}
+    }
+
+    return max_tile_size;
 }
 
 function joinRow(row, tileSize, alwaysPad) {
