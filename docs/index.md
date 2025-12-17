@@ -5,13 +5,22 @@ Game creation tools that minimize required resources and knowledge to use them h
 
 ## Live Editor
 [Try the live editor!](/edengine.html)
-There are a ton of examples to explore.
+Some introductory materials (a brief editor guide and a short video) are available on [OSF](https://osf.io/btqcj/).
+
+Use the Select Game dropdown to explore demo games! If you edit one of the demos, TRRBT will create a local copy, so you can always see the original tree. All your edits and any new games you create are saved locally in your browser; you can also use the import/export buttons to import/export to JSON. 
+
+### Demo Games
+
+* blockdude*: A remake of Block Dude, a side-view block-moving game originally introduced in the [TI-83+ PuzzPack](https://detachedsolutions.com/puzzpack/). "blockdude" defines the meta tree that invokes each blockdude level file ("blockdude_levels/*") in sequence. Each level file contains the starting state for the level and invokes the mechanics tree ("blockdude_mechanics") that contains all of the functional code for executing Block Dude. Except for blockdude_0 (LV0), the levels are copied from the original game.
+* ca: A basic proof of concept that Turbot can be used to implement a cellular automata (of finite size), showing Turing completeness.
+* checkers: The two-player board game. Red is implemented as a copy of Black. At runtime, the characters are replaced by [Kenney sprites](https://kenney.nl) using a [sprites file](/games_yaml/sprites/checkers). At this time, sprites can only be configured using YAML files.
+* 
 
 ## Code
 Explore the code on [GitHub](https://github.com/crowdgames/trrbt).
 
 ## Study Data
-The study materials and full text of the paper are on [OSF](https://osf.io/btqcj/).
+The study materials (including a short video tutorial and brief editor guide) and full text of the paper are on [OSF](https://osf.io/btqcj/).
 
 ## Node Behaviors
 
