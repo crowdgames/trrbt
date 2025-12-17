@@ -25,7 +25,7 @@ Then run `bash make/viz.sh` to create visualizations in the `viz` folder.
 
 ### Playing Games
 
-To play a game in the terminal, run `bash script/game_play.sh games/trees/NAME.json`.
+To play a game in the terminal, run `bash script/game_play.sh --game games/trees/{NAME}.json`.
 
 
 ## Node Behaviors
