@@ -1,8 +1,8 @@
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
-const ENG_UNDO_NONE   = 'UNDO_NONE';
+const ENG_UNDO_NONE = 'UNDO_NONE';
 const ENG_UNDO_PLAYER = 'UNDO_PLAYER';
-const ENG_UNDO_FULL   = 'UNDO_FULL';
+const ENG_UNDO_FULL = 'UNDO_FULL';
 
 const ENG_UNDO_PLAYER_MAX = 100;
 const ENG_UNDO_RECENT_MAX = 100;
@@ -57,7 +57,7 @@ function stateSeed(state, seed) {
 }
 
 function shuffleArray(arr, state) {
-    for (let ii = arr.length - 1; ii > 0; -- ii) {
+    for (let ii = arr.length - 1; ii > 0; --ii) {
         const jj = Math.floor(stateRandom(state) * (ii + 1));
         [arr[ii], arr[jj]] = [arr[jj], arr[ii]];
     }
@@ -149,7 +149,7 @@ class TRRBTStepper {
 
     stepNodeOrder(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-                                    ['index', 0]]);
+        ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
@@ -162,8 +162,8 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-                                    ['anyThisLoop', false],
-                                    ['index', 0]]);
+        ['anyThisLoop', false],
+        ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
         this.localSetIfTrue(stateFrame, 'anyThisLoop', stateCallResult);
@@ -183,8 +183,8 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-                                    ['times', 0],
-                                    ['index', 0]]);
+        ['times', 0],
+        ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
@@ -445,8 +445,10 @@ class TRRBTStepper {
                 if (child.type === 'rewrite') {
                     let matches = this.findLayerPattern(state, child.lhs);
                     for (let match of matches) {
-                        choices.push({ desc: child.desc, button: child.button, mouse: child.mouse,
-                                       lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col });
+                        choices.push({
+                            desc: child.desc, button: child.button, mouse: child.mouse,
+                            lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col
+                        });
                     }
                 }
             }
@@ -627,7 +629,7 @@ class TRRBTEngine {
         if (this.game.tree === null) {
             this.nodeLookup = null;
         } else {
-            this.nodeLookup = { idToNode:new Map(), nodeToId:new WeakMap() };
+            this.nodeLookup = { idToNode: new Map(), nodeToId: new WeakMap() };
             this.initializeNodeLookup(this.nodeLookup, this.game.tree, [0]);
         }
 
@@ -881,7 +883,7 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
         this.canvas.focus();
 
-        if (this.game.sprites !== null) {
+        if (this.game.sprites && this.game.sprites !== null) {
             if (this.game.sprites.images !== undefined) {
                 this.spriteArrays = Object.create(null);
                 this.spriteImages = Object.create(null);
