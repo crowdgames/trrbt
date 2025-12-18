@@ -2228,7 +2228,7 @@ class TRRBTEditor {
 
             const node_clr = this.nodeColor(node.type, false);
             const node_help_str = EDT_NODE_HELP[node.type].help;
-            const node_friendly = proto.friendly || node.type;
+            const node_friendly = proto?.friendly || node.type;
 
             appendText(ed, node_friendly, true);
             appendBr(ed);
@@ -2534,6 +2534,8 @@ class TRRBTEditor {
             }
         }
         if (new_props.size > 0) {
+            console.log(old_props)
+            console.log(new_props)
             this.afterSave(old_props);
         }
         this.updateTreeStructureAndDraw(false, false);

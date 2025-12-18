@@ -1,0 +1,15 @@
+{
+    "sprites": {
+        "P": "player_05",
+        "@": "crate_04",
+        "X": "block_08",
+        "O": "crate_29",
+        "_": ".",
+        "B": "ground_01"
+    },
+    "back": [
+        [
+            "B"
+        ]
+    ]
+}

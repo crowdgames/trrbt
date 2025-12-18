@@ -1,6 +1,0 @@
----
-name: rewrite-one
-tree:
-  type: rewrite
-  lhs: X
-  rhs: O
