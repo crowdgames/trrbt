@@ -1,3 +1,5 @@
+"use strict";
+
 const args = parse_args({
     game: { type: 'string', required: true },
     fmt: { type: 'string', required: true },

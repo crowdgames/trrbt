@@ -1,3 +1,5 @@
+"use strict";
+
 const DEFAULT_LAYER      = 'main';
 
 const NDX_IDENT          = 'x-ident';
@@ -68,30 +70,25 @@ const FKEY_TREE          = 'tree';
 
 const BUTTON_LEFT = 0;
 const BUTTON_RIGHT = 2;
-const PIXEL_RATIO = (typeof (window) === 'undefined') ? 1 : window.devicePixelRatio;
+const PIXEL_RATIO = (typeof window === 'undefined') ? 1 : window.devicePixelRatio;
 const DOUBLE_CLICK_TIME = 300;
 
 const TAU = 2 * Math.PI;
 
 const SEGMENTER = new Intl.Segmenter();
 
-let G_nextId = 0;
+
+
+var alert = (typeof alert !== 'undefined') ? alert : (message) => { console.log(message); };
+var telemetry = (typeof telemetry !== 'undefined') ? telemetry : (action) => {};
+
+
 
 function getNextId() {
-    ++G_nextId;
-    return G_nextId;
+    ++getNextId.nextId;
+    return getNextId.nextId;
 }
-
-if (typeof alert === 'undefined') {
-    function alert(message) {
-        console.log(message);
-    }
-}
-
-if (typeof telemetry === 'undefined') {
-    function telemetry(action) {
-    }
-}
+getNextId.nextId = 0;
 
 function copymap(map) {
     if (map === null) {

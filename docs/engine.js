@@ -1,3 +1,5 @@
+"use strict";
+
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
 const ENG_UNDO_NONE = 'UNDO_NONE';

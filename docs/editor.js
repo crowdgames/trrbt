@@ -1,3 +1,5 @@
+"use strict";
+
 const EDT_UNDO_MAX = 25;
 
 const EDT_NODE_PADDING = 8;
@@ -3084,8 +3086,6 @@ class TRRBTEditor {
         if (!this.resizing) {
             this.resizing = true;
             let targetHeight = Math.min(parent.clientHeight, 1500);
-            console.log("target Height: " + targetHeight)
-
             let targetWidth = Math.min(parent.clientWidth, 1500);
             this.updateCanvasSize(targetWidth, targetHeight);
             this.requestDraw();

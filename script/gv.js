@@ -1,3 +1,5 @@
+"use strict";
+
 const GVNEWLINE   = '<BR/>';
 const GVTILEBGN   = '<FONT FACE="Courier New">';
 const GVTILEEND   = '</FONT>';
