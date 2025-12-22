@@ -32,18 +32,18 @@ const EDT_BUTTONS = { '': '\u2205', 'up': '\u2191', 'down': '\u2193', 'left': '\
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type: ND_PLAYER, friendly: 'player-choice', comment: '', nid: '', children: [], pid: '' },
+    { type: ND_PLAYER, comment: '', nid: '', children: [], pid: '' },
 
     { type: ND_WIN, comment: '', nid: '', children: [], pid: '' },
     { type: ND_LOSE, comment: '', nid: '', children: [], pid: '' },
-    { type: ND_DRAW, friendly: 'tie', comment: '', nid: '', children: [] },
+    { type: ND_DRAW, comment: '', nid: '', children: [] },
 
     { type: ND_ORDER, comment: '', nid: '', children: [] },
     { type: ND_ALL, comment: '', nid: '', children: [] },
     { type: ND_NONE, comment: '', nid: '', children: [] },
-    { type: ND_RND_TRY, friendly: 'random-until-pass', comment: '', nid: '', children: [] },
-    { type: ND_LOOP_UNTIL_ALL, friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
-    { type: ND_LOOP_TIMES, friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
+    { type: ND_RND_TRY, comment: '', nid: '', children: [] },
+    { type: ND_LOOP_UNTIL_ALL, comment: '', nid: '', children: [] },
+    { type: ND_LOOP_TIMES, comment: '', nid: '', children: [], times: 1 },
 
     { type: ND_REWRITE, comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
     { type: ND_REWRITE_ALL, comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
@@ -59,32 +59,32 @@ const EDT_NODE_PROTOTYPES = [
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type: NDX_IDENT, friendly: 'group', comment: '', nid: '', children: [] },
-    { type: NDX_MIRROR, friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: NDX_SKEW, friendly: 'slant', comment: '', nid: '', children: [], remorig: false },
-    { type: NDX_ROTATE, comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
-    { type: NDX_SPIN, comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
-    { type: NDX_FLIP, friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: NDX_SWAP_ONLY, comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
-    { type: NDX_REPLACE_ONLY, comment: '', friendly: 'replace-text-leaves', nid: '', children: [], what: '', withs: [] },
-    { type: NDX_UNROLL_REPLACE, comment: '', friendly: 'replace-text-subtree', nid: '', children: [], what: '', withs: [] },
-    { type: NDX_PRUNE, comment: '', friendly: 'delete', nid: '', children: [] },
-    { type: NDX_LINK, comment: '', friendly: 'copy-subtree', nid: '', target: '' },
+    { type: NDX_IDENT, comment: '', nid: '', children: [] },
+    { type: NDX_MIRROR, comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_SKEW, comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_ROTATE, comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_SPIN, comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_FLIP, comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_SWAP_ONLY, comment: '', nid: '', children: [], what: '', with: '' },
+    { type: NDX_REPLACE_ONLY, comment: '', nid: '', children: [], what: '', withs: [] },
+    { type: NDX_UNROLL_REPLACE, comment: '', nid: '', children: [], what: '', withs: [] },
+    { type: NDX_PRUNE, comment: '', nid: '', children: [] },
+    { type: NDX_LINK, comment: '', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
-    [ND_PLAYER]: { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise.' },
+    [ND_PLAYER]: { color: [0, 0, 1], friendly: 'player-choice', help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise.' },
 
     [ND_WIN]: { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
     [ND_LOSE]: { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player losing; otherwise fails.' },
-    [ND_DRAW]: { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with a draw; otherwise fails.' },
+    [ND_DRAW]: { color: [1, 0, 0], friendly: 'tie', help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with a draw; otherwise fails.' },
 
     [ND_ORDER]: { color: [1, 1, 0], help: 'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.' },
     [ND_ALL]: { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Succeeds if all children are successful, otherwise fails.' },
     [ND_NONE]: { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Succeeds if all children fail, otherwise fails.' },
-    [ND_RND_TRY]: { color: [1, 1, 0], help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
-    [ND_LOOP_UNTIL_ALL]: { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds at least once, otherwise fails.' },
-    [ND_LOOP_TIMES]: { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds at least once, otherwise fails.' },
+    [ND_RND_TRY]: { color: [1, 1, 0], friendly: 'random-until-pass', help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
+    [ND_LOOP_UNTIL_ALL]: { color: [1, 1, 0], friendly: 'loop-until-all-fail', help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds at least once, otherwise fails.' },
+    [ND_LOOP_TIMES]: { color: [1, 1, 0], friendly: 'loop-n-times', help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds at least once, otherwise fails.' },
 
     [ND_REWRITE]: { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
     [ND_REWRITE_ALL]: { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, rewrite as many as possible in random order with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
@@ -98,21 +98,21 @@ const EDT_NODE_HELP = {
     [ND_MATCH]: { color: [0, 1, 1], help: 'Succeeds if the pattern is found anywhere on the board, otherwise fails.' },
     [ND_MATCH_TIMES]: { color: [0, 1, 1], help: 'Succeeds if the pattern is found on the current board the given number of times, otherwise fails.' },
 
-    [NDX_IDENT]: { color: [1, 1, 1], help: 'No effect. Nodes are visually grouped only.' },
-    [NDX_PRUNE]: { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
+    [NDX_IDENT]: { color: [1, 1, 1], friendly: 'group', help: 'No effect. Nodes are visually grouped only.' },
+    [NDX_PRUNE]: { color: [1, 1, 1], friendly: 'delete', help: 'Exclude nodes from transformed tree.' },
 
-    [NDX_MIRROR]: { color: [1, 1, 1], help: 'Mirror patterns left-right, e.g x y => x y, y x' },
-    [NDX_SKEW]: { color: [1, 1, 1], help: 'Slant patterns down, e.g x y z => x y z, x . ./. y ./. . z' },
-    [NDX_ROTATE]: { color: [1, 1, 1], help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
-    [NDX_SPIN]: { color: [1, 1, 1], help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
-    [NDX_FLIP]: { color: [1, 1, 1], help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
+    [NDX_MIRROR]: { color: [1, 1, 1], friendly: 'row-mirror', help: 'Mirror patterns left-right, e.g x y => x y, y x' },
+    [NDX_SKEW]: { color: [1, 1, 1], friendly: 'slant', help: 'Slant patterns down, e.g x y z => x y z, x . ./. y ./. . z' },
+    [NDX_ROTATE]: { color: [1, 1, 1], friendly: 'rotate-90', help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
+    [NDX_SPIN]: { color: [1, 1, 1], friendly: 'rotate-all', help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
+    [NDX_FLIP]: { color: [1, 1, 1], friendly: 'col-mirror', help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
 
-    [NDX_SWAP_ONLY]: { color: [1, 1, 1], help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
-    [NDX_REPLACE_ONLY]: { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
+    [NDX_SWAP_ONLY]: { color: [1, 1, 1], friendly: 'swap-chars', help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
+    [NDX_REPLACE_ONLY]: { color: [1, 1, 1], friendly: 'replace-text-leaves', help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
 
-    [NDX_UNROLL_REPLACE]: { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
+    [NDX_UNROLL_REPLACE]: { color: [1, 1, 1], friendly: 'replace-text-subtree', help: 'Duplicate replaces here as children of an order node.' },
 
-    [NDX_LINK]: { color: [1, 1, 1], help: 'Create a copy of another node accessed by node ID.' },
+    [NDX_LINK]: { color: [1, 1, 1], friendly: 'copy-subtree', help: 'Create a copy of another node accessed by node ID.' },
     [NDX_FILE]: { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
 }
 
@@ -138,6 +138,13 @@ const EDT_NODE_PROP_NAMES = {
 const EDT_GAME_PROP_NAMES = {
     name: { name: 'Game Title', help: 'A unique title for the game.' },
 }
+
+function nodeFriendlyName(node) {
+    const ntype = node[NKEY_TYPE];
+    return EDT_NODE_HELP.hasOwnProperty(ntype) && EDT_NODE_HELP[ntype].hasOwnProperty('friendly') ? EDT_NODE_HELP[ntype].friendly : ntype;
+}
+
+
 
 class TRRBTEditor {
 
@@ -608,7 +615,7 @@ class TRRBTEditor {
     updateDesiredPositionsTreeNode(nodePositions, nodeTexts, stackNodes, node, xpos, ypos, align) {
         let texts = [];
         const proto = this.getNodePrototype(node.type);
-        const node_friendly_name = proto?.friendly || node.type;
+        const node_friendly_name = nodeFriendlyName(node);
         texts.push({ type: EDT_TEXT_FONT, data: 'bold 10px sans-serif' });
         texts.push({ type: EDT_TEXT_COLOR, data: '#222222' });
         texts.push({ type: EDT_TEXT_LINE, data: node_friendly_name });
@@ -2230,7 +2237,7 @@ class TRRBTEditor {
 
             const node_clr = this.nodeColor(node.type, false);
             const node_help_str = EDT_NODE_HELP[node.type].help;
-            const node_friendly = proto?.friendly || node.type;
+            const node_friendly = nodeFriendlyName(node);
 
             appendText(ed, node_friendly, true);
             appendBr(ed);
@@ -2396,7 +2403,7 @@ class TRRBTEditor {
                         }
                     }
 
-                    let friendlyName = (proto.friendly || proto.type);
+                    const friendlyName = nodeFriendlyName(proto);
                     appendButton(elem, 'node-help-' + proto.type, '?', tooltip_help, clr, () => { alert(friendlyName + ': ' + help_str); });
                     appendText(elem, ' ' + friendlyName);
                     appendBr(elem);
