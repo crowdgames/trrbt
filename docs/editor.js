@@ -1,32 +1,32 @@
 "use strict";
 
-const EDT_UNDO_MAX = 25;
+const EDT_UNDO_MAX     = 25;
 
-const EDT_NODE_PADDING = 8;
+const EDT_NODE_PADDING =  8;
 const EDT_NODE_SPACING = 25;
 
-const EDT_FONT_SIZE = 10;
-const EDT_FONT_CHAR_SIZE = 7;
+const EDT_FONT_SIZE      = 10;
+const EDT_FONT_CHAR_SIZE =  7;
 const EDT_FONT_LINE_SIZE = 12;
 
-const EDT_KEY_PAN_DELAY = 10;
-const EDT_KEY_PAN_AMOUNT_MIN = 1;
+const EDT_KEY_PAN_DELAY      = 10;
+const EDT_KEY_PAN_AMOUNT_MIN =  1;
 const EDT_KEY_PAN_AMOUNT_MAX = 10;
-const EDT_KEY_PAN_AMOUNT_SCL = 1.05;
+const EDT_KEY_PAN_AMOUNT_SCL =  1.05;
 
-const EDT_TEXT_FONT = 0;
-const EDT_TEXT_COLOR = 1;
-const EDT_TEXT_LINE = 2;
+const EDT_TEXT_FONT       = 0;
+const EDT_TEXT_COLOR      = 1;
+const EDT_TEXT_LINE       = 2;
 const EDT_TEXT_RECT_BEGIN = 3;
-const EDT_TEXT_RECT_END = 4;
+const EDT_TEXT_RECT_END   = 4;
 
-const EDT_PARSE_TEXT_INT = 0;
+const EDT_PARSE_TEXT_INT   = 0;
 const EDT_PARSE_TEXT_FLOAT = 1;
-const EDT_PARSE_TEXT_WORD = 2;
-const EDT_PARSE_TEXT_TEXT = 3;
+const EDT_PARSE_TEXT_WORD  = 2;
+const EDT_PARSE_TEXT_TEXT  = 3;
 
 const EDT_COLOR_CHANGE = '#ffffbb';
-const EDT_COLOR_ERROR = '#ffdddd';
+const EDT_COLOR_ERROR  = '#ffdddd';
 
 const EDT_BUTTONS = { '': '\u2205', 'up': '\u2191', 'down': '\u2193', 'left': '\u2190', 'right': '\u2192', 'action1': 'Z', 'action2': 'X' };
 

@@ -2,19 +2,19 @@
 
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
-const ENG_UNDO_NONE = 'UNDO_NONE';
+const ENG_UNDO_NONE   = 'UNDO_NONE';
 const ENG_UNDO_PLAYER = 'UNDO_PLAYER';
-const ENG_UNDO_FULL = 'UNDO_FULL';
+const ENG_UNDO_FULL   = 'UNDO_FULL';
 
 const ENG_UNDO_PLAYER_MAX = 100;
 const ENG_UNDO_RECENT_MAX = 100;
 
 const ENG_LOOP_CHECK_MAX = 100000;
 
-const ENG_CELL_SIZE_MIN = 15;
-const ENG_CELL_SIZE_MAX = 60;
+const ENG_CELL_SIZE_MIN     = 15;
+const ENG_CELL_SIZE_MAX     = 60;
 const ENG_CELL_SIZE_DEFAULT = 50;
-const ENG_CELL_SIZE_STEP = 5;
+const ENG_CELL_SIZE_STEP    =  5;
 
 
 
