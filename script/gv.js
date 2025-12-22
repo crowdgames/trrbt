@@ -16,8 +16,7 @@ const GVDESCEND   = ')</FONT>';
 const GVBOOLBGN   = '<FONT POINT-SIZE="9">';
 const GVBOOLEND   = '</FONT>';
 
-const NKEY_GVID   = '__GVID';
-
+const NKEY_GVID   = Symbol('gvid');
 
 
 function pattern_max_tile_width(patt) {

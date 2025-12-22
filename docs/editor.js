@@ -32,88 +32,88 @@ const EDT_BUTTONS = { '': '\u2205', 'up': '\u2191', 'down': '\u2193', 'left': '\
 
 const EDT_EMPTY_PATTERN = {}
 const EDT_NODE_PROTOTYPES = [
-    { type: 'player', friendly: 'player-choice', comment: '', nid: '', children: [], pid: '' },
+    { type: ND_PLAYER, friendly: 'player-choice', comment: '', nid: '', children: [], pid: '' },
 
-    { type: 'win', comment: '', nid: '', children: [], pid: '' },
-    { type: 'lose', comment: '', nid: '', children: [], pid: '' },
-    { type: 'draw', friendly: 'tie', comment: '', nid: '', children: [] },
+    { type: ND_WIN, comment: '', nid: '', children: [], pid: '' },
+    { type: ND_LOSE, comment: '', nid: '', children: [], pid: '' },
+    { type: ND_DRAW, friendly: 'tie', comment: '', nid: '', children: [] },
 
-    { type: 'order', friendly: 'order', comment: '', nid: '', children: [] },
-    { type: 'all', friendly: 'all', comment: '', nid: '', children: [] },
-    { type: 'none', friendly: 'none', comment: '', nid: '', children: [] },
-    { type: 'random-try', friendly: 'random-until-pass', comment: '', nid: '', children: [] },
-    { type: 'loop-until-all', friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
-    { type: 'loop-times', friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
+    { type: ND_ORDER, comment: '', nid: '', children: [] },
+    { type: ND_ALL, comment: '', nid: '', children: [] },
+    { type: ND_NONE, comment: '', nid: '', children: [] },
+    { type: ND_RND_TRY, friendly: 'random-until-pass', comment: '', nid: '', children: [] },
+    { type: ND_LOOP_UNTIL_ALL, friendly: 'loop-until-all-fail', comment: '', nid: '', children: [] },
+    { type: ND_LOOP_TIMES, friendly: 'loop-n-times', comment: '', nid: '', children: [], times: 1 },
 
-    { type: 'rewrite', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
-    { type: 'rewrite-all', comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
-    { type: 'set-board', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
-    { type: 'append-rows', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
-    { type: 'append-columns', comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
-    { type: 'layer-template', comment: '', nid: '', layer: '', with: '' },
+    { type: ND_REWRITE, comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
+    { type: ND_REWRITE_ALL, comment: '', nid: '', button: '', lhs: EDT_EMPTY_PATTERN, rhs: EDT_EMPTY_PATTERN },
+    { type: ND_SET_BOARD, comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: ND_APPEND_ROWS, comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: ND_APPEND_COLS, comment: '', nid: '', pattern: EDT_EMPTY_PATTERN },
+    { type: ND_LAYER_TEMPLATE, comment: '', nid: '', layer: '', with: '' },
 
-    { type: 'display-board', comment: '', nid: '', delay: 0.5 },
+    { type: ND_DISPLAY_BOARD, comment: '', nid: '', delay: 0.5 },
 
-    { type: 'match', pattern: EDT_EMPTY_PATTERN },
-    { type: 'match-times', times: 1, pattern: EDT_EMPTY_PATTERN },
+    { type: ND_MATCH, pattern: EDT_EMPTY_PATTERN },
+    { type: ND_MATCH_TIMES, times: 1, pattern: EDT_EMPTY_PATTERN },
 ];
 
 const EDT_XNODE_PROTOTYPES = [
-    { type: 'x-ident', friendly: 'group', comment: '', nid: '', children: [] },
-    { type: 'x-mirror', friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-skew', friendly: 'slant', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-rotate', comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
-    { type: 'x-spin', comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
-    { type: 'x-flip', friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
-    { type: 'x-swap', comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
-    { type: 'x-replace', comment: '', friendly: 'replace-text-leaves', nid: '', children: [], what: '', withs: [] },
-    { type: 'x-unroll-replace', comment: '', friendly: 'replace-text-subtree', nid: '', children: [], what: '', withs: [] },
-    { type: 'x-prune', comment: '', friendly: 'delete', nid: '', children: [] },
-    { type: 'x-link', comment: '', friendly: 'copy-subtree', nid: '', target: '' },
+    { type: NDX_IDENT, friendly: 'group', comment: '', nid: '', children: [] },
+    { type: NDX_MIRROR, friendly: 'row-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_SKEW, friendly: 'slant', comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_ROTATE, comment: '', friendly: 'rotate-90', nid: '', children: [], remorig: false },
+    { type: NDX_SPIN, comment: '', friendly: 'rotate-all', nid: '', children: [], remorig: false },
+    { type: NDX_FLIP, friendly: 'col-mirror', comment: '', nid: '', children: [], remorig: false },
+    { type: NDX_SWAP_ONLY, comment: '', friendly: 'swap-chars', nid: '', children: [], what: '', with: '' },
+    { type: NDX_REPLACE_ONLY, comment: '', friendly: 'replace-text-leaves', nid: '', children: [], what: '', withs: [] },
+    { type: NDX_UNROLL_REPLACE, comment: '', friendly: 'replace-text-subtree', nid: '', children: [], what: '', withs: [] },
+    { type: NDX_PRUNE, comment: '', friendly: 'delete', nid: '', children: [] },
+    { type: NDX_LINK, comment: '', friendly: 'copy-subtree', nid: '', target: '' },
 ];
 
 const EDT_NODE_HELP = {
-    'player': { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise.' },
+    [ND_PLAYER]: { color: [0, 0, 1], help: 'Player can choose which rewrite child to apply, provided the LEFT pattern exists on the board. Succeeds if at least one valid move exists, fails otherwise.' },
 
-    'win': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
-    'lose': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player losing; otherwise fails.' },
-    'draw': { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with a draw; otherwise fails.' },
+    [ND_WIN]: { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player winning; otherwise fails.' },
+    [ND_LOSE]: { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with the given player losing; otherwise fails.' },
+    [ND_DRAW]: { color: [1, 0, 0], help: 'Runs children in order, until any child succeeds. If any child succeeds, the game ends with a draw; otherwise fails.' },
 
-    'order': { color: [1, 1, 0], help: 'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.' },
-    'all': { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Succeeds if all children are successful, otherwise fails.' },
-    'none': { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Succeeds if all children fail, otherwise fails.' },
-    'random-try': { color: [1, 1, 0], help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
-    'loop-until-all': { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds at least once, otherwise fails.' },
-    'loop-times': { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds at least once, otherwise fails.' },
+    [ND_ORDER]: { color: [1, 1, 0], help: 'Runs all children in order (regardless of their success or failure). Succeeds if any child succeeds, otherwise fails.' },
+    [ND_ALL]: { color: [1, 1, 0], help: 'Runs children in order, until any child fails. Succeeds if all children are successful, otherwise fails.' },
+    [ND_NONE]: { color: [1, 1, 0], help: 'Runs children in order, until any child succeeds. Succeeds if all children fail, otherwise fails.' },
+    [ND_RND_TRY]: { color: [1, 1, 0], help: 'Runs children in random order until one succeeds. Succeeds if any child succeeds, otherwise fails.' },
+    [ND_LOOP_UNTIL_ALL]: { color: [1, 1, 0], help: 'Repeatedly runs children in order, until all children fail on one loop. Succeeds if any child succeeds at least once, otherwise fails.' },
+    [ND_LOOP_TIMES]: { color: [1, 1, 0], help: 'Repeatedly runs children in order a fixed number of times. Succeeds if any child succeeds at least once, otherwise fails.' },
 
-    'rewrite': { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
-    'rewrite-all': { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, rewrite as many as possible in random order with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
-    'set-board': { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
-    'append-rows': { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
-    'append-columns': { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
-    'layer-template': { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
+    [ND_REWRITE]: { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, randomly rewrites one of these matches with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
+    [ND_REWRITE_ALL]: { color: [0, 1, 0], help: 'If the LEFT pattern is found anywhere on the board, rewrite as many as possible in random order with the RIGHT pattern. Succeeds if there were any matches, otherwise, fails.' },
+    [ND_SET_BOARD]: { color: [0, 1, 0], help: 'Sets the board. Always succeeds.' },
+    [ND_APPEND_ROWS]: { color: [0, 1, 0], help: 'Appends a new row to the board. Always succeeds.' },
+    [ND_APPEND_COLS]: { color: [0, 1, 0], help: 'Appends a new column the board. Always succeeds.' },
+    [ND_LAYER_TEMPLATE]: { color: [0, 1, 0], help: 'Creates a new layer with the given name filled with the given tile. Always succeeds.' },
 
-    'display-board': { color: [1, 0, 1], help: 'Causes the board display to update. Always succeeds.' },
+    [ND_DISPLAY_BOARD]: { color: [1, 0, 1], help: 'Causes the board display to update. Always succeeds.' },
 
-    'match': { color: [0, 1, 1], help: 'Succeeds if the pattern is found anywhere on the board, otherwise fails.' },
-    'match-times': { color: [0, 1, 1], help: 'Succeeds if the pattern is found on the current board the given number of times, otherwise fails.' },
+    [ND_MATCH]: { color: [0, 1, 1], help: 'Succeeds if the pattern is found anywhere on the board, otherwise fails.' },
+    [ND_MATCH_TIMES]: { color: [0, 1, 1], help: 'Succeeds if the pattern is found on the current board the given number of times, otherwise fails.' },
 
-    'x-ident': { color: [1, 1, 1], help: 'No effect. Nodes are visually grouped only.' },
-    'x-prune': { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
+    [NDX_IDENT]: { color: [1, 1, 1], help: 'No effect. Nodes are visually grouped only.' },
+    [NDX_PRUNE]: { color: [1, 1, 1], help: 'Exclude nodes from transformed tree.' },
 
-    'x-mirror': { color: [1, 1, 1], help: 'Mirror patterns left-right, e.g x y => x y, y x' },
-    'x-skew': { color: [1, 1, 1], help: 'Slant patterns down, e.g x y z => x y z, x . ./. y ./. . z' },
-    'x-rotate': { color: [1, 1, 1], help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
-    'x-spin': { color: [1, 1, 1], help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
-    'x-flip': { color: [1, 1, 1], help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
+    [NDX_MIRROR]: { color: [1, 1, 1], help: 'Mirror patterns left-right, e.g x y => x y, y x' },
+    [NDX_SKEW]: { color: [1, 1, 1], help: 'Slant patterns down, e.g x y z => x y z, x . ./. y ./. . z' },
+    [NDX_ROTATE]: { color: [1, 1, 1], help: 'Rotate patterns 90 degrees, e.g x y => x y, x/y' },
+    [NDX_SPIN]: { color: [1, 1, 1], help: 'Rotate patterns in all directions (90, 180, 270 degrees), e.g x y => x y, x/y, y x, y/x' },
+    [NDX_FLIP]: { color: [1, 1, 1], help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
 
-    'x-swap': { color: [1, 1, 1], help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
-    'x-replace': { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
+    [NDX_SWAP_ONLY]: { color: [1, 1, 1], help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
+    [NDX_REPLACE_ONLY]: { color: [1, 1, 1], help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
 
-    'x-unroll-replace': { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
+    [NDX_UNROLL_REPLACE]: { color: [1, 1, 1], help: 'Duplicate replaces here as children of an order node.' },
 
-    'x-link': { color: [1, 1, 1], help: 'Create a copy of another node accessed by node ID.' },
-    'x-file': { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
+    [NDX_LINK]: { color: [1, 1, 1], help: 'Create a copy of another node accessed by node ID.' },
+    [NDX_FILE]: { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
 }
 
 const EDT_NODE_PROP_NAMES = {
@@ -435,8 +435,8 @@ class TRRBTEditor {
     }
 
     clearNodeDispid(node) {
-        if (node.hasOwnProperty('dispid')) {
-            delete node.dispid;
+        if (node.hasOwnProperty(NKEY_DISPID)) {
+            delete node[NKEY_DISPID];
         }
         if (node.hasOwnProperty('children')) {
             for (let child of node.children) {
@@ -446,14 +446,14 @@ class TRRBTEditor {
     }
 
     updateDispids(node) {
-        if (node.hasOwnProperty('dispid')) {
-            if (this.dispidToNode.has(node.dispid)) {
-                node.dispid = getNextId();
+        if (node.hasOwnProperty(NKEY_DISPID)) {
+            if (this.dispidToNode.has(node[NKEY_DISPID])) {
+                node[NKEY_DISPID] = getNextId();
             }
         } else {
-            node.dispid = getNextId();
+            node[NKEY_DISPID] = getNextId();
         }
-        this.dispidToNode.set(node.dispid, node);
+        this.dispidToNode.set(node[NKEY_DISPID], node);
         if (node.hasOwnProperty('children')) {
             for (let child of node.children) {
                 this.updateDispids(child);
@@ -497,7 +497,7 @@ class TRRBTEditor {
 
     updateTreeStructure(skipUndo) {
         if (this.game.tree === null) {
-            this.game.tree = deepcopyobj(this.getNodePrototype('order'));
+            this.game.tree = deepcopyobj(this.getNodePrototype(ND_ORDER));
         }
 
         if (!skipUndo) {
@@ -535,9 +535,9 @@ class TRRBTEditor {
 
     nodeCollapsed(node, stackNodes) {
         if (this.followStack) {
-            return !stackNodes.has(node.dispid);
+            return !stackNodes.has(node[NKEY_DISPID]);
         } else {
-            return this.collapsedNodes.has(node.dispid);
+            return this.collapsedNodes.has(node[NKEY_DISPID]);
         }
     }
 
@@ -549,7 +549,7 @@ class TRRBTEditor {
         let stackNodes = new Set();
         if (this.hasEngine() && this.engine.state.callStack !== null) {
             for (let frame of this.engine.state.callStack) {
-                stackNodes.add(this.engine.nodeLookup.idToNode.get(frame.nodeId).dispid);
+                stackNodes.add(this.engine.nodeLookup.idToNode.get(frame.nodeId)[NKEY_DISPID]);
             }
         }
         return stackNodes;
@@ -614,7 +614,7 @@ class TRRBTEditor {
         texts.push({ type: EDT_TEXT_LINE, data: node_friendly_name });
         texts.push({ type: EDT_TEXT_FONT, data: '10px sans-serif' });
 
-        //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node.dispid});
+        //texts.push({type:EDT_TEXT_LINE,  data:'dispid: ' + node[NKEY_DISPID]});
 
         if (node.hasOwnProperty('comment') && node.comment != '') {
             texts.push({ type: EDT_TEXT_FONT, data: 'italic 10px sans-serif' });
@@ -793,8 +793,8 @@ class TRRBTEditor {
             }
         }
 
-        nodePositions.set(node.dispid, { x: nx, y: ny, w: nw, h: nh })
-        nodeTexts.set(node.dispid, texts);
+        nodePositions.set(node[NKEY_DISPID], { x: nx, y: ny, w: nw, h: nh })
+        nodeTexts.set(node[NKEY_DISPID], texts);
 
         return next_pos;
     }
@@ -807,7 +807,7 @@ class TRRBTEditor {
 
     drawTreeLink(ctx, nodePositions, nodeTexts, nodeIds, stackNodes, node) {
         if (node.hasOwnProperty('file') || node.hasOwnProperty('target')) {
-            const nrect = nodePositions.get(node.dispid);
+            const nrect = nodePositions.get(node[NKEY_DISPID]);
             const nx = nrect.x;
             const ny = nrect.y;
             const nw = nrect.w;
@@ -837,8 +837,8 @@ class TRRBTEditor {
                 if (target) {
                     found_target = true;
 
-                    if (!has_file && nodePositions.has(target.dispid)) {
-                        const tnrect = nodePositions.get(target.dispid);
+                    if (!has_file && nodePositions.has(target[NKEY_DISPID])) {
+                        const tnrect = nodePositions.get(target[NKEY_DISPID]);
                         const tnx = tnrect.x;
                         const tny = tnrect.y;
                         const tnw = tnrect.w;
@@ -879,7 +879,7 @@ class TRRBTEditor {
     }
 
     drawTreeNode(ctx, nodePositions, nodeTexts, stackNodes, node) {
-        const nrect = nodePositions.get(node.dispid);
+        const nrect = nodePositions.get(node[NKEY_DISPID]);
         const nx = nrect.x;
         const ny = nrect.y;
         const nw = nrect.w;
@@ -891,7 +891,7 @@ class TRRBTEditor {
 
                 let childOnStack = false;
                 for (let child of node.children) {
-                    if (stackNodes.has(child.dispid)) {
+                    if (stackNodes.has(child[NKEY_DISPID])) {
                         childOnStack = true;
                         break;
                     }
@@ -922,7 +922,7 @@ class TRRBTEditor {
                 let stackEdges = [];
                 let nonStackEdges = [];
                 for (let child of node.children) {
-                    const cnrect = nodePositions.get(child.dispid);
+                    const cnrect = nodePositions.get(child[NKEY_DISPID]);
                     // if (cnrect == undefined) {
                     //     continue;
                     // }
@@ -935,16 +935,16 @@ class TRRBTEditor {
                     const midy = 0.5 * (ny + nh + cny);
 
                     const edge = this.layout_horizontal ?
-                        [nx + nw / 2, ny + nh,
-                        nx + nw / 2, midy,
-                        cnx + cnw / 2, midy,
-                        cnx + cnw / 2, cny] :
-                        [nx + nw, ny + nh / 2,
-                            midx, ny + nh / 2,
-                            midx, cny + cnh / 2,
-                            cnx, cny + cnh / 2];
+                          [nx + nw / 2, ny + nh,
+                           nx + nw / 2, midy,
+                           cnx + cnw / 2, midy,
+                           cnx + cnw / 2, cny] :
+                          [nx + nw, ny + nh / 2,
+                           midx, ny + nh / 2,
+                           midx, cny + cnh / 2,
+                           cnx, cny + cnh / 2];
 
-                    if (stackNodes.has(child.dispid)) {
+                    if (stackNodes.has(child[NKEY_DISPID])) {
                         stackEdges.push(edge);
                     } else {
                         nonStackEdges.push(edge);
@@ -979,7 +979,7 @@ class TRRBTEditor {
 
         ctx.fillStyle = this.nodeColor(node.type, node === this.mouseNode);
 
-        if (['player'].indexOf(node.type) >= 0) {
+        if ([ND_PLAYER].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.moveTo(nx + 0.40 * nw, ny + 0.00 * nh);
             ctx.lineTo(nx + 0.60 * nw, ny + 0.00 * nh);
@@ -991,7 +991,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.40 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['win', 'lose', 'draw'].indexOf(node.type) >= 0) {
+        } else if ([ND_WIN, ND_LOSE, ND_DRAW].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.moveTo(nx + 0.25 * nw, ny + 0.00 * nh);
             ctx.lineTo(nx + 0.75 * nw, ny + 0.00 * nh);
@@ -1003,11 +1003,11 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.25 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['rewrite', 'rewrite-all', 'match', 'match-times', 'set-board', 'layer-template', 'append-rows', 'append-columns', 'display-board'].indexOf(node.type) >= 0) {
+        } else if ([ND_REWRITE, ND_REWRITE_ALL, ND_MATCH, ND_MATCH_TIMES, ND_SET_BOARD, ND_LAYER_TEMPLATE, ND_APPEND_ROWS, ND_APPEND_COLS, ND_DISPLAY_BOARD].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.roundRect(nx, ny, nw, nh, 6)
             ctx.fill();
-        } else if (['x-unroll-replace'].indexOf(node.type) >= 0) {
+        } else if ([NDX_UNROLL_REPLACE].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.moveTo(nx + 0.00 * nw, ny + 0.00 * nh);
             ctx.lineTo(nx + 0.33 * nw, ny + 0.05 * nh);
@@ -1019,7 +1019,7 @@ class TRRBTEditor {
             ctx.lineTo(nx + 0.00 * nw, ny + 0.95 * nh);
             ctx.closePath();
             ctx.fill();
-        } else if (['x-link', 'x-file'].indexOf(node.type) >= 0) {
+        } else if ([NDX_LINK, NDX_FILE].indexOf(node.type) >= 0) {
             ctx.beginPath();
             ctx.moveTo(nx + 0.00 * nw, ny + 0.00 * nh);
             ctx.lineTo(nx + 1.00 * nw, ny + 0.00 * nh);
@@ -1050,7 +1050,7 @@ class TRRBTEditor {
 
         let line = 0;
         let rects = [];
-        for (const text of nodeTexts.get(node.dispid)) {
+        for (const text of nodeTexts.get(node[NKEY_DISPID])) {
             if (text.type === EDT_TEXT_FONT) {
                 ctx.font = text.data;
             } else if (text.type === EDT_TEXT_COLOR) {
@@ -1085,9 +1085,9 @@ class TRRBTEditor {
                     const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
                     const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
                     ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
-                        ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
-                        width,
-                        texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
+				   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+				   width,
+				   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
         }
@@ -1098,7 +1098,7 @@ class TRRBTEditor {
             ctx.stroke();
         }
 
-        if (stackNodes.has(node.dispid)) {
+        if (stackNodes.has(node[NKEY_DISPID])) {
             // Highlight current node.
             ctx.lineWidth = 4;
             ctx.strokeStyle = '#FF13F0';
@@ -1154,9 +1154,9 @@ class TRRBTEditor {
     collapseNodes(node, recurse, collapse) {
         if (node.hasOwnProperty('children')) {
             if (collapse && node.children.length > 0) {
-                this.collapsedNodes.add(node.dispid);
+                this.collapsedNodes.add(node[NKEY_DISPID]);
             } else {
-                this.collapsedNodes.delete(node.dispid);
+                this.collapsedNodes.delete(node[NKEY_DISPID]);
             }
             if (recurse) {
                 for (let child of node.children) {
@@ -1178,7 +1178,7 @@ class TRRBTEditor {
         this.updatePositionsAndDraw(true);
         this.doNodeDrawPositionUpdate();
 
-        const rect = this.nodeDrawPositions.get(node.dispid);
+        const rect = this.nodeDrawPositions.get(node[NKEY_DISPID]);
         if (rect) {
             this.resetXform();
             this.translateXform(this.canvas.width / 2 / PIXEL_RATIO - rect.x - 0.5 * rect.w, this.canvas.height / 2 / PIXEL_RATIO - rect.y - 0.5 * rect.h);
@@ -1639,8 +1639,74 @@ class TRRBTEditor {
             //     }
 
             //     return false;
-            case "Backspace":
-                if (input.selectionEnd == 0 && [...(pattern[layer][r][c].trim())].length > 0) {
+        case "Backspace":
+            if (input.selectionEnd == 0 && [...(pattern[layer][r][c].trim())].length > 0) {
+                // Move to previous cell.
+                c -= 1;
+                if (c < 0) {
+                    if (r > 0) {
+                        r -= 1;
+                        c = pattern[layer][r].length - 1;
+                    }
+                    else {
+                        c = 0;
+                    }
+                }
+                this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                return false;
+                // c -= 1;
+                // if (c < 0) {
+                //     if (r > 0) {
+                //         c = pattern[layer][r].length;
+                //         pattern[layer][r - 1].push(...pattern[layer][r]);
+                //         pattern[layer].splice(r, 1);
+                //         r -= 1;
+                //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                //         return false;
+                //     }
+                //     break;
+                // }
+            }
+            else if ([...(pattern[layer][r][c].trim())].length <= 1) {
+                // if (pattern[layer][r][c].trim() == "." || pattern[layer][r][c].trim() == "?" || pattern[layer][r][c] == " ") {
+                //     // if cell is empty, delete and move to the cell to the left.
+                //     pattern[layer][r].splice(c, 1);
+                //     c -= 1;
+                //     if (c < 0) {
+                //         if (r > 0) {
+                //             // move up one row, deleting this row if it is empty.
+                //             let delRow = true;
+                //             for (let c = 0; c < pattern[layer][r].length; c++) {
+                //                 if (pattern[layer][r][c] != "?") {
+                //                     delRow = false;
+                //                 }
+                //             }
+                //             if (delRow) {
+                //                 pattern[layer].splice(r, 1);
+                //                 r -= 1;
+                //                 c = pattern[layer][r].length - 1;
+                //             }
+                //             else {
+                //                 c = 0;
+                //                 this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                //                 break;
+                //             }
+                //         }
+                //         else {
+                //             console.log("update for c = 0; r = 0")
+                //             c = 0;
+                //             this.updatePatternText(id, pattern, layer, r, c, 0, 0);
+                //             break;
+                //         }
+                //     }
+                // } else {
+                //     // Remove contents and allow putting something else in.
+                //     pattern[layer][r][c] = " ";
+                //     this.updatePatternText(id, pattern, layer, r, c, 0, 1);
+                //     return false;
+                // }
+
+                if (pattern[layer][r][c] == "_") {
                     // Move to previous cell.
                     c -= 1;
                     if (c < 0) {
@@ -1652,154 +1718,88 @@ class TRRBTEditor {
                             c = 0;
                         }
                     }
-                    this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                    return false;
-                    // c -= 1;
-                    // if (c < 0) {
-                    //     if (r > 0) {
-                    //         c = pattern[layer][r].length;
-                    //         pattern[layer][r - 1].push(...pattern[layer][r]);
-                    //         pattern[layer].splice(r, 1);
-                    //         r -= 1;
-                    //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                    //         return false;
-                    //     }
-                    //     break;
-                    // }
-                }
-                else if ([...(pattern[layer][r][c].trim())].length <= 1) {
-                    // if (pattern[layer][r][c].trim() == "." || pattern[layer][r][c].trim() == "?" || pattern[layer][r][c] == " ") {
-                    //     // if cell is empty, delete and move to the cell to the left.
-                    //     pattern[layer][r].splice(c, 1);
-                    //     c -= 1;
-                    //     if (c < 0) {
-                    //         if (r > 0) {
-                    //             // move up one row, deleting this row if it is empty.
-                    //             let delRow = true;
-                    //             for (let c = 0; c < pattern[layer][r].length; c++) {
-                    //                 if (pattern[layer][r][c] != "?") {
-                    //                     delRow = false;
-                    //                 }
-                    //             }
-                    //             if (delRow) {
-                    //                 pattern[layer].splice(r, 1);
-                    //                 r -= 1;
-                    //                 c = pattern[layer][r].length - 1;
-                    //             }
-                    //             else {
-                    //                 c = 0;
-                    //                 this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                    //                 break;
-                    //             }
-                    //         }
-                    //         else {
-                    //             console.log("update for c = 0; r = 0")
-                    //             c = 0;
-                    //             this.updatePatternText(id, pattern, layer, r, c, 0, 0);
-                    //             break;
-                    //         }
-                    //     }
-                    // } else {
-                    //     // Remove contents and allow putting something else in.
-                    //     pattern[layer][r][c] = " ";
-                    //     this.updatePatternText(id, pattern, layer, r, c, 0, 1);
-                    //     return false;
-                    // }
-
-                    if (pattern[layer][r][c] == "_") {
-                        // Move to previous cell.
-                        c -= 1;
-                        if (c < 0) {
-                            if (r > 0) {
-                                r -= 1;
-                                c = pattern[layer][r].length - 1;
-                            }
-                            else {
-                                c = 0;
-                            }
-                        }
-                    } else {
-                        // Remove contents and allow putting something else in.
-                        pattern[layer][r][c] = "_";
-                        this.updatePatternText(id, pattern, layer, r, c, 0, 1);
-                        return false;
-                    }
-                    this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                } else {
+                    // Remove contents and allow putting something else in.
+                    pattern[layer][r][c] = "_";
+                    this.updatePatternText(id, pattern, layer, r, c, 0, 1);
                     return false;
                 }
-                break;
-            case "Enter":
-                c = 0;
-            case "ArrowDown":
-                // go to the next cell down (or otherwise the next layer) if one exists
-                if (pattern[layer][r + 1]) {
-                    r += 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                } else {
-                    const layers = Object.getOwnPropertyNames(pattern);
-                    let found = false;
-                    for (const layerName of layers) {
-                        if (found) {
-                            layer = layerName;
-                            r = 0;
-                            this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                            break;
-                        }
-                        if (layerName == layer) {
-                            found = true;
-                        }
-                    }
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                    break;
-                }
-                break;
-            case "ArrowUp":
-                // go to the next cell/layer up, if one exists
-                if (pattern[layer][r - 1]) {
-                    r -= 1;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                } else {
-                    const layers = Object.getOwnPropertyNames(pattern);
-                    let newLayer = layer;
-                    for (const layerName of layers) {
-                        if (layerName == layer) {
-                            break;
-                        }
-                        newLayer = layerName;
-                    }
-                    layer = newLayer;
-                    this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
-                }
-                break;
-            case "ArrowLeft":
-                if (input.selectionStart == 0) {
-                    // go to the next cell to the left, if one exists
-                    if (pattern[layer][r][c - 1]) {
-                        c -= 1;
+                this.updatePatternText(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                return false;
+            }
+            break;
+        case "Enter":
+            c = 0;
+        case "ArrowDown":
+            // go to the next cell down (or otherwise the next layer) if one exists
+            if (pattern[layer][r + 1]) {
+                r += 1;
+                this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            } else {
+                const layers = Object.getOwnPropertyNames(pattern);
+                let found = false;
+                for (const layerName of layers) {
+                    if (found) {
+                        layer = layerName;
+                        r = 0;
                         this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+                        break;
                     }
-                }
-                break;
-            case " ":
-                pattern[layer][r][c] = pattern[layer][r][c].trim();
-                c += 1;
-                if (c >= pattern[layer][r].length) {
-                    c = 0;
-                    r += 1;
-                    if (r >= pattern[layer].length) {
-                        r -= 1;
-                        c = pattern[layer][r].length - 1;
+                    if (layerName == layer) {
+                        found = true;
                     }
                 }
                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 break;
-            case "ArrowRight":
-                // go to the next cell to the right, if one exists
-                if (input.selectionEnd == pattern[layer][r][c].length) {
-                    c = Math.min(c + 1, pattern[layer][r].length - 1);
+            }
+            break;
+        case "ArrowUp":
+            // go to the next cell/layer up, if one exists
+            if (pattern[layer][r - 1]) {
+                r -= 1;
+                this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            } else {
+                const layers = Object.getOwnPropertyNames(pattern);
+                let newLayer = layer;
+                for (const layerName of layers) {
+                    if (layerName == layer) {
+                        break;
+                    }
+                    newLayer = layerName;
+                }
+                layer = newLayer;
+                this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            }
+            break;
+        case "ArrowLeft":
+            if (input.selectionStart == 0) {
+                // go to the next cell to the left, if one exists
+                if (pattern[layer][r][c - 1]) {
+                    c -= 1;
                     this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
                 }
-                break;
+            }
+            break;
+        case " ":
+            pattern[layer][r][c] = pattern[layer][r][c].trim();
+            c += 1;
+            if (c >= pattern[layer][r].length) {
+                c = 0;
+                r += 1;
+                if (r >= pattern[layer].length) {
+                    r -= 1;
+                    c = pattern[layer][r].length - 1;
+                }
+            }
+            this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            break;
+        case "ArrowRight":
+            // go to the next cell to the right, if one exists
+            if (input.selectionEnd == pattern[layer][r][c].length) {
+                c = Math.min(c + 1, pattern[layer][r].length - 1);
+                this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
+            }
+            break;
             // case "Enter":
             //     // new line (split in middle)
             //     if (input.selectionStart == pattern[layer][r][c].length) {
@@ -1825,8 +1825,8 @@ class TRRBTEditor {
             //     r += 1;
             //     this.updatePatternText(id, pattern, layer, r, c, 0, 0);
             //     break;
-            default:
-                break;
+        default:
+            break;
         }
     }
 
@@ -2015,7 +2015,7 @@ class TRRBTEditor {
         if (pattern[layer] != undefined) {
             for (let r = 0; r < pattern[layer].length; r++) {
                 while (pattern[layer][r][pattern[layer][r].length - 1] != undefined
-                    && (pattern[layer][r][pattern[layer][r].length - 1] == "?")) {
+                       && (pattern[layer][r][pattern[layer][r].length - 1] == "?")) {
                     pattern[layer][r].splice(pattern[layer][r].length - 1, 1);
                 }
                 if (pattern[layer][r].length > maxCols) {
@@ -2117,9 +2117,9 @@ class TRRBTEditor {
         }
 
         const changed =
-            force ||
-            (this.propertyNodes === null && node !== null) ||
-            (this.propertyNodes !== null && node !== this.propertyNodes.node);
+              force ||
+              (this.propertyNodes === null && node !== null) ||
+              (this.propertyNodes !== null && node !== this.propertyNodes.node);
 
         if (!changed) {
             return;
@@ -2185,13 +2185,13 @@ class TRRBTEditor {
 
             let choicesNid = []
             for (const [key, node] of this.nidToNode) {
-                choicesNid.push([EDT_NODE_PROP_NAMES['nid'].name + ': ' + key, node.dispid]);
+                choicesNid.push([EDT_NODE_PROP_NAMES['nid'].name + ': ' + key, node[NKEY_DISPID]]);
             }
             choicesNid.sort();
 
             let choicesCmt = []
             for (const [key, node] of this.commentToNode) {
-                choicesCmt.push([EDT_NODE_PROP_NAMES['comment'].name + ': ' + key, node.dispid]);
+                choicesCmt.push([EDT_NODE_PROP_NAMES['comment'].name + ': ' + key, node[NKEY_DISPID]]);
             }
             choicesCmt.sort();
 
@@ -2240,7 +2240,7 @@ class TRRBTEditor {
             if (parent !== null) {
                 appendButton(ed, 'node-shift-left', 'Move Earlier', 'Move node one child earlier under parent.', null, bind1(this, 'onNodeShift', true));
                 appendButton(ed, 'node-shift-right', 'Move Later', 'Move node one child later under parent.', null, bind1(this, 'onNodeShift', false));
-                if (node.type === 'player') {
+                if (node.type === ND_PLAYER) {
                     // pass
                 } else if (node.hasOwnProperty('children')) {
                     appendButton(ed, 'node-swap-up', 'Swap with Parent', 'Swap node with parent, such that its children become the children of the parent.', null, bind0(this, 'onNodeSwapUp'));
@@ -2263,7 +2263,7 @@ class TRRBTEditor {
 
             if (this.clipboard !== null) {
                 if (node.hasOwnProperty('children')) {
-                    if (node.type === 'player' && !can_be_player_children([this.clipboard])) {
+                    if (node.type === ND_PLAYER && !can_be_player_children([this.clipboard])) {
                         // pass
                     } else {
                         appendButton(ed, 'node-paste-subtree', 'Paste Node/Subtree', 'Paste the remembered node/subtree to the end of the children.', null, bind1(this, 'onNodePaste', true));
@@ -2362,7 +2362,7 @@ class TRRBTEditor {
                     const help_str = EDT_NODE_HELP[proto.type].help;
 
                     if (node.hasOwnProperty('children')) {
-                        if (node.type === 'player' && !can_be_player_children([proto])) {
+                        if (node.type === ND_PLAYER && !can_be_player_children([proto])) {
                             // pass
                         } else {
                             if (node.children.length === 0) {
@@ -2375,9 +2375,9 @@ class TRRBTEditor {
                     }
 
                     if (node.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
-                        if (proto.type === 'player' && !can_be_player_children(node.children)) {
+                        if (proto.type === ND_PLAYER && !can_be_player_children(node.children)) {
                             // pass
-                        } else if (node.type === 'player' && !can_be_player_children([proto])) {
+                        } else if (node.type === ND_PLAYER && !can_be_player_children([proto])) {
                             // pass
                         } else {
                             if (node.children.length > 0) {
@@ -2387,9 +2387,9 @@ class TRRBTEditor {
                     }
 
                     if (parent !== null && parent.hasOwnProperty('children') && proto.hasOwnProperty('children')) {
-                        if (proto.type === 'player' && !can_be_player_children([node])) {
+                        if (proto.type === ND_PLAYER && !can_be_player_children([node])) {
                             // pass
-                        } else if (parent.type === 'player' && !can_be_player_children([proto])) {
+                        } else if (parent.type === ND_PLAYER && !can_be_player_children([proto])) {
                             // pass
                         } else {
                             appendButton(elem, 'node-add-parent-' + proto.type, '\u2912', tooltip_add_above, clr, bind1(this, 'onNodeAddParent', proto.type));
@@ -2410,25 +2410,25 @@ class TRRBTEditor {
 
     validateProperties() {
         const SAVE_PROPS =
-            [
-                ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
-                ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
-                ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
-                ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
-                ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
-                ['withs', bind0(this, 'parseListProperty'), false],
-                ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
-                ['pattern', bind0(this, 'parsePatternProperty'), undefined],
-                ['lhs', bind0(this, 'parsePatternProperty'), undefined],
-                ['rhs', bind0(this, 'parsePatternProperty'), undefined]
-            ];
+              [
+                  ['name', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                  ['comment', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                  ['nid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['remorig', bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
+                  ['file', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['target', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['pid', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['layer', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['times', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_INT],
+                  ['delay', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_FLOAT],
+                  ['what', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['with', bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
+                  ['withs', bind0(this, 'parseListProperty'), false],
+                  ['button', bind0(this, 'parseChoiceProperty'), EDT_BUTTONS],
+                  ['pattern', bind0(this, 'parsePatternProperty'), undefined],
+                  ['lhs', bind0(this, 'parsePatternProperty'), undefined],
+                  ['rhs', bind0(this, 'parsePatternProperty'), undefined]
+              ];
 
         let node = this.propertyNodes?.node;
 
@@ -2439,9 +2439,9 @@ class TRRBTEditor {
         for (let [propid, propfn, proparg] of SAVE_PROPS) {
             let full_id = 'prop_' + propid
             if ((EDT_GAME_PROP_NAMES[propid]
-                || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
+                 || (EDT_NODE_PROP_NAMES[propid] && node?.hasOwnProperty(propid)))
                 && document.getElementById(full_id)
-            ) {
+               ) {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     this.highlightProperty('prop_' + propid, true, result.error);
@@ -2873,10 +2873,10 @@ class TRRBTEditor {
         if (this.mouseNode !== null) {
             if (this.propertyEditor === null || (this.propertyNodes !== null && this.mouseNode === this.propertyNodes.node)) {
                 if (isDouble) {
-                    this.collapseNodes(this.mouseNode, true, this.collapsedNodes.has(this.mouseNode.dispid));
+                    this.collapseNodes(this.mouseNode, true, this.collapsedNodes.has(this.mouseNode[NKEY_DISPID]));
                     this.updatePositionsAndDraw(true);
                 } else {
-                    this.collapseNodes(this.mouseNode, false, !this.collapsedNodes.has(this.mouseNode.dispid));
+                    this.collapseNodes(this.mouseNode, false, !this.collapsedNodes.has(this.mouseNode[NKEY_DISPID]));
                     this.updatePositionsAndDraw(false);
                 }
             }

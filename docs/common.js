@@ -31,11 +31,11 @@ const ND_LOOP_TIMES      = 'loop-times';
 
 const ND_REWRITE         = 'rewrite';
 const ND_REWRITE_ALL     = 'rewrite-all';
-const ND_SET_BOARD       = 'set-board';
 
 const ND_MATCH           = 'match';
 const ND_MATCH_TIMES     = 'match-times';
 
+const ND_SET_BOARD       = 'set-board';
 const ND_LAYER_TEMPLATE  = 'layer-template';
 const ND_APPEND_ROWS     = 'append-rows';
 const ND_APPEND_COLS     = 'append-columns';
@@ -62,6 +62,8 @@ const NKEY_TARGET        = 'target';
 const NKEY_DESC          = 'desc';
 const NKEY_DELAY         = 'delay';
 const NKEY_BUTTON        = 'button';
+
+const NKEY_DISPID        = Symbol('dispid');
 
 const FKEY_NAME          = 'name';
 const FKEY_TREE          = 'tree';
@@ -245,7 +247,7 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_
     }
 }
 
-const ALLOWED_PLAYER_CHILDREN = ['x-ident', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap', 'x-replace', 'rewrite']
+const ALLOWED_PLAYER_CHILDREN = [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, ND_REWRITE]
 function can_be_player_children(nodes) {
     for (const node of nodes) {
         if (!ALLOWED_PLAYER_CHILDREN.includes(node.type)) {
@@ -456,10 +458,10 @@ function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
 }
 
 function xform_rule_identity(node) {
-    if (node.type === 'x-unroll-replace') {
-        let new_node = { type: 'order', children: [] };
+    if (node.type === NDX_UNROLL_REPLACE) {
+        let new_node = { type: ND_ORDER, children: [] };
         for (const which of node.withs) {
-            new_node.children.push({ type: 'x-replace', what: node.what, withs: [which], children: deepcopyobj(node.children) });
+            new_node.children.push({ type: NDX_REPLACE_ONLY, what: node.what, withs: [which], children: deepcopyobj(node.children) });
         }
         return [new_node]
     }
@@ -593,11 +595,11 @@ function xform_rule_replace_only_fn(wht, wths) {
 
     function rule_replace_only(node) {
         let ret = [];
-        if (node.type === 'x-unroll-replace') {
+        if (node.type === NDX_UNROLL_REPLACE) {
             if (node.what === wht) {
-                let new_node = { type: 'order', children: [] };
+                let new_node = { type: ND_ORDER, children: [] };
                 for (const wth of wths) {
-                    new_node.children.push({ type: 'x-replace', what: node.what, withs: [wth], children: deepcopyobj(node.children) });
+                    new_node.children.push({ type: NDX_REPLACE_ONLY, what: node.what, withs: [wth], children: deepcopyobj(node.children) });
                 }
                 ret.push(new_node);
             } else {
@@ -630,7 +632,7 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
                     // pass
                     // TODO: ? add specialized node ?
                 } else {
-                    const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node.dispid : undefined;
+                    const linked_dispid_suffix = (dispid_use_or_prefix !== undefined) ? node[NKEY_DISPID] : undefined;
                     const linked = xform_apply_to_node(deepcopyobj(target), xforms, file_to_tree, nid_to_node, [linked_id].concat(already_linked), apply_xform, linked_dispid_suffix);
                     return linked;
                 }
@@ -640,7 +642,7 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
     }
 
     if (!apply_xform) {
-        if (['x-file'].indexOf(ntype) >= 0) {
+        if ([NDX_FILE].indexOf(ntype) >= 0) {
             const linked_nodes = get_link_or_file_nodes();
             if (linked_nodes !== null) {
                 node.children = linked_nodes;
@@ -660,7 +662,7 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
         }
     } else {
         if (dispid_use_or_prefix !== undefined && dispid_use_or_prefix !== null) {
-            node.dispid = dispid_use_or_prefix + '_' + node.dispid;
+            node[NKEY_DISPID] = dispid_use_or_prefix + '_' + node[NKEY_DISPID];
         }
 
         if (node.hasOwnProperty('comment')) {
@@ -670,30 +672,30 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
             delete node.nid;
         }
 
-        if (['x-link', 'x-file'].indexOf(ntype) >= 0) {
+        if ([NDX_LINK, NDX_FILE].indexOf(ntype) >= 0) {
             const linked_nodes = get_link_or_file_nodes();
             if (linked_nodes !== null) {
                 ret_nodes.push(...linked_nodes);
             }
-        } else if (['x-ident', 'x-prune', 'x-mirror', 'x-skew', 'x-rotate', 'x-spin', 'x-flip', 'x-swap', 'x-replace'].indexOf(ntype) >= 0) {
+        } else if ([NDX_IDENT, NDX_PRUNE, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY].indexOf(ntype) >= 0) {
             let fn = null;
-            if (ntype === 'x-ident') {
+            if (ntype === NDX_IDENT) {
                 fn = xform_rule_identity;
-            } else if (ntype === 'x-prune') {
+            } else if (ntype === NDX_PRUNE) {
                 fn = xform_rule_prune;
-            } else if (ntype === 'x-mirror') {
+            } else if (ntype === NDX_MIRROR) {
                 fn = xform_rule_mirror_fn(node.remorig);
-            } else if (ntype === 'x-rotate') {
+            } else if (ntype === NDX_ROTATE) {
                 fn = xform_rule_rotate_fn(node.remorig);
-            } else if (ntype === 'x-spin') {
+            } else if (ntype === NDX_SPIN) {
                 fn = xform_rule_spin_fn(node.remorig);
-            } else if (ntype === 'x-skew') {
+            } else if (ntype === NDX_SKEW) {
                 fn = xform_rule_skew_fn(node.remorig);
-            } else if (ntype === 'x-flip') {
+            } else if (ntype === NDX_FLIP) {
                 fn = xform_rule_flip_fn(node.remorig);
-            } else if (ntype === 'x-swap') {
+            } else if (ntype === NDX_SWAP_ONLY) {
                 fn = xform_rule_swap_only_fn(node.what, node.with);
-            } else if (ntype === 'x-replace') {
+            } else if (ntype === NDX_REPLACE_ONLY) {
                 fn = xform_rule_replace_only_fn(node.what, node.withs);
             }
 
@@ -703,14 +705,14 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
                 for (let child_xformed of children_xformed) {
                     if (dispid_use_or_prefix !== undefined) {
                         if (dispid_suffix > 0) {
-                            child_xformed.dispid = children_xformed[0].dispid + '_' + dispid_suffix;
+                            child_xformed[NKEY_DISPID] = children_xformed[0][NKEY_DISPID] + '_' + dispid_suffix;
                         }
                         ++dispid_suffix;
                     }
                     ret_nodes.push(child_xformed);
                 }
             }
-        } else if (['player', 'win', 'lose', 'draw', 'order', 'all', 'none', 'random-try', 'loop-until-all', 'loop-times', 'rewrite', 'rewrite-all', 'set-board', 'append-rows', 'append-columns', 'layer-template', 'match', 'match-times', 'display-board', 'x-unroll-replace'].indexOf(ntype) >= 0) {
+        } else if ([ND_PLAYER, ND_WIN, ND_LOSE, ND_DRAW, ND_ORDER, ND_ALL, ND_NONE, ND_RND_TRY, ND_LOOP_UNTIL_ALL, ND_LOOP_TIMES, ND_REWRITE, ND_REWRITE_ALL, ND_SET_BOARD, ND_APPEND_ROWS, ND_APPEND_COLS, ND_LAYER_TEMPLATE, ND_MATCH, ND_MATCH_TIMES, ND_DISPLAY_BOARD, NDX_UNROLL_REPLACE].indexOf(ntype) >= 0) {
             let xformed = [node];
             for (let xform of xforms) {
                 let new_xformed = [];

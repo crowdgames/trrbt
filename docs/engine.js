@@ -100,25 +100,25 @@ class TRRBTStepper {
 
     step(nodeLookup, state, stepout) {
         const NODE_FN_MAP = {
-            'display-board': bind0(this, 'stepNodeDisplayBoard'),
-            'set-board': bind0(this, 'stepNodeSetBoard'),
-            'layer-template': bind0(this, 'stepNodeLayerTemplate'),
-            'append-rows': bind0(this, 'stepNodeAppendRows'),
-            'append-columns': bind0(this, 'stepNodeAppendCols'),
-            'order': bind0(this, 'stepNodeOrder'),
-            'loop-until-all': bind0(this, 'stepNodeLoopUntilAll'),
-            'loop-times': bind0(this, 'stepNodeLoopTimes'),
-            'random-try': bind0(this, 'stepNodeRandomTry'),
-            'all': bind0(this, 'stepNodeAll'),
-            'none': bind0(this, 'stepNodeNone'),
-            'win': bind0(this, 'stepNodeWin'),
-            'lose': bind0(this, 'stepNodeLose'),
-            'draw': bind0(this, 'stepNodeDraw'),
-            'match': bind0(this, 'stepNodeMatch'),
-            'match-times': bind0(this, 'stepNodeMatchTimes'),
-            'rewrite': bind0(this, 'stepNodeRewrite'),
-            'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
-            'player': bind0(this, 'stepNodePlayer'),
+            [ND_DISPLAY_BOARD]: bind0(this, 'stepNodeDisplayBoard'),
+            [ND_SET_BOARD]: bind0(this, 'stepNodeSetBoard'),
+            [ND_LAYER_TEMPLATE]: bind0(this, 'stepNodeLayerTemplate'),
+            [ND_APPEND_ROWS]: bind0(this, 'stepNodeAppendRows'),
+            [ND_APPEND_COLS]: bind0(this, 'stepNodeAppendCols'),
+            [ND_ORDER]: bind0(this, 'stepNodeOrder'),
+            [ND_LOOP_UNTIL_ALL]: bind0(this, 'stepNodeLoopUntilAll'),
+            [ND_LOOP_TIMES]: bind0(this, 'stepNodeLoopTimes'),
+            [ND_RND_TRY]: bind0(this, 'stepNodeRandomTry'),
+            [ND_ALL]: bind0(this, 'stepNodeAll'),
+            [ND_NONE]: bind0(this, 'stepNodeNone'),
+            [ND_WIN]: bind0(this, 'stepNodeWin'),
+            [ND_LOSE]: bind0(this, 'stepNodeLose'),
+            [ND_DRAW]: bind0(this, 'stepNodeDraw'),
+            [ND_MATCH]: bind0(this, 'stepNodeMatch'),
+            [ND_MATCH_TIMES]: bind0(this, 'stepNodeMatchTimes'),
+            [ND_REWRITE]: bind0(this, 'stepNodeRewrite'),
+            [ND_REWRITE_ALL]: bind0(this, 'stepNodeRewriteAll'),
+            [ND_PLAYER]: bind0(this, 'stepNodePlayer'),
         };
 
         if (nodeLookup === null) {
@@ -151,7 +151,7 @@ class TRRBTStepper {
 
     stepNodeOrder(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-        ['index', 0]]);
+				    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
@@ -164,8 +164,8 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-        ['anyThisLoop', false],
-        ['index', 0]]);
+				    ['anyThisLoop', false],
+				    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
         this.localSetIfTrue(stateFrame, 'anyThisLoop', stateCallResult);
@@ -185,8 +185,8 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-        ['times', 0],
-        ['index', 0]]);
+				    ['times', 0],
+				    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
@@ -444,7 +444,7 @@ class TRRBTStepper {
 
             let choices = [];
             for (let child of stateNode.children) {
-                if (child.type === 'rewrite') {
+                if (child.type === ND_REWRITE) {
                     let matches = this.findLayerPattern(state, child.lhs);
                     for (let match of matches) {
                         choices.push({
