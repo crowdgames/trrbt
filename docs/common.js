@@ -1,6 +1,6 @@
 "use strict";
 
-const DEFAULT_LAYER      = 'main';
+const LAYER_DEFAULT      = 'main';
 
 const NDX_IDENT          = 'x-ident';
 const NDX_PRUNE          = 'x-prune';
@@ -62,18 +62,26 @@ const NKEY_TARGET        = 'target';
 const NKEY_DESC          = 'desc';
 const NKEY_DELAY         = 'delay';
 const NKEY_BUTTON        = 'button';
+const NKEY_MOUSE         = 'mouse';
 
 const NKEY_DISPID        = Symbol('dispid');
 
-const FKEY_NAME          = 'name';
-const FKEY_TREE          = 'tree';
+const GKEY_NAME          = 'name';
+const GKEY_TREE          = 'tree';
+const GKEY_SPRITES       = 'sprites';
+
+const SKEY_IMAGES        = 'images';
+const SKEY_TILES         = 'tiles';
+const SKEY_PLAYERS       = 'players';
+const SKEY_BACK          = 'back';
 
 
 
-const BUTTON_LEFT = 0;
+const BUTTON_LEFT  = 0;
 const BUTTON_RIGHT = 2;
-const PIXEL_RATIO = (typeof window === 'undefined') ? 1 : window.devicePixelRatio;
 const DOUBLE_CLICK_TIME = 300;
+
+const PIXEL_RATIO = (typeof window !== 'undefined') ? window.devicePixelRatio : 1;
 
 const TAU = 2 * Math.PI;
 
@@ -222,25 +230,25 @@ function appendList(parent) {
 
 
 function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_to_node) {
-    if (node.hasOwnProperty('nid') && node.nid != null && node.nid != '') {
-        if (!nid_to_node.has(node.nid)) {
-            nid_to_node.set(node.nid, node);
+    if (node.hasOwnProperty(NKEY_NID) && node[NKEY_NID] != null && node[NKEY_NID] != '') {
+        if (!nid_to_node.has(node[NKEY_NID])) {
+            nid_to_node.set(node[NKEY_NID], node);
         }
     }
-    if (node.hasOwnProperty('children')) {
-        for (let child of node.children) {
+    if (node.hasOwnProperty(NKEY_CHILDREN)) {
+        for (let child of node[NKEY_CHILDREN]) {
             find_file_node_ids(file, child, resolve_file_to_game, file_to_tree, nid_to_node);
         }
     }
-    if (node.hasOwnProperty('file') && node.hasOwnProperty('target')) {
+    if (node.hasOwnProperty(NKEY_FILE) && node.hasOwnProperty(NKEY_TARGET)) {
         if (resolve_file_to_game != null) {
-            if (!file_to_tree.has(node.file)) {
-                const game_tree = resolve_file_to_game(node.file);
+            if (!file_to_tree.has(node[NKEY_FILE])) {
+                const game_tree = resolve_file_to_game(node[NKEY_FILE]);
                 if (game_tree) {
-                    file_to_tree.set(node.file, game_tree);
-                    find_file_node_ids(node.file, game_tree, resolve_file_to_game, file_to_tree, nid_to_node);
+                    file_to_tree.set(node[NKEY_FILE], game_tree);
+                    find_file_node_ids(node[NKEY_FILE], game_tree, resolve_file_to_game, file_to_tree, nid_to_node);
                 } else {
-                    file_to_tree.set(node.file, null);
+                    file_to_tree.set(node[NKEY_FILE], null);
                 }
             }
         }
@@ -250,7 +258,7 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_
 const ALLOWED_PLAYER_CHILDREN = [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, ND_REWRITE]
 function can_be_player_children(nodes) {
     for (const node of nodes) {
-        if (!ALLOWED_PLAYER_CHILDREN.includes(node.type)) {
+        if (!ALLOWED_PLAYER_CHILDREN.includes(node[NKEY_TYPE])) {
             return false;
         }
     }
@@ -389,7 +397,7 @@ function xform_node_shallowequal(node1, node2) {
         return false;
     }
     for (const prop1 of props1) {
-        if (prop1 === 'children') {
+        if (prop1 === NKEY_CHILDREN) {
             continue;
         }
         if (!node2.hasOwnProperty(prop1)) {
@@ -429,7 +437,7 @@ function xform_unique(nodes) {
 
 function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
     if (pattern_func !== null) {
-        for (const key of ['pattern', 'lhs', 'rhs']) {
+        for (const key of [NKEY_PATTERN, NKEY_LHS, NKEY_RHS]) {
             if (node.hasOwnProperty(key)) {
                 let new_patt = {}
                 for (const layer of Object.getOwnPropertyNames(node[key])) {
@@ -441,15 +449,15 @@ function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
     }
 
     if (pid_func !== null) {
-        if (node.hasOwnProperty('pid')) {
-            node.pid = pid_func('' + node.pid);
+        if (node.hasOwnProperty(NKEY_PID)) {
+            node[NKEY_PID] = pid_func('' + node[NKEY_PID]);
         }
     }
 
     if (button_obj !== null) {
-        if (node.hasOwnProperty('button')) {
-            if (button_obj.hasOwnProperty(node.button)) {
-                node.button = button_obj[node.button];
+        if (node.hasOwnProperty(NKEY_BUTTON)) {
+            if (button_obj.hasOwnProperty(node[NKEY_BUTTON])) {
+                node[NKEY_BUTTON] = button_obj[node[NKEY_BUTTON]];
             }
         }
     }
@@ -458,10 +466,10 @@ function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
 }
 
 function xform_rule_identity(node) {
-    if (node.type === NDX_UNROLL_REPLACE) {
+    if (node[NKEY_TYPE] === NDX_UNROLL_REPLACE) {
         let new_node = { type: ND_ORDER, children: [] };
-        for (const which of node.withs) {
-            new_node.children.push({ type: NDX_REPLACE_ONLY, what: node.what, withs: [which], children: deepcopyobj(node.children) });
+        for (const which of node[NKEY_WITHS]) {
+            new_node[NKEY_CHILDREN].push({ type: NDX_REPLACE_ONLY, what: node[NKEY_WHAT], withs: [which], children: deepcopyobj(node[NKEY_CHILDREN]) });
         }
         return [new_node]
     }
@@ -595,11 +603,11 @@ function xform_rule_replace_only_fn(wht, wths) {
 
     function rule_replace_only(node) {
         let ret = [];
-        if (node.type === NDX_UNROLL_REPLACE) {
-            if (node.what === wht) {
+        if (node[NKEY_TYPE] === NDX_UNROLL_REPLACE) {
+            if (node[NKEY_WHAT] === wht) {
                 let new_node = { type: ND_ORDER, children: [] };
                 for (const wth of wths) {
-                    new_node.children.push({ type: NDX_REPLACE_ONLY, what: node.what, withs: [wth], children: deepcopyobj(node.children) });
+                    new_node[NKEY_CHILDREN].push({ type: NDX_REPLACE_ONLY, what: node[NKEY_WHAT], withs: [wth], children: deepcopyobj(node[NKEY_CHILDREN]) });
                 }
                 ret.push(new_node);
             } else {
@@ -621,13 +629,13 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
 
     node = shallowcopyobj(node);
 
-    const ntype = node.type;
+    const ntype = node[NKEY_TYPE];
 
     function get_link_or_file_nodes() {
-        if (node.hasOwnProperty('target')) {
-            const target = nid_to_node.get(node.target);
+        if (node.hasOwnProperty(NKEY_TARGET)) {
+            const target = nid_to_node.get(node[NKEY_TARGET]);
             if (target) {
-                const linked_id = node.target;
+                const linked_id = node[NKEY_TARGET];
                 if (already_linked.indexOf(linked_id) >= 0) {
                     // pass
                     // TODO: ? add specialized node ?
@@ -645,19 +653,19 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
         if ([NDX_FILE].indexOf(ntype) >= 0) {
             const linked_nodes = get_link_or_file_nodes();
             if (linked_nodes !== null) {
-                node.children = linked_nodes;
+                node[NKEY_CHILDREN] = linked_nodes;
             }
         }
         ret_nodes.push(node)
 
         for (let ret_node of ret_nodes) {
-            if (ret_node.hasOwnProperty('children')) {
+            if (ret_node.hasOwnProperty(NKEY_CHILDREN)) {
                 let new_children = []
-                for (const child of ret_node.children) {
+                for (const child of ret_node[NKEY_CHILDREN]) {
                     const child_xformed = xform_apply_to_node(child, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                     new_children.push(...child_xformed);
                 }
-                ret_node.children = new_children;
+                ret_node[NKEY_CHILDREN] = new_children;
             }
         }
     } else {
@@ -665,11 +673,11 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
             node[NKEY_DISPID] = dispid_use_or_prefix + '_' + node[NKEY_DISPID];
         }
 
-        if (node.hasOwnProperty('comment')) {
-            delete node.comment;
+        if (node.hasOwnProperty(NKEY_COMMENT)) {
+            delete node[NKEY_COMMENT];
         }
-        if (node.hasOwnProperty('nid')) {
-            delete node.nid;
+        if (node.hasOwnProperty(NKEY_NID)) {
+            delete node[NKEY_NID];
         }
 
         if ([NDX_LINK, NDX_FILE].indexOf(ntype) >= 0) {
@@ -684,22 +692,22 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
             } else if (ntype === NDX_PRUNE) {
                 fn = xform_rule_prune;
             } else if (ntype === NDX_MIRROR) {
-                fn = xform_rule_mirror_fn(node.remorig);
+                fn = xform_rule_mirror_fn(node[NKEY_REMORIG]);
             } else if (ntype === NDX_ROTATE) {
-                fn = xform_rule_rotate_fn(node.remorig);
+                fn = xform_rule_rotate_fn(node[NKEY_REMORIG]);
             } else if (ntype === NDX_SPIN) {
-                fn = xform_rule_spin_fn(node.remorig);
+                fn = xform_rule_spin_fn(node[NKEY_REMORIG]);
             } else if (ntype === NDX_SKEW) {
-                fn = xform_rule_skew_fn(node.remorig);
+                fn = xform_rule_skew_fn(node[NKEY_REMORIG]);
             } else if (ntype === NDX_FLIP) {
-                fn = xform_rule_flip_fn(node.remorig);
+                fn = xform_rule_flip_fn(node[NKEY_REMORIG]);
             } else if (ntype === NDX_SWAP_ONLY) {
-                fn = xform_rule_swap_only_fn(node.what, node.with);
+                fn = xform_rule_swap_only_fn(node[NKEY_WHAT], node[NKEY_WITH]);
             } else if (ntype === NDX_REPLACE_ONLY) {
-                fn = xform_rule_replace_only_fn(node.what, node.withs);
+                fn = xform_rule_replace_only_fn(node[NKEY_WHAT], node[NKEY_WITHS]);
             }
 
-            for (const child of node.children) {
+            for (const child of node[NKEY_CHILDREN]) {
                 let dispid_suffix = 0;
                 const children_xformed = xform_apply_to_node(child, [fn].concat(xforms), file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                 for (let child_xformed of children_xformed) {
@@ -725,13 +733,13 @@ function xform_apply_to_node(node, xforms, file_to_tree, nid_to_node, already_li
             ret_nodes = xformed;
 
             for (let ret_node of ret_nodes) {
-                if (ret_node.hasOwnProperty('children')) {
+                if (ret_node.hasOwnProperty(NKEY_CHILDREN)) {
                     let new_children = []
-                    for (const child of ret_node.children) {
+                    for (const child of ret_node[NKEY_CHILDREN]) {
                         const child_xformed = xform_apply_to_node(child, xforms, file_to_tree, nid_to_node, already_linked, apply_xform, dispid_use_or_prefix)
                         new_children.push(...child_xformed);
                     }
-                    ret_node.children = new_children;
+                    ret_node[NKEY_CHILDREN] = new_children;
                 }
             }
         } else {
@@ -754,24 +762,24 @@ function xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispid
 
 
 function xformApplyIntoGame(game, fromGame, resolve_file_to_game) {
-    game.name = fromGame.name;
-    game.sprites = fromGame.sprites;
+    game[GKEY_NAME] = fromGame[GKEY_NAME];
+    game[GKEY_SPRITES] = fromGame[GKEY_SPRITES];
 
-    if (fromGame.tree === null) {
-        game.tree = null;
+    if (fromGame[GKEY_TREE] === null) {
+        game[GKEY_TREE] = null;
     } else {
-        game.tree = xform_apply_to_tree(fromGame.tree, resolve_file_to_game, true, true);
+        game[GKEY_TREE] = xform_apply_to_tree(fromGame[GKEY_TREE], resolve_file_to_game, true, true);
     }
 }
 
 function copyIntoGame(game, fromGame) {
-    game.name = fromGame.name;
-    game.sprites = fromGame.sprites;
-    game.tree = deepcopyobj(fromGame.tree);
+    game[GKEY_NAME] = fromGame[GKEY_NAME];
+    game[GKEY_SPRITES] = fromGame[GKEY_SPRITES];
+    game[GKEY_TREE] = deepcopyobj(fromGame[GKEY_TREE]);
 }
 
 function emptyGame() {
-    return { name: 'empty', sprites: null, tree: null };
+    return { [GKEY_NAME]: 'empty', [GKEY_SPRITES]: null, [GKEY_TREE]: null };
 }
 
 async function readClipboard() {

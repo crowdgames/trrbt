@@ -90,7 +90,7 @@ function layer_pattern_to_string(lpatt, filt, lpre, lpost, lsep, ppre, ppost, co
         if (li > 0) {
             ret += lsep;
         }
-        if (Object.entries(lpatt).length > 1 || layer !== DEFAULT_LAYER) {
+        if (Object.entries(lpatt).length > 1 || layer !== LAYER_DEFAULT) {
             ret += (lpre + layer + lpost);
         }
         ret += ppre;
@@ -171,7 +171,7 @@ function gv_print_node(node_lines, edge_lines, node, depth, nid_to_node) {
             }
 
             for (const [layer, [llhs, lrhs]] of Object.entries(layer_to_sides)) {
-                if (layer === DEFAULT_LAYER && Object.entries(layer_to_sides).length === 1) {
+                if (layer === LAYER_DEFAULT && Object.entries(layer_to_sides).length === 1) {
                     // pass
                 } else {
                     nlabel += '<TR>';
@@ -410,7 +410,7 @@ export function gv_print_game(game) {
     let lines = [];
     lines.push('digraph G {');
     lines.push('  graph [ordering="out", margin="0"];');
-    lines.push(`  _NAME [shape="component", label=<${game.name}>, style="filled", fillcolor="#cccccc"];`);
+    lines.push(`  _NAME [shape="component", label=<${game[GKEY_NAME]}>, style="filled", fillcolor="#cccccc"];`);
     lines = lines.concat(node_lines, edge_lines);
     lines.push('}');
 

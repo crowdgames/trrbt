@@ -139,7 +139,7 @@ class TRRBTStepper {
             if (stepout !== null && state.loopCheck >= stepout) {
                 state.gameResult = { result: 'stepout' };
             } else {
-                let fn = NODE_FN_MAP[stateNode.type];
+                let fn = NODE_FN_MAP[stateNode[NKEY_TYPE]];
                 state.callResult = fn(nodeLookup.nodeToId, state, stateFrame, stateNode, state.callResult);
 
                 if (state.callResult === true || state.callResult === false) {
@@ -155,7 +155,7 @@ class TRRBTStepper {
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
-        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return this.localGet(stateFrame, 'any');
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -170,7 +170,7 @@ class TRRBTStepper {
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
         this.localSetIfTrue(stateFrame, 'anyThisLoop', stateCallResult);
 
-        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             if (this.localGet(stateFrame, 'anyThisLoop')) {
                 this.localSet(stateFrame, 'anyThisLoop', false);
                 this.localSet(stateFrame, 'index', 0);
@@ -190,9 +190,9 @@ class TRRBTStepper {
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
-        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             this.localIncrement(stateFrame, 'times');
-            if (this.localEqual(stateFrame, 'times', stateNode.times)) {
+            if (this.localEqual(stateFrame, 'times', stateNode[NKEY_TIMES])) {
                 return this.localGet(stateFrame, 'any');
             } else {
                 this.localSet(stateFrame, 'index', 0);
@@ -208,7 +208,7 @@ class TRRBTStepper {
 
         if (this.localEqual(stateFrame, 'order', null)) {
             let order = [];
-            for (let ii = 0; ii < stateNode.children.length; ++ii) {
+            for (let ii = 0; ii < stateNode[NKEY_CHILDREN].length; ++ii) {
                 order.push(ii);
             }
             shuffleArray(order, state);
@@ -221,7 +221,7 @@ class TRRBTStepper {
             return false;
         } else {
             const index = this.localGet(stateFrame, 'order').pop();
-            this.pushCallStack(nodeToId, state, stateNode.children[index]);
+            this.pushCallStack(nodeToId, state, stateNode[NKEY_CHILDREN][index]);
             return null;
         }
     }
@@ -231,7 +231,7 @@ class TRRBTStepper {
 
         if (stateCallResult === false) {
             return false;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return true;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -243,7 +243,7 @@ class TRRBTStepper {
 
         if (stateCallResult === true) {
             return false;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return true;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -254,9 +254,9 @@ class TRRBTStepper {
         this.localInit(stateFrame, [['index', 0]]);
 
         if (stateCallResult === true) {
-            state.gameResult = { result: 'win', player: stateNode.pid };
+            state.gameResult = { result: 'win', player: stateNode[NKEY_PID] };
             return null;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return false;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -267,9 +267,9 @@ class TRRBTStepper {
         this.localInit(stateFrame, [['index', 0]]);
 
         if (stateCallResult === true) {
-            state.gameResult = { result: 'lose', player: stateNode.pid };
+            state.gameResult = { result: 'lose', player: stateNode[NKEY_PID] };
             return null;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return false;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -282,7 +282,7 @@ class TRRBTStepper {
         if (stateCallResult === true) {
             state.gameResult = { result: 'draw' };
             return null;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return false;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -290,7 +290,7 @@ class TRRBTStepper {
     }
 
     stepNodeSetBoard(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        state.board = deepcopyobj(stateNode.pattern);
+        state.board = deepcopyobj(stateNode[NKEY_PATTERN]);
 
         const [newRows, newCols] = this.layerPatternSize(state.board);
         state.rows = newRows;
@@ -301,7 +301,7 @@ class TRRBTStepper {
 
     stepNodeLayerTemplate(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let newLayer = [];
-        for (let row of state.board['main']) {
+        for (let row of state.board[LAYER_DEFAULT]) {
             let newRow = [];
             for (let tile of row) {
                 if (tile === '.') {
@@ -313,16 +313,16 @@ class TRRBTStepper {
             newLayer.push(newRow);
         }
 
-        state.board[stateNode.layer] = newLayer;
+        state.board[stateNode[NKEY_LAYER]] = newLayer;
 
         return true;
     }
 
     stepNodeAppendRows(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.board === null) {
-            state.board = deepcopyobj(stateNode.pattern);
+            state.board = deepcopyobj(stateNode[NKEY_PATTERN]);
         } else {
-            const patt = stateNode.pattern;
+            const patt = stateNode[NKEY_PATTERN];
             if (!samepropsobj(state.board, patt)) {
                 return false;
             }
@@ -347,9 +347,9 @@ class TRRBTStepper {
 
     stepNodeAppendCols(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.board === null) {
-            state.board = deepcopyobj(stateNode.pattern);
+            state.board = deepcopyobj(stateNode[NKEY_PATTERN]);
         } else {
-            const patt = stateNode.pattern;
+            const patt = stateNode[NKEY_PATTERN];
             if (!samepropsobj(state.board, patt)) {
                 return false;
             }
@@ -368,7 +368,7 @@ class TRRBTStepper {
     }
 
     stepNodeMatch(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        if (this.findLayerPattern(state, stateNode.pattern).length > 0) {
+        if (this.findLayerPattern(state, stateNode[NKEY_PATTERN]).length > 0) {
             return true;
         } else {
             return false;
@@ -376,7 +376,7 @@ class TRRBTStepper {
     }
 
     stepNodeMatchTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        if (this.findLayerPattern(state, stateNode.pattern).length === stateNode.times) {
+        if (this.findLayerPattern(state, stateNode[NKEY_PATTERN]).length === stateNode[NKEY_TIMES]) {
             return true;
         } else {
             return false;
@@ -384,10 +384,10 @@ class TRRBTStepper {
     }
 
     stepNodeRewrite(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        let matches = this.findLayerPattern(state, stateNode.lhs);
+        let matches = this.findLayerPattern(state, stateNode[NKEY_LHS]);
         if (matches.length > 0) {
             let match = matches[Math.floor(stateRandom(state) * matches.length)];
-            this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+            this.rewriteLayerPattern(state, stateNode[NKEY_RHS], match.row, match.col);
             return true;
         } else {
             return false;
@@ -395,12 +395,12 @@ class TRRBTStepper {
     }
 
     stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        let matches = this.findLayerPattern(state, stateNode.lhs);
+        let matches = this.findLayerPattern(state, stateNode[NKEY_LHS]);
         if (matches.length > 0) {
             shuffleArray(matches, state);
             for (let match of matches) {
-                if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
-                    this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+                if (this.matchLayerPattern(state, stateNode[NKEY_LHS], match.row, match.col)) {
+                    this.rewriteLayerPattern(state, stateNode[NKEY_RHS], match.row, match.col);
                 }
             }
             return true;
@@ -420,8 +420,8 @@ class TRRBTStepper {
             state.displayDone = false;
             state.displayDelay = 0;
 
-            if (stateNode.hasOwnProperty('delay')) {
-                state.displayDelay = stateNode.delay;
+            if (stateNode.hasOwnProperty(NKEY_DELAY)) {
+                state.displayDelay = stateNode[NKEY_DELAY];
             }
             return null;
         }
@@ -443,13 +443,13 @@ class TRRBTStepper {
             state.choicesByBtn = null;
 
             let choices = [];
-            for (let child of stateNode.children) {
-                if (child.type === ND_REWRITE) {
-                    let matches = this.findLayerPattern(state, child.lhs);
+            for (let child of stateNode[NKEY_CHILDREN]) {
+                if (child[NKEY_TYPE] === ND_REWRITE) {
+                    let matches = this.findLayerPattern(state, child[NKEY_LHS]);
                     for (let match of matches) {
                         choices.push({
-                            desc: child.desc, button: child.button, mouse: child.mouse,
-                            lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col
+                            desc: child[NKEY_DESC], button: child[NKEY_BUTTON], mouse: child[NKEY_MOUSE],
+                            lhs: child[NKEY_LHS], rhs: child[NKEY_RHS], row: match.row, col: match.col
                         });
                     }
                 }
@@ -467,7 +467,7 @@ class TRRBTStepper {
             choices = choicesUnique;
 
             if (choices.length > 0) {
-                state.choicePlayer = stateNode.pid;
+                state.choicePlayer = stateNode[NKEY_PID];
 
                 state.choices = choices;
                 state.choicesByRct = Object.create(null);
@@ -509,7 +509,7 @@ class TRRBTStepper {
     }
 
     pushCallStackNextChild(nodeToId, state, stateFrame, stateNode) {
-        this.pushCallStack(nodeToId, state, stateNode.children[stateFrame.local['index']]);
+        this.pushCallStack(nodeToId, state, stateNode[NKEY_CHILDREN][stateFrame.local['index']]);
         stateFrame.local['index'] = stateFrame.local['index'] + 1;
         return null;
     }
@@ -628,11 +628,11 @@ class TRRBTEngine {
     onLoad() {
         this.game = this.game;
 
-        if (this.game.tree === null) {
+        if (this.game[GKEY_TREE] === null) {
             this.nodeLookup = null;
         } else {
             this.nodeLookup = { idToNode: new Map(), nodeToId: new WeakMap() };
-            this.initializeNodeLookup(this.nodeLookup, this.game.tree, [0]);
+            this.initializeNodeLookup(this.nodeLookup, this.game[GKEY_TREE], [0]);
         }
 
         this.state = new TRRBTState();
@@ -658,8 +658,8 @@ class TRRBTEngine {
         nodeLookup.idToNode.set(id[0], node);
         nodeLookup.nodeToId.set(node, id[0]);
 
-        if (node.hasOwnProperty('children')) {
-            for (let child of node.children) {
+        if (node.hasOwnProperty(NKEY_CHILDREN)) {
+            for (let child of node[NKEY_CHILDREN]) {
                 id[0] += 1;
                 this.initializeNodeLookup(nodeLookup, child, id);
             }
@@ -885,28 +885,28 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
         this.canvas.focus();
 
-        if (this.game.sprites && this.game.sprites !== null) {
-            if (this.game.sprites.images !== undefined) {
+        if (this.game[GKEY_SPRITES] && this.game[GKEY_SPRITES] !== null) {
+            if (this.game[GKEY_SPRITES][SKEY_IMAGES] !== undefined) {
                 this.spriteArrays = Object.create(null);
                 this.spriteImages = Object.create(null);
-                for (let imageName in this.game.sprites.images) {
-                    const image_info = this.game.sprites.images[imageName];
+                for (let imageName in this.game[GKEY_SPRITES][SKEY_IMAGES]) {
+                    const image_info = this.game[GKEY_SPRITES][SKEY_IMAGES][imageName];
                     this.loadSpriteImage(imageName, image_info)
                 }
             }
-            if (this.game.sprites.tiles !== undefined) {
+            if (this.game[GKEY_SPRITES][SKEY_TILES] !== undefined) {
                 this.spriteTiles = Object.create(null);
-                for (let tile in this.game.sprites.tiles) {
-                    this.spriteTiles[tile] = this.game.sprites.tiles[tile];
+                for (let tile in this.game[GKEY_SPRITES][SKEY_TILES]) {
+                    this.spriteTiles[tile] = this.game[GKEY_SPRITES][SKEY_TILES][tile];
                 }
             }
-            if (this.game.sprites.players !== undefined) {
-                for (let pid in this.game.sprites.players) {
-                    this.player_id_colors[String(pid)] = this.game.sprites.players[pid];
+            if (this.game[GKEY_SPRITES][SKEY_PLAYERS] !== undefined) {
+                for (let pid in this.game[GKEY_SPRITES][SKEY_PLAYERS]) {
+                    this.player_id_colors[String(pid)] = this.game[GKEY_SPRITES][SKEY_PLAYERS][pid];
                 }
             }
-            if (this.game.sprites.back !== undefined) {
-                this.back = this.game.sprites.back;
+            if (this.game[GKEY_SPRITES][SKEY_BACK] !== undefined) {
+                this.back = this.game[GKEY_SPRITES][SKEY_BACK];
             }
         }
 
