@@ -151,7 +151,7 @@ class TRRBTStepper {
 
     stepNodeOrder(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-				    ['index', 0]]);
+                                    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
@@ -164,8 +164,8 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-				    ['anyThisLoop', false],
-				    ['index', 0]]);
+                                    ['anyThisLoop', false],
+                                    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
         this.localSetIfTrue(stateFrame, 'anyThisLoop', stateCallResult);
@@ -185,8 +185,8 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-				    ['times', 0],
-				    ['index', 0]]);
+                                    ['times', 0],
+                                    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
@@ -800,6 +800,112 @@ class TRRBTEngine {
 
 
 
+class SpriteLoader {
+    constructor(sprite_size) {
+        this.#sprite_size = sprite_size;
+        this.#sprite_arrays = Object.create(null);
+        this.#sprite_images = Object.create(null);
+    }
+
+    getSpriteImage(image_name) {
+        return this.#sprite_images[image_name];
+    }
+
+    loadSpriteImage(image_name, image_info) {
+        this.#loadSpriteImage(image_name, image_info);
+    }
+
+    setSpriteSize(sprite_size) {
+        if (this.#sprite_size !== sprite_size) {
+            this.#sprite_size = sprite_size;
+            this.#resizeAllSpriteImages();
+        }
+    }
+
+    isStillLoading() {
+        for (let [imgName, img] of Object.entries(this.#sprite_images)) {
+            if (img === null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    #sprite_size;
+    #sprite_arrays;
+    #sprite_images;
+
+    #arrayToImageData(from_data, fw, fh, ww, hh) {
+        let new_data = new Uint8ClampedArray(ww * hh * 4);
+        for (let xx = 0; xx < ww; xx += 1) {
+            for (let yy = 0; yy < hh; yy += 1) {
+                const fx = Math.floor(xx / ww * fw);
+                const fy = Math.floor(yy / hh * fh);
+
+                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
+                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
+                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
+                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
+            }
+        }
+        return new ImageData(new_data, ww, hh);
+    }
+
+    #loadSpriteImage(image_name, image_info) {
+        this.#sprite_arrays[image_name] = null;
+        this.#sprite_images[image_name] = null;
+
+        const image_info_size = image_info.size;
+        const image_info_data = image_info.data;
+
+        const image_decoded = atob(image_info_data);
+        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
+        const image_blob = new Blob([image_array.buffer]);
+        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
+        const image_reader = image_decompressed.getReader();
+
+        let image_read_array = null;
+
+        let this_loader = this;
+
+        image_reader.read().then(function process({ done, value }) {
+            if (!done) {
+                if (image_read_array === null) {
+                    image_read_array = value;
+                } else {
+                    let merged_array = new Uint8Array(image_read_array.length + value.length);
+                    merged_array.set(image_read_array);
+                    merged_array.set(value, image_read_array.length);
+                    image_read_array = merged_array;
+                }
+                return image_reader.read().then(process);
+            } else {
+                this_loader.#sprite_arrays[image_name] = { array: image_read_array, size: image_info_size };
+                this_loader.#resizeSpriteImage(image_name);
+            }
+        });
+    }
+
+    #resizeSpriteImage(image_name) {
+        let this_loader = this;
+        const image_array = this_loader.#sprite_arrays[image_name];
+        const image_data = this_loader.#arrayToImageData(image_array.array, image_array.size[0], image_array.size[1], this_loader.#sprite_size, this_loader.#sprite_size);
+        let img_promise = createImageBitmap(image_data);
+        img_promise.then((img_loaded) => this_loader.#sprite_images[image_name] = img_loaded);
+    }
+
+    #resizeAllSpriteImages() {
+        if (this.#sprite_images !== null) {
+            for (const image_name of Object.keys(this.#sprite_arrays)) {
+                this.#sprite_images[image_name] = null;
+                this.#resizeSpriteImage(image_name);
+            }
+        }
+    }
+};
+
+
+
 class TRRBTWebEngine extends TRRBTEngine {
 
     constructor(game, undoSetting, canvasname, divname) {
@@ -821,10 +927,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.min_width = null;
         this.keysDown = null;
 
-        this.spriteArrays = null;
-        this.spriteImages = null;
-        this.spriteTiles = null;
-        this.back = null;
+        this.spriteLoader = null;
+        this.spriteTileNames = null;
+        this.spriteBackTiles = null;
 
         this.player_id_colors = null;
 
@@ -860,10 +965,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.min_width = 10 * ENG_CELL_SIZE_MAX;
         this.keysDown = new Set();
 
-        this.spriteArrays = null;
-        this.spriteImages = null;
-        this.spriteTiles = null;
-        this.back = null;
+        this.spriteLoader = null;
+        this.spriteTileNames = null;
+        this.spriteBackTiles = null;
 
         this.player_id_colors = Object.create(null);
 
@@ -886,27 +990,26 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.canvas.focus();
 
         if (this.game[GKEY_SPRITES] && this.game[GKEY_SPRITES] !== null) {
+            this.spriteLoader = new SpriteLoader(this.cell_size);
             if (this.game[GKEY_SPRITES][SKEY_IMAGES] !== undefined) {
-                this.spriteArrays = Object.create(null);
-                this.spriteImages = Object.create(null);
-                for (let imageName in this.game[GKEY_SPRITES][SKEY_IMAGES]) {
-                    const image_info = this.game[GKEY_SPRITES][SKEY_IMAGES][imageName];
-                    this.loadSpriteImage(imageName, image_info)
+                for (const image_name in this.game[GKEY_SPRITES][SKEY_IMAGES]) {
+                    const image_info = this.game[GKEY_SPRITES][SKEY_IMAGES][image_name];
+                    this.spriteLoader.loadSpriteImage(image_name, image_info);
                 }
             }
             if (this.game[GKEY_SPRITES][SKEY_TILES] !== undefined) {
-                this.spriteTiles = Object.create(null);
-                for (let tile in this.game[GKEY_SPRITES][SKEY_TILES]) {
-                    this.spriteTiles[tile] = this.game[GKEY_SPRITES][SKEY_TILES][tile];
+                this.spriteTileNames = Object.create(null);
+                for (const tile in this.game[GKEY_SPRITES][SKEY_TILES]) {
+                    this.spriteTileNames[tile] = this.game[GKEY_SPRITES][SKEY_TILES][tile];
                 }
             }
             if (this.game[GKEY_SPRITES][SKEY_PLAYERS] !== undefined) {
-                for (let pid in this.game[GKEY_SPRITES][SKEY_PLAYERS]) {
+                for (const pid in this.game[GKEY_SPRITES][SKEY_PLAYERS]) {
                     this.player_id_colors[String(pid)] = this.game[GKEY_SPRITES][SKEY_PLAYERS][pid];
                 }
             }
             if (this.game[GKEY_SPRITES][SKEY_BACK] !== undefined) {
-                this.back = this.game[GKEY_SPRITES][SKEY_BACK];
+                this.spriteBackTiles = this.game[GKEY_SPRITES][SKEY_BACK];
             }
         }
 
@@ -915,72 +1018,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.updateEngineEditor();
 
         this.requestDraw();
-    }
-
-    arrayToImageData(from_data, fw, fh, ww, hh) {
-        let new_data = new Uint8ClampedArray(ww * hh * 4);
-        for (let xx = 0; xx < ww; xx += 1) {
-            for (let yy = 0; yy < hh; yy += 1) {
-                const fx = Math.floor(xx / ww * fw);
-                const fy = Math.floor(yy / hh * fh);
-
-                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
-                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
-                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
-                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
-            }
-        }
-        return new ImageData(new_data, ww, hh);
-    }
-
-    loadSpriteImage(image_name, image_info) {
-        this.spriteArrays[image_name] = null;
-        this.spriteImages[image_name] = null;
-
-        const image_info_data = image_info.data;
-        const image_decoded = atob(image_info_data);
-        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
-        const image_blob = new Blob([image_array.buffer]);
-        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
-        const image_reader = image_decompressed.getReader();
-
-        let image_read_array = null;
-
-        let this_engine = this;
-
-        image_reader.read().then(function process({ done, value }) {
-            if (!done) {
-                if (image_read_array === null) {
-                    image_read_array = value;
-                } else {
-                    let merged_array = new Uint8Array(image_read_array.length + value.length);
-                    merged_array.set(image_read_array);
-                    merged_array.set(value, image_read_array.length);
-                    image_read_array = merged_array;
-                }
-                return image_reader.read().then(process);
-            } else {
-                this_engine.spriteArrays[image_name] = { array: image_read_array, size: image_info.size };
-                this_engine.resizeSpriteImage(image_name);
-            }
-        });
-    }
-
-    resizeSpriteImage(image_name) {
-        let this_engine = this;
-        const image_array = this_engine.spriteArrays[image_name];
-        const image_data = this_engine.arrayToImageData(image_array.array, image_array.size[0], image_array.size[1], this_engine.cell_size, this_engine.cell_size);
-        let img_promise = createImageBitmap(image_data);
-        img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
-    }
-
-    resizeAllSpriteImages() {
-        if (this.spriteImages !== null) {
-            for (const image_name of Object.keys(this.spriteArrays)) {
-                this.spriteImages[image_name] = null;
-                this.resizeSpriteImage(image_name);
-            }
-        }
     }
 
     setState(state) {
@@ -1129,12 +1166,10 @@ class TRRBTWebEngine extends TRRBTEngine {
     onDraw() {
         this.drawRequested = false;
 
-        if (this.spriteImages !== null) {
-            for (let [imgName, img] of Object.entries(this.spriteImages)) {
-                if (img === null) {
-                    this.requestDraw();
-                    return;
-                }
+        if (this.spriteLoader !== null) {
+            if (this.spriteLoader.isStillLoading()) {
+                this.requestDraw();
+                return;
             }
         }
 
@@ -1180,13 +1215,13 @@ class TRRBTWebEngine extends TRRBTEngine {
                     }
                 }
                 if (!all_invis) {
-                    if (this.back !== null) {
-                        const brows = this.back.length;
-                        const bcols = this.back[0].length;
+                    if (this.spriteBackTiles !== null) {
+                        const brows = this.spriteBackTiles.length;
+                        const bcols = this.spriteBackTiles[0].length;
 
-                        const back_tile = this.back[rr % brows][cc % bcols];
-                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, back_tile)) {
-                            const img = this.spriteImages[this.spriteTiles[back_tile]];
+                        const back_tile = this.spriteBackTiles[rr % brows][cc % bcols];
+                        if (this.spriteTileNames !== null && Object.hasOwn(this.spriteTileNames, back_tile)) {
+                            const img = this.spriteLoader.getSpriteImage(this.spriteTileNames[back_tile]);
                             this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                         }
                     } else {
@@ -1246,10 +1281,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                         this.ctx.globalAlpha = 1.0;
                     }
                     if (tile !== '.') {
-                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, tile)) {
-                            const imgName = this.spriteTiles[tile];
+                        if (this.spriteTileNames !== null && Object.hasOwn(this.spriteTileNames, tile)) {
+                            const imgName = this.spriteTileNames[tile];
                             if (imgName !== null) {
-                                const img = this.spriteImages[imgName];
+                                const img = this.spriteLoader.getSpriteImage(imgName);
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
@@ -1480,7 +1515,9 @@ class TRRBTWebEngine extends TRRBTEngine {
 
     onCellSize(by) {
         this.cell_size = Math.max(ENG_CELL_SIZE_MIN, Math.min(ENG_CELL_SIZE_MAX, this.cell_size + by * ENG_CELL_SIZE_STEP));
-        this.resizeAllSpriteImages();
+        if (this.spriteLoader !== null) {
+            this.spriteLoader.resizeAllSpriteImages(this.cell_size);
+        }
         this.requestDraw();
     }
 

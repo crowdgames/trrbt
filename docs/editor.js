@@ -1092,9 +1092,9 @@ class TRRBTEditor {
                     const lox = Math.max(nx + EDT_NODE_PADDING, nx + nw / 2 - EDT_FONT_CHAR_SIZE * rect.len / 2);
                     const width = Math.min(nw - EDT_NODE_PADDING, (rect.to - rect.from) * EDT_FONT_CHAR_SIZE + EDT_FONT_CHAR_SIZE);
                     ctx.strokeRect(lox + rect.from * EDT_FONT_CHAR_SIZE - EDT_FONT_CHAR_SIZE / 2,
-				   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
-				   width,
-				   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
+                                   ny + rect.texty - EDT_FONT_LINE_SIZE / 2 - EDT_FONT_LINE_SIZE / 10,
+                                   width,
+                                   texty - rect.texty + EDT_FONT_LINE_SIZE / 5);
                 }
             }
         }
