@@ -1,7 +1,9 @@
+"use strict";
+
 window.addEventListener('load', SEL_onLoad, false);
 
 var GAME_SETUPS = {}
-var LOCAL_GAME_SETUPS = JSON.parse(localStorage.getItem("LOCAL_GAME_SETUPS")) || {};
+var LOCAL_GAME_SETUPS = JSON.parse(localStorage.getItem('LOCAL_GAME_SETUPS')) || {};
 
 const TEMPLATES = [
     'connect four',
@@ -18,12 +20,11 @@ function SEL_onLoad() {
         if (false) {
         } else {
             const select = document.createElement('select');
-            select.type = 'select';
             select.id = 'game-selector';
             select.onchange = function () {
                 const gameOp = select.options[select.selectedIndex];
                 const game = gameOp.value
-                telemetry("select-" + game);
+                telemetry('select-' + game);
                 select.selectedIndex = 0;
                 window.location.hash = encodeURIComponent(game);
                 if (gameOp.classList.contains('local')) {
@@ -45,7 +46,7 @@ function setOptions(select) {
     SEL_addOption('--', '');
 
     for (const game of Object.getOwnPropertyNames(LOCAL_GAME_SETUPS).sort()) {
-        SEL_addOption(game + " (local)", game, ['local']);
+        SEL_addOption(game + ' (local)', game, ['local']);
     }
     for (const game of Object.getOwnPropertyNames(GAME_SETUPS).sort()) {
         // if (TEMPLATES.includes(game)) {
@@ -55,8 +56,8 @@ function setOptions(select) {
 }
 
 function SEL_addOption(innerHTML, value, classList = []) {
-    select = document.getElementById('game-selector');
-    var option = document.createElement('option');
+    let select = document.getElementById('game-selector');
+    let option = document.createElement('option');
     option.innerHTML = innerHTML;
     option.value = value;
     if (classList.length > 0) {
@@ -73,12 +74,12 @@ function SEL_update() {
 function SEL_upsert(game) {
     LOCAL_GAME_SETUPS[game['name']] = game;
     SEL_update();
-    localStorage.setItem("LOCAL_GAME_SETUPS", JSON.stringify(LOCAL_GAME_SETUPS));
+    localStorage.setItem('LOCAL_GAME_SETUPS', JSON.stringify(LOCAL_GAME_SETUPS));
 }
 
 function SEL_removeLocal(game) {
     delete LOCAL_GAME_SETUPS[game];
-    localStorage.setItem("LOCAL_GAME_SETUPS", JSON.stringify(LOCAL_GAME_SETUPS))
+    localStorage.setItem('LOCAL_GAME_SETUPS', JSON.stringify(LOCAL_GAME_SETUPS))
     SEL_update();
 }
 

@@ -1,3 +1,5 @@
+"use strict";
+
 var TELEMETRY_DATA = JSON.parse(localStorage.getItem("TELEMETRY_DATA")) || [];
 const TELEMETRY_SESSION = TELEMETRY_DATA.length
 TELEMETRY_DATA.push([]);

@@ -1,18 +1,20 @@
+"use strict";
+
 const ENG_FONTNAME = 'px Courier New, Courier, sans-serif';
 
-const ENG_UNDO_NONE = 'UNDO_NONE';
+const ENG_UNDO_NONE   = 'UNDO_NONE';
 const ENG_UNDO_PLAYER = 'UNDO_PLAYER';
-const ENG_UNDO_FULL = 'UNDO_FULL';
+const ENG_UNDO_FULL   = 'UNDO_FULL';
 
 const ENG_UNDO_PLAYER_MAX = 100;
 const ENG_UNDO_RECENT_MAX = 100;
 
 const ENG_LOOP_CHECK_MAX = 100000;
 
-const ENG_CELL_SIZE_MIN = 15;
-const ENG_CELL_SIZE_MAX = 60;
+const ENG_CELL_SIZE_MIN     = 15;
+const ENG_CELL_SIZE_MAX     = 60;
 const ENG_CELL_SIZE_DEFAULT = 50;
-const ENG_CELL_SIZE_STEP = 5;
+const ENG_CELL_SIZE_STEP    =  5;
 
 
 
@@ -98,25 +100,25 @@ class TRRBTStepper {
 
     step(nodeLookup, state, stepout) {
         const NODE_FN_MAP = {
-            'display-board': bind0(this, 'stepNodeDisplayBoard'),
-            'set-board': bind0(this, 'stepNodeSetBoard'),
-            'layer-template': bind0(this, 'stepNodeLayerTemplate'),
-            'append-rows': bind0(this, 'stepNodeAppendRows'),
-            'append-columns': bind0(this, 'stepNodeAppendCols'),
-            'order': bind0(this, 'stepNodeOrder'),
-            'loop-until-all': bind0(this, 'stepNodeLoopUntilAll'),
-            'loop-times': bind0(this, 'stepNodeLoopTimes'),
-            'random-try': bind0(this, 'stepNodeRandomTry'),
-            'all': bind0(this, 'stepNodeAll'),
-            'none': bind0(this, 'stepNodeNone'),
-            'win': bind0(this, 'stepNodeWin'),
-            'lose': bind0(this, 'stepNodeLose'),
-            'draw': bind0(this, 'stepNodeDraw'),
-            'match': bind0(this, 'stepNodeMatch'),
-            'match-times': bind0(this, 'stepNodeMatchTimes'),
-            'rewrite': bind0(this, 'stepNodeRewrite'),
-            'rewrite-all': bind0(this, 'stepNodeRewriteAll'),
-            'player': bind0(this, 'stepNodePlayer'),
+            [ND_DISPLAY_BOARD]: bind0(this, 'stepNodeDisplayBoard'),
+            [ND_SET_BOARD]: bind0(this, 'stepNodeSetBoard'),
+            [ND_LAYER_TEMPLATE]: bind0(this, 'stepNodeLayerTemplate'),
+            [ND_APPEND_ROWS]: bind0(this, 'stepNodeAppendRows'),
+            [ND_APPEND_COLS]: bind0(this, 'stepNodeAppendCols'),
+            [ND_ORDER]: bind0(this, 'stepNodeOrder'),
+            [ND_LOOP_UNTIL_ALL]: bind0(this, 'stepNodeLoopUntilAll'),
+            [ND_LOOP_TIMES]: bind0(this, 'stepNodeLoopTimes'),
+            [ND_RND_TRY]: bind0(this, 'stepNodeRandomTry'),
+            [ND_ALL]: bind0(this, 'stepNodeAll'),
+            [ND_NONE]: bind0(this, 'stepNodeNone'),
+            [ND_WIN]: bind0(this, 'stepNodeWin'),
+            [ND_LOSE]: bind0(this, 'stepNodeLose'),
+            [ND_DRAW]: bind0(this, 'stepNodeDraw'),
+            [ND_MATCH]: bind0(this, 'stepNodeMatch'),
+            [ND_MATCH_TIMES]: bind0(this, 'stepNodeMatchTimes'),
+            [ND_REWRITE]: bind0(this, 'stepNodeRewrite'),
+            [ND_REWRITE_ALL]: bind0(this, 'stepNodeRewriteAll'),
+            [ND_PLAYER]: bind0(this, 'stepNodePlayer'),
         };
 
         if (nodeLookup === null) {
@@ -137,7 +139,7 @@ class TRRBTStepper {
             if (stepout !== null && state.loopCheck >= stepout) {
                 state.gameResult = { result: 'stepout' };
             } else {
-                let fn = NODE_FN_MAP[stateNode.type];
+                let fn = NODE_FN_MAP[stateNode[NKEY_TYPE]];
                 state.callResult = fn(nodeLookup.nodeToId, state, stateFrame, stateNode, state.callResult);
 
                 if (state.callResult === true || state.callResult === false) {
@@ -149,11 +151,11 @@ class TRRBTStepper {
 
     stepNodeOrder(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-        ['index', 0]]);
+                                    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
-        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return this.localGet(stateFrame, 'any');
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -162,13 +164,13 @@ class TRRBTStepper {
 
     stepNodeLoopUntilAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-        ['anyThisLoop', false],
-        ['index', 0]]);
+                                    ['anyThisLoop', false],
+                                    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
         this.localSetIfTrue(stateFrame, 'anyThisLoop', stateCallResult);
 
-        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             if (this.localGet(stateFrame, 'anyThisLoop')) {
                 this.localSet(stateFrame, 'anyThisLoop', false);
                 this.localSet(stateFrame, 'index', 0);
@@ -183,14 +185,14 @@ class TRRBTStepper {
 
     stepNodeLoopTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         this.localInit(stateFrame, [['any', false],
-        ['times', 0],
-        ['index', 0]]);
+                                    ['times', 0],
+                                    ['index', 0]]);
 
         this.localSetIfTrue(stateFrame, 'any', stateCallResult);
 
-        if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             this.localIncrement(stateFrame, 'times');
-            if (this.localEqual(stateFrame, 'times', stateNode.times)) {
+            if (this.localEqual(stateFrame, 'times', stateNode[NKEY_TIMES])) {
                 return this.localGet(stateFrame, 'any');
             } else {
                 this.localSet(stateFrame, 'index', 0);
@@ -206,7 +208,7 @@ class TRRBTStepper {
 
         if (this.localEqual(stateFrame, 'order', null)) {
             let order = [];
-            for (let ii = 0; ii < stateNode.children.length; ++ii) {
+            for (let ii = 0; ii < stateNode[NKEY_CHILDREN].length; ++ii) {
                 order.push(ii);
             }
             shuffleArray(order, state);
@@ -219,7 +221,7 @@ class TRRBTStepper {
             return false;
         } else {
             const index = this.localGet(stateFrame, 'order').pop();
-            this.pushCallStack(nodeToId, state, stateNode.children[index]);
+            this.pushCallStack(nodeToId, state, stateNode[NKEY_CHILDREN][index]);
             return null;
         }
     }
@@ -229,7 +231,7 @@ class TRRBTStepper {
 
         if (stateCallResult === false) {
             return false;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return true;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -241,7 +243,7 @@ class TRRBTStepper {
 
         if (stateCallResult === true) {
             return false;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return true;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -252,9 +254,9 @@ class TRRBTStepper {
         this.localInit(stateFrame, [['index', 0]]);
 
         if (stateCallResult === true) {
-            state.gameResult = { result: 'win', player: stateNode.pid };
+            state.gameResult = { result: 'win', player: stateNode[NKEY_PID] };
             return null;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return false;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -265,9 +267,9 @@ class TRRBTStepper {
         this.localInit(stateFrame, [['index', 0]]);
 
         if (stateCallResult === true) {
-            state.gameResult = { result: 'lose', player: stateNode.pid };
+            state.gameResult = { result: 'lose', player: stateNode[NKEY_PID] };
             return null;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return false;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -280,7 +282,7 @@ class TRRBTStepper {
         if (stateCallResult === true) {
             state.gameResult = { result: 'draw' };
             return null;
-        } else if (this.localEqual(stateFrame, 'index', stateNode.children.length)) {
+        } else if (this.localEqual(stateFrame, 'index', stateNode[NKEY_CHILDREN].length)) {
             return false;
         } else {
             return this.pushCallStackNextChild(nodeToId, state, stateFrame, stateNode);
@@ -288,7 +290,7 @@ class TRRBTStepper {
     }
 
     stepNodeSetBoard(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        state.board = deepcopyobj(stateNode.pattern);
+        state.board = deepcopyobj(stateNode[NKEY_PATTERN]);
 
         const [newRows, newCols] = this.layerPatternSize(state.board);
         state.rows = newRows;
@@ -299,7 +301,7 @@ class TRRBTStepper {
 
     stepNodeLayerTemplate(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         let newLayer = [];
-        for (let row of state.board['main']) {
+        for (let row of state.board[LAYER_DEFAULT]) {
             let newRow = [];
             for (let tile of row) {
                 if (tile === '.') {
@@ -311,16 +313,16 @@ class TRRBTStepper {
             newLayer.push(newRow);
         }
 
-        state.board[stateNode.layer] = newLayer;
+        state.board[stateNode[NKEY_LAYER]] = newLayer;
 
         return true;
     }
 
     stepNodeAppendRows(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.board === null) {
-            state.board = deepcopyobj(stateNode.pattern);
+            state.board = deepcopyobj(stateNode[NKEY_PATTERN]);
         } else {
-            const patt = stateNode.pattern;
+            const patt = stateNode[NKEY_PATTERN];
             if (!samepropsobj(state.board, patt)) {
                 return false;
             }
@@ -345,9 +347,9 @@ class TRRBTStepper {
 
     stepNodeAppendCols(nodeToId, state, stateFrame, stateNode, stateCallResult) {
         if (state.board === null) {
-            state.board = deepcopyobj(stateNode.pattern);
+            state.board = deepcopyobj(stateNode[NKEY_PATTERN]);
         } else {
-            const patt = stateNode.pattern;
+            const patt = stateNode[NKEY_PATTERN];
             if (!samepropsobj(state.board, patt)) {
                 return false;
             }
@@ -366,7 +368,7 @@ class TRRBTStepper {
     }
 
     stepNodeMatch(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        if (this.findLayerPattern(state, stateNode.pattern).length > 0) {
+        if (this.findLayerPattern(state, stateNode[NKEY_PATTERN]).length > 0) {
             return true;
         } else {
             return false;
@@ -374,7 +376,7 @@ class TRRBTStepper {
     }
 
     stepNodeMatchTimes(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        if (this.findLayerPattern(state, stateNode.pattern).length === stateNode.times) {
+        if (this.findLayerPattern(state, stateNode[NKEY_PATTERN]).length === stateNode[NKEY_TIMES]) {
             return true;
         } else {
             return false;
@@ -382,10 +384,10 @@ class TRRBTStepper {
     }
 
     stepNodeRewrite(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        let matches = this.findLayerPattern(state, stateNode.lhs);
+        let matches = this.findLayerPattern(state, stateNode[NKEY_LHS]);
         if (matches.length > 0) {
             let match = matches[Math.floor(stateRandom(state) * matches.length)];
-            this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+            this.rewriteLayerPattern(state, stateNode[NKEY_RHS], match.row, match.col);
             return true;
         } else {
             return false;
@@ -393,12 +395,12 @@ class TRRBTStepper {
     }
 
     stepNodeRewriteAll(nodeToId, state, stateFrame, stateNode, stateCallResult) {
-        let matches = this.findLayerPattern(state, stateNode.lhs);
+        let matches = this.findLayerPattern(state, stateNode[NKEY_LHS]);
         if (matches.length > 0) {
             shuffleArray(matches, state);
             for (let match of matches) {
-                if (this.matchLayerPattern(state, stateNode.lhs, match.row, match.col)) {
-                    this.rewriteLayerPattern(state, stateNode.rhs, match.row, match.col);
+                if (this.matchLayerPattern(state, stateNode[NKEY_LHS], match.row, match.col)) {
+                    this.rewriteLayerPattern(state, stateNode[NKEY_RHS], match.row, match.col);
                 }
             }
             return true;
@@ -418,8 +420,8 @@ class TRRBTStepper {
             state.displayDone = false;
             state.displayDelay = 0;
 
-            if (stateNode.hasOwnProperty('delay')) {
-                state.displayDelay = stateNode.delay;
+            if (stateNode.hasOwnProperty(NKEY_DELAY)) {
+                state.displayDelay = stateNode[NKEY_DELAY];
             }
             return null;
         }
@@ -441,13 +443,13 @@ class TRRBTStepper {
             state.choicesByBtn = null;
 
             let choices = [];
-            for (let child of stateNode.children) {
-                if (child.type === 'rewrite') {
-                    let matches = this.findLayerPattern(state, child.lhs);
+            for (let child of stateNode[NKEY_CHILDREN]) {
+                if (child[NKEY_TYPE] === ND_REWRITE) {
+                    let matches = this.findLayerPattern(state, child[NKEY_LHS]);
                     for (let match of matches) {
                         choices.push({
-                            desc: child.desc, button: child.button, mouse: child.mouse,
-                            lhs: child.lhs, rhs: child.rhs, row: match.row, col: match.col
+                            desc: child[NKEY_DESC], button: child[NKEY_BUTTON], mouse: child[NKEY_MOUSE],
+                            lhs: child[NKEY_LHS], rhs: child[NKEY_RHS], row: match.row, col: match.col
                         });
                     }
                 }
@@ -465,7 +467,7 @@ class TRRBTStepper {
             choices = choicesUnique;
 
             if (choices.length > 0) {
-                state.choicePlayer = stateNode.pid;
+                state.choicePlayer = stateNode[NKEY_PID];
 
                 state.choices = choices;
                 state.choicesByRct = Object.create(null);
@@ -507,7 +509,7 @@ class TRRBTStepper {
     }
 
     pushCallStackNextChild(nodeToId, state, stateFrame, stateNode) {
-        this.pushCallStack(nodeToId, state, stateNode.children[stateFrame.local['index']]);
+        this.pushCallStack(nodeToId, state, stateNode[NKEY_CHILDREN][stateFrame.local['index']]);
         stateFrame.local['index'] = stateFrame.local['index'] + 1;
         return null;
     }
@@ -626,11 +628,11 @@ class TRRBTEngine {
     onLoad() {
         this.game = this.game;
 
-        if (this.game.tree === null) {
+        if (this.game[GKEY_TREE] === null) {
             this.nodeLookup = null;
         } else {
             this.nodeLookup = { idToNode: new Map(), nodeToId: new WeakMap() };
-            this.initializeNodeLookup(this.nodeLookup, this.game.tree, [0]);
+            this.initializeNodeLookup(this.nodeLookup, this.game[GKEY_TREE], [0]);
         }
 
         this.state = new TRRBTState();
@@ -656,8 +658,8 @@ class TRRBTEngine {
         nodeLookup.idToNode.set(id[0], node);
         nodeLookup.nodeToId.set(node, id[0]);
 
-        if (node.hasOwnProperty('children')) {
-            for (let child of node.children) {
+        if (node.hasOwnProperty(NKEY_CHILDREN)) {
+            for (let child of node[NKEY_CHILDREN]) {
                 id[0] += 1;
                 this.initializeNodeLookup(nodeLookup, child, id);
             }
@@ -798,6 +800,112 @@ class TRRBTEngine {
 
 
 
+class SpriteLoader {
+    constructor(sprite_size) {
+        this.#sprite_size = sprite_size;
+        this.#sprite_arrays = Object.create(null);
+        this.#sprite_images = Object.create(null);
+    }
+
+    getSpriteImage(image_name) {
+        return this.#sprite_images[image_name];
+    }
+
+    loadSpriteImage(image_name, image_info) {
+        this.#loadSpriteImage(image_name, image_info);
+    }
+
+    setSpriteSize(sprite_size) {
+        if (this.#sprite_size !== sprite_size) {
+            this.#sprite_size = sprite_size;
+            this.#resizeAllSpriteImages();
+        }
+    }
+
+    isStillLoading() {
+        for (let [imgName, img] of Object.entries(this.#sprite_images)) {
+            if (img === null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    #sprite_size;
+    #sprite_arrays;
+    #sprite_images;
+
+    #arrayToImageData(from_data, fw, fh, ww, hh) {
+        let new_data = new Uint8ClampedArray(ww * hh * 4);
+        for (let xx = 0; xx < ww; xx += 1) {
+            for (let yy = 0; yy < hh; yy += 1) {
+                const fx = Math.floor(xx / ww * fw);
+                const fy = Math.floor(yy / hh * fh);
+
+                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
+                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
+                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
+                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
+            }
+        }
+        return new ImageData(new_data, ww, hh);
+    }
+
+    #loadSpriteImage(image_name, image_info) {
+        this.#sprite_arrays[image_name] = null;
+        this.#sprite_images[image_name] = null;
+
+        const image_info_size = image_info.size;
+        const image_info_data = image_info.data;
+
+        const image_decoded = atob(image_info_data);
+        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
+        const image_blob = new Blob([image_array.buffer]);
+        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
+        const image_reader = image_decompressed.getReader();
+
+        let image_read_array = null;
+
+        let this_loader = this;
+
+        image_reader.read().then(function process({ done, value }) {
+            if (!done) {
+                if (image_read_array === null) {
+                    image_read_array = value;
+                } else {
+                    let merged_array = new Uint8Array(image_read_array.length + value.length);
+                    merged_array.set(image_read_array);
+                    merged_array.set(value, image_read_array.length);
+                    image_read_array = merged_array;
+                }
+                return image_reader.read().then(process);
+            } else {
+                this_loader.#sprite_arrays[image_name] = { array: image_read_array, size: image_info_size };
+                this_loader.#resizeSpriteImage(image_name);
+            }
+        });
+    }
+
+    #resizeSpriteImage(image_name) {
+        let this_loader = this;
+        const image_array = this_loader.#sprite_arrays[image_name];
+        const image_data = this_loader.#arrayToImageData(image_array.array, image_array.size[0], image_array.size[1], this_loader.#sprite_size, this_loader.#sprite_size);
+        let img_promise = createImageBitmap(image_data);
+        img_promise.then((img_loaded) => this_loader.#sprite_images[image_name] = img_loaded);
+    }
+
+    #resizeAllSpriteImages() {
+        if (this.#sprite_images !== null) {
+            for (const image_name of Object.keys(this.#sprite_arrays)) {
+                this.#sprite_images[image_name] = null;
+                this.#resizeSpriteImage(image_name);
+            }
+        }
+    }
+};
+
+
+
 class TRRBTWebEngine extends TRRBTEngine {
 
     constructor(game, undoSetting, canvasname, divname) {
@@ -819,10 +927,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.min_width = null;
         this.keysDown = null;
 
-        this.spriteArrays = null;
-        this.spriteImages = null;
-        this.spriteTiles = null;
-        this.back = null;
+        this.spriteLoader = null;
+        this.spriteTileNames = null;
+        this.spriteBackTiles = null;
 
         this.player_id_colors = null;
 
@@ -858,10 +965,9 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.min_width = 10 * ENG_CELL_SIZE_MAX;
         this.keysDown = new Set();
 
-        this.spriteArrays = null;
-        this.spriteImages = null;
-        this.spriteTiles = null;
-        this.back = null;
+        this.spriteLoader = null;
+        this.spriteTileNames = null;
+        this.spriteBackTiles = null;
 
         this.player_id_colors = Object.create(null);
 
@@ -883,28 +989,27 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.canvas.addEventListener('keyup', bind0(this, 'onKeyUp'));
         this.canvas.focus();
 
-        if (this.game.sprites && this.game.sprites !== null) {
-            if (this.game.sprites.images !== undefined) {
-                this.spriteArrays = Object.create(null);
-                this.spriteImages = Object.create(null);
-                for (let imageName in this.game.sprites.images) {
-                    const image_info = this.game.sprites.images[imageName];
-                    this.loadSpriteImage(imageName, image_info)
+        if (this.game[GKEY_SPRITES] && this.game[GKEY_SPRITES] !== null) {
+            this.spriteLoader = new SpriteLoader(this.cell_size);
+            if (this.game[GKEY_SPRITES][SKEY_IMAGES] !== undefined) {
+                for (const image_name in this.game[GKEY_SPRITES][SKEY_IMAGES]) {
+                    const image_info = this.game[GKEY_SPRITES][SKEY_IMAGES][image_name];
+                    this.spriteLoader.loadSpriteImage(image_name, image_info);
                 }
             }
-            if (this.game.sprites.tiles !== undefined) {
-                this.spriteTiles = Object.create(null);
-                for (let tile in this.game.sprites.tiles) {
-                    this.spriteTiles[tile] = this.game.sprites.tiles[tile];
+            if (this.game[GKEY_SPRITES][SKEY_TILES] !== undefined) {
+                this.spriteTileNames = Object.create(null);
+                for (const tile in this.game[GKEY_SPRITES][SKEY_TILES]) {
+                    this.spriteTileNames[tile] = this.game[GKEY_SPRITES][SKEY_TILES][tile];
                 }
             }
-            if (this.game.sprites.players !== undefined) {
-                for (let pid in this.game.sprites.players) {
-                    this.player_id_colors[String(pid)] = this.game.sprites.players[pid];
+            if (this.game[GKEY_SPRITES][SKEY_PLAYERS] !== undefined) {
+                for (const pid in this.game[GKEY_SPRITES][SKEY_PLAYERS]) {
+                    this.player_id_colors[String(pid)] = this.game[GKEY_SPRITES][SKEY_PLAYERS][pid];
                 }
             }
-            if (this.game.sprites.back !== undefined) {
-                this.back = this.game.sprites.back;
+            if (this.game[GKEY_SPRITES][SKEY_BACK] !== undefined) {
+                this.spriteBackTiles = this.game[GKEY_SPRITES][SKEY_BACK];
             }
         }
 
@@ -913,72 +1018,6 @@ class TRRBTWebEngine extends TRRBTEngine {
         this.updateEngineEditor();
 
         this.requestDraw();
-    }
-
-    arrayToImageData(from_data, fw, fh, ww, hh) {
-        let new_data = new Uint8ClampedArray(ww * hh * 4);
-        for (let xx = 0; xx < ww; xx += 1) {
-            for (let yy = 0; yy < hh; yy += 1) {
-                const fx = Math.floor(xx / ww * fw);
-                const fy = Math.floor(yy / hh * fh);
-
-                new_data[4 * (yy * ww + xx) + 0] = from_data[4 * (fy * fw + fx) + 0];
-                new_data[4 * (yy * ww + xx) + 1] = from_data[4 * (fy * fw + fx) + 1];
-                new_data[4 * (yy * ww + xx) + 2] = from_data[4 * (fy * fw + fx) + 2];
-                new_data[4 * (yy * ww + xx) + 3] = from_data[4 * (fy * fw + fx) + 3];
-            }
-        }
-        return new ImageData(new_data, ww, hh);
-    }
-
-    loadSpriteImage(image_name, image_info) {
-        this.spriteArrays[image_name] = null;
-        this.spriteImages[image_name] = null;
-
-        const image_info_data = image_info.data;
-        const image_decoded = atob(image_info_data);
-        const image_array = Uint8Array.from(image_decoded, c => c.charCodeAt(0));
-        const image_blob = new Blob([image_array.buffer]);
-        const image_decompressed = image_blob.stream().pipeThrough(new DecompressionStream('deflate'));
-        const image_reader = image_decompressed.getReader();
-
-        let image_read_array = null;
-
-        let this_engine = this;
-
-        image_reader.read().then(function process({ done, value }) {
-            if (!done) {
-                if (image_read_array === null) {
-                    image_read_array = value;
-                } else {
-                    let merged_array = new Uint8Array(image_read_array.length + value.length);
-                    merged_array.set(image_read_array);
-                    merged_array.set(value, image_read_array.length);
-                    image_read_array = merged_array;
-                }
-                return image_reader.read().then(process);
-            } else {
-                this_engine.spriteArrays[image_name] = { array: image_read_array, size: image_info.size };
-                this_engine.resizeSpriteImage(image_name);
-            }
-        });
-    }
-
-    resizeSpriteImage(image_name) {
-        let this_engine = this;
-        const image_array = this_engine.spriteArrays[image_name];
-        const image_data = this_engine.arrayToImageData(image_array.array, image_array.size[0], image_array.size[1], this_engine.cell_size, this_engine.cell_size);
-        let img_promise = createImageBitmap(image_data);
-        img_promise.then((img_loaded) => this_engine.spriteImages[image_name] = img_loaded);
-    }
-
-    resizeAllSpriteImages() {
-        if (this.spriteImages !== null) {
-            for (const image_name of Object.keys(this.spriteArrays)) {
-                this.spriteImages[image_name] = null;
-                this.resizeSpriteImage(image_name);
-            }
-        }
     }
 
     setState(state) {
@@ -1127,12 +1166,10 @@ class TRRBTWebEngine extends TRRBTEngine {
     onDraw() {
         this.drawRequested = false;
 
-        if (this.spriteImages !== null) {
-            for (let [imgName, img] of Object.entries(this.spriteImages)) {
-                if (img === null) {
-                    this.requestDraw();
-                    return;
-                }
+        if (this.spriteLoader !== null) {
+            if (this.spriteLoader.isStillLoading()) {
+                this.requestDraw();
+                return;
             }
         }
 
@@ -1178,13 +1215,13 @@ class TRRBTWebEngine extends TRRBTEngine {
                     }
                 }
                 if (!all_invis) {
-                    if (this.back !== null) {
-                        const brows = this.back.length;
-                        const bcols = this.back[0].length;
+                    if (this.spriteBackTiles !== null) {
+                        const brows = this.spriteBackTiles.length;
+                        const bcols = this.spriteBackTiles[0].length;
 
-                        const back_tile = this.back[rr % brows][cc % bcols];
-                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, back_tile)) {
-                            const img = this.spriteImages[this.spriteTiles[back_tile]];
+                        const back_tile = this.spriteBackTiles[rr % brows][cc % bcols];
+                        if (this.spriteTileNames !== null && Object.hasOwn(this.spriteTileNames, back_tile)) {
+                            const img = this.spriteLoader.getSpriteImage(this.spriteTileNames[back_tile]);
                             this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                         }
                     } else {
@@ -1244,10 +1281,10 @@ class TRRBTWebEngine extends TRRBTEngine {
                         this.ctx.globalAlpha = 1.0;
                     }
                     if (tile !== '.') {
-                        if (this.spriteTiles !== null && Object.hasOwn(this.spriteTiles, tile)) {
-                            const imgName = this.spriteTiles[tile];
+                        if (this.spriteTileNames !== null && Object.hasOwn(this.spriteTileNames, tile)) {
+                            const imgName = this.spriteTileNames[tile];
                             if (imgName !== null) {
-                                const img = this.spriteImages[imgName];
+                                const img = this.spriteLoader.getSpriteImage(imgName);
                                 this.ctx.drawImage(img, this.tocvsx(cc), this.tocvsy(rr));
                             }
                         } else {
@@ -1478,7 +1515,9 @@ class TRRBTWebEngine extends TRRBTEngine {
 
     onCellSize(by) {
         this.cell_size = Math.max(ENG_CELL_SIZE_MIN, Math.min(ENG_CELL_SIZE_MAX, this.cell_size + by * ENG_CELL_SIZE_STEP));
-        this.resizeAllSpriteImages();
+        if (this.spriteLoader !== null) {
+            this.spriteLoader.resizeAllSpriteImages(this.cell_size);
+        }
         this.requestDraw();
     }
 

@@ -1,3 +1,5 @@
+"use strict";
+
 import fs from 'fs';
 import path from 'node:path';
 import readline from 'node:readline/promises';
