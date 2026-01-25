@@ -9,7 +9,6 @@ mkdir -p viz/pdf
 
 for game in `ls games/trees | grep '\.json$'`; do
     game=${game%.json}
-    echo ${game}
 
     bash script/game_convert.sh --game games/trees/${game}.json --out viz/gv/${game}--unxform.gv --fmt gv --resolve
     bash script/game_convert.sh --game games/trees/${game}.json --out viz/gv/${game}--xform.gv --fmt gv --resolve --xform
