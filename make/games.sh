@@ -14,6 +14,7 @@ bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game dungeon.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game dungeon~patrol.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game dungeon~chase.json
+bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game kirsch-triangle.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game lights_out.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game loop.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game lost_and_found.json
