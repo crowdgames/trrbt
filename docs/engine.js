@@ -1516,7 +1516,7 @@ class TRRBTWebEngine extends TRRBTEngine {
     onCellSize(by) {
         this.cell_size = Math.max(ENG_CELL_SIZE_MIN, Math.min(ENG_CELL_SIZE_MAX, this.cell_size + by * ENG_CELL_SIZE_STEP));
         if (this.spriteLoader !== null) {
-            this.spriteLoader.resizeAllSpriteImages(this.cell_size);
+            this.spriteLoader.setSpriteSize(this.cell_size);
         }
         this.requestDraw();
     }
