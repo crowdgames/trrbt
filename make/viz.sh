@@ -7,7 +7,7 @@ mkdir -p viz/gv
 mkdir -p viz/pdf
 ##mkdir -p viz/png
 
-for game in `ls games/trees | grep '\.json$'`; do
+for game in `find games/trees -type f -d 1 | sort | cut -c 13-`; do
     game=${game%.json}
 
     bash script/game_convert.sh --game games/trees/${game}.json --out viz/gv/${game}--unxform.gv --fmt gv --resolve
