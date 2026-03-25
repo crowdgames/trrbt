@@ -407,10 +407,15 @@ export function gv_print_game(game) {
 
     node_clear_ids(game.tree);
 
+    let gv_name = game[GKEY_NAME];
+    if (game[GKEY_DESC] !== '') {
+	gv_name = gv_name + GVNEWLINE + GVCOMMBGN + game[GKEY_DESC] + GVCOMMEND;
+    }
+
     let lines = [];
     lines.push('digraph G {');
     lines.push('  graph [ordering="out", margin="0"];');
-    lines.push(`  _NAME [shape="component", label=<${game[GKEY_NAME]}>, style="filled", fillcolor="#cccccc"];`);
+    lines.push(`  _NAME [shape="component", label=<${gv_name}>, style="filled", fillcolor="#cccccc"];`);
     lines = lines.concat(node_lines, edge_lines);
     lines.push('}');
 
