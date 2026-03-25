@@ -67,6 +67,7 @@ const NKEY_MOUSE         = 'mouse';
 const NKEY_DISPID        = Symbol('dispid');
 
 const GKEY_NAME          = 'name';
+const GKEY_DESC          = 'desc';
 const GKEY_TREE          = 'tree';
 const GKEY_SPRITES       = 'sprites';
 
@@ -193,11 +194,11 @@ function appendText(parent, text, bold = false, underline = false, italic = fals
 
 function appendButton(parent, id, text, tooltip, color, callback) {
     const button = document.createElement('button');
-    button.id = "button-" + id;
+    button.id = 'button-' + id;
     button.innerHTML = text;
     button.title = tooltip;
     if (color !== null) {
-        let colors = color.split(";");
+        let colors = color.split(';');
         button.style.backgroundColor = colors[0];
         if (colors.length > 1) {
             button.style.color = colors[1];
@@ -206,7 +207,7 @@ function appendButton(parent, id, text, tooltip, color, callback) {
         button.style.backgroundColor = '#dddddd';
     }
     button.onclick = () => {
-        telemetry("button-" + id)
+        telemetry('button-' + id)
         callback();
     };
     parent.appendChild(button)
@@ -758,6 +759,7 @@ function xform_apply_to_tree(tree, resolve_file_to_game, apply_xform, use_dispid
 
 function xformApplyIntoGame(game, fromGame, resolve_file_to_game) {
     game[GKEY_NAME] = fromGame[GKEY_NAME];
+    game[GKEY_DESC] = fromGame[GKEY_DESC];
     game[GKEY_SPRITES] = fromGame[GKEY_SPRITES];
 
     if (fromGame[GKEY_TREE] === null) {
@@ -769,12 +771,13 @@ function xformApplyIntoGame(game, fromGame, resolve_file_to_game) {
 
 function copyIntoGame(game, fromGame) {
     game[GKEY_NAME] = fromGame[GKEY_NAME];
+    game[GKEY_DESC] = fromGame[GKEY_DESC];
     game[GKEY_SPRITES] = fromGame[GKEY_SPRITES];
     game[GKEY_TREE] = deepcopyobj(fromGame[GKEY_TREE]);
 }
 
 function emptyGame() {
-    return { [GKEY_NAME]: 'empty', [GKEY_SPRITES]: null, [GKEY_TREE]: null };
+    return { [GKEY_NAME]: 'empty', [GKEY_DESC]: '', [GKEY_SPRITES]: null, [GKEY_TREE]: null };
 }
 
 async function readClipboard() {

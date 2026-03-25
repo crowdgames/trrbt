@@ -23,6 +23,8 @@ if (args.rename) {
     game.name = game_name;
 }
 
+game.desc = '';
+
 if (args.sprites) {
     game.sprites = load_sprites(args.sprites);
 }

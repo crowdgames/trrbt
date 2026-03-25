@@ -1433,20 +1433,20 @@ class TRRBTWebEngine extends TRRBTEngine {
     }
 
     updateStepManual(setting, force = false) {
-        let breakBtn = document.getElementById("button-engine-breakresume");
-        let undoStepBtn = document.getElementById("button-engine-undo-step");
-        let nextStepBtn = document.getElementById("button-engine-next-step");
+        let breakBtn = document.getElementById('button-engine-breakresume');
+        let undoStepBtn = document.getElementById('button-engine-undo-step');
+        let nextStepBtn = document.getElementById('button-engine-next-step');
         if (force || setting != this.stepManual) {
             this.stepManual = setting;
             if (this.breakResumeText !== null) {
                 if (this.stepManual) {
                     this.breakResumeText.style.display = 'inline';
-                    breakBtn.innerHTML = "Start/Continue";
+                    breakBtn.innerHTML = 'Start/Continue';
                     undoStepBtn.style.display = 'inline';
                     nextStepBtn.style.display = 'inline';
                 } else {
                     this.breakResumeText.style.display = 'none';
-                    breakBtn.innerHTML = "Step Through Tree";
+                    breakBtn.innerHTML = 'Step Through Tree';
                     undoStepBtn.style.display = 'none';
                     nextStepBtn.style.display = 'none';
                 }

@@ -137,6 +137,7 @@ const EDT_NODE_PROP_NAMES = {
 
 const EDT_GAME_PROP_NAMES = {
     [GKEY_NAME]: { name: 'Game Title', help: 'A unique title for the game.' },
+    [GKEY_DESC]: { name: 'Game Description', help: 'A description of the game.' },
 }
 
 function nodeFriendlyName(node) {
@@ -206,7 +207,7 @@ class TRRBTEditor {
 
         this.xform_editor = null;
 
-        this.confirmedAlerts = "";
+        this.confirmedAlerts = '';
         this.preventInput = false;
     }
 
@@ -373,7 +374,7 @@ class TRRBTEditor {
         this.drawRequested = false;
 
         this.requestDraw();
-        new ResizeObserver(bind0(this, 'onGrandParentResize')).observe(this.canvas.closest(".card"));
+        new ResizeObserver(bind0(this, 'onGrandParentResize')).observe(this.canvas.closest('.card'));
     }
 
     requestDraw() {
@@ -1221,8 +1222,8 @@ class TRRBTEditor {
             const iNode = document.createElement('i');
             iNode.appendChild(textNode);
             textNode = iNode;
-            textNode.style = "color: red";
-            textNode.classList.add("errtext");
+            textNode.style = 'color: red';
+            textNode.classList.add('errtext');
             parent.appendChild(textNode);
         } else if (errNode != null && errText == '') {
             errNode.remove();
@@ -1247,7 +1248,7 @@ class TRRBTEditor {
             this.validateProperties();
         }
         input.onchange = () => {
-            telemetry("text-" + name + "-set-" + input.value);
+            telemetry('text-' + name + '-set-' + input.value);
             this.nodeSaveProperties();
         }
         input.onblur = () => {
@@ -1300,7 +1301,7 @@ class TRRBTEditor {
         input.type = 'checkbox';
         input.checked = value;
         input.onclick = () => {
-            telemetry("check-" + id + "-set-" + value);
+            telemetry('check-' + id + '-set-' + value);
             this.highlightProperty(id, false);
             this.nodeSaveProperties();
         };
@@ -1346,7 +1347,7 @@ class TRRBTEditor {
             input.value = choice_value;
             input.checked = (choice_value === value);
             input.onclick = () => {
-                telemetry("choice-" + name + "-choose-" + choice_text)
+                telemetry('choice-' + name + '-choose-' + choice_text)
                 this.highlightProperty(id, false);
                 this.nodeSaveProperties();
             };
@@ -1408,16 +1409,16 @@ class TRRBTEditor {
             }
 
             for (const cell of cells) {
-                cell.style.width = maxWidth + "px";
-                cell.style.height = maxHeight + "px";
+                cell.style.width = maxWidth + 'px';
+                cell.style.height = maxHeight + 'px';
             }
         }
     }
 
-    renderTableInputs(id, pattern, flayer = "", fr = 0, fc = 0, fis = 0, fie = 0) {
-        let tableInput = document.getElementById(id + "_tableview");
-        tableInput.innerHTML = "";
-        console.log("pattern og")
+    renderTableInputs(id, pattern, flayer = '', fr = 0, fc = 0, fis = 0, fie = 0) {
+        let tableInput = document.getElementById(id + '_tableview');
+        tableInput.innerHTML = '';
+        console.log('pattern og')
         console.log(pattern)
         if (pattern == undefined || pattern.length == 0) {
             pattern = {
@@ -1433,7 +1434,7 @@ class TRRBTEditor {
         pattern = this.patternFromString(textPattern);
         for (const layer of layers) {
             if (pattern[layer].length == 0) {
-                pattern[layer].push([" "]);
+                pattern[layer].push([' ']);
             }
             const inputTable = document.createElement('table');
             inputTable.classList.add('pattern-table');
@@ -1443,7 +1444,7 @@ class TRRBTEditor {
                 const row = document.createElement('tr');
                 const cell = document.createElement('td');
                 const input = document.createElement('input');
-                input.type = "text";
+                input.type = 'text';
                 input.value = layer;
                 input.onblur = () => this.layerTextOnBlur(id, input, pattern, layer);
                 input.onfocus = () => {
@@ -1455,7 +1456,7 @@ class TRRBTEditor {
                 inputTable.appendChild(row);
             }
             if (pattern[layer].length == 0) {
-                pattern[layer] = [[""]]
+                pattern[layer] = [['']]
             }
             if (pattern[layer][0].length > 1) {
                 let row = document.createElement('tr');
@@ -1476,7 +1477,7 @@ class TRRBTEditor {
                 addColTd.classList.add('pattern-table-cell');
                 let desc = 'Add column to right';
                 if (c == -1) {
-                    desc = "Add column left"
+                    desc = 'Add column left'
                 }
                 appendButton(addColTd, 'add-pattern-col-' + id + c, '+', desc, 'green;white', bind4(this, 'onAddPatternCol', id, pattern, layer, c));
                 row.appendChild(addColTd);
@@ -1511,7 +1512,7 @@ class TRRBTEditor {
                         input.setSelectionRange(0, input.value.length);
                     }
                     input.size = 1;
-                    input.value = pattern[layer][r][c] == "_" ? " " : pattern[layer][r][c];
+                    input.value = pattern[layer][r][c] == '_' ? ' ' : pattern[layer][r][c];
                     cell.dataset.value = input.value;
                     cell.appendChild(input)
                     row.appendChild(cell);
@@ -1519,15 +1520,15 @@ class TRRBTEditor {
 
                 if (pattern[layer].length > 1) {
                     const removeTd = document.createElement('td');
-                    removeTd.classList.add("pattern-table-cell");
-                    appendText(removeTd, " ");
+                    removeTd.classList.add('pattern-table-cell');
+                    appendText(removeTd, ' ');
                     appendButton(removeTd, 'remove-pattern-row-' + id + r, '-', 'Remove row', 'red;white', bind4(this, 'onRemovePatternRow', id, pattern, layer, r));
                     row.appendChild(removeTd);
                 }
 
                 const addTd = document.createElement('td');
-                addTd.classList.add("pattern-table-cell");
-                appendText(addTd, " ");
+                addTd.classList.add('pattern-table-cell');
+                appendText(addTd, ' ');
                 appendButton(addTd, 'add-pattern-row-' + id + r, '+', 'Add row below', 'green;white', bind4(this, 'onAddPatternRow', id, pattern, layer, r));
                 row.appendChild(addTd);
 
@@ -1548,7 +1549,7 @@ class TRRBTEditor {
                     }
                     focusInput.setSelectionRange(fis, fie);
                 }
-                if (focusInput.value.trim() == "?" || focusInput.value.trim() == "." || focusInput.value == " ") {
+                if (focusInput.value.trim() == '?' || focusInput.value.trim() == '.' || focusInput.value == ' ') {
                     focusInput.setSelectionRange(0, 1);
                 }
             }, 10)
@@ -1559,7 +1560,7 @@ class TRRBTEditor {
     }
 
     onAddPatternLayer(id, pattern) {
-        let layer = "NEW"
+        let layer = 'NEW'
         let uniqueName = layer
         let i = 1
         while (uniqueName in pattern) {
@@ -1571,14 +1572,14 @@ class TRRBTEditor {
     }
     onAddPatternCol(id, pattern, layer, c) {
         for (let r = 0; r < pattern[layer].length; r++) {
-            pattern[layer][r].splice(c + 1, 0, " ");
+            pattern[layer][r].splice(c + 1, 0, ' ');
         }
         this.updatePatternText(id, pattern, layer, 0, c + 1);
     }
     onAddPatternRow(id, pattern, layer, r) {
         let newRow = [];
         for (let c = 0; c < pattern[layer][0].length; c++) {
-            newRow.push(" ")
+            newRow.push(' ')
         }
         pattern[layer].splice(r + 1, 0, newRow);
         this.updatePatternText(id, pattern, layer, r + 1, 0);
@@ -1606,8 +1607,8 @@ class TRRBTEditor {
         }
         let newLayerName = input.value.trim();
         console.log(newLayerName)
-        if (newLayerName == "") {
-            this.displayAlert(["Layer name cannot be blank."])
+        if (newLayerName == '') {
+            this.displayAlert(['Layer name cannot be blank.'])
             return
         }
         if (newLayerName != layer && newLayerName in pattern) {
@@ -1622,18 +1623,18 @@ class TRRBTEditor {
 
     patternCellOnKeyDown(id, inputTable, input, pattern, layer, r, c, e) {
         switch (e.key) {
-            // case " ":
+            // case ' ':
             //     if (input.selectionEnd == pattern[layer][r][c].length) {
             //         c += 1;
             //         if (c < pattern[layer][r].length) {
-            //             pattern[layer][r].splice(c, 0, " ");
+            //             pattern[layer][r].splice(c, 0, ' ');
             //         }
             //         else {
-            //             pattern[layer][r].push(" ");
+            //             pattern[layer][r].push(' ');
             //         }
             //         this.updatePatternText(id, pattern, layer, r, c, 0, 1);
             //     } else if (input.selectionStart == 0) {
-            //         pattern[layer][r].splice(c, 0, " ");
+            //         pattern[layer][r].splice(c, 0, ' ');
             //         c += 1;
             //         this.updatePatternText(id, pattern, layer, r, c, 0, 0);
             //     } else {
@@ -1646,7 +1647,7 @@ class TRRBTEditor {
             //     }
 
             //     return false;
-        case "Backspace":
+        case 'Backspace':
             if (input.selectionEnd == 0 && [...(pattern[layer][r][c].trim())].length > 0) {
                 // Move to previous cell.
                 c -= 1;
@@ -1675,7 +1676,7 @@ class TRRBTEditor {
                 // }
             }
             else if ([...(pattern[layer][r][c].trim())].length <= 1) {
-                // if (pattern[layer][r][c].trim() == "." || pattern[layer][r][c].trim() == "?" || pattern[layer][r][c] == " ") {
+                // if (pattern[layer][r][c].trim() == '.' || pattern[layer][r][c].trim() == '?' || pattern[layer][r][c] == ' ') {
                 //     // if cell is empty, delete and move to the cell to the left.
                 //     pattern[layer][r].splice(c, 1);
                 //     c -= 1;
@@ -1684,7 +1685,7 @@ class TRRBTEditor {
                 //             // move up one row, deleting this row if it is empty.
                 //             let delRow = true;
                 //             for (let c = 0; c < pattern[layer][r].length; c++) {
-                //                 if (pattern[layer][r][c] != "?") {
+                //                 if (pattern[layer][r][c] != '?') {
                 //                     delRow = false;
                 //                 }
                 //             }
@@ -1700,7 +1701,7 @@ class TRRBTEditor {
                 //             }
                 //         }
                 //         else {
-                //             console.log("update for c = 0; r = 0")
+                //             console.log('update for c = 0; r = 0')
                 //             c = 0;
                 //             this.updatePatternText(id, pattern, layer, r, c, 0, 0);
                 //             break;
@@ -1708,12 +1709,12 @@ class TRRBTEditor {
                 //     }
                 // } else {
                 //     // Remove contents and allow putting something else in.
-                //     pattern[layer][r][c] = " ";
+                //     pattern[layer][r][c] = ' ';
                 //     this.updatePatternText(id, pattern, layer, r, c, 0, 1);
                 //     return false;
                 // }
 
-                if (pattern[layer][r][c] == "_") {
+                if (pattern[layer][r][c] == '_') {
                     // Move to previous cell.
                     c -= 1;
                     if (c < 0) {
@@ -1727,7 +1728,7 @@ class TRRBTEditor {
                     }
                 } else {
                     // Remove contents and allow putting something else in.
-                    pattern[layer][r][c] = "_";
+                    pattern[layer][r][c] = '_';
                     this.updatePatternText(id, pattern, layer, r, c, 0, 1);
                     return false;
                 }
@@ -1735,9 +1736,9 @@ class TRRBTEditor {
                 return false;
             }
             break;
-        case "Enter":
+        case 'Enter':
             c = 0;
-        case "ArrowDown":
+        case 'ArrowDown':
             // go to the next cell down (or otherwise the next layer) if one exists
             if (pattern[layer][r + 1]) {
                 r += 1;
@@ -1760,7 +1761,7 @@ class TRRBTEditor {
                 break;
             }
             break;
-        case "ArrowUp":
+        case 'ArrowUp':
             // go to the next cell/layer up, if one exists
             if (pattern[layer][r - 1]) {
                 r -= 1;
@@ -1778,7 +1779,7 @@ class TRRBTEditor {
                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
             }
             break;
-        case "ArrowLeft":
+        case 'ArrowLeft':
             if (input.selectionStart == 0) {
                 // go to the next cell to the left, if one exists
                 if (pattern[layer][r][c - 1]) {
@@ -1787,7 +1788,7 @@ class TRRBTEditor {
                 }
             }
             break;
-        case " ":
+        case ' ':
             pattern[layer][r][c] = pattern[layer][r][c].trim();
             c += 1;
             if (c >= pattern[layer][r].length) {
@@ -1800,14 +1801,14 @@ class TRRBTEditor {
             }
             this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
             break;
-        case "ArrowRight":
+        case 'ArrowRight':
             // go to the next cell to the right, if one exists
             if (input.selectionEnd == pattern[layer][r][c].length) {
                 c = Math.min(c + 1, pattern[layer][r].length - 1);
                 this.renderTableInputs(id, pattern, layer, r, c, 0, pattern[layer][r][c].length);
             }
             break;
-            // case "Enter":
+            // case 'Enter':
             //     // new line (split in middle)
             //     if (input.selectionStart == pattern[layer][r][c].length) {
             //         c += 1;
@@ -1825,7 +1826,7 @@ class TRRBTEditor {
             //         pattern[layer][r] = oldRow;
             //         pattern[layer].splice(r + 1, 0, newRow);
             //     } else {
-            //         pattern[layer].splice(r + 1, 0, [" "]);
+            //         pattern[layer].splice(r + 1, 0, [' ']);
             //     }
 
             //     c = 0;
@@ -1843,7 +1844,7 @@ class TRRBTEditor {
             this.preventInput = false;
             return;
         }
-        pattern[layer][r][c] = input.value.trim() == "" ? "_" : input.value.trim();
+        pattern[layer][r][c] = input.value.trim() == '' ? '_' : input.value.trim();
         // if ([...pattern[layer][r][c].trim()].length == 0) {
         //     // if cell is empty, delete and move to the cell to the left.
         //     pattern[layer][r].splice(c, 1);
@@ -1855,7 +1856,7 @@ class TRRBTEditor {
         this.updatePatternText(id, pattern, layer, r, c, input.selectionStart, input.selectionStart);
     }
 
-    updatePatternText(id, pattern, layer = "", r = 0, c = 0, fis = -1, fie = -1) {
+    updatePatternText(id, pattern, layer = '', r = 0, c = 0, fis = -1, fie = -1) {
         let patternText = this.textFromPattern(pattern).patternText
         let textInput = document.getElementById(id);
         if (textInput != null) {
@@ -1865,7 +1866,7 @@ class TRRBTEditor {
                 this.patternTextVisible = true;
             }
             textInput.value = patternText;
-            telemetry("pattern-" + id + "-set-" + textInput.value);
+            telemetry('pattern-' + id + '-set-' + textInput.value);
             this.validateProperties();
             this.nodeSaveProperties();
             this.renderTableInputs(id, pattern, layer, r, c, fis, fie);
@@ -1895,13 +1896,13 @@ class TRRBTEditor {
         }
     }
 
-    appendPatternProperty(parent, id, name, help, pattern, tileSize, minRows = 0, minCols = 0, sublabel = "") {
+    appendPatternProperty(parent, id, name, help, pattern, tileSize, minRows = 0, minCols = 0, sublabel = '') {
         let textPattern = this.textFromPattern(pattern).patternText;
         pattern = this.patternFromString(textPattern);
         let layers = Object.getOwnPropertyNames(pattern);
         for (const layer of layers) {
             if (pattern[layer].length == 0) {
-                pattern[layer].push([" "]);
+                pattern[layer].push([' ']);
             }
         }
         let patternTextInfo = this.textFromPattern(pattern, tileSize, minRows, minCols);
@@ -1917,13 +1918,13 @@ class TRRBTEditor {
 
         item.appendChild(label)
         appendBr(item)
-        if (sublabel != "") {
+        if (sublabel != '') {
             appendText(item, sublabel, false, false, true)
             appendBr(item)
         }
 
         const tableInput = document.createElement('div');
-        tableInput.id = id + "_tableview";
+        tableInput.id = id + '_tableview';
         item.appendChild(tableInput);
         appendBr(item)
         parent.appendChild(item);
@@ -1935,7 +1936,7 @@ class TRRBTEditor {
         patternTextInputHideable.id = id + 'showhide';
         patternTextInputHideable.style = 'display: none';
         const patternTextInputDesc = document.createElement('div');
-        patternTextInputDesc.innerHTML = "<i>Separate cells with spaces. Special characters: use '_' for an empty cell, '.' is a wildcard (matches everything in rewrites), and '?' is padding.</i>";
+        patternTextInputDesc.innerHTML = '<i>Separate cells with spaces. Special characters: use "_" for an empty cell, "." is a wildcard (matches everything in rewrites), and "?" is padding.</i>';
         patternTextInputHideable.appendChild(patternTextInputDesc);
 
         const patternTextInput = document.createElement('textarea');
@@ -1951,7 +1952,7 @@ class TRRBTEditor {
             this.renderTableInputs(id, pattern);
             this.updatePatternText(id, pattern);
             this.nodeSaveProperties();
-            telemetry("pattern-" + name + "-set-" + patternTextInput.value);
+            telemetry('pattern-' + name + '-set-' + patternTextInput.value);
         }
         patternTextInput.onblur = () => {
             this.unhighlightProperty(id);
@@ -1972,7 +1973,7 @@ class TRRBTEditor {
         let rows = 0;
         cols = Math.max(minCols, cols);
         rows = Math.max(minRows, rows);
-        let patternText = "";
+        let patternText = '';
         const layers = Object.getOwnPropertyNames(pattern);
         for (const layer of layers) {
             if (layers.length === 1 && layers[0] === LAYER_DEFAULT) {
@@ -1984,7 +1985,7 @@ class TRRBTEditor {
             cols = Math.max(cols, graphemeLength(layer) + 1);
 
             for (const row of pattern[layer]) {
-                let rowCopy = row.map(tile => tile.trim() == "" ? "_" : tile);
+                let rowCopy = row.map(tile => tile.trim() == '' ? '_' : tile);
                 const row_text = joinRow(rowCopy, tileSize, false);
                 patternText += row_text + '\n';
                 rows += 1;
@@ -1992,9 +1993,9 @@ class TRRBTEditor {
             }
         }
         return {
-            "patternText": patternText,
-            "rows": rows,
-            "cols": cols,
+            'patternText': patternText,
+            'rows': rows,
+            'cols': cols,
         };
     }
 
@@ -2022,7 +2023,7 @@ class TRRBTEditor {
         if (pattern[layer] != undefined) {
             for (let r = 0; r < pattern[layer].length; r++) {
                 while (pattern[layer][r][pattern[layer][r].length - 1] != undefined
-                       && (pattern[layer][r][pattern[layer][r].length - 1] == "?")) {
+                       && (pattern[layer][r][pattern[layer][r].length - 1] == '?')) {
                     pattern[layer][r].splice(pattern[layer][r].length - 1, 1);
                 }
                 if (pattern[layer][r].length > maxCols) {
@@ -2031,8 +2032,8 @@ class TRRBTEditor {
             }
             for (let r = 0; r < pattern[layer].length; r++) {
                 for (let c = 0; c < maxCols; c++) {
-                    if (!pattern[layer][r][c] || pattern[layer][r][c] == "") {
-                        pattern[layer][r][c] = "?";
+                    if (!pattern[layer][r][c] || pattern[layer][r][c] == '') {
+                        pattern[layer][r][c] = '?';
                     }
                 }
             }
@@ -2048,9 +2049,9 @@ class TRRBTEditor {
     }
 
     checkPatterns(patterns) {
-        let overallErrMsg = "Patterns must be the same size.";
-        let patternErrMsg = "Layers must be the same size.";
-        let layerErrMsg = "Rows must be the same length."
+        let overallErrMsg = 'Patterns must be the same size.';
+        let patternErrMsg = 'Layers must be the same size.';
+        let layerErrMsg = 'Rows must be the same length.'
 
         let overallErr = false;
         let patternErr = false;
@@ -2098,7 +2099,7 @@ class TRRBTEditor {
             }
         }
 
-        let errMsg = "";
+        let errMsg = '';
         if (layerErr) {
             errMsg = layerErrMsg;
         } else if (patternErr) {
@@ -2153,21 +2154,23 @@ class TRRBTEditor {
         appendButton(ed, 'undo-edit', 'Undo', 'Undo the last edit.', null, bind0(this, 'onUndo'));
         appendButton(ed, 'redo-edit', 'Redo', 'Redo the last undo.', null, bind0(this, 'onRedo'));
         appendText(ed, ' ');
-        let treecolumnbuttons = document.getElementById("treecolumnbuttons");
+        let treecolumnbuttons = document.getElementById('treecolumnbuttons');
         let hasHrz = false;
         for (var i = 0; i < treecolumnbuttons[NKEY_CHILDREN].length; i++) {
-            if (treecolumnbuttons[NKEY_CHILDREN][i].innerHTML == "Switch Layout Hrz/Vrt") {
+            if (treecolumnbuttons[NKEY_CHILDREN][i].innerHTML == 'Switch Layout Hrz/Vrt') {
                 hasHrz = true;
             }
         }
         if (!hasHrz) {
-            appendButton(treecolumnbuttons, 'hrz-vrt', "Switch Layout Hrz/Vrt", 'Toggle between horizontal and vertical layout for the trees.', null, bind0(this, 'onHrzVrt'));
+            appendButton(treecolumnbuttons, 'hrz-vrt', 'Switch Layout Hrz/Vrt', 'Toggle between horizontal and vertical layout for the trees.', null, bind0(this, 'onHrzVrt'));
         }
         appendButton(ed, 'import', 'Import', 'Import game (paste) from clipboard.', null, bind0(this, 'onImport'));
         appendButton(ed, 'export', 'Export', 'Export game (copy) to clipboard.', null, bind0(this, 'onExport'));
         appendBr(ed, true);
 
         this.appendTextProperty(ed, 'prop_name', EDT_GAME_PROP_NAMES[GKEY_NAME].name, + EDT_GAME_PROP_NAMES[GKEY_NAME].help, this.game[GKEY_NAME])
+        appendBr(ed, true);
+        this.appendTextProperty(ed, 'prop_desc', EDT_GAME_PROP_NAMES[GKEY_DESC].name, + EDT_GAME_PROP_NAMES[GKEY_DESC].help, this.game[GKEY_DESC])
         appendBr(ed, true);
         appendButton(ed, 'template', 'Use as Template', 'Create a local copy of the game to edit.', null, bind0(this, 'onTemplate'));
         appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
@@ -2419,6 +2422,7 @@ class TRRBTEditor {
         const SAVE_PROPS =
               [
                   [GKEY_NAME, bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
+                  [GKEY_DESC, bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
                   [NKEY_COMMENT, bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_TEXT],
                   [NKEY_NID, bind0(this, 'parseTextProperty'), EDT_PARSE_TEXT_WORD],
                   [NKEY_REMORIG, bind0(this, 'parseBoolProperty'), EDT_PARSE_TEXT_WORD],
@@ -2452,7 +2456,7 @@ class TRRBTEditor {
                 let result = propfn('prop_' + propid, proparg);
                 if (!result.ok) {
                     this.highlightProperty('prop_' + propid, true, result.error);
-                    let propname = ""
+                    let propname = '';
                     if (EDT_NODE_PROP_NAMES[propid]) {
                         propname = EDT_NODE_PROP_NAMES[propid].name
                     } else {
@@ -2499,7 +2503,7 @@ class TRRBTEditor {
         }
 
         if (new_props.size > 0) {
-            let new_name = ""
+            let new_name = '';
             if (new_props.has(GKEY_NAME)) {
                 new_name = new_props.get(GKEY_NAME)
             }
@@ -2554,15 +2558,15 @@ class TRRBTEditor {
     displayAlert(alert_strs, doConfirm) {
         if (alert_strs.length > 0) {
             let joined_alerts = alert_strs.join('\n\n');
-            telemetry("alert-" + joined_alerts);
+            telemetry('alert-' + joined_alerts);
             if (doConfirm) {
                 this.confirmedAlerts = joined_alerts;
-                return confirm("The following errors were found when attempting to save: \n" + joined_alerts + "\nClick cancel to continue editing, or OK to continue without saving.")
+                return confirm('The following errors were found when attempting to save: \n' + joined_alerts + '\nClick cancel to continue editing, or OK to continue without saving.')
             } else {
                 if (this.confirmedAlerts != joined_alerts) {
-                    alert("The following errors were found when attempting to save: " + joined_alerts);
+                    alert('The following errors were found when attempting to save: ' + joined_alerts);
                 }
-                this.confirmedAlerts = "";
+                this.confirmedAlerts = '';
                 return false;
             }
         }
@@ -2583,7 +2587,7 @@ class TRRBTEditor {
     }
 
     onNodeCopy(cut) {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2602,7 +2606,7 @@ class TRRBTEditor {
     }
 
     onNodePaste() {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2617,7 +2621,7 @@ class TRRBTEditor {
     }
 
     onNodeDelete(reparentChildren) {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2643,7 +2647,7 @@ class TRRBTEditor {
     }
 
     onNodeDeleteChildren() {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2672,7 +2676,7 @@ class TRRBTEditor {
     }
 
     onNodeAddChild(type, where) {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2693,7 +2697,7 @@ class TRRBTEditor {
     }
 
     onNodeAddParent(type) {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2716,7 +2720,7 @@ class TRRBTEditor {
     }
 
     onNodeShift(earlier) {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -2742,7 +2746,7 @@ class TRRBTEditor {
     }
 
     onNodeSwapUp() {
-        let alert_strs = this.validateGame("");
+        let alert_strs = this.validateGame('');
         if (alert_strs.length > 0) {
             this.displayAlert(alert_strs);
             return false;
@@ -3087,8 +3091,8 @@ class TRRBTEditor {
             }
         }
 
-        parent.style.height = grandparent.offsetHeight - pebbleHeight + "px";
-        parent.style.width = grandparent.offsetWidth + "px";
+        parent.style.height = grandparent.offsetHeight - pebbleHeight + 'px';
+        parent.style.width = grandparent.offsetWidth + 'px';
 
         if (!this.resizing) {
             this.resizing = true;
