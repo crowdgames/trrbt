@@ -255,6 +255,8 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_
     }
 }
 
+
+
 const ALLOWED_PLAYER_CHILDREN = [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, ND_REWRITE]
 function can_be_player_children(nodes) {
     for (const node of nodes) {
@@ -466,13 +468,6 @@ function xform_rule_apply(node, pattern_func, pid_func, button_obj) {
 }
 
 function xform_rule_identity(node) {
-    if (node[NKEY_TYPE] === NDX_UNROLL_REPLACE) {
-        let new_node = { type: ND_ORDER, children: [] };
-        for (const which of node[NKEY_WITHS]) {
-            new_node[NKEY_CHILDREN].push({ type: NDX_REPLACE_ONLY, what: node[NKEY_WHAT], withs: [which], children: deepcopyobj(node[NKEY_CHILDREN]) });
-        }
-        return [new_node]
-    }
     return [node];
 }
 

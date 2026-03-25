@@ -67,7 +67,7 @@ const EDT_XNODE_PROTOTYPES = [
     { [NKEY_TYPE]: NDX_FLIP, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_CHILDREN]: [], [NKEY_REMORIG]: false },
     { [NKEY_TYPE]: NDX_SWAP_ONLY, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_CHILDREN]: [], [NKEY_WHAT]: '', [NKEY_WITH]: '' },
     { [NKEY_TYPE]: NDX_REPLACE_ONLY, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_CHILDREN]: [], [NKEY_WHAT]: '', [NKEY_WITHS]: [] },
-    { [NKEY_TYPE]: NDX_UNROLL_REPLACE, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_CHILDREN]: [], [NKEY_WHAT]: '', [NKEY_WITHS]: [] },
+    { [NKEY_TYPE]: NDX_UNROLL_REPLACE, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_CHILDREN]: [], [NKEY_WHAT]: '' },
     { [NKEY_TYPE]: NDX_PRUNE, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_CHILDREN]: [] },
     { [NKEY_TYPE]: NDX_LINK, [NKEY_COMMENT]: '', [NKEY_NID]: '', [NKEY_TARGET]: '' },
 ];
@@ -108,9 +108,9 @@ const EDT_NODE_HELP = {
     [NDX_FLIP]: { color: [1, 1, 1], friendly: 'col-mirror', help: 'Flip patterns top-bottom, e.g x/y => x/y, y/x' },
 
     [NDX_SWAP_ONLY]: { color: [1, 1, 1], friendly: 'swap-chars', help: 'Swap "what" and "with" with eachother in patterns and player IDs (removing original), e.g x, y => y, x' },
-    [NDX_REPLACE_ONLY]: { color: [1, 1, 1], friendly: 'replace-text-leaves', help: 'Replace each child leaf node with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
+    [NDX_REPLACE_ONLY]: { color: [1, 1, 1], friendly: 'replace-chars', help: 'Replace nodes with copies for each replacement in "withs" replacing the "what" in all patterns and player IDs, e.g x => y, z' },
 
-    [NDX_UNROLL_REPLACE]: { color: [1, 1, 1], friendly: 'replace-text-subtree', help: 'Duplicate replaces here as children of an order node.' },
+    [NDX_UNROLL_REPLACE]: { color: [1, 1, 1], friendly: 'unroll-replace', help: 'Duplicate replaces here as children of an order node.' },
 
     [NDX_LINK]: { color: [1, 1, 1], friendly: 'copy-subtree', help: 'Create a copy of another node accessed by node ID.' },
     [NDX_FILE]: { color: [1, 1, 1], help: 'Link to another node by file name and node ID.' }
