@@ -198,6 +198,7 @@ class TRRBTEditor {
         this.layout_horizontal = null;
 
         this.tooltip = null;
+        this.tablePatternEditor = false;
         this.emojiMessage = null;
         this.emojiPicker = null;
 
@@ -1224,6 +1225,7 @@ class TRRBTEditor {
             textNode = iNode;
             textNode.style = 'color: red';
             textNode.classList.add('errtext');
+            appendBr(parent);
             parent.appendChild(textNode);
         } else if (errNode != null && errText == '') {
             errNode.remove();
@@ -1417,6 +1419,10 @@ class TRRBTEditor {
 
     renderTableInputs(id, pattern, flayer = '', fr = 0, fc = 0, fis = 0, fie = 0) {
         let tableInput = document.getElementById(id + '_tableview');
+        if (tableInput === null) {
+            return;
+        }
+
         tableInput.innerHTML = '';
         console.log('pattern og')
         console.log(pattern)
@@ -1883,16 +1889,12 @@ class TRRBTEditor {
         textInput.setSelectionRange(pos, pos);
     }
 
-    onShowHidePatternText(id, show = null) {
-        let textInput = document.getElementById(id);
-        if (textInput !== null) {
-            if (textInput.style.display === 'none' || show) {
-                console.log('show')
-                textInput.style.display = 'block';
-            } else {
-                console.log('hide')
-                textInput.style.display = 'none';
-            }
+    onTogglePatternEditor() {
+        this.tablePatternEditor = !this.tablePatternEditor;
+        if (this.propertyNodes !== null) {
+            this.updatePropertyEditor(this.propertyNodes.node, true);
+        } else {
+            this.updatePropertyEditor(null);
         }
     }
 
@@ -1923,48 +1925,56 @@ class TRRBTEditor {
             appendBr(item)
         }
 
-        const tableInput = document.createElement('div');
-        tableInput.id = id + '_tableview';
-        item.appendChild(tableInput);
-        appendBr(item)
+        const patternEditorDiv = document.createElement('div');
         parent.appendChild(item);
-        this.renderTableInputs(id, pattern);
+        item.appendChild(patternEditorDiv);
 
-        const patternTextInputDiv = document.createElement('div');
-        appendButton(patternTextInputDiv, 'showHidePatternText', 'Show/Hide Text Editor', 'Show/Hide Text-based Pattern Editor', null, bind1(this, 'onShowHidePatternText', id + 'showhide'));
-        const patternTextInputHideable = document.createElement('div');
-        patternTextInputHideable.id = id + 'showhide';
-        patternTextInputHideable.style = 'display: none';
-        const patternTextInputDesc = document.createElement('div');
-        patternTextInputDesc.innerHTML = '<i>Separate cells with spaces. Special characters: use "_" for an empty cell, "." is a wildcard (matches everything in rewrites), and "?" is padding.</i>';
-        patternTextInputHideable.appendChild(patternTextInputDesc);
+        if (this.tablePatternEditor) {
+            // table editor div
+            const patternEditorTableDiv = document.createElement('div');
+            patternEditorDiv.appendChild(patternEditorTableDiv);
 
-        const patternTextInput = document.createElement('textarea');
-        patternTextInput.id = id;
-        patternTextInput.name = id;
-        patternTextInput.innerHTML = patternText;
-        patternTextInput.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
-        patternTextInput.oninput = () => {
-            this.patternTextOnInput(id);
-        }
-        patternTextInput.onchange = () => {
-            let pattern = this.patternFromString(patternTextInput.value)
+            if (false) { /* help text */
+                const patternTableInputDesc = document.createElement('div');
+                patternTableInputDesc.innerHTML = '<i>Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).</i>'
+                patternEditorTableDiv.appendChild(patternTableInputDesc);
+            }
+
+            const tableInput = document.createElement('div');
+            patternEditorTableDiv.appendChild(tableInput);
+            tableInput.id = id + '_tableview';
             this.renderTableInputs(id, pattern);
-            this.updatePatternText(id, pattern);
-            this.nodeSaveProperties();
-            telemetry('pattern-' + name + '-set-' + patternTextInput.value);
-        }
-        patternTextInput.onblur = () => {
-            this.unhighlightProperty(id);
-        }
-        this.patternTextInput = patternTextInput;
-        patternTextInputHideable.appendChild(patternTextInput);
-        patternTextInputDiv.appendChild(patternTextInputHideable)
+        } else {
+            // text editor div
+            const patternEditorTextDiv = document.createElement('div');
+            patternEditorDiv.appendChild(patternEditorTextDiv);
 
-        item.appendChild(patternTextInputDiv);
-        if (this.patternTextVisible) {
-            this.onShowHidePatternText(id);
-            setTimeout(() => this.patternTextVisible = false, 10);
+            if (false) { /* help text */
+                const patternTextInputDesc = document.createElement('div');
+                patternTextInputDesc.innerHTML = '<i>Separate cells with spaces. Special characters: use "_" for an empty cell, "." is a wildcard (matches everything in rewrites), and "?" is padding.</i>';
+                patternEditorTextDiv.appendChild(patternTextInputDesc);
+            }
+
+            const patternTextInput = document.createElement('textarea');
+            patternTextInput.id = id;
+            patternTextInput.name = id;
+            patternTextInput.innerHTML = patternText;
+            patternTextInput.style = 'font-family:monospace; letter-spacing:-0.1em; font-kerning:none; text-transform:full-width; width:' + (cols + 2) + 'em; height:' + (rows + 2) + 'lh';
+            patternTextInput.oninput = () => {
+                this.patternTextOnInput(id);
+            }
+            patternTextInput.onchange = () => {
+                let pattern = this.patternFromString(patternTextInput.value)
+                this.renderTableInputs(id, pattern);
+                this.updatePatternText(id, pattern);
+                this.nodeSaveProperties();
+                telemetry('pattern-' + name + '-set-' + patternTextInput.value);
+            }
+            patternTextInput.onblur = () => {
+                this.unhighlightProperty(id);
+            }
+            this.patternTextInput = patternTextInput;
+            patternEditorTextDiv.appendChild(patternTextInput);
         }
     }
 
@@ -2002,9 +2012,6 @@ class TRRBTEditor {
     patternFromString(patternStr) {
         let pattern = deepcopyobj(EDT_EMPTY_PATTERN);
         let layer = LAYER_DEFAULT;
-        if (!pattern.hasOwnProperty(layer) && patternStr[0] != ' ') {
-            pattern[layer] = [];
-        }
 
         for (const line of patternStr.split('\n')) {
             const tline = line.trimEnd();
@@ -2016,6 +2023,9 @@ class TRRBTEditor {
                 pattern[layer] = [];
             } else {
                 let row = tline.trim().split(/\s+/);
+                if (!pattern.hasOwnProperty(layer)) {
+                    pattern[layer] = [];
+                }
                 pattern[layer].push(row);
             }
         }
@@ -2176,6 +2186,7 @@ class TRRBTEditor {
         appendButton(ed, 'delete-game', 'Delete Local Game', 'Delete this game from the local library.', null, bind0(this, 'onDeleteGame'));
         appendBr(ed, true);
 
+        appendButton(ed, 'togglePatternEditor', 'Toggle Text/Table Editor', 'Toggle Text/Table Pattern Editor', null, bind1(this, 'onTogglePatternEditor'));
         this.appendThisEmojiPicker(ed);
 
         if (true) {
@@ -2243,8 +2254,10 @@ class TRRBTEditor {
             const node_friendly = nodeFriendlyName(node);
 
             appendText(ed, node_friendly, true);
-            appendBr(ed);
-            appendText(ed, node_help_str, false, false, true);
+            if (false) { /* help text */
+                appendBr(ed);
+                appendText(ed, node_help_str, false, false, true);
+            }
             appendBr(ed, true);
 
             if (parent !== null) {
@@ -2337,17 +2350,17 @@ class TRRBTEditor {
             }
             if (node.hasOwnProperty(NKEY_PATTERN)) {
                 const tileSize = getTileSize([node[NKEY_PATTERN]]);
-                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES[NKEY_PATTERN].name, EDT_NODE_PROP_NAMES[NKEY_PATTERN].help, node[NKEY_PATTERN], tileSize, 5, 5, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
+                this.appendPatternProperty(list, 'prop_pattern', EDT_NODE_PROP_NAMES[NKEY_PATTERN].name, EDT_NODE_PROP_NAMES[NKEY_PATTERN].help, node[NKEY_PATTERN], tileSize, 5, 5, '');
             }
             if (node.hasOwnProperty(NKEY_LHS) || node.hasOwnProperty(NKEY_RHS)) {
                 const hasLHS = node.hasOwnProperty(NKEY_LHS);
                 const hasRHS = node.hasOwnProperty(NKEY_RHS);
                 const tileSize = (hasLHS && hasRHS) ? getTileSize([node[NKEY_LHS], node[NKEY_RHS]]) : (hasLHS ? getTileSize([node[NKEY_LHS]]) : getTileSize([node[NKEY_RHS]]));
                 if (hasLHS) {
-                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES[NKEY_LHS].name, EDT_NODE_PROP_NAMES[NKEY_LHS].help, node[NKEY_LHS], tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
+                    this.appendPatternProperty(list, 'prop_lhs', EDT_NODE_PROP_NAMES[NKEY_LHS].name, EDT_NODE_PROP_NAMES[NKEY_LHS].help, node[NKEY_LHS], tileSize, 2, 2, '');
                 }
                 if (hasRHS) {
-                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES[NKEY_RHS].name, EDT_NODE_PROP_NAMES[NKEY_RHS].help, node[NKEY_RHS], tileSize, 2, 2, 'Click a cell to edit it; move between cells with TAB, SPACE, ⬆️➡️⬇️⬅️. Special characters: \'.\' is a wildcard (matches everything in rewrite patterns), and \'?\' is padding (extra \'?\'s will be removed).');
+                    this.appendPatternProperty(list, 'prop_rhs', EDT_NODE_PROP_NAMES[NKEY_RHS].name, EDT_NODE_PROP_NAMES[NKEY_RHS].help, node[NKEY_RHS], tileSize, 2, 2, '');
                 }
             }
 
