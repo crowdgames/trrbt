@@ -1,0 +1,12 @@
+{
+    "sprites": {
+        "(": "bush_left",
+        "(?": "bush_left_wave",
+        ")": "bush_right",
+        ")?": "bush_right_wave",
+        "X": "dirt",
+        "X?": "dirt_wave",
+        "~": "sky",
+        "~?": "sky_wave"
+    }
+}

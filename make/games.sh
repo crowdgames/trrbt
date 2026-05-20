@@ -36,6 +36,7 @@ bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game trogue.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game trogue-mini.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game turn.json --sprites games/sprites/turn/turn.json
+bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game wfc-test.json --sprites games/sprites/wfc-test/wfc-test.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game x-unroll-replace-switches.json
 
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game block_dude.json --sprites games/sprites/block_dude/block_dude.json
