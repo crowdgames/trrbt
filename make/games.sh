@@ -34,6 +34,7 @@ bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game tic-tac-toe.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game tm-parens.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game trogue.json
+bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game trogue-2.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game trogue-mini.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game turn.json --sprites games/sprites/turn/turn.json
 bash script/game_convert.sh --out docs/games/games.js --append --fmt js-entry --folder games/trees --game wfc-test.json --sprites games/sprites/wfc-test/wfc-test.json
