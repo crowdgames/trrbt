@@ -21,8 +21,8 @@
           G_engine.onLoad();
       }
       function onLoad() {
-          xformApplyIntoGame(G_game, SEL_startingGame(), SEL_getGameTree);
           G_engine.onLoad();
+          SEL_selectStartingGame();
       }
       window.addEventListener('load', onLoad, false);
     </script>
