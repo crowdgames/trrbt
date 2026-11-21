@@ -307,7 +307,7 @@ class TRRBTStepper {
                 if (tile === '.') {
                     newRow.push('.');
                 } else {
-                    newRow.push(stateNode.with);
+                    newRow.push(stateNode[NKEY_WITH]);
                 }
             }
             newLayer.push(newRow);

@@ -258,8 +258,8 @@ function find_file_node_ids(file, node, resolve_file_to_game, file_to_tree, nid_
 
 
 
-const ALLOWED_PLAYER_CHILDREN = [NDX_IDENT, NDX_MIRROR, NDX_SKEW, NDX_ROTATE, NDX_SPIN, NDX_FLIP, NDX_SWAP_ONLY, NDX_REPLACE_ONLY, ND_REWRITE]
 function can_be_player_children(nodes) {
+    const ALLOWED_PLAYER_CHILDREN = [ND_REWRITE];
     for (const node of nodes) {
         if (!ALLOWED_PLAYER_CHILDREN.includes(node[NKEY_TYPE])) {
             return false;
